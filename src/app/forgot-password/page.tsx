@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
       } else {
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to send reset email. Please check your email address.");
     } finally {
       setIsLoading(false);
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
             <CardDescription>
-              We've sent a password reset link to your email address
+              We&apos;ve sent a password reset link to your email address
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Please check your email and click the link to reset your password. 
-              If you don't see the email, check your spam folder.
+              If you don&apos;t see the email, check your spam folder.
             </p>
             <div className="text-center">
               <Link href="/sign-in" className="text-primary hover:underline text-sm">
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
           <CardDescription>
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we&apos;ll send you a link to reset your password
           </CardDescription>
         </CardHeader>
         <CardContent>

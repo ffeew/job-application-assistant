@@ -16,7 +16,7 @@ import type {
 
 export class CoverLettersService {
   async getCoverLetters(userId: string, query?: CoverLettersQuery): Promise<CoverLetterResponse[]> {
-    let whereConditions = [eq(coverLetters.userId, userId)];
+    const whereConditions = [eq(coverLetters.userId, userId)];
 
     // Add query filters
     if (query?.isAiGenerated !== undefined) {

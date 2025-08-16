@@ -11,7 +11,7 @@ import type {
 
 export class ResumesService {
   async getResumes(userId: string, query?: ResumesQuery): Promise<ResumeResponse[]> {
-    let whereConditions = [eq(resumes.userId, userId)];
+    const whereConditions = [eq(resumes.userId, userId)];
 
     // Add query filters
     if (query?.isDefault !== undefined) {
@@ -26,7 +26,10 @@ export class ResumesService {
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
-    return resumesList;
+    return resumesList.map(resume => ({
+      ...resume,
+      isDefault: Boolean(resume.isDefault)
+    }));
   }
 
   async getResumeById(userId: string, id: string): Promise<ResumeResponse | null> {
@@ -39,7 +42,8 @@ export class ResumesService {
       ))
       .limit(1);
 
-    return resumesList[0] || null;
+    const resume = resumesList[0];
+    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
   }
 
   async createResume(userId: string, data: CreateResumeRequest): Promise<ResumeResponse> {
@@ -64,7 +68,7 @@ export class ResumesService {
       })
       .returning();
 
-    return resume;
+    return { ...resume, isDefault: Boolean(resume.isDefault) };
   }
 
   async updateResume(
@@ -91,7 +95,7 @@ export class ResumesService {
       ))
       .returning();
 
-    return resume || null;
+    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
   }
 
   async deleteResume(userId: string, id: string): Promise<boolean> {
@@ -124,7 +128,8 @@ export class ResumesService {
       ))
       .limit(1);
 
-    return resumesList[0] || null;
+    const resume = resumesList[0];
+    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
   }
 
   private async unsetAllDefaults(userId: string): Promise<void> {

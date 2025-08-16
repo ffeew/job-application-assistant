@@ -15,7 +15,7 @@ export default function Home() {
         if (session) {
           window.location.href = "/dashboard";
         }
-      } catch (error) {
+      } catch {
         // User not authenticated, stay on landing page
       }
     };
@@ -51,35 +51,41 @@ export default function Home() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto px-4">
-          <Card className="h-full">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">Resume Management</CardTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4 w-full">
+          <Card className="h-full w-full min-w-0 overflow-hidden">
+            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
+                Resume Management
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <CardDescription className="text-sm sm:text-base leading-relaxed">
+            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
                 Create and manage multiple versions of your resume. Customize them for different job applications.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="h-full">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">AI Cover Letters</CardTitle>
+          <Card className="h-full w-full min-w-0 overflow-hidden">
+            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
+                AI Cover Letters
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <CardDescription className="text-sm sm:text-base leading-relaxed">
+            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
                 Generate personalized cover letters using AI based on job descriptions and your resume.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="h-full sm:col-span-2 lg:col-span-1">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">Application Tracking</CardTitle>
+          <Card className="h-full w-full min-w-0 overflow-hidden sm:col-span-2 lg:col-span-1">
+            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
+                Application Tracking
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <CardDescription className="text-sm sm:text-base leading-relaxed">
+            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
                 Keep track of all your job applications, their status, and important dates in one dashboard.
               </CardDescription>
             </CardContent>

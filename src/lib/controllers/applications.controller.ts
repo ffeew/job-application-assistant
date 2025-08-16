@@ -29,7 +29,7 @@ export class ApplicationsController {
       const validatedQuery = applicationsQuerySchema.safeParse(queryParams);
       if (!validatedQuery.success) {
         return NextResponse.json(
-          { error: "Invalid query parameters", details: validatedQuery.error.errors },
+          { error: "Invalid query parameters", details: validatedQuery.error.issues },
           { status: 400 }
         );
       }
@@ -88,7 +88,7 @@ export class ApplicationsController {
       const validatedData = createApplicationSchema.safeParse(body);
       if (!validatedData.success) {
         return NextResponse.json(
-          { error: "Invalid request data", details: validatedData.error.errors },
+          { error: "Invalid request data", details: validatedData.error.issues },
           { status: 400 }
         );
       }
@@ -121,7 +121,7 @@ export class ApplicationsController {
       const validatedData = updateApplicationSchema.safeParse(body);
       if (!validatedData.success) {
         return NextResponse.json(
-          { error: "Invalid request data", details: validatedData.error.errors },
+          { error: "Invalid request data", details: validatedData.error.issues },
           { status: 400 }
         );
       }

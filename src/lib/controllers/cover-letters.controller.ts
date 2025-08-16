@@ -30,7 +30,7 @@ export class CoverLettersController {
       const validatedQuery = coverLettersQuerySchema.safeParse(queryParams);
       if (!validatedQuery.success) {
         return NextResponse.json(
-          { error: "Invalid query parameters", details: validatedQuery.error.errors },
+          { error: "Invalid query parameters", details: validatedQuery.error.issues },
           { status: 400 }
         );
       }
@@ -89,7 +89,7 @@ export class CoverLettersController {
       const validatedData = createCoverLetterSchema.safeParse(body);
       if (!validatedData.success) {
         return NextResponse.json(
-          { error: "Invalid request data", details: validatedData.error.errors },
+          { error: "Invalid request data", details: validatedData.error.issues },
           { status: 400 }
         );
       }
@@ -122,7 +122,7 @@ export class CoverLettersController {
       const validatedData = updateCoverLetterSchema.safeParse(body);
       if (!validatedData.success) {
         return NextResponse.json(
-          { error: "Invalid request data", details: validatedData.error.errors },
+          { error: "Invalid request data", details: validatedData.error.issues },
           { status: 400 }
         );
       }
@@ -186,7 +186,7 @@ export class CoverLettersController {
       const validatedData = generateCoverLetterSchema.safeParse(body);
       if (!validatedData.success) {
         return NextResponse.json(
-          { error: "Invalid request data", details: validatedData.error.errors },
+          { error: "Invalid request data", details: validatedData.error.issues },
           { status: 400 }
         );
       }

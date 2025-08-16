@@ -5,21 +5,24 @@ const controller = new ResumesController();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.getResumeById(request, { params });
+  const resolvedParams = await params;
+  return controller.getResumeById(request, { params: resolvedParams });
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.updateResume(request, { params });
+  const resolvedParams = await params;
+  return controller.updateResume(request, { params: resolvedParams });
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.deleteResume(request, { params });
+  const resolvedParams = await params;
+  return controller.deleteResume(request, { params: resolvedParams });
 }

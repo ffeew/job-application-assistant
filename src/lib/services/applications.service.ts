@@ -12,7 +12,7 @@ import { db } from "@/lib/db/db";
 
 export class ApplicationsService {
   async getApplications(userId: string, query?: ApplicationsQuery): Promise<ApplicationResponse[]> {
-    let whereConditions = [eq(jobApplications.userId, userId)];
+    const whereConditions = [eq(jobApplications.userId, userId)];
 
     // Add query filters
     if (query?.status) {

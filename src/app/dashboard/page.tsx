@@ -21,16 +21,35 @@ export default function DashboardPage() {
     return date.toLocaleDateString();
   };
 
-  const getActivityIcon = (iconType: string) => {
-    switch (iconType) {
-      case 'briefcase':
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'application':
         return Briefcase;
-      case 'pen-tool':
+      case 'cover_letter':
         return PenTool;
-      case 'file-text':
+      case 'resume':
       default:
         return FileText;
     }
+  };
+
+  const getActivityIconColor = (type: string, action: string) => {
+    const actionIntensity = action === 'created' ? '600' : action === 'updated' ? '500' : '400';
+    const baseColors = {
+      application: `text-blue-${actionIntensity}`,
+      cover_letter: `text-purple-${actionIntensity}`,
+      resume: `text-green-${actionIntensity}`,
+    };
+    return baseColors[type as keyof typeof baseColors] || `text-gray-${actionIntensity}`;
+  };
+
+  const getActivityBackgroundColor = (type: string) => {
+    const backgroundColors = {
+      application: 'bg-blue-100 dark:bg-blue-900',
+      cover_letter: 'bg-purple-100 dark:bg-purple-900',
+      resume: 'bg-green-100 dark:bg-green-900',
+    };
+    return backgroundColors[type as keyof typeof backgroundColors] || 'bg-gray-100 dark:bg-gray-900';
   };
 
   if (isLoading) {
@@ -110,7 +129,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalApplications || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.activeApplications || 0} active
+              {(stats?.applicationsByStatus.applied || 0) + (stats?.applicationsByStatus.interviewing || 0)} active
             </p>
           </CardContent>
         </Card>
@@ -131,76 +150,78 @@ export default function DashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.successRate || 0}%</div>
+            <div className="text-2xl font-bold">
+              {stats ? Math.round(((stats.applicationsByStatus.offer || 0) / Math.max(stats.totalApplications, 1)) * 100) : 0}%
+            </div>
             <p className="text-xs text-muted-foreground">
-              Based on responses
+              Offer rate
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Resume Management</CardTitle>
-            <CardDescription>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="w-full min-w-0 overflow-hidden">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg truncate">Resume Management</CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
               Create and manage your resumes
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex space-x-2">
-              <Button asChild>
+          <CardContent className="pt-0 px-4 sm:px-6">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/resumes/new">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   New Resume
                 </Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/resumes">View All</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Applications</CardTitle>
-            <CardDescription>
+        <Card className="w-full min-w-0 overflow-hidden">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg truncate">Job Applications</CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
               Track your job applications
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex space-x-2">
-              <Button asChild>
+          <CardContent className="pt-0 px-4 sm:px-6">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/applications/new">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   Add Application
                 </Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/applications">View All</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Cover Letters</CardTitle>
-            <CardDescription>
+        <Card className="w-full min-w-0 overflow-hidden sm:col-span-2 lg:col-span-1">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg truncate">Cover Letters</CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
               Generate AI-powered cover letters
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex space-x-2">
-              <Button asChild>
+          <CardContent className="pt-0 px-4 sm:px-6">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/cover-letters/new">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   Generate Letter
                 </Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="text-xs sm:text-sm">
                 <Link href="/dashboard/cover-letters">View All</Link>
               </Button>
             </div>
@@ -225,22 +246,22 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-4">
               {activity.map((activityItem) => {
-                const IconComponent = getActivityIcon(activityItem.icon);
-                const backgroundColorClass = activityItem.iconColor.includes('blue') 
-                  ? 'bg-blue-100 dark:bg-blue-900'
-                  : activityItem.iconColor.includes('green')
-                  ? 'bg-green-100 dark:bg-green-900'
-                  : 'bg-purple-100 dark:bg-purple-900';
+                const IconComponent = getActivityIcon(activityItem.type);
+                const iconColor = getActivityIconColor(activityItem.type, activityItem.action);
+                const backgroundColor = getActivityBackgroundColor(activityItem.type);
                 
                 return (
                   <div key={activityItem.id} className="flex items-center space-x-4">
-                    <div className={`${backgroundColorClass} p-2 rounded-full`}>
-                      <IconComponent className={`h-4 w-4 ${activityItem.iconColor}`} />
+                    <div className={`${backgroundColor} p-2 rounded-full`}>
+                      <IconComponent className={`h-4 w-4 ${iconColor}`} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{activityItem.description}</p>
+                      <p className="text-sm font-medium">{activityItem.title}</p>
+                      {activityItem.description && (
+                        <p className="text-xs text-muted-foreground">{activityItem.description}</p>
+                      )}
                       <p className="text-xs text-muted-foreground">
-                        {formatRelativeTime(activityItem.timestamp)}
+                        {formatRelativeTime(activityItem.createdAt.toISOString())}
                       </p>
                     </div>
                   </div>

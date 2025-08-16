@@ -33,7 +33,7 @@ export default function NewCoverLetterPage() {
   // Set default resume when resumes are loaded
   useEffect(() => {
     if (resumes.length > 0 && !selectedResume) {
-      const defaultResume = resumes.find((r: any) => r.isDefault) || resumes[0];
+      const defaultResume = resumes.find((r: { isDefault: boolean }) => r.isDefault) || resumes[0];
       setSelectedResume(defaultResume.id);
     }
   }, [resumes, selectedResume]);
@@ -70,7 +70,7 @@ export default function NewCoverLetterPage() {
         setGeneratedContent(data.coverLetter);
         setTitle(`Cover Letter - ${manualCompany} ${manualPosition}`);
       },
-      onError: (error: any) => {
+      onError: (error: Error) => {
         console.error("Error generating cover letter:", error);
         alert(error.message || "Error generating cover letter. Please try again.");
       },
@@ -86,8 +86,8 @@ export default function NewCoverLetterPage() {
     createCoverLetterMutation.mutate({
       title,
       content: generatedContent,
-      jobApplicationId: selectedApplication || null,
-      resumeId: selectedResume || null,
+      jobApplicationId: selectedApplication || undefined,
+      resumeId: selectedResume || undefined,
       isAiGenerated: true,
     }, {
       onSuccess: () => {

@@ -5,21 +5,24 @@ const controller = new CoverLettersController();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.getCoverLetterById(request, { params });
+  const resolvedParams = await params;
+  return controller.getCoverLetterById(request, { params: resolvedParams });
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.updateCoverLetter(request, { params });
+  const resolvedParams = await params;
+  return controller.updateCoverLetter(request, { params: resolvedParams });
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.deleteCoverLetter(request, { params });
+  const resolvedParams = await params;
+  return controller.deleteCoverLetter(request, { params: resolvedParams });
 }

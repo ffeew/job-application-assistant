@@ -1,6 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { resumesApi, type Resume, type CreateResumeData, type UpdateResumeData } from '@/lib/api';
 import { dashboardKeys } from './use-dashboard';
+import type { 
+  ResumeResponse as Resume, 
+  CreateResumeRequest as CreateResumeData, 
+  UpdateResumeRequest as UpdateResumeData 
+} from '@/lib/validators';
+
+// Direct API call functions
+const resumesApi = {
+  getAll: async (): Promise<Resume[]> => {
+    const response = await fetch('/api/resumes');
+    if (!response.ok) {
+      throw new Error('Failed to fetch resumes');
+    }
+    return response.json();
+  },
+
+  getById: async (id: string): Promise<Resume> => {
+    const response = await fetch(`/api/resumes/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch resume');
+    }
+    return response.json();
+  },
+
+  create: async (data: CreateResumeData): Promise<Resume> => {
+    const response = await fetch('/api/resumes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create resume');
+    }
+    return response.json();
+  },
+
+  update: async (id: string, data: UpdateResumeData): Promise<Resume> => {
+    const response = await fetch(`/api/resumes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update resume');
+    }
+    return response.json();
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const response = await fetch(`/api/resumes/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete resume');
+    }
+  },
+};
 
 // Query keys for resumes
 export const resumeKeys = {

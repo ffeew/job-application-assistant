@@ -1,5 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '@/lib/api';
+import type { DashboardStats, DashboardActivity } from '@/lib/validators';
+
+// Direct API call functions
+const dashboardApi = {
+  getStats: async (): Promise<DashboardStats> => {
+    const response = await fetch('/api/dashboard/stats');
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard stats');
+    }
+    return response.json();
+  },
+
+  getActivity: async (): Promise<DashboardActivity> => {
+    const response = await fetch('/api/dashboard/activity?limit=10');
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard activity');
+    }
+    return response.json();
+  },
+};
 
 // Query keys for dashboard
 export const dashboardKeys = {

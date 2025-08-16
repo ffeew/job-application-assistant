@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Plus, Briefcase, Edit, Trash2, ExternalLink, Calendar } from "lucide-react";
 import { useApplications, useDeleteApplication } from "@/hooks/use-applications";
-import type { JobApplication } from "@/lib/api/types";
 
 const statusColors = {
   applied: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",

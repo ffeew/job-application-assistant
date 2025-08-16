@@ -20,7 +20,7 @@ export default function NewApplicationPage() {
     location: "",
     jobUrl: "",
     salaryRange: "",
-    status: "applied",
+    status: "applied" as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     appliedAt: new Date().toISOString().split('T')[0], // Today's date
     notes: "",
     contactEmail: "",
@@ -196,7 +196,7 @@ export default function NewApplicationPage() {
             <CardHeader>
               <CardTitle>Contact Information</CardTitle>
               <CardDescription>
-                People you've been in contact with regarding this application
+                People you&apos;ve been in contact with regarding this application
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

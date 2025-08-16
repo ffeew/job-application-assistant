@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FileText, Edit, Trash2, Star } from "lucide-react";
 import { useResumes, useDeleteResume, useUpdateResume } from "@/hooks";
-import type { ResumeContent } from "@/lib/api";
 
 export default function ResumesPage() {
   const { data: resumes = [], isLoading } = useResumes();
@@ -34,7 +33,7 @@ export default function ResumesPage() {
         id,
         data: {
           title: resume.title,
-          content: JSON.parse(resume.content) as ResumeContent,
+          content: resume.content,
           isDefault: !resume.isDefault,
         }
       });

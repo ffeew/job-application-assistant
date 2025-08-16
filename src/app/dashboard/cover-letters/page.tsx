@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Plus, PenTool, Eye, Trash2, Sparkles } from "lucide-react";
 import { useCoverLetters, useDeleteCoverLetter } from "@/hooks/use-cover-letters";
-import type { CoverLetter } from "@/lib/api/types";
 
 export default function CoverLettersPage() {
   const { data: coverLetters = [], isLoading, error, refetch } = useCoverLetters();

@@ -1,6 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { applicationsApi, type JobApplication, type CreateJobApplicationData, type UpdateJobApplicationData } from '@/lib/api';
 import { dashboardKeys } from './use-dashboard';
+import type { 
+  ApplicationResponse as JobApplication, 
+  CreateApplicationRequest as CreateJobApplicationData, 
+  UpdateApplicationRequest as UpdateJobApplicationData 
+} from '@/lib/validators';
+
+// Direct API call functions
+const applicationsApi = {
+  getAll: async (): Promise<JobApplication[]> => {
+    const response = await fetch('/api/applications');
+    if (!response.ok) {
+      throw new Error('Failed to fetch applications');
+    }
+    return response.json();
+  },
+
+  getById: async (id: string): Promise<JobApplication> => {
+    const response = await fetch(`/api/applications/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch application');
+    }
+    return response.json();
+  },
+
+  create: async (data: CreateJobApplicationData): Promise<JobApplication> => {
+    const response = await fetch('/api/applications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create application');
+    }
+    return response.json();
+  },
+
+  update: async (id: string, data: UpdateJobApplicationData): Promise<JobApplication> => {
+    const response = await fetch(`/api/applications/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update application');
+    }
+    return response.json();
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const response = await fetch(`/api/applications/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete application');
+    }
+  },
+};
 
 // Query keys for job applications
 export const applicationKeys = {

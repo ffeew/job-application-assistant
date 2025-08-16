@@ -5,21 +5,24 @@ const controller = new ApplicationsController();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.getApplicationById(request, { params });
+  const resolvedParams = await params;
+  return controller.getApplicationById(request, { params: resolvedParams });
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.updateApplication(request, { params });
+  const resolvedParams = await params;
+  return controller.updateApplication(request, { params: resolvedParams });
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return controller.deleteApplication(request, { params });
+  const resolvedParams = await params;
+  return controller.deleteApplication(request, { params: resolvedParams });
 }

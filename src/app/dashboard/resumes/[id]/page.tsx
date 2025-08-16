@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { useResume, useUpdateResume } from "@/hooks/use-resumes";
 
 interface ResumeContent {
   personalInfo: {
@@ -23,7 +24,7 @@ interface ResumeContent {
   skills: string;
 }
 
-export default function EditResumePage({ params }: { params: { id: string } }) {
+export default function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
   const [title, setTitle] = useState("");
   const [personalInfo, setPersonalInfo] = useState({
     name: "",
@@ -38,37 +39,43 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
   const [isDefault, setIsDefault] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
   
   const router = useRouter();
+  const { data: resume, isLoading: resumeLoading, error } = useResume(resolvedParams?.id || "");
+  const updateResumeMutation = useUpdateResume();
 
+  // Resolve params Promise
   useEffect(() => {
-    fetchResume();
-  }, []);
+    const resolveParams = async () => {
+      const resolved = await params;
+      setResolvedParams(resolved);
+    };
+    resolveParams();
+  }, [params]);
 
-  const fetchResume = async () => {
-    try {
-      const response = await fetch(`/api/resumes/${params.id}`);
-      if (response.ok) {
-        const resume = await response.json();
-        setTitle(resume.title);
-        setIsDefault(resume.isDefault);
-        
-        const content: ResumeContent = JSON.parse(resume.content);
-        setPersonalInfo(content.personalInfo || { name: "", email: "", phone: "", address: "" });
-        setSummary(content.summary || "");
-        setExperience(content.experience || "");
-        setEducation(content.education || "");
-        setSkills(content.skills || "");
-      } else {
-        router.push("/dashboard/resumes");
-      }
-    } catch (error) {
-      console.error("Error fetching resume:", error);
-      router.push("/dashboard/resumes");
-    } finally {
+  // Populate form when resume data is loaded
+  useEffect(() => {
+    if (resume) {
+      setTitle(resume.title);
+      setIsDefault(resume.isDefault);
+      
+      const content: ResumeContent = JSON.parse(resume.content);
+      setPersonalInfo(content.personalInfo || { name: "", email: "", phone: "", address: "" });
+      setSummary(content.summary || "");
+      setExperience(content.experience || "");
+      setEducation(content.education || "");
+      setSkills(content.skills || "");
       setLoading(false);
     }
-  };
+  }, [resume]);
+
+  // Handle error case
+  useEffect(() => {
+    if (error) {
+      router.push("/dashboard/resumes");
+    }
+  }, [error, router]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,33 +95,30 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
       skills,
     };
 
-    try {
-      const response = await fetch(`/api/resumes/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          content: resumeContent,
-          isDefault,
-        }),
-      });
+    if (!resolvedParams?.id) return;
 
-      if (response.ok) {
-        router.push("/dashboard/resumes");
-      } else {
-        alert("Error updating resume. Please try again.");
+    updateResumeMutation.mutate({
+      id: resolvedParams.id,
+      data: {
+        title,
+        content: JSON.stringify(resumeContent),
+        isDefault,
       }
-    } catch (error) {
-      console.error("Error updating resume:", error);
-      alert("Error updating resume. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    }, {
+      onSuccess: () => {
+        router.push("/dashboard/resumes");
+      },
+      onError: (error) => {
+        console.error("Error updating resume:", error);
+        alert("Error updating resume. Please try again.");
+      },
+      onSettled: () => {
+        setSaving(false);
+      },
+    });
   };
 
-  if (loading) {
+  if (!resolvedParams || resumeLoading || loading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-lg">Loading resume...</div>

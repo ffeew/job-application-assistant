@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { useCreateResume } from "@/hooks/use-resumes";
 
 export default function NewResumePage() {
   const [title, setTitle] = useState("");
@@ -26,6 +27,7 @@ export default function NewResumePage() {
   const [saving, setSaving] = useState(false);
   
   const router = useRouter();
+  const createResumeMutation = useCreateResume();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,30 +47,22 @@ export default function NewResumePage() {
       skills,
     };
 
-    try {
-      const response = await fetch("/api/resumes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          content: resumeContent,
-          isDefault,
-        }),
-      });
-
-      if (response.ok) {
+    createResumeMutation.mutate({
+      title,
+      content: JSON.stringify(resumeContent),
+      isDefault,
+    }, {
+      onSuccess: () => {
         router.push("/dashboard/resumes");
-      } else {
+      },
+      onError: (error) => {
+        console.error("Error creating resume:", error);
         alert("Error creating resume. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error creating resume:", error);
-      alert("Error creating resume. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+      },
+      onSettled: () => {
+        setSaving(false);
+      },
+    });
   };
 
   return (

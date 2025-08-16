@@ -27,7 +27,7 @@ export default function DashboardLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const [user, setUser] = useState<any>(null);
+	const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const pathname = usePathname();
@@ -40,8 +40,8 @@ export default function DashboardLayout({
 					window.location.href = "/sign-in";
 					return;
 				}
-				setUser(session.data?.user);
-			} catch (error) {
+				setUser(session.data?.user ? { name: session.data.user.name, email: session.data.user.email } : null);
+			} catch {
 				window.location.href = "/sign-in";
 			} finally {
 				setLoading(false);

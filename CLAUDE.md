@@ -8,6 +8,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build for production**: `npm run build`
 - **Start production server**: `npm start`
 - **Lint code**: `npm run lint`
+- **Type check**: `npm run typecheck`
+
+## Code Quality Requirements
+
+**CRITICAL**: After completing any coding task or making changes to the codebase, you MUST run both:
+
+1. **`npm run lint`** - Check for ESLint errors and warnings
+2. **`npm run typecheck`** - Verify TypeScript type correctness
+
+### Quality Standards
+- **All ESLint errors must be fixed** - No exceptions
+- **All TypeScript errors must be resolved** - Ensure type safety
+- **Address ESLint warnings** when possible (prefer fixing over disabling)
+- **Use proper TypeScript types** - Avoid `any`, use specific interfaces/types
+
+### Common Issues to Fix
+- **Unused variables/imports** - Remove or prefix with underscore if intentionally unused
+- **Missing dependencies in useEffect** - Add to dependency array or use ESLint disable comment
+- **Unescaped entities** - Use `&apos;` for apostrophes in JSX
+- **Type mismatches** - Ensure database types match TypeScript interfaces
+- **Missing error handling** - Properly handle catch blocks and error states
+
+### Before Task Completion
+1. Run `npm run lint` and fix ALL errors and warnings
+2. Run `npm run typecheck` and resolve ALL type errors  
+3. Test the changes work as expected
+4. Only then consider the task complete
+
+**Never** commit or mark a task as complete while linting or type checking fails.
 
 ## Project Architecture
 

@@ -26,7 +26,7 @@ export default function SignInPage() {
       });
       // Redirect to dashboard on success
       window.location.href = "/dashboard";
-    } catch (err) {
+    } catch {
       setError("Invalid email or password");
     } finally {
       setIsLoading(false);
@@ -81,7 +81,7 @@ export default function SignInPage() {
             </Link>
           </div>
           <div className="mt-2 text-center text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/sign-up" className="text-primary hover:underline">
               Sign up
             </Link>

@@ -12,7 +12,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useApplication, useUpdateApplication } from "@/hooks/use-applications";
 
-export default function EditApplicationPage({ params }: { params: { id: string } }) {
+export default function EditApplicationPage({ params }: { params: Promise<{ id: string }> }) {
   const [formData, setFormData] = useState({
     company: "",
     position: "",
@@ -20,15 +20,26 @@ export default function EditApplicationPage({ params }: { params: { id: string }
     location: "",
     jobUrl: "",
     salaryRange: "",
-    status: "applied",
+    status: "applied" as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     appliedAt: "",
     notes: "",
     contactEmail: "",
     contactName: "",
     recruiterId: "",
   });
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+
+  // Resolve params Promise
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolved = await params;
+      setResolvedParams(resolved);
+    };
+    resolveParams();
+  }, [params]);
+
   const router = useRouter();
-  const { data: application, isLoading, error } = useApplication(params.id);
+  const { data: application, isLoading, error } = useApplication(resolvedParams?.id || "");
   const updateApplicationMutation = useUpdateApplication();
 
   useEffect(() => {
@@ -73,7 +84,7 @@ export default function EditApplicationPage({ params }: { params: { id: string }
     }
 
     updateApplicationMutation.mutate(
-      { id: params.id, data: formData },
+      { id: resolvedParams?.id || "", data: formData },
       {
         onSuccess: () => {
           router.push("/dashboard/applications");
@@ -86,7 +97,7 @@ export default function EditApplicationPage({ params }: { params: { id: string }
     );
   };
 
-  if (isLoading) {
+  if (!resolvedParams || isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-lg">Loading application...</div>

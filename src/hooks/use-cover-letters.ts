@@ -1,16 +1,85 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  coverLettersApi, 
-  resumesApi,
-  applicationsApi,
-  type CoverLetter, 
-  type GenerateCoverLetterData,
-  type CreateCoverLetterData, 
-  type UpdateCoverLetterData 
-} from '@/lib/api';
 import { dashboardKeys } from './use-dashboard';
-import { resumeKeys } from './use-resumes';
-import { applicationKeys } from './use-applications';
+import { useResumes } from './use-resumes';
+import { useApplications } from './use-applications';
+import type { 
+  CoverLetterResponse as CoverLetter, 
+  GenerateCoverLetterRequest as GenerateCoverLetterData,
+  GenerateCoverLetterResponse,
+  CreateCoverLetterRequest as CreateCoverLetterData, 
+  UpdateCoverLetterRequest as UpdateCoverLetterData 
+} from '@/lib/validators';
+
+// Direct API call functions
+const coverLettersApi = {
+  getAll: async (): Promise<CoverLetter[]> => {
+    const response = await fetch('/api/cover-letters');
+    if (!response.ok) {
+      throw new Error('Failed to fetch cover letters');
+    }
+    return response.json();
+  },
+
+  getById: async (id: string): Promise<CoverLetter> => {
+    const response = await fetch(`/api/cover-letters/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch cover letter');
+    }
+    return response.json();
+  },
+
+  create: async (data: CreateCoverLetterData): Promise<CoverLetter> => {
+    const response = await fetch('/api/cover-letters', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create cover letter');
+    }
+    return response.json();
+  },
+
+  update: async (id: string, data: UpdateCoverLetterData): Promise<CoverLetter> => {
+    const response = await fetch(`/api/cover-letters/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update cover letter');
+    }
+    return response.json();
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const response = await fetch(`/api/cover-letters/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete cover letter');
+    }
+  },
+
+  generate: async (data: GenerateCoverLetterData): Promise<GenerateCoverLetterResponse> => {
+    const response = await fetch('/api/cover-letters/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to generate cover letter');
+    }
+    return response.json();
+  },
+};
 
 // Query keys for cover letters
 export const coverLetterKeys = {
@@ -104,15 +173,8 @@ export function useDeleteCoverLetter() {
 
 // Hook for cover letter generation page - fetches resumes and applications for dropdowns
 export function useCoverLetterFormData() {
-  const resumesQuery = useQuery({
-    queryKey: resumeKeys.lists(),
-    queryFn: resumesApi.getAll,
-  });
-
-  const applicationsQuery = useQuery({
-    queryKey: applicationKeys.lists(),
-    queryFn: applicationsApi.getAll,
-  });
+  const resumesQuery = useResumes();
+  const applicationsQuery = useApplications();
 
   return {
     resumes: resumesQuery.data || [],

@@ -11,7 +11,7 @@ export class DashboardController {
     this.dashboardService = new DashboardService();
   }
 
-  async getDashboardStats(request: NextRequest) {
+  async getDashboardStats() {
     try {
       const session = await auth.api.getSession({ headers: await headers() });
       if (!session) {
@@ -43,7 +43,7 @@ export class DashboardController {
       const validatedQuery = activityQuerySchema.safeParse(queryParams);
       if (!validatedQuery.success) {
         return NextResponse.json(
-          { error: "Invalid query parameters", details: validatedQuery.error.errors },
+          { error: "Invalid query parameters", details: validatedQuery.error.issues },
           { status: 400 }
         );
       }

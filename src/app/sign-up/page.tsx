@@ -41,7 +41,7 @@ export default function SignUpPage() {
       });
       // Redirect to dashboard on success
       window.location.href = "/dashboard";
-    } catch (err) {
+    } catch {
       setError("Failed to create account. Email might already be in use.");
     } finally {
       setIsLoading(false);
