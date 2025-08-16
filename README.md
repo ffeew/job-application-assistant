@@ -5,29 +5,34 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 ## ✨ Features
 
 ### 🔐 Authentication & Security
+
 - Email/password authentication with BetterAuth
 - Secure session management with server-side validation
 - Password reset functionality via email
 - Protected routes with middleware authentication
 
 ### 📄 Resume Management
+
 - Create and manage multiple resume versions
 - Customize resumes for different job applications
 - JSON-based content storage for flexibility
 - Export capabilities (planned)
 
 ### 🤖 AI-Powered Cover Letters
+
 - Generate personalized cover letters using Groq AI
 - Based on job descriptions and your resume data
 - Customizable and editable generated content
 
 ### 📊 Application Tracking
+
 - Track job applications with status updates
 - Dashboard with real-time statistics
 - Application status visualization
 - Activity timeline and history
 
 ### 🎨 Modern UI/UX
+
 - Responsive design for all devices
 - Dark/light mode support
 - Clean, professional interface
@@ -36,25 +41,30 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 ## 🛠 Technology Stack
 
 ### Core Framework
+
 - **Next.js 15** - Full-stack React framework with App Router
 - **TypeScript 5** - Type-safe development
 - **Node.js 20+** - Runtime environment
 
 ### Database & ORM
+
 - **Turso (SQLite)** - Serverless database
 - **Drizzle ORM** - Type-safe database toolkit
 - **Database migrations** - Version-controlled schema changes
 
 ### Authentication
+
 - **BetterAuth** - Modern authentication library
 - **Email/Password** - Secure credential-based auth
 - **Session management** - Server-side session validation
 
 ### AI Integration
+
 - **Vercel AI SDK** - AI integration framework
 - **Groq** - Fast AI inference for cover letter generation
 
 ### Frontend
+
 - **React Query (TanStack Query)** - Server state management with custom hooks
 - **Zustand** - Client state management
 - **Tailwind CSS v4** - Utility-first styling
@@ -63,22 +73,26 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 - **Next-Themes** - Dark mode support
 
 ### Validation & Forms
+
 - **Zod v4** - Runtime type validation
 - **React Hook Form** - Performant forms with validation
 
 ### Development Tools
+
 - **Bun** - Fast package manager and runtime
 - **ESLint** - Code linting
 - **TypeScript** - Static type checking
 
 ### Deployment
+
 - **Vercel** - Production deployment platform
 - **Environment validation** - Startup configuration checks
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 20+ 
+
+- Node.js 20+
 - Bun (recommended) or npm
 - A Turso database account
 - A Groq API key (for AI features)
@@ -86,12 +100,14 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ffeew/job-application-assistant
    cd job-application-assistant
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    # or
@@ -99,26 +115,29 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Fill in your environment variables in `.env`:
+
    ```bash
    # Better Auth Configuration
    BETTER_AUTH_SECRET=your-32-character-secret-key-here
    BETTER_AUTH_URL=http://localhost:3000
    NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-   
+
    # Turso Database Configuration
    TURSO_CONNECTION_URL=libsql://your-database-name.aws-region.turso.io
    TURSO_AUTH_TOKEN=your-turso-auth-token
-   
+
    # Groq AI Configuration (optional)
    GROQ_API_KEY=your-groq-api-key
    ```
 
 4. **Set up the database**
+
    ```bash
    bun run db:push
    # or
@@ -126,6 +145,7 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
    ```
 
 5. **Start the development server**
+
    ```bash
    bun run dev
    # or
@@ -168,21 +188,25 @@ This application follows a clean architecture with separation between frontend a
 ### Backend Architecture (3-Layer API)
 
 #### 1. **Validators** (`src/lib/validators/`)
+
 - Define and validate API input/output using Zod schemas
 - Shared TypeScript types between frontend and backend
 - Runtime validation with compile-time type safety
 
 #### 2. **Services** (`src/lib/services/`)
+
 - Contains all business logic and database operations
 - One service class per domain (e.g., `ApplicationsService`)
 - Handles data transformation and business rules
 
 #### 3. **Controllers** (`src/lib/controllers/`)
+
 - Handle HTTP requests and orchestrate services
 - Authentication validation and error handling
 - Request/response validation using Zod schemas
 
 #### 4. **Routes** (`src/app/api/`)
+
 - Thin layer that delegates to controllers
 - Clean separation of concerns
 - Consistent error handling
@@ -190,32 +214,35 @@ This application follows a clean architecture with separation between frontend a
 ### Frontend Architecture
 
 #### **React Query Hooks** (`src/hooks/`)
+
 - Direct API calls to backend endpoints
 - Custom hooks for each domain (resumes, applications, cover letters)
 - Built-in caching, loading states, and error handling
 - Type-safe using validator schemas
 
 **Example Hook Structure:**
+
 ```typescript
 // Direct API functions
 const resumesApi = {
-  getAll: async () => {
-    const response = await fetch('/api/resumes');
-    if (!response.ok) throw new Error('Failed to fetch');
-    return response.json();
-  }
+	getAll: async () => {
+		const response = await fetch("/api/resumes");
+		if (!response.ok) throw new Error("Failed to fetch");
+		return response.json();
+	},
 };
 
 // React Query hooks
 export function useResumes() {
-  return useQuery({
-    queryKey: ['resumes'],
-    queryFn: resumesApi.getAll,
-  });
+	return useQuery({
+		queryKey: ["resumes"],
+		queryFn: resumesApi.getAll,
+	});
 }
 ```
 
 **Benefits:**
+
 - **No intermediate API layer** - Direct fetch calls in hooks
 - **Type safety** - Uses validator types directly
 - **Better performance** - Fewer abstraction layers
@@ -238,16 +265,16 @@ bun run db:generate      # Generate migration files
 
 ## 🔒 Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `BETTER_AUTH_SECRET` | Yes | 32+ character secret for auth encryption |
-| `BETTER_AUTH_URL` | Yes | Base URL for authentication |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes | Public auth URL for client-side |
-| `TURSO_CONNECTION_URL` | Yes | Turso database connection string |
-| `TURSO_AUTH_TOKEN` | Yes | Turso authentication token |
-| `GROQ_API_KEY` | No | Groq API key for AI cover letter generation |
-| `NODE_ENV` | No | Environment (development/production) |
-| `PORT` | No | Server port (default: 3000) |
+| Variable                      | Required | Description                                 |
+| ----------------------------- | -------- | ------------------------------------------- |
+| `BETTER_AUTH_SECRET`          | Yes      | 32+ character secret for auth encryption    |
+| `BETTER_AUTH_URL`             | Yes      | Base URL for authentication                 |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes      | Public auth URL for client-side             |
+| `TURSO_CONNECTION_URL`        | Yes      | Turso database connection string            |
+| `TURSO_AUTH_TOKEN`            | Yes      | Turso authentication token                  |
+| `GROQ_API_KEY`                | No       | Groq API key for AI cover letter generation |
+| `NODE_ENV`                    | No       | Environment (development/production)        |
+| `PORT`                        | No       | Server port (default: 3000)                 |
 
 ## 🤝 Contributing
 
