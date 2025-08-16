@@ -55,7 +55,7 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 - **Groq** - Fast AI inference for cover letter generation
 
 ### Frontend
-- **React Query (TanStack Query)** - Server state management
+- **React Query (TanStack Query)** - Server state management with custom hooks
 - **Zustand** - Client state management
 - **Tailwind CSS v4** - Utility-first styling
 - **Shadcn/ui** - High-quality component library
@@ -156,35 +156,70 @@ src/
 │   ├── db/                       # Database configuration
 │   ├── validators/               # Zod validation schemas
 │   ├── services/                 # Business logic layer
-│   ├── controllers/              # API request handlers
-│   └── api/                      # Frontend API client
+│   └── controllers/              # API request handlers
 ├── hooks/                        # Custom React Query hooks
 └── components/                   # Reusable UI components
 ```
 
 ## 🏗 Architecture
 
-This application follows a clean 3-layer API architecture:
+This application follows a clean architecture with separation between frontend and backend:
 
-### 1. **Validators** (`src/lib/validators/`)
+### Backend Architecture (3-Layer API)
+
+#### 1. **Validators** (`src/lib/validators/`)
 - Define and validate API input/output using Zod schemas
 - Shared TypeScript types between frontend and backend
 - Runtime validation with compile-time type safety
 
-### 2. **Services** (`src/lib/services/`)
+#### 2. **Services** (`src/lib/services/`)
 - Contains all business logic and database operations
 - One service class per domain (e.g., `ApplicationsService`)
 - Handles data transformation and business rules
 
-### 3. **Controllers** (`src/lib/controllers/`)
+#### 3. **Controllers** (`src/lib/controllers/`)
 - Handle HTTP requests and orchestrate services
 - Authentication validation and error handling
 - Request/response validation using Zod schemas
 
-### 4. **Routes** (`src/app/api/`)
+#### 4. **Routes** (`src/app/api/`)
 - Thin layer that delegates to controllers
 - Clean separation of concerns
 - Consistent error handling
+
+### Frontend Architecture
+
+#### **React Query Hooks** (`src/hooks/`)
+- Direct API calls to backend endpoints
+- Custom hooks for each domain (resumes, applications, cover letters)
+- Built-in caching, loading states, and error handling
+- Type-safe using validator schemas
+
+**Example Hook Structure:**
+```typescript
+// Direct API functions
+const resumesApi = {
+  getAll: async () => {
+    const response = await fetch('/api/resumes');
+    if (!response.ok) throw new Error('Failed to fetch');
+    return response.json();
+  }
+};
+
+// React Query hooks
+export function useResumes() {
+  return useQuery({
+    queryKey: ['resumes'],
+    queryFn: resumesApi.getAll,
+  });
+}
+```
+
+**Benefits:**
+- **No intermediate API layer** - Direct fetch calls in hooks
+- **Type safety** - Uses validator types directly
+- **Better performance** - Fewer abstraction layers
+- **Easier debugging** - Clear path from component to API
 
 ## 🧪 Development Commands
 

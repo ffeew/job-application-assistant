@@ -68,7 +68,6 @@ This is a fully functional Next.js 15 application for a job application assistan
 - `src/lib/validators/` - Zod validation schemas shared between frontend and backend
 - `src/lib/services/` - Business logic layer with database operations
 - `src/lib/controllers/` - Request handling and service orchestration
-- `src/lib/api/` - Frontend API client layer with typed functions
 - `src/lib/env.ts` - Environment variable validation with Zod
 - `src/hooks/` - Custom React Query hooks for data management
 - `src/components/providers/` - Application providers (QueryClient, etc.)
@@ -110,18 +109,49 @@ The application follows a clean 3-layer API architecture:
 
 ### Frontend Data Management
 
-The application uses React Query for all data fetching with a well-organized structure:
-
-- **API Service Layer** (`src/lib/api/`):
-  - `client.ts` - Base API client with error handling
-  - `services.ts` - Typed service functions for all endpoints
-  - `types.ts` - TypeScript interfaces (can be migrated to use validator types)
+The application uses React Query for all data fetching with direct API calls and custom hooks:
 
 - **Custom React Query Hooks** (`src/hooks/`):
-  - `use-dashboard.ts` - Dashboard stats and activity data
-  - `use-resumes.ts` - Resume CRUD operations
-  - `use-applications.ts` - Job application management
-  - `use-cover-letters.ts` - Cover letter generation and management
+  - `use-dashboard.ts` - Dashboard stats and activity data with direct `/api/dashboard/*` calls
+  - `use-resumes.ts` - Resume CRUD operations with direct `/api/resumes/*` calls
+  - `use-applications.ts` - Job application management with direct `/api/applications/*` calls
+  - `use-cover-letters.ts` - Cover letter generation and management with direct `/api/cover-letters/*` calls
+
+#### React Query Hook Architecture
+
+Each hook file contains:
+- **Direct API functions**: Simple fetch calls to backend endpoints
+- **Query hooks**: For data fetching (e.g., `useResumes()`, `useApplication(id)`)
+- **Mutation hooks**: For data modification (e.g., `useCreateResume()`, `useUpdateApplication()`)
+- **Query keys**: Organized cache invalidation patterns
+- **Type safety**: Uses validator types directly from `@/lib/validators`
+
+**Example Hook Structure**:
+```typescript
+// Direct API calls
+const resumesApi = {
+  getAll: async (): Promise<Resume[]> => {
+    const response = await fetch('/api/resumes');
+    if (!response.ok) throw new Error('Failed to fetch resumes');
+    return response.json();
+  },
+  // ... other methods
+};
+
+// React Query hooks
+export function useResumes() {
+  return useQuery({
+    queryKey: resumeKeys.lists(),
+    queryFn: resumesApi.getAll,
+  });
+}
+```
+
+**Benefits**:
+- **Simplified Architecture**: No intermediate API client layer
+- **Direct Type Safety**: Uses validator types without re-exports
+- **Better Performance**: Fewer abstraction layers
+- **Easier Debugging**: Clear path from hook to API endpoint
 
 ### Environment Configuration
 
@@ -210,10 +240,35 @@ export async function GET(request: NextRequest) {
 
 ### Development Notes
 
-- All pages use React Query for data fetching with proper error handling and loading states
+- All pages use React Query hooks for data fetching with proper error handling and loading states
 - Environment variables are validated at startup - app won't start with invalid configuration
 - API follows clean architecture with validators, services, and controllers
-- Frontend and backend share Zod validation schemas for type safety
+- Frontend React Query hooks use validator types directly for type safety
+- No client-side fetch() calls - all data fetching goes through React Query hooks
 - Uses Geist fonts (Geist Sans and Geist Mono) for typography
 - Configured for both light and dark mode support
 - Proper TypeScript throughout with strict type checking
+
+### Frontend Development Guidelines
+
+**Data Fetching**:
+- **ALWAYS** use React Query hooks for data fetching, never direct `fetch()` calls
+- Import hooks from `@/hooks` (e.g., `import { useResumes } from '@/hooks/use-resumes'`)
+- Use appropriate hooks for CRUD operations:
+  - `useResumes()` for fetching all resumes
+  - `useResume(id)` for fetching a single resume
+  - `useCreateResume()` for creating resumes
+  - `useUpdateResume()` for updating resumes
+  - Similar patterns for applications and cover letters
+
+**Adding New Data Operations**:
+1. If hook doesn't exist, add it to the appropriate hook file in `src/hooks/`
+2. Follow the established pattern with direct API calls and React Query
+3. Use validator types from `@/lib/validators` for type safety
+4. Include proper error handling and cache invalidation
+
+**Component Patterns**:
+- Use loading states from React Query (`isLoading`, `isPending`)
+- Handle error states appropriately (`error`, `isError`)
+- Leverage React Query's caching and background refetching
+- Use mutations for create/update/delete operations with proper `onSuccess` callbacks
