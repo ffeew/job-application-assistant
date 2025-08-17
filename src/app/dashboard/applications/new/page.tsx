@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,41 +12,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useCreateApplication } from "@/hooks/use-applications";
+import { createApplicationSchema } from "@/lib/validators/applications.validator";
+import type { CreateApplicationRequest } from "@/lib/validators/applications.validator";
 
 export default function NewApplicationPage() {
-  const [formData, setFormData] = useState({
-    company: "",
-    position: "",
-    jobDescription: "",
-    location: "",
-    jobUrl: "",
-    salaryRange: "",
-    status: "applied" as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
-    appliedAt: new Date().toISOString().split('T')[0], // Today's date
-    notes: "",
-    contactEmail: "",
-    contactName: "",
-    recruiterId: "",
-  });
   const router = useRouter();
   const createApplicationMutation = useCreateApplication();
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const form = useForm({
+    resolver: zodResolver(createApplicationSchema),
+    defaultValues: {
+      company: "",
+      position: "",
+      jobDescription: "",
+      location: "",
+      jobUrl: "",
+      salaryRange: "",
+      status: "applied" as const,
+      appliedAt: new Date().toISOString().split('T')[0],
+      notes: "",
+      contactEmail: "",
+      contactName: "",
+      recruiterId: "",
+    },
+  });
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = form;
 
-    if (!formData.company.trim() || !formData.position.trim()) {
-      alert("Company and position are required");
-      return;
-    }
-
-    createApplicationMutation.mutate(formData, {
+  const onSubmit = async (data: unknown) => {
+    // Data is validated by Zod resolver, safe to cast
+    const validatedData = data as CreateApplicationRequest;
+    
+    createApplicationMutation.mutate(validatedData, {
       onSuccess: () => {
         router.push("/dashboard/applications");
       },
@@ -73,7 +71,7 @@ export default function NewApplicationPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -89,20 +87,22 @@ export default function NewApplicationPage() {
                   <Input
                     id="company"
                     placeholder="e.g., Google"
-                    value={formData.company}
-                    onChange={(e) => handleInputChange("company", e.target.value)}
-                    required
+                    {...register("company")}
                   />
+                  {errors.company && (
+                    <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="position">Position *</Label>
                   <Input
                     id="position"
                     placeholder="e.g., Software Engineer"
-                    value={formData.position}
-                    onChange={(e) => handleInputChange("position", e.target.value)}
-                    required
+                    {...register("position")}
                   />
+                  {errors.position && (
+                    <p className="text-red-500 text-sm mt-1">{errors.position.message}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -111,18 +111,22 @@ export default function NewApplicationPage() {
                   <Input
                     id="location"
                     placeholder="e.g., San Francisco, CA"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange("location", e.target.value)}
+                    {...register("location")}
                   />
+                  {errors.location && (
+                    <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="salaryRange">Salary Range</Label>
                   <Input
                     id="salaryRange"
                     placeholder="e.g., $100k - $130k"
-                    value={formData.salaryRange}
-                    onChange={(e) => handleInputChange("salaryRange", e.target.value)}
+                    {...register("salaryRange")}
                   />
+                  {errors.salaryRange && (
+                    <p className="text-red-500 text-sm mt-1">{errors.salaryRange.message}</p>
+                  )}
                 </div>
               </div>
               <div>
@@ -131,9 +135,11 @@ export default function NewApplicationPage() {
                   id="jobUrl"
                   type="url"
                   placeholder="https://..."
-                  value={formData.jobUrl}
-                  onChange={(e) => handleInputChange("jobUrl", e.target.value)}
+                  {...register("jobUrl")}
                 />
+                {errors.jobUrl && (
+                  <p className="text-red-500 text-sm mt-1">{errors.jobUrl.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -149,27 +155,38 @@ export default function NewApplicationPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="applied">Applied</SelectItem>
-                      <SelectItem value="interviewing">Interviewing</SelectItem>
-                      <SelectItem value="offer">Offer</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="withdrawn">Withdrawn</SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectContent>
+                          <SelectItem value="applied">Applied</SelectItem>
+                          <SelectItem value="interviewing">Interviewing</SelectItem>
+                          <SelectItem value="offer">Offer</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.status && (
+                    <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="appliedAt">Application Date</Label>
                   <Input
                     id="appliedAt"
                     type="date"
-                    value={formData.appliedAt}
-                    onChange={(e) => handleInputChange("appliedAt", e.target.value)}
+                    {...register("appliedAt")}
                   />
+                  {errors.appliedAt && (
+                    <p className="text-red-500 text-sm mt-1">{errors.appliedAt.message}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -185,10 +202,12 @@ export default function NewApplicationPage() {
             <CardContent>
               <Textarea
                 placeholder="Paste the job description here..."
-                value={formData.jobDescription}
-                onChange={(e) => handleInputChange("jobDescription", e.target.value)}
+                {...register("jobDescription")}
                 rows={8}
               />
+              {errors.jobDescription && (
+                <p className="text-red-500 text-sm mt-1">{errors.jobDescription.message}</p>
+              )}
             </CardContent>
           </Card>
 
@@ -206,9 +225,11 @@ export default function NewApplicationPage() {
                   <Input
                     id="contactName"
                     placeholder="e.g., John Smith"
-                    value={formData.contactName}
-                    onChange={(e) => handleInputChange("contactName", e.target.value)}
+                    {...register("contactName")}
                   />
+                  {errors.contactName && (
+                    <p className="text-red-500 text-sm mt-1">{errors.contactName.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="contactEmail">Contact Email</Label>
@@ -216,9 +237,11 @@ export default function NewApplicationPage() {
                     id="contactEmail"
                     type="email"
                     placeholder="john@company.com"
-                    value={formData.contactEmail}
-                    onChange={(e) => handleInputChange("contactEmail", e.target.value)}
+                    {...register("contactEmail")}
                   />
+                  {errors.contactEmail && (
+                    <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>
+                  )}
                 </div>
               </div>
               <div>
@@ -226,9 +249,11 @@ export default function NewApplicationPage() {
                 <Input
                   id="recruiterId"
                   placeholder="e.g., LinkedIn profile or name"
-                  value={formData.recruiterId}
-                  onChange={(e) => handleInputChange("recruiterId", e.target.value)}
+                  {...register("recruiterId")}
                 />
+                {errors.recruiterId && (
+                  <p className="text-red-500 text-sm mt-1">{errors.recruiterId.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -243,10 +268,12 @@ export default function NewApplicationPage() {
             <CardContent>
               <Textarea
                 placeholder="Add any notes about this application, interview experiences, etc."
-                value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
+                {...register("notes")}
                 rows={4}
               />
+              {errors.notes && (
+                <p className="text-red-500 text-sm mt-1">{errors.notes.message}</p>
+              )}
             </CardContent>
           </Card>
 
@@ -254,9 +281,9 @@ export default function NewApplicationPage() {
             <Button variant="outline" asChild>
               <Link href="/dashboard/applications">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={createApplicationMutation.isPending}>
+            <Button type="submit" disabled={isSubmitting || createApplicationMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {createApplicationMutation.isPending ? "Saving..." : "Save Application"}
+              {isSubmitting || createApplicationMutation.isPending ? "Saving..." : "Save Application"}
             </Button>
           </div>
         </div>

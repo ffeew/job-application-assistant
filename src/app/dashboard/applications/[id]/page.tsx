@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,23 +13,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useApplication, useUpdateApplication } from "@/hooks/use-applications";
+import { updateApplicationSchema } from "@/lib/validators/applications.validator";
+import type { UpdateApplicationRequest } from "@/lib/validators/applications.validator";
 
 export default function EditApplicationPage({ params }: { params: Promise<{ id: string }> }) {
-  const [formData, setFormData] = useState({
-    company: "",
-    position: "",
-    jobDescription: "",
-    location: "",
-    jobUrl: "",
-    salaryRange: "",
-    status: "applied" as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
-    appliedAt: "",
-    notes: "",
-    contactEmail: "",
-    contactName: "",
-    recruiterId: "",
-  });
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+  const router = useRouter();
+  const { data: application, isLoading, error } = useApplication(resolvedParams?.id || "");
+  const updateApplicationMutation = useUpdateApplication();
+
+  const form = useForm({
+    resolver: zodResolver(updateApplicationSchema),
+    defaultValues: {
+      company: "",
+      position: "",
+      jobDescription: "",
+      location: "",
+      jobUrl: "",
+      salaryRange: "",
+      status: "applied" as const,
+      appliedAt: "",
+      notes: "",
+      contactEmail: "",
+      contactName: "",
+      recruiterId: "",
+    },
+  });
+
+  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = form;
 
   // Resolve params Promise
   useEffect(() => {
@@ -38,13 +51,10 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
     resolveParams();
   }, [params]);
 
-  const router = useRouter();
-  const { data: application, isLoading, error } = useApplication(resolvedParams?.id || "");
-  const updateApplicationMutation = useUpdateApplication();
-
+  // Reset form with application data when loaded
   useEffect(() => {
     if (application) {
-      setFormData({
+      reset({
         company: application.company || "",
         position: application.position || "",
         jobDescription: application.jobDescription || "",
@@ -60,7 +70,7 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
         recruiterId: application.recruiterId || "",
       });
     }
-  }, [application]);
+  }, [application, reset]);
 
   useEffect(() => {
     if (error) {
@@ -68,23 +78,12 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
     }
   }, [error, router]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.company.trim() || !formData.position.trim()) {
-      alert("Company and position are required");
-      return;
-    }
-
+  const onSubmit = async (data: unknown) => {
+    // Data is validated by Zod resolver, safe to cast
+    const validatedData = data as UpdateApplicationRequest;
+    
     updateApplicationMutation.mutate(
-      { id: resolvedParams?.id || "", data: formData },
+      { id: resolvedParams?.id || "", data: validatedData },
       {
         onSuccess: () => {
           router.push("/dashboard/applications");
@@ -122,7 +121,7 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -138,46 +137,59 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
                   <Input
                     id="company"
                     placeholder="e.g., Google"
-                    value={formData.company}
-                    onChange={(e) => handleInputChange("company", e.target.value)}
-                    required
+                    {...register("company")}
                   />
+                  {errors.company && (
+                    <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="position">Position *</Label>
                   <Input
                     id="position"
                     placeholder="e.g., Software Engineer"
-                    value={formData.position}
-                    onChange={(e) => handleInputChange("position", e.target.value)}
-                    required
+                    {...register("position")}
                   />
+                  {errors.position && (
+                    <p className="text-red-500 text-sm mt-1">{errors.position.message}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="applied">Applied</SelectItem>
-                      <SelectItem value="interviewing">Interviewing</SelectItem>
-                      <SelectItem value="offer">Offer</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="withdrawn">Withdrawn</SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectContent>
+                          <SelectItem value="applied">Applied</SelectItem>
+                          <SelectItem value="interviewing">Interviewing</SelectItem>
+                          <SelectItem value="offer">Offer</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.status && (
+                    <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="appliedAt">Application Date</Label>
                   <Input
                     id="appliedAt"
                     type="date"
-                    value={formData.appliedAt}
-                    onChange={(e) => handleInputChange("appliedAt", e.target.value)}
+                    {...register("appliedAt")}
                   />
+                  {errors.appliedAt && (
+                    <p className="text-red-500 text-sm mt-1">{errors.appliedAt.message}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -193,19 +205,23 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
                 <Input
                   id="location"
                   placeholder="e.g., San Francisco, CA"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
+                  {...register("location")}
                 />
+                {errors.location && (
+                  <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
                   placeholder="Add any notes about this application..."
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                  {...register("notes")}
                   rows={4}
                 />
+                {errors.notes && (
+                  <p className="text-red-500 text-sm mt-1">{errors.notes.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -214,9 +230,9 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
             <Button variant="outline" asChild>
               <Link href="/dashboard/applications">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={updateApplicationMutation.isPending}>
+            <Button type="submit" disabled={isSubmitting || updateApplicationMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {updateApplicationMutation.isPending ? "Saving..." : "Save Changes"}
+              {isSubmitting || updateApplicationMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>

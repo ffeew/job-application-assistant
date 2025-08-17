@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useResume, useUpdateResume } from "@/hooks/use-resumes";
+import type { UpdateResumeRequest } from "@/lib/validators/resumes.validator";
 
 interface ResumeContent {
   personalInfo: {
@@ -24,26 +26,48 @@ interface ResumeContent {
   skills: string;
 }
 
+// Form data structure
+interface ResumeFormData {
+  title: string;
+  isDefault: boolean;
+  personalInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  summary: string;
+  experience: string;
+  education: string;
+  skills: string;
+}
+
 export default function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
-  const [title, setTitle] = useState("");
-  const [personalInfo, setPersonalInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-  const [summary, setSummary] = useState("");
-  const [experience, setExperience] = useState("");
-  const [education, setEducation] = useState("");
-  const [skills, setSkills] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
   
   const router = useRouter();
   const { data: resume, isLoading: resumeLoading, error } = useResume(resolvedParams?.id || "");
   const updateResumeMutation = useUpdateResume();
+
+  const form = useForm<ResumeFormData>({
+    defaultValues: {
+      title: "",
+      isDefault: false,
+      personalInfo: {
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+      },
+      summary: "",
+      experience: "",
+      education: "",
+      skills: "",
+    },
+  });
+
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = form;
 
   // Resolve params Promise
   useEffect(() => {
@@ -57,18 +81,19 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
   // Populate form when resume data is loaded
   useEffect(() => {
     if (resume) {
-      setTitle(resume.title);
-      setIsDefault(resume.isDefault);
-      
       const content: ResumeContent = JSON.parse(resume.content);
-      setPersonalInfo(content.personalInfo || { name: "", email: "", phone: "", address: "" });
-      setSummary(content.summary || "");
-      setExperience(content.experience || "");
-      setEducation(content.education || "");
-      setSkills(content.skills || "");
+      reset({
+        title: resume.title,
+        isDefault: resume.isDefault,
+        personalInfo: content.personalInfo || { name: "", email: "", phone: "", address: "" },
+        summary: content.summary || "",
+        experience: content.experience || "",
+        education: content.education || "",
+        skills: content.skills || "",
+      });
       setLoading(false);
     }
-  }, [resume]);
+  }, [resume, reset]);
 
   // Handle error case
   useEffect(() => {
@@ -77,33 +102,32 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
     }
   }, [error, router]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
-    if (!title.trim()) {
+  const onSubmit = async (data: ResumeFormData) => {
+    // Validate required fields
+    if (!data.title.trim()) {
       alert("Please enter a title for your resume");
-      setSaving(false);
       return;
     }
 
-    const resumeContent = {
-      personalInfo,
-      summary,
-      experience,
-      education,
-      skills,
+    const resumeContent: ResumeContent = {
+      personalInfo: data.personalInfo,
+      summary: data.summary,
+      experience: data.experience,
+      education: data.education,
+      skills: data.skills,
     };
 
     if (!resolvedParams?.id) return;
 
+    const updateData: UpdateResumeRequest = {
+      title: data.title,
+      content: JSON.stringify(resumeContent),
+      isDefault: data.isDefault,
+    };
+
     updateResumeMutation.mutate({
       id: resolvedParams.id,
-      data: {
-        title,
-        content: JSON.stringify(resumeContent),
-        isDefault,
-      }
+      data: updateData
     }, {
       onSuccess: () => {
         router.push("/dashboard/resumes");
@@ -111,9 +135,6 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       onError: (error) => {
         console.error("Error updating resume:", error);
         alert("Error updating resume. Please try again.");
-      },
-      onSettled: () => {
-        setSaving(false);
       },
     });
   };
@@ -143,7 +164,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -158,17 +179,17 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                 <Input
                   id="title"
                   placeholder="e.g., Software Engineer Resume"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
+                  {...register("title", { required: "Title is required" })}
                 />
+                {errors.title && (
+                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="isDefault"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
+                  {...register("isDefault")}
                 />
                 <Label htmlFor="isDefault">Set as default resume</Label>
               </div>
@@ -185,8 +206,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    value={personalInfo.name}
-                    onChange={(e) => setPersonalInfo({...personalInfo, name: e.target.value})}
+                    {...register("personalInfo.name")}
                   />
                 </div>
                 <div>
@@ -194,8 +214,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                   <Input
                     id="email"
                     type="email"
-                    value={personalInfo.email}
-                    onChange={(e) => setPersonalInfo({...personalInfo, email: e.target.value})}
+                    {...register("personalInfo.email")}
                   />
                 </div>
               </div>
@@ -204,16 +223,14 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={personalInfo.phone}
-                    onChange={(e) => setPersonalInfo({...personalInfo, phone: e.target.value})}
+                    {...register("personalInfo.phone")}
                   />
                 </div>
                 <div>
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
-                    value={personalInfo.address}
-                    onChange={(e) => setPersonalInfo({...personalInfo, address: e.target.value})}
+                    {...register("personalInfo.address")}
                   />
                 </div>
               </div>
@@ -230,8 +247,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <Textarea
                 placeholder="Write a brief summary of your professional background..."
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
+                {...register("summary")}
                 rows={4}
               />
             </CardContent>
@@ -247,8 +263,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <Textarea
                 placeholder="Job Title - Company Name (Start Date - End Date)&#10;• Responsibility or achievement&#10;• Another responsibility or achievement&#10;&#10;Previous Job Title - Previous Company..."
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                {...register("experience")}
                 rows={8}
               />
             </CardContent>
@@ -264,8 +279,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <Textarea
                 placeholder="Degree - School Name (Graduation Year)&#10;Relevant coursework, honors, or achievements..."
-                value={education}
-                onChange={(e) => setEducation(e.target.value)}
+                {...register("education")}
                 rows={4}
               />
             </CardContent>
@@ -281,8 +295,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <Textarea
                 placeholder="• Programming Languages: Python, JavaScript, Java&#10;• Frameworks: React, Node.js, Django&#10;• Tools: Git, Docker, AWS&#10;• Soft Skills: Team Leadership, Communication, Problem Solving"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
+                {...register("skills")}
                 rows={6}
               />
             </CardContent>
@@ -292,9 +305,9 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <Button variant="outline" asChild>
               <Link href="/dashboard/resumes">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={isSubmitting || updateResumeMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {saving ? "Saving..." : "Save Changes"}
+              {isSubmitting || updateResumeMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>

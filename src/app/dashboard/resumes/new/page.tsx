@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,57 +10,89 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useCreateResume } from "@/hooks/use-resumes";
+import type { CreateResumeRequest } from "@/lib/validators/resumes.validator";
+
+// Content structure for the resume
+interface ResumeContent {
+  personalInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  summary: string;
+  experience: string;
+  education: string;
+  skills: string;
+}
+
+// Form data structure
+interface ResumeFormData {
+  title: string;
+  isDefault: boolean;
+  personalInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  summary: string;
+  experience: string;
+  education: string;
+  skills: string;
+}
 
 export default function NewResumePage() {
-  const [title, setTitle] = useState("");
-  const [personalInfo, setPersonalInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-  const [summary, setSummary] = useState("");
-  const [experience, setExperience] = useState("");
-  const [education, setEducation] = useState("");
-  const [skills, setSkills] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
-  const [saving, setSaving] = useState(false);
-  
   const router = useRouter();
   const createResumeMutation = useCreateResume();
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const form = useForm<ResumeFormData>({
+    defaultValues: {
+      title: "",
+      isDefault: false,
+      personalInfo: {
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+      },
+      summary: "",
+      experience: "",
+      education: "",
+      skills: "",
+    },
+  });
 
-    if (!title.trim()) {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+
+  const onSubmit = async (data: ResumeFormData) => {
+    // Validate required fields manually since we can't use Zod for the nested structure
+    if (!data.title.trim()) {
       alert("Please enter a title for your resume");
-      setSaving(false);
       return;
     }
 
-    const resumeContent = {
-      personalInfo,
-      summary,
-      experience,
-      education,
-      skills,
+    const resumeContent: ResumeContent = {
+      personalInfo: data.personalInfo,
+      summary: data.summary,
+      experience: data.experience,
+      education: data.education,
+      skills: data.skills,
     };
 
-    createResumeMutation.mutate({
-      title,
+    const resumeData: CreateResumeRequest = {
+      title: data.title,
       content: JSON.stringify(resumeContent),
-      isDefault,
-    }, {
+      isDefault: data.isDefault,
+    };
+
+    createResumeMutation.mutate(resumeData, {
       onSuccess: () => {
         router.push("/dashboard/resumes");
       },
       onError: (error) => {
         console.error("Error creating resume:", error);
         alert("Error creating resume. Please try again.");
-      },
-      onSettled: () => {
-        setSaving(false);
       },
     });
   };
@@ -82,7 +114,7 @@ export default function NewResumePage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -97,17 +129,17 @@ export default function NewResumePage() {
                 <Input
                   id="title"
                   placeholder="e.g., Software Engineer Resume"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
+                  {...register("title", { required: "Title is required" })}
                 />
+                {errors.title && (
+                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="isDefault"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
+                  {...register("isDefault")}
                 />
                 <Label htmlFor="isDefault">Set as default resume</Label>
               </div>
@@ -124,8 +156,7 @@ export default function NewResumePage() {
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    value={personalInfo.name}
-                    onChange={(e) => setPersonalInfo({...personalInfo, name: e.target.value})}
+                    {...register("personalInfo.name")}
                   />
                 </div>
                 <div>
@@ -133,8 +164,7 @@ export default function NewResumePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={personalInfo.email}
-                    onChange={(e) => setPersonalInfo({...personalInfo, email: e.target.value})}
+                    {...register("personalInfo.email")}
                   />
                 </div>
               </div>
@@ -143,16 +173,14 @@ export default function NewResumePage() {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={personalInfo.phone}
-                    onChange={(e) => setPersonalInfo({...personalInfo, phone: e.target.value})}
+                    {...register("personalInfo.phone")}
                   />
                 </div>
                 <div>
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
-                    value={personalInfo.address}
-                    onChange={(e) => setPersonalInfo({...personalInfo, address: e.target.value})}
+                    {...register("personalInfo.address")}
                   />
                 </div>
               </div>
@@ -169,8 +197,7 @@ export default function NewResumePage() {
             <CardContent>
               <Textarea
                 placeholder="Write a brief summary of your professional background..."
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
+                {...register("summary")}
                 rows={4}
               />
             </CardContent>
@@ -186,8 +213,7 @@ export default function NewResumePage() {
             <CardContent>
               <Textarea
                 placeholder="Job Title - Company Name (Start Date - End Date)&#10;• Responsibility or achievement&#10;• Another responsibility or achievement&#10;&#10;Previous Job Title - Previous Company..."
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                {...register("experience")}
                 rows={8}
               />
             </CardContent>
@@ -203,8 +229,7 @@ export default function NewResumePage() {
             <CardContent>
               <Textarea
                 placeholder="Degree - School Name (Graduation Year)&#10;Relevant coursework, honors, or achievements..."
-                value={education}
-                onChange={(e) => setEducation(e.target.value)}
+                {...register("education")}
                 rows={4}
               />
             </CardContent>
@@ -220,8 +245,7 @@ export default function NewResumePage() {
             <CardContent>
               <Textarea
                 placeholder="• Programming Languages: Python, JavaScript, Java&#10;• Frameworks: React, Node.js, Django&#10;• Tools: Git, Docker, AWS&#10;• Soft Skills: Team Leadership, Communication, Problem Solving"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
+                {...register("skills")}
                 rows={6}
               />
             </CardContent>
@@ -231,9 +255,9 @@ export default function NewResumePage() {
             <Button variant="outline" asChild>
               <Link href="/dashboard/resumes">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={isSubmitting || createResumeMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {saving ? "Creating..." : "Create Resume"}
+              {isSubmitting || createResumeMutation.isPending ? "Creating..." : "Create Resume"}
             </Button>
           </div>
         </div>

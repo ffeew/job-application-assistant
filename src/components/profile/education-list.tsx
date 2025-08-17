@@ -2,131 +2,37 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Save, X, GraduationCap, Calendar, MapPin } from "lucide-react";
-import { 
-  useCreateEducation, 
-  useUpdateEducation, 
-  useDeleteEducation 
-} from "@/hooks/use-profile";
-import type { 
-  EducationResponse, 
-  CreateEducationRequest
-} from "@/lib/validators/profile.validator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Edit, Trash2, GraduationCap, Calendar, MapPin } from "lucide-react";
+import { useDeleteEducation } from "@/hooks/use-profile";
+import { EducationForm } from "./education-form";
+import type { EducationResponse } from "@/lib/validators/profile.validator";
 
 interface EducationListProps {
   education: EducationResponse[];
   isLoading: boolean;
 }
 
-interface EducationFormData {
-  degree: string;
-  fieldOfStudy: string;
-  institution: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  gpa: string;
-  honors: string;
-  relevantCoursework: string;
-  displayOrder: number;
-}
-
-const emptyFormData: EducationFormData = {
-  degree: "",
-  fieldOfStudy: "",
-  institution: "",
-  location: "",
-  startDate: "",
-  endDate: "",
-  gpa: "",
-  honors: "",
-  relevantCoursework: "",
-  displayOrder: 0,
-};
 
 export function EducationList({ education, isLoading }: EducationListProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<EducationFormData>(emptyFormData);
-  const [saving, setSaving] = useState(false);
+  const [editingEducation, setEditingEducation] = useState<EducationResponse | null>(null);
 
-  const createMutation = useCreateEducation();
-  const updateMutation = useUpdateEducation();
   const deleteMutation = useDeleteEducation();
 
-  const handleChange = (field: keyof EducationFormData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   const startAdding = () => {
-    setFormData({ ...emptyFormData, displayOrder: education.length });
     setIsAdding(true);
-    setEditingId(null);
+    setEditingEducation(null);
   };
 
   const startEditing = (edu: EducationResponse) => {
-    setFormData({
-      degree: edu.degree,
-      fieldOfStudy: edu.fieldOfStudy || "",
-      institution: edu.institution,
-      location: edu.location || "",
-      startDate: edu.startDate || "",
-      endDate: edu.endDate || "",
-      gpa: edu.gpa || "",
-      honors: edu.honors || "",
-      relevantCoursework: edu.relevantCoursework || "",
-      displayOrder: edu.displayOrder,
-    });
-    setEditingId(edu.id);
+    setEditingEducation(edu);
     setIsAdding(false);
   };
 
   const cancelEditing = () => {
     setIsAdding(false);
-    setEditingId(null);
-    setFormData(emptyFormData);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
-    const submitData: CreateEducationRequest = {
-      degree: formData.degree,
-      fieldOfStudy: formData.fieldOfStudy || null,
-      institution: formData.institution,
-      location: formData.location || null,
-      startDate: formData.startDate || null,
-      endDate: formData.endDate || null,
-      gpa: formData.gpa || null,
-      honors: formData.honors || null,
-      relevantCoursework: formData.relevantCoursework || null,
-      displayOrder: formData.displayOrder,
-    };
-
-    if (isAdding) {
-      createMutation.mutate(submitData, {
-        onSuccess: () => cancelEditing(),
-        onError: (error) => {
-          console.error("Error creating education:", error);
-          alert("Error creating education. Please try again.");
-        },
-        onSettled: () => setSaving(false),
-      });
-    } else if (editingId) {
-      updateMutation.mutate({ id: editingId, data: submitData }, {
-        onSuccess: () => cancelEditing(),
-        onError: (error) => {
-          console.error("Error updating education:", error);
-          alert("Error updating education. Please try again.");
-        },
-        onSettled: () => setSaving(false),
-      });
-    }
+    setEditingEducation(null);
   };
 
   const handleDelete = async (id: number) => {
@@ -167,129 +73,18 @@ export function EducationList({ education, isLoading }: EducationListProps) {
             Add your educational background
           </p>
         </div>
-        <Button onClick={startAdding} disabled={isAdding || editingId !== null}>
+        <Button onClick={startAdding} disabled={isAdding || editingEducation !== null}>
           <Plus className="mr-2 h-4 w-4" />
           Add Education
         </Button>
       </div>
 
-      {(isAdding || editingId !== null) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{isAdding ? "Add Education" : "Edit Education"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="degree">Degree *</Label>
-                  <Input
-                    id="degree"
-                    value={formData.degree}
-                    onChange={(e) => handleChange("degree", e.target.value)}
-                    placeholder="Bachelor of Science"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="fieldOfStudy">Field of Study</Label>
-                  <Input
-                    id="fieldOfStudy"
-                    value={formData.fieldOfStudy}
-                    onChange={(e) => handleChange("fieldOfStudy", e.target.value)}
-                    placeholder="Computer Science"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="institution">Institution *</Label>
-                  <Input
-                    id="institution"
-                    value={formData.institution}
-                    onChange={(e) => handleChange("institution", e.target.value)}
-                    placeholder="University of California"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleChange("location", e.target.value)}
-                    placeholder="Berkeley, CA"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="month"
-                    value={formData.startDate}
-                    onChange={(e) => handleChange("startDate", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="month"
-                    value={formData.endDate}
-                    onChange={(e) => handleChange("endDate", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="gpa">GPA</Label>
-                  <Input
-                    id="gpa"
-                    value={formData.gpa}
-                    onChange={(e) => handleChange("gpa", e.target.value)}
-                    placeholder="3.8/4.0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="honors">Honors</Label>
-                  <Input
-                    id="honors"
-                    value={formData.honors}
-                    onChange={(e) => handleChange("honors", e.target.value)}
-                    placeholder="Magna Cum Laude"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="relevantCoursework">Relevant Coursework</Label>
-                <Textarea
-                  id="relevantCoursework"
-                  value={formData.relevantCoursework}
-                  onChange={(e) => handleChange("relevantCoursework", e.target.value)}
-                  placeholder="Data Structures, Algorithms, Software Engineering..."
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={cancelEditing}>
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Saving..." : isAdding ? "Add Education" : "Update Education"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+      {(isAdding || editingEducation !== null) && (
+        <EducationForm
+          education={editingEducation || undefined}
+          onCancel={cancelEditing}
+          onSuccess={cancelEditing}
+        />
       )}
 
       <div className="space-y-4">
@@ -322,7 +117,7 @@ export function EducationList({ education, isLoading }: EducationListProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => startEditing(edu)}
-                      disabled={isAdding || editingId !== null}
+                      disabled={isAdding || editingEducation !== null}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -330,7 +125,7 @@ export function EducationList({ education, isLoading }: EducationListProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(edu.id)}
-                      disabled={isAdding || editingId !== null}
+                      disabled={isAdding || editingEducation !== null}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
