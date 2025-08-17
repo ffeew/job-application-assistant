@@ -3,3 +3,5 @@ export * from './applications.service';
 export * from './resumes.service';
 export * from './cover-letters.service';
 export * from './dashboard.service';
+export * from './profile.service';
+export * from './resume-generation.service';

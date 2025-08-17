@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **All ESLint errors must be fixed** - No exceptions
 - **All TypeScript errors must be resolved** - Ensure type safety
 - **Address ESLint warnings** when possible (prefer fixing over disabling)
-- **Use proper TypeScript types** - Avoid `any`, use specific interfaces/types
+- **Use proper TypeScript types** - **NEVER use `any`**, always use specific interfaces/types, `unknown`, or proper generics
 
 ### Common Issues to Fix
 - **Unused variables/imports** - Remove or prefix with underscore if intentionally unused
@@ -38,6 +38,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Never** commit or mark a task as complete while linting or type checking fails.
 
+## AI Model Configuration
+
+When working with AI features in this application, use the following Groq models in order of preference:
+
+1. **`openai/gpt-oss-120b`** - Primary model for cover letter generation and AI features
+2. **`moonshotai/kimi-k2-instruct`** - Secondary model if primary is unavailable
+
+These models provide the best performance and quality for the application's AI-powered features.
+
+## TypeScript Coding Standards
+
+### Strict Type Safety
+- **NEVER use `any` type** - Always use proper types, interfaces, or `unknown`
+- **Use specific types** - Prefer `string | number` over `unknown` when possible
+- **Leverage type inference** - Let TypeScript infer types when they're obvious
+- **Use generics** - For reusable functions and components
+
+### Proper Type Patterns
+```typescript
+// ✅ Good - Specific types
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string | null;
+}
+
+// ✅ Good - Using unknown for dynamic data
+function parseJson(data: string): unknown {
+  return JSON.parse(data);
+}
+
+// ✅ Good - Proper generics
+function apiCall<T>(endpoint: string): Promise<T> {
+  return fetch(endpoint).then(res => res.json());
+}
+
+// ❌ Bad - Using any
+function handleData(data: any): any {
+  return data.something;
+}
+```
+
+### Database Type Conversion
+- Use utility functions like `nullToUndefined()` to convert database `null` to TypeScript `undefined`
+- Create proper interfaces that match database schema
+- Use type assertions only when absolutely necessary with proper runtime checks
+
 ## Project Architecture
 
 This is a fully functional Next.js 15 application for a job application assistant that helps users create cover letters, customize resumes, and track applications.
@@ -52,7 +99,7 @@ This is a fully functional Next.js 15 application for a job application assistan
 - **State Management**: Zustand
 - **Data Fetching**: React Query (TanStack Query) with custom hooks
 - **Validation**: Zod v4 (including environment variable validation)
-- **AI Integration**: Vercel AI SDK with Groq
+- **AI Integration**: Vercel AI SDK with Groq (preferred models: `openai/gpt-oss-120b`, `moonshotai/kimi-k2-instruct`)
 - **Dark Mode Support**: Next-Themes
 - **UI Library**: Shadcn UI
 - **Icons**: Lucide Icons
@@ -116,6 +163,7 @@ The application uses React Query for all data fetching with direct API calls and
   - `use-resumes.ts` - Resume CRUD operations with direct `/api/resumes/*` calls
   - `use-applications.ts` - Job application management with direct `/api/applications/*` calls
   - `use-cover-letters.ts` - Cover letter generation and management with direct `/api/cover-letters/*` calls
+  - `use-profile.ts` - Comprehensive profile data management with direct `/api/profile/*` calls
 
 #### React Query Hook Architecture
 
@@ -174,8 +222,10 @@ Authentication is configured through BetterAuth with SQLite provider using the D
 1. **User Authentication** - Email/password with BetterAuth
 2. **Resume Management** - Create, edit, delete resumes with JSON content storage
 3. **Job Application Tracking** - Track applications with status updates and detailed information
-4. **AI Cover Letter Generation** - Groq-powered personalized cover letters
-5. **Dashboard Analytics** - Real-time stats and activity tracking
+4. **AI Cover Letter Generation** - Groq-powered personalized cover letters (uses `openai/gpt-oss-120b` or `moonshotai/kimi-k2-instruct`)
+5. **Structured Profile Management** - Comprehensive user profiles with experiences, education, skills, projects, certifications, achievements, and references
+6. **Professional Resume Generation** - HTML/PDF resume generation with 1-page templates and content selection
+7. **Dashboard Analytics** - Real-time stats and activity tracking
 
 ### Path Aliases
 
@@ -272,3 +322,85 @@ export async function GET(request: NextRequest) {
 - Handle error states appropriately (`error`, `isError`)
 - Leverage React Query's caching and background refetching
 - Use mutations for create/update/delete operations with proper `onSuccess` callbacks
+
+### Form Development with React Hook Form
+
+**All forms in this application use React Hook Form with Zod validation**. This provides robust validation, better UX, and strong type safety.
+
+#### Form Implementation Pattern
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createUserProfileSchema } from "@/lib/validators/profile.validator";
+import type { CreateUserProfileRequest } from "@/lib/validators/profile.validator";
+
+export function MyForm() {
+  const form = useForm({
+    resolver: zodResolver(createUserProfileSchema),
+    defaultValues: {
+      firstName: null,
+      lastName: null,
+      // ... other fields
+    },
+  });
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+
+  const onSubmit = async (data: unknown) => {
+    // Data is validated by Zod resolver, safe to cast
+    const validatedData = data as CreateUserProfileRequest;
+    mutation.mutate(validatedData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="firstName">First Name</Label>
+        <Input id="firstName" {...register("firstName")} />
+        {errors.firstName && (
+          <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+        )}
+      </div>
+      {/* More fields... */}
+    </form>
+  );
+}
+```
+
+#### Form Development Rules
+
+1. **Always use Zod resolvers**: Import schemas from `@/lib/validators` and use `zodResolver`
+2. **Type safety with `unknown`**: Use `unknown` for form data parameters, then cast after validation
+3. **Field-level errors**: Display validation errors below each field using `{errors.fieldName && ...}`
+4. **Proper registration**: Use `{...register("fieldName")}` for all form inputs
+5. **Loading states**: Use `isSubmitting` from formState to disable submit buttons
+
+#### Profile Form Components
+
+The application includes comprehensive profile forms using this pattern:
+
+- **`UserProfileForm`** - Personal information with react-hook-form and Zod validation
+- **`WorkExperienceForm`** - Work experience CRUD with date handling and current position logic
+- **`EducationForm`** - Education history with degree validation
+- **`SkillsForm`** - Skills with category and proficiency level dropdowns
+- **`ProjectsForm`** - Project portfolio with technology tags
+- **`CertificationsForm`** - Professional certifications with verification
+- **`AchievementsForm`** - Career achievements and awards
+- **`ReferencesForm`** - Professional references with contact details
+
+Each form follows the same pattern:
+- Uses appropriate Zod schema for validation
+- Handles both create and edit operations
+- Integrates with React Query mutations
+- Provides proper error handling and loading states
+- Uses `unknown` type casting with validation comments
+
+#### Form Best Practices
+
+- **Never use `any` type**: Always use `unknown` and proper casting after Zod validation
+- **Validation comments**: Add `// Data is validated by Zod resolver, safe to cast` before type assertions
+- **Error handling**: Provide user-friendly error messages and console logging
+- **Loading states**: Show loading indicators during form submission
+- **Cancel functionality**: Provide cancel buttons that reset form state
+- **Success callbacks**: Use `onSuccess` callbacks to trigger cache invalidation and UI updates

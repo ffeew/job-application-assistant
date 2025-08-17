@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileText, Edit, Trash2, Star } from "lucide-react";
+import { Plus, FileText, Edit, Trash2, Star, Wand2 } from "lucide-react";
 import { useResumes, useDeleteResume, useUpdateResume } from "@/hooks";
 
 export default function ResumesPage() {
@@ -60,12 +60,20 @@ export default function ResumesPage() {
             Manage your resumes and create tailored versions for different applications.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/resumes/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Resume
-          </Link>
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/resumes/generate">
+              <Wand2 className="mr-2 h-4 w-4" />
+              Generate from Profile
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard/resumes/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Manual
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {resumes.length === 0 ? (
@@ -76,12 +84,20 @@ export default function ResumesPage() {
             <p className="text-muted-foreground mb-6 text-center max-w-sm">
               Create your first resume to get started with your job applications.
             </p>
-            <Button asChild>
-              <Link href="/dashboard/resumes/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Your First Resume
-              </Link>
-            </Button>
+            <div className="flex space-x-2">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/resumes/generate">
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Generate from Profile
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/dashboard/resumes/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Manual Resume
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (

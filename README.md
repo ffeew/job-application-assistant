@@ -13,16 +13,20 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 
 ### 📄 Resume Management
 
-- Create and manage multiple resume versions
-- Customize resumes for different job applications
-- JSON-based content storage for flexibility
-- Export capabilities (planned)
+- **Structured Profile System** - Comprehensive user profiles with work experience, education, skills, projects, certifications, achievements, and references
+- **Professional Resume Generation** - Generate 1-page PDF resumes from structured profile data
+- **Multiple Template Support** - Professional resume templates optimized for ATS systems
+- **Content Selection** - Choose which profile sections to include in each resume
+- **Drag & Drop Ordering** - Reorder experiences, education, and other sections
+- **HTML/PDF Export** - Download resumes as professional PDFs or HTML
 
 ### 🤖 AI-Powered Cover Letters
 
 - Generate personalized cover letters using Groq AI
-- Based on job descriptions and your resume data
+- **Preferred Models**: `openai/gpt-oss-120b` and `moonshotai/kimi-k2-instruct`
+- Based on job descriptions and your structured profile data
 - Customizable and editable generated content
+- AI optimization for different job types and companies
 
 ### 📊 Application Tracking
 
@@ -62,6 +66,8 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 
 - **Vercel AI SDK** - AI integration framework
 - **Groq** - Fast AI inference for cover letter generation
+- **Preferred Models**: `openai/gpt-oss-120b`, `moonshotai/kimi-k2-instruct`
+- **Puppeteer** - Server-side PDF generation for resumes
 
 ### Frontend
 
@@ -74,8 +80,9 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 
 ### Validation & Forms
 
-- **Zod v4** - Runtime type validation
-- **React Hook Form** - Performant forms with validation
+- **Zod v4** - Runtime type validation with TypeScript integration
+- **React Hook Form** - Performant forms with comprehensive validation
+- **Integrated Validation** - All forms use react-hook-form with Zod resolvers
 
 ### Development Tools
 
@@ -134,6 +141,7 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 
    # Groq AI Configuration (optional)
    GROQ_API_KEY=your-groq-api-key
+   # Preferred models: openai/gpt-oss-120b, moonshotai/kimi-k2-instruct
    ```
 
 4. **Set up the database**
@@ -168,7 +176,8 @@ src/
 │   ├── dashboard/                # Protected dashboard
 │   │   ├── applications/
 │   │   ├── resumes/
-│   │   └── cover-letters/
+│   │   ├── cover-letters/
+│   │   └── profile/             # Structured profile management
 │   └── api/                      # API routes
 ├── lib/                          # Shared utilities
 │   ├── auth.ts                   # BetterAuth configuration
@@ -176,7 +185,9 @@ src/
 │   ├── db/                       # Database configuration
 │   ├── validators/               # Zod validation schemas
 │   ├── services/                 # Business logic layer
-│   └── controllers/              # API request handlers
+│   ├── controllers/              # API request handlers
+│   ├── resume-templates/         # Resume generation templates
+│   └── utils/                    # Helper utilities
 ├── hooks/                        # Custom React Query hooks
 └── components/                   # Reusable UI components
 ```
@@ -216,9 +227,16 @@ This application follows a clean architecture with separation between frontend a
 #### **React Query Hooks** (`src/hooks/`)
 
 - Direct API calls to backend endpoints
-- Custom hooks for each domain (resumes, applications, cover letters)
+- Custom hooks for each domain (resumes, applications, cover letters, profiles)
 - Built-in caching, loading states, and error handling
 - Type-safe using validator schemas
+
+**Available Hook Collections:**
+- `use-dashboard.ts` - Dashboard statistics and activity tracking
+- `use-resumes.ts` - Resume CRUD operations and management
+- `use-applications.ts` - Job application tracking and status updates
+- `use-cover-letters.ts` - AI-powered cover letter generation
+- `use-profile.ts` - Comprehensive profile data management (user profiles, work experience, education, skills, projects, certifications, achievements, references)
 
 **Example Hook Structure:**
 
@@ -256,12 +274,115 @@ bun run dev              # Start development server
 bun run build            # Build for production
 bun run start            # Start production server
 bun run lint             # Run ESLint
+bun run typecheck        # Run TypeScript type checking
 
 # Database
 bun run db:push          # Push schema changes to database
 bun run db:studio        # Open Drizzle Studio
 bun run db:generate      # Generate migration files
 ```
+
+## 💻 Development Guidelines
+
+### TypeScript Standards
+
+This project follows strict TypeScript guidelines:
+
+- **NEVER use `any` type** - Always use proper types, interfaces, or `unknown`
+- **Use specific types** - Prefer `string | number` over `unknown` when possible
+- **Leverage type inference** - Let TypeScript infer types when they're obvious
+- **Use generics** - For reusable functions and components
+
+```typescript
+// ✅ Good - Specific types
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string | null;
+}
+
+// ✅ Good - Using unknown for dynamic data
+function parseJson(data: string): unknown {
+  return JSON.parse(data);
+}
+
+// ❌ Bad - Using any
+function handleData(data: any): any {
+  return data.something;
+}
+```
+
+### Code Quality
+
+- All ESLint errors must be fixed before committing
+- All TypeScript errors must be resolved
+- Run `bun run lint` and `bun run typecheck` before submitting PRs
+
+### Form Development with React Hook Form
+
+All forms in this application use **React Hook Form with Zod validation** for robust, type-safe form handling.
+
+#### Core Form Pattern
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createUserProfileSchema } from "@/lib/validators/profile.validator";
+
+export function MyForm() {
+  const form = useForm({
+    resolver: zodResolver(createUserProfileSchema),
+    defaultValues: {
+      firstName: null,
+      lastName: null,
+      // ... other fields
+    },
+  });
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+
+  const onSubmit = async (data: unknown) => {
+    // Data is validated by Zod resolver, safe to cast
+    const validatedData = data as CreateUserProfileRequest;
+    mutation.mutate(validatedData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="firstName">First Name</Label>
+        <Input id="firstName" {...register("firstName")} />
+        {errors.firstName && (
+          <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+        )}
+      </div>
+    </form>
+  );
+}
+```
+
+#### Form Development Rules
+
+1. **Always use Zod resolvers** - Import schemas from `@/lib/validators`
+2. **Type safety with `unknown`** - Use `unknown` for form data, then cast after validation
+3. **Field-level errors** - Display validation errors below each field
+4. **Proper registration** - Use `{...register("fieldName")}` for all inputs
+5. **Loading states** - Use `isSubmitting` to disable submit buttons during processing
+
+#### Profile Management Forms
+
+The application includes comprehensive profile forms:
+
+- **Personal Information** - Contact details and professional links
+- **Work Experience** - Career history with date handling and current position logic
+- **Education** - Academic background with degree validation
+- **Skills** - Technical and soft skills with proficiency levels
+- **Projects** - Portfolio projects with technology tags
+- **Certifications** - Professional certifications with verification
+- **Achievements** - Career highlights and awards
+- **References** - Professional contacts with details
+
+Each form follows consistent patterns for validation, error handling, and user experience.
 
 ## 🔒 Environment Variables
 

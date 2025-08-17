@@ -15,6 +15,20 @@
       "when": 1755189801192,
       "tag": "0001_blue_squadron_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1755363669386,
+      "tag": "0002_elite_dorian_gray",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1755363867396,
+      "tag": "0003_tranquil_hawkeye",
+      "breakpoints": true
     }
   ]
 }
