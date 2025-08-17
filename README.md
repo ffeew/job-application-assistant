@@ -11,14 +11,25 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 - Password reset functionality via email
 - Protected routes with middleware authentication
 
-### 📄 Resume Management
+### 📄 Resume Management & Profile System
 
-- **Structured Profile System** - Comprehensive user profiles with work experience, education, skills, projects, certifications, achievements, and references
-- **Professional Resume Generation** - Generate 1-page PDF resumes from structured profile data
-- **Multiple Template Support** - Professional resume templates optimized for ATS systems
-- **Content Selection** - Choose which profile sections to include in each resume
-- **Drag & Drop Ordering** - Reorder experiences, education, and other sections
-- **HTML/PDF Export** - Download resumes as professional PDFs or HTML
+#### **Comprehensive Profile Management**
+- **👤 Personal Information** - Contact details, professional links (LinkedIn, GitHub, portfolio)
+- **💼 Work Experience** - Full career history with technologies, descriptions, and date ranges
+- **🎓 Education** - Academic background with degrees, institutions, GPA, and coursework
+- **💡 Skills** - Categorized technical and soft skills with proficiency levels
+- **📁 Projects** - Portfolio projects with live demos, GitHub links, and technology stacks
+- **🏆 Certifications** - Professional credentials with issue/expiration dates and verification URLs
+- **🏅 Achievements** - Awards, recognitions, and career highlights
+- **👥 References** - Professional contacts with relationship tracking
+
+#### **Intelligent Resume Generation**
+- **Smart Content Selection** - Choose which profile sections and specific items to include
+- **Multiple Template Support** - Professional, Modern, Minimal, and Creative templates
+- **Real-time Preview** - See exactly how your resume will look before generating
+- **1-Page PDF Optimization** - ATS-friendly formatting with proper constraints
+- **Automatic Data Validation** - Ensures complete profile data before generation
+- **Bulk Export Options** - Generate multiple resume versions for different job applications
 
 ### 🤖 AI-Powered Cover Letters
 
@@ -28,12 +39,13 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 - Customizable and editable generated content
 - AI optimization for different job types and companies
 
-### 📊 Application Tracking
+### 📊 Application Tracking & Analytics
 
-- Track job applications with status updates
-- Dashboard with real-time statistics
-- Application status visualization
-- Activity timeline and history
+- **Comprehensive Job Tracking** - Monitor applications across multiple companies
+- **Status Management** - Track progress from application to interview to offer
+- **Real-time Dashboard** - Visual statistics and activity summaries
+- **Application History** - Complete timeline of all job application activities
+- **Status Analytics** - Success rates and application performance insights
 
 ### 🎨 Modern UI/UX
 
@@ -176,8 +188,18 @@ src/
 │   ├── dashboard/                # Protected dashboard
 │   │   ├── applications/
 │   │   ├── resumes/
+│   │   │   ├── generate/         # Resume generation from profile data
+│   │   │   └── new/             # Manual resume creation
 │   │   ├── cover-letters/
-│   │   └── profile/             # Structured profile management
+│   │   └── profile/             # Comprehensive profile management
+│   │       ├── personal-info/
+│   │       ├── work-experience/
+│   │       ├── education/
+│   │       ├── skills/
+│   │       ├── projects/
+│   │       ├── certifications/
+│   │       ├── achievements/
+│   │       └── references/
 │   └── api/                      # API routes
 ├── lib/                          # Shared utilities
 │   ├── auth.ts                   # BetterAuth configuration
@@ -236,7 +258,16 @@ This application follows a clean architecture with separation between frontend a
 - `use-resumes.ts` - Resume CRUD operations and management
 - `use-applications.ts` - Job application tracking and status updates
 - `use-cover-letters.ts` - AI-powered cover letter generation
-- `use-profile.ts` - Comprehensive profile data management (user profiles, work experience, education, skills, projects, certifications, achievements, references)
+- `use-profile.ts` - Comprehensive profile data management:
+  - Personal information and contact details
+  - Work experience with technology tracking
+  - Education history with academic details
+  - Skills categorization and proficiency levels
+  - Project portfolio with links and technologies
+  - Professional certifications and credentials
+  - Career achievements and awards
+  - Professional references and contacts
+- `use-resume-generation.ts` - Intelligent resume generation from structured profile data
 
 **Example Hook Structure:**
 
@@ -371,18 +402,58 @@ export function MyForm() {
 
 #### Profile Management Forms
 
-The application includes comprehensive profile forms:
+The application includes **8 comprehensive profile sections**, each with full CRUD functionality:
 
-- **Personal Information** - Contact details and professional links
-- **Work Experience** - Career history with date handling and current position logic
-- **Education** - Academic background with degree validation
-- **Skills** - Technical and soft skills with proficiency levels
-- **Projects** - Portfolio projects with technology tags
-- **Certifications** - Professional certifications with verification
-- **Achievements** - Career highlights and awards
-- **References** - Professional contacts with details
+1. **👤 Personal Information** - Contact details, professional links (LinkedIn, GitHub, portfolio), and professional summary
+2. **💼 Work Experience** - Job titles, companies, dates, technologies, descriptions with current position tracking
+3. **🎓 Education** - Degrees, institutions, GPAs, honors, relevant coursework with date ranges
+4. **💡 Skills** - Categorized skills (Technical, Soft, Languages, Tools, Frameworks) with proficiency levels and experience years
+5. **📁 Projects** - Portfolio projects with descriptions, technologies, live demos, GitHub links, and ongoing status
+6. **🏆 Certifications** - Professional credentials with issuing organizations, dates, credential IDs, and verification URLs
+7. **🏅 Achievements** - Awards, recognitions, honors with descriptions, dates, and related URLs
+8. **👥 References** - Professional contacts with titles, companies, relationships, and contact information
 
-Each form follows consistent patterns for validation, error handling, and user experience.
+**Form Features:**
+- **React Hook Form + Zod Validation** - Type-safe forms with real-time validation
+- **Inline Editing** - Edit any item directly in the interface
+- **Drag & Drop Ordering** - Reorder items with display priority
+- **Rich Data Fields** - Support for dates, URLs, categories, and structured data
+- **Professional UI** - Clean, responsive forms with loading states and error handling
+
+## 📋 User Workflow
+
+### Getting Started with Your Profile
+
+1. **📝 Complete Your Profile**
+   - Start with Personal Information (contact details, links)
+   - Add Work Experience (current and past positions)
+   - Include Education background
+   - List your Skills by category with proficiency levels
+
+2. **🔧 Enhance Your Profile** (Optional)
+   - Showcase Projects with live demos and code repositories
+   - Add Professional Certifications and credentials
+   - Highlight Career Achievements and awards
+   - Include Professional References
+
+3. **📄 Generate Professional Resumes**
+   - Navigate to Resume Generation
+   - Choose which profile sections to include
+   - Select from multiple professional templates
+   - Preview your resume before generating
+   - Download as optimized PDF
+
+4. **🤖 Create AI Cover Letters**
+   - Input job descriptions
+   - Let AI generate personalized cover letters
+   - Edit and customize the generated content
+   - Save multiple versions for different applications
+
+5. **📊 Track Applications**
+   - Add job applications with company details
+   - Update status as you progress through interviews
+   - Monitor your application statistics on the dashboard
+   - Review activity timeline and success rates
 
 ## 🔒 Environment Variables
 
