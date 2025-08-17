@@ -92,6 +92,7 @@ export default function NewCoverLetterPage() {
       isAiGenerated: true,
     }, {
       onSuccess: () => {
+        toast.success("Cover letter saved successfully!");
         router.push("/dashboard/cover-letters");
       },
       onError: (error) => {

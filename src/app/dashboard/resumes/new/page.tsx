@@ -89,6 +89,7 @@ export default function NewResumePage() {
 
     createResumeMutation.mutate(resumeData, {
       onSuccess: () => {
+        toast.success("Resume created successfully!");
         router.push("/dashboard/resumes");
       },
       onError: (error) => {

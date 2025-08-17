@@ -52,7 +52,10 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
     
     if (reference) {
       updateMutation.mutate({ id: reference.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Reference updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating reference:", error);
           toast.error("Error updating reference. Please try again.");
@@ -60,7 +63,10 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Reference added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating reference:", error);
           toast.error("Error creating reference. Please try again.");

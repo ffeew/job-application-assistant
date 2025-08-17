@@ -46,6 +46,7 @@ export default function NewApplicationPage() {
     
     createApplicationMutation.mutate(validatedData, {
       onSuccess: () => {
+        toast.success("Application created successfully!");
         router.push("/dashboard/applications");
       },
       onError: (error) => {

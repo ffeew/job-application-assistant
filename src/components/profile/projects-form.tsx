@@ -47,7 +47,10 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
     
     if (project) {
       updateMutation.mutate({ id: project.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Project updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating project:", error);
           toast.error("Error updating project. Please try again.");
@@ -55,7 +58,10 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Project added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating project:", error);
           toast.error("Error creating project. Please try again.");

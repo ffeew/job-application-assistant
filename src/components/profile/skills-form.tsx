@@ -57,7 +57,10 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
     
     if (skill) {
       updateMutation.mutate({ id: skill.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Skill updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating skill:", error);
           toast.error("Error updating skill. Please try again.");
@@ -65,7 +68,10 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Skill added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating skill:", error);
           toast.error("Error creating skill. Please try again.");

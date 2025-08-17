@@ -39,6 +39,9 @@ export function ReferencesList({ references, isLoading }: ReferencesListProps) {
 	const handleDelete = async (id: number) => {
 		if (window.confirm("Are you sure you want to delete this reference?")) {
 			deleteMutation.mutate(id, {
+				onSuccess: () => {
+					toast.success("Reference deleted successfully!");
+				},
 				onError: (error: unknown) => {
 					console.error("Error deleting reference:", error);
 					toast.error("Error deleting reference. Please try again.");

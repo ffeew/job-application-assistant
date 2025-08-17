@@ -19,6 +19,7 @@ export default function ResumesPage() {
 
     try {
       await deleteResumeMutation.mutateAsync(id);
+      toast.success("Resume deleted successfully!");
     } catch (error) {
       console.error("Error deleting resume:", error);
       toast.error("Failed to delete resume. Please try again.");
@@ -38,6 +39,7 @@ export default function ResumesPage() {
           isDefault: !resume.isDefault,
         }
       });
+      toast.success(resume.isDefault ? "Default resume removed" : "Set as default resume");
     } catch (error) {
       console.error("Error updating resume:", error);
       toast.error("Failed to update resume. Please try again.");

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Code } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteSkill } from "@/hooks/use-profile";
 import { SkillForm } from "./skills-form";
 import type { SkillResponse } from "@/lib/validators/profile.validator";
@@ -39,7 +40,15 @@ export function SkillsList({ skills, isLoading }: SkillsListProps) {
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this skill?")) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Skill deleted successfully!");
+        },
+        onError: (error) => {
+          console.error("Error deleting skill:", error);
+          toast.error("Error deleting skill. Please try again.");
+        },
+      });
     }
   };
 

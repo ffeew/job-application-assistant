@@ -47,7 +47,10 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
     
     if (experience) {
       updateMutation.mutate({ id: experience.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Work experience updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating work experience:", error);
           toast.error("Error updating work experience. Please try again.");
@@ -55,7 +58,10 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Work experience created successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating work experience:", error);
           toast.error("Error creating work experience. Please try again.");

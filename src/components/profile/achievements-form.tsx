@@ -43,7 +43,10 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
     
     if (achievement) {
       updateMutation.mutate({ id: achievement.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Achievement updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating achievement:", error);
           toast.error("Error updating achievement. Please try again.");
@@ -51,7 +54,10 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Achievement added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating achievement:", error);
           toast.error("Error creating achievement. Please try again.");

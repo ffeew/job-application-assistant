@@ -39,6 +39,9 @@ export function EducationList({ education, isLoading }: EducationListProps) {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this education entry?")) {
       deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Education deleted successfully!");
+        },
         onError: (error) => {
           console.error("Error deleting education:", error);
           toast.error("Error deleting education. Please try again.");

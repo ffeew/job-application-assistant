@@ -38,6 +38,9 @@ export function WorkExperienceList({ experiences, isLoading }: WorkExperienceLis
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this work experience?")) {
       deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Work experience deleted successfully!");
+        },
         onError: (error) => {
           console.error("Error deleting work experience:", error);
           toast.error("Error deleting work experience. Please try again.");

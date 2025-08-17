@@ -40,6 +40,9 @@ export function CertificationsList({ certifications, isLoading }: Certifications
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this certification?")) {
       deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Certification deleted successfully!");
+        },
         onError: (error) => {
           console.error("Error deleting certification:", error);
           toast.error("Error deleting certification. Please try again.");

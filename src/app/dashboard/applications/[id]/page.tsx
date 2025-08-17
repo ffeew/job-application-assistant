@@ -87,6 +87,7 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
       { id: resolvedParams?.id || "", data: validatedData },
       {
         onSuccess: () => {
+          toast.success("Application updated successfully!");
           router.push("/dashboard/applications");
         },
         onError: (error) => {

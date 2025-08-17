@@ -43,7 +43,10 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
     
     if (certification) {
       updateMutation.mutate({ id: certification.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Certification updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating certification:", error);
           toast.error("Error updating certification. Please try again.");
@@ -51,7 +54,10 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Certification added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating certification:", error);
           toast.error("Error creating certification. Please try again.");

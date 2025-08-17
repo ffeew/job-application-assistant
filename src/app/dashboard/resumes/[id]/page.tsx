@@ -131,6 +131,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       data: updateData
     }, {
       onSuccess: () => {
+        toast.success("Resume updated successfully!");
         router.push("/dashboard/resumes");
       },
       onError: (error) => {

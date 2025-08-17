@@ -47,7 +47,10 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
     
     if (education) {
       updateMutation.mutate({ id: education.id, data: validatedData }, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Education updated successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error updating education:", error);
           toast.error("Error updating education. Please try again.");
@@ -55,7 +58,10 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
       });
     } else {
       createMutation.mutate(validatedData, {
-        onSuccess,
+        onSuccess: () => {
+          toast.success("Education added successfully!");
+          onSuccess();
+        },
         onError: (error) => {
           console.error("Error creating education:", error);
           toast.error("Error creating education. Please try again.");

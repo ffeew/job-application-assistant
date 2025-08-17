@@ -41,6 +41,9 @@ export function ProjectsList({ projects, isLoading }: ProjectsListProps) {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Project deleted successfully!");
+        },
         onError: (error) => {
           console.error("Error deleting project:", error);
           toast.error("Error deleting project. Please try again.");

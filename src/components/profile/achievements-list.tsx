@@ -40,6 +40,9 @@ export function AchievementsList({ achievements, isLoading }: AchievementsListPr
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this achievement?")) {
       deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Achievement deleted successfully!");
+        },
         onError: (error) => {
           console.error("Error deleting achievement:", error);
           toast.error("Error deleting achievement. Please try again.");

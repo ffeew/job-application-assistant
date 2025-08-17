@@ -70,6 +70,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
     
     mutation.mutate(validatedData, {
       onSuccess: () => {
+        toast.success(profile ? "Profile updated successfully!" : "Profile created successfully!");
         // Success is handled by React Query cache updates
       },
       onError: (error) => {
