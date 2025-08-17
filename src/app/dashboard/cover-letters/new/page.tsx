@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useResumes } from "@/hooks/use-resumes";
 import { useApplications } from "@/hooks/use-applications";
 import { useCreateCoverLetter, useGenerateCoverLetter } from "@/hooks/use-cover-letters";
+import { toast } from "sonner";
 
 export default function NewCoverLetterPage() {
   const [selectedResume, setSelectedResume] = useState("");
@@ -52,7 +53,7 @@ export default function NewCoverLetterPage() {
 
   const handleGenerateCoverLetter = () => {
     if (!manualCompany || !manualPosition) {
-      alert("Please provide company and position information");
+      toast.error("Please provide company and position information");
       return;
     }
 
@@ -72,14 +73,14 @@ export default function NewCoverLetterPage() {
       },
       onError: (error: Error) => {
         console.error("Error generating cover letter:", error);
-        alert(error.message || "Error generating cover letter. Please try again.");
+        toast.error(error.message || "Error generating cover letter. Please try again.");
       },
     });
   };
 
   const handleSaveCoverLetter = () => {
     if (!title || !generatedContent) {
-      alert("Please generate a cover letter first");
+      toast.error("Please generate a cover letter first");
       return;
     }
 
@@ -95,7 +96,7 @@ export default function NewCoverLetterPage() {
       },
       onError: (error) => {
         console.error("Error saving cover letter:", error);
-        alert("Error saving cover letter. Please try again.");
+        toast.error("Error saving cover letter. Please try again.");
       },
     });
   };

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Award, Calendar, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteCertification } from "@/hooks/use-profile";
 import { CertificationsForm } from "./certifications-form";
 import type { CertificationResponse } from "@/lib/validators/profile.validator";
@@ -41,7 +42,7 @@ export function CertificationsList({ certifications, isLoading }: Certifications
       deleteMutation.mutate(id, {
         onError: (error) => {
           console.error("Error deleting certification:", error);
-          alert("Error deleting certification. Please try again.");
+          toast.error("Error deleting certification. Please try again.");
         },
       });
     }

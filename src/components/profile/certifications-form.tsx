@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateCertification, useUpdateCertification } from "@/hooks/use-profile";
 import { createCertificationSchema } from "@/lib/validators/profile.validator";
 import type { CertificationResponse, CreateCertificationRequest } from "@/lib/validators/profile.validator";
@@ -45,7 +46,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
         onSuccess,
         onError: (error) => {
           console.error("Error updating certification:", error);
-          alert("Error updating certification. Please try again.");
+          toast.error("Error updating certification. Please try again.");
         },
       });
     } else {
@@ -53,7 +54,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
         onSuccess,
         onError: (error) => {
           console.error("Error creating certification:", error);
-          alert("Error creating certification. Please try again.");
+          toast.error("Error creating certification. Please try again.");
         },
       });
     }

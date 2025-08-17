@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateEducation, useUpdateEducation } from "@/hooks/use-profile";
 import { createEducationSchema } from "@/lib/validators/profile.validator";
 import type { EducationResponse, CreateEducationRequest } from "@/lib/validators/profile.validator";
@@ -49,7 +50,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
         onSuccess,
         onError: (error) => {
           console.error("Error updating education:", error);
-          alert("Error updating education. Please try again.");
+          toast.error("Error updating education. Please try again.");
         },
       });
     } else {
@@ -57,7 +58,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
         onSuccess,
         onError: (error) => {
           console.error("Error creating education:", error);
-          alert("Error creating education. Please try again.");
+          toast.error("Error creating education. Please try again.");
         },
       });
     }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, GraduationCap, Calendar, MapPin } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteEducation } from "@/hooks/use-profile";
 import { EducationForm } from "./education-form";
 import type { EducationResponse } from "@/lib/validators/profile.validator";
@@ -40,7 +41,7 @@ export function EducationList({ education, isLoading }: EducationListProps) {
       deleteMutation.mutate(id, {
         onError: (error) => {
           console.error("Error deleting education:", error);
-          alert("Error deleting education. Please try again.");
+          toast.error("Error deleting education. Please try again.");
         },
       });
     }

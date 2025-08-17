@@ -11,6 +11,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useCreateResume } from "@/hooks/use-resumes";
 import type { CreateResumeRequest } from "@/lib/validators/resumes.validator";
+import { toast } from "sonner";
 
 // Content structure for the resume
 interface ResumeContent {
@@ -68,7 +69,7 @@ export default function NewResumePage() {
   const onSubmit = async (data: ResumeFormData) => {
     // Validate required fields manually since we can't use Zod for the nested structure
     if (!data.title.trim()) {
-      alert("Please enter a title for your resume");
+      toast.error("Please enter a title for your resume");
       return;
     }
 
@@ -92,7 +93,7 @@ export default function NewResumePage() {
       },
       onError: (error) => {
         console.error("Error creating resume:", error);
-        alert("Error creating resume. Please try again.");
+        toast.error("Error creating resume. Please try again.");
       },
     });
   };

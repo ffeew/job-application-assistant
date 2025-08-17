@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Trophy, Calendar, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteAchievement } from "@/hooks/use-profile";
 import { AchievementsForm } from "./achievements-form";
 import type { AchievementResponse } from "@/lib/validators/profile.validator";
@@ -41,7 +42,7 @@ export function AchievementsList({ achievements, isLoading }: AchievementsListPr
       deleteMutation.mutate(id, {
         onError: (error) => {
           console.error("Error deleting achievement:", error);
-          alert("Error deleting achievement. Please try again.");
+          toast.error("Error deleting achievement. Please try again.");
         },
       });
     }

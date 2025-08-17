@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, User } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateUserProfile, useUpdateUserProfile } from "@/hooks/use-profile";
 import { createUserProfileSchema } from "@/lib/validators/profile.validator";
 import type { UserProfileResponse, CreateUserProfileRequest } from "@/lib/validators/profile.validator";
@@ -73,7 +74,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
       },
       onError: (error) => {
         console.error("Error saving profile:", error);
-        alert("Error saving profile. Please try again.");
+        toast.error("Error saving profile. Please try again.");
       },
     });
   };

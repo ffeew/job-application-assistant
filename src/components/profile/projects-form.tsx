@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateProject, useUpdateProject } from "@/hooks/use-profile";
 import { createProjectSchema } from "@/lib/validators/profile.validator";
 import type { ProjectResponse, CreateProjectRequest } from "@/lib/validators/profile.validator";
@@ -49,7 +50,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
         onSuccess,
         onError: (error) => {
           console.error("Error updating project:", error);
-          alert("Error updating project. Please try again.");
+          toast.error("Error updating project. Please try again.");
         },
       });
     } else {
@@ -57,7 +58,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
         onSuccess,
         onError: (error) => {
           console.error("Error creating project:", error);
-          alert("Error creating project. Please try again.");
+          toast.error("Error creating project. Please try again.");
         },
       });
     }

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useApplication, useUpdateApplication } from "@/hooks/use-applications";
 import { updateApplicationSchema } from "@/lib/validators/applications.validator";
@@ -90,7 +91,7 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
         },
         onError: (error) => {
           console.error("Error updating application:", error);
-          alert("Error updating application. Please try again.");
+          toast.error("Error updating application. Please try again.");
         },
       }
     );

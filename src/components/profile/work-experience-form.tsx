@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateWorkExperience, useUpdateWorkExperience } from "@/hooks/use-profile";
 import { createWorkExperienceSchema } from "@/lib/validators/profile.validator";
 import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/lib/validators/profile.validator";
@@ -49,7 +50,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
         onSuccess,
         onError: (error) => {
           console.error("Error updating work experience:", error);
-          alert("Error updating work experience. Please try again.");
+          toast.error("Error updating work experience. Please try again.");
         },
       });
     } else {
@@ -57,7 +58,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
         onSuccess,
         onError: (error) => {
           console.error("Error creating work experience:", error);
-          alert("Error creating work experience. Please try again.");
+          toast.error("Error creating work experience. Please try again.");
         },
       });
     }

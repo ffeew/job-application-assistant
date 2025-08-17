@@ -1,26 +1,29 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authClient } from "@/app/utils/authClient";
 
 export default function Home() {
+  const router = useRouter();
+  
   useEffect(() => {
     // Check if user is authenticated and redirect to dashboard
     const checkAuth = async () => {
       try {
         const session = await authClient.getSession();
         if (session) {
-          window.location.href = "/dashboard";
+          router.push("/dashboard");
         }
       } catch {
         // User not authenticated, stay on landing page
       }
     };
     checkAuth();
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-background">

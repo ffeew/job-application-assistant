@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useCreateApplication } from "@/hooks/use-applications";
 import { createApplicationSchema } from "@/lib/validators/applications.validator";
@@ -49,7 +50,7 @@ export default function NewApplicationPage() {
       },
       onError: (error) => {
         console.error("Error creating application:", error);
-        alert("Error creating application. Please try again.");
+        toast.error("Error creating application. Please try again.");
       },
     });
   };

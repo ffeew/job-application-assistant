@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +26,7 @@ import { AchievementsList } from "@/components/profile/achievements-list";
 import { ReferencesList } from "@/components/profile/references-list";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("personal");
   
   const { data: userProfile, isLoading: profileLoading } = useUserProfile();
@@ -123,7 +125,7 @@ export default function ProfilePage() {
         </div>
         <Button onClick={() => {
           // Navigate to resume generation with current profile data
-          window.location.href = "/dashboard/resumes/generate";
+          router.push("/dashboard/resumes/generate");
         }}>
           <Plus className="mr-2 h-4 w-4" />
           Generate Resume

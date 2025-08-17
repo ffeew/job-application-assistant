@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/app/utils/authClient";
 import {
@@ -31,34 +31,35 @@ export default function DashboardLayout({
 	const [loading, setLoading] = useState(true);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const pathname = usePathname();
+	const router = useRouter();
 
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
 				const session = await authClient.getSession();
 				if (!session) {
-					window.location.href = "/sign-in";
+					router.push("/sign-in");
 					return;
 				}
 				setUser(session.data?.user ? { name: session.data.user.name, email: session.data.user.email } : null);
 			} catch {
-				window.location.href = "/sign-in";
+				router.push("/sign-in");
 			} finally {
 				setLoading(false);
 			}
 		};
 
 		checkAuth();
-	}, []);
+	}, [router]);
 
 	const handleSignOut = async () => {
 		try {
 			await authClient.signOut();
-			window.location.href = "/sign-in";
+			router.push("/sign-in");
 		} catch (error) {
 			console.error("Error signing out:", error);
 			// Even if sign out fails, redirect to sign-in page
-			window.location.href = "/sign-in";
+			router.push("/sign-in");
 		}
 	};
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateSkill, useUpdateSkill } from "@/hooks/use-profile";
 import { createSkillSchema } from "@/lib/validators/profile.validator";
 import type { SkillResponse, CreateSkillRequest } from "@/lib/validators/profile.validator";
@@ -59,7 +60,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
         onSuccess,
         onError: (error) => {
           console.error("Error updating skill:", error);
-          alert("Error updating skill. Please try again.");
+          toast.error("Error updating skill. Please try again.");
         },
       });
     } else {
@@ -67,7 +68,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
         onSuccess,
         onError: (error) => {
           console.error("Error creating skill:", error);
-          alert("Error creating skill. Please try again.");
+          toast.error("Error creating skill. Please try again.");
         },
       });
     }

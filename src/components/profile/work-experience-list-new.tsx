@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Briefcase, Calendar, MapPin } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteWorkExperience } from "@/hooks/use-profile";
 import { WorkExperienceForm } from "./work-experience-form";
 import type { WorkExperienceResponse } from "@/lib/validators/profile.validator";
@@ -39,7 +40,7 @@ export function WorkExperienceList({ experiences, isLoading }: WorkExperienceLis
       deleteMutation.mutate(id, {
         onError: (error) => {
           console.error("Error deleting work experience:", error);
-          alert("Error deleting work experience. Please try again.");
+          toast.error("Error deleting work experience. Please try again.");
         },
       });
     }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FileText, Edit, Trash2, Star, Wand2 } from "lucide-react";
 import { useResumes, useDeleteResume, useUpdateResume } from "@/hooks";
+import { toast } from "sonner";
 
 export default function ResumesPage() {
   const { data: resumes = [], isLoading } = useResumes();
@@ -20,7 +21,7 @@ export default function ResumesPage() {
       await deleteResumeMutation.mutateAsync(id);
     } catch (error) {
       console.error("Error deleting resume:", error);
-      alert("Failed to delete resume. Please try again.");
+      toast.error("Failed to delete resume. Please try again.");
     }
   };
 
@@ -39,7 +40,7 @@ export default function ResumesPage() {
       });
     } catch (error) {
       console.error("Error updating resume:", error);
-      alert("Failed to update resume. Please try again.");
+      toast.error("Failed to update resume. Please try again.");
     }
   };
 

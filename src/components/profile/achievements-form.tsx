@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateAchievement, useUpdateAchievement } from "@/hooks/use-profile";
 import { createAchievementSchema } from "@/lib/validators/profile.validator";
 import type { AchievementResponse, CreateAchievementRequest } from "@/lib/validators/profile.validator";
@@ -45,7 +46,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
         onSuccess,
         onError: (error) => {
           console.error("Error updating achievement:", error);
-          alert("Error updating achievement. Please try again.");
+          toast.error("Error updating achievement. Please try again.");
         },
       });
     } else {
@@ -53,7 +54,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
         onSuccess,
         onError: (error) => {
           console.error("Error creating achievement:", error);
-          alert("Error creating achievement. Please try again.");
+          toast.error("Error creating achievement. Please try again.");
         },
       });
     }

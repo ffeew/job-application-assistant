@@ -12,6 +12,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useResume, useUpdateResume } from "@/hooks/use-resumes";
 import type { UpdateResumeRequest } from "@/lib/validators/resumes.validator";
+import { toast } from "sonner";
 
 interface ResumeContent {
   personalInfo: {
@@ -105,7 +106,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
   const onSubmit = async (data: ResumeFormData) => {
     // Validate required fields
     if (!data.title.trim()) {
-      alert("Please enter a title for your resume");
+      toast.error("Please enter a title for your resume");
       return;
     }
 
@@ -134,7 +135,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       },
       onError: (error) => {
         console.error("Error updating resume:", error);
-        alert("Error updating resume. Please try again.");
+        toast.error("Error updating resume. Please try again.");
       },
     });
   };

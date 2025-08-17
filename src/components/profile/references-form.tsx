@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateReference, useUpdateReference } from "@/hooks/use-profile";
 import { createReferenceSchema } from "@/lib/validators/profile.validator";
 import type { ReferenceResponse, CreateReferenceRequest } from "@/lib/validators/profile.validator";
@@ -54,7 +55,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
         onSuccess,
         onError: (error) => {
           console.error("Error updating reference:", error);
-          alert("Error updating reference. Please try again.");
+          toast.error("Error updating reference. Please try again.");
         },
       });
     } else {
@@ -62,7 +63,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
         onSuccess,
         onError: (error) => {
           console.error("Error creating reference:", error);
-          alert("Error creating reference. Please try again.");
+          toast.error("Error creating reference. Please try again.");
         },
       });
     }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, FolderOpen, Calendar, ExternalLink, Github } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteProject } from "@/hooks/use-profile";
 import { ProjectsForm } from "./projects-form";
 import type { ProjectResponse } from "@/lib/validators/profile.validator";
@@ -42,7 +43,7 @@ export function ProjectsList({ projects, isLoading }: ProjectsListProps) {
       deleteMutation.mutate(id, {
         onError: (error) => {
           console.error("Error deleting project:", error);
-          alert("Error deleting project. Please try again.");
+          toast.error("Error deleting project. Please try again.");
         },
       });
     }

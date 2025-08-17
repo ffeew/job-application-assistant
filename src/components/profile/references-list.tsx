@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Users, Mail, Phone } from "lucide-react";
+import { toast } from "sonner";
 import { useDeleteReference } from "@/hooks/use-profile";
 import { ReferencesForm } from "./references-form";
 import type { ReferenceResponse } from "@/lib/validators/profile.validator";
@@ -40,7 +41,7 @@ export function ReferencesList({ references, isLoading }: ReferencesListProps) {
 			deleteMutation.mutate(id, {
 				onError: (error: unknown) => {
 					console.error("Error deleting reference:", error);
-					alert("Error deleting reference. Please try again.");
+					toast.error("Error deleting reference. Please try again.");
 				},
 			});
 		}
