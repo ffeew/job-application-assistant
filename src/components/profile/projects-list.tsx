@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, FolderOpen, Calendar, ExternalLink, Github } from "lucide-react";
+import { Plus, Edit, Trash2, FolderOpen, Calendar, ExternalLink } from "lucide-react";
+import { GithubIcon } from "@/components/ui/github-icon";
 import { toast } from "sonner";
 import { useDeleteProject } from "@/hooks/use-profile";
 import { ProjectsForm } from "./projects-form";
@@ -173,7 +174,7 @@ export function ProjectsList({ projects, isLoading }: ProjectsListProps) {
                     {project.githubUrl && (
                       <Button variant="outline" size="sm" asChild>
                         <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
-                          <Github className="mr-2 h-4 w-4" />
+                          <GithubIcon className="mr-2 h-4 w-4" width={16} height={16} />
                           Source Code
                         </a>
                       </Button>

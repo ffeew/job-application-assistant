@@ -103,6 +103,7 @@ This is a fully functional Next.js 15 application for a job application assistan
 - **Dark Mode Support**: Next-Themes
 - **UI Library**: Shadcn UI
 - **Icons**: Lucide Icons
+- **Notifications**: Sonner toast notifications for user feedback
 - **Package Manager**: Bun (indicated by bun.lock)
 - **Runtime**: Node.js 20+ (TypeScript 5)
 
@@ -118,6 +119,7 @@ This is a fully functional Next.js 15 application for a job application assistan
 - `src/lib/env.ts` - Environment variable validation with Zod
 - `src/hooks/` - Custom React Query hooks for data management
 - `src/components/providers/` - Application providers (QueryClient, etc.)
+- `src/components/ui/` - Reusable UI components (Shadcn UI + custom components)
 
 ### API Architecture
 

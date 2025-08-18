@@ -1,100 +1,46 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 import { authClient } from "@/app/utils/authClient";
+import { Header } from "@/components/landing/header";
+import { HeroSection } from "@/components/landing/hero-section";
+import { FeaturesSection } from "@/components/landing/features-section";
+import { TechStackSection } from "@/components/landing/tech-stack-section";
+import { GettingStartedSection } from "@/components/landing/getting-started-section";
+import { CommunitySection } from "@/components/landing/community-section";
+import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
-  const router = useRouter();
-  
-  useEffect(() => {
-    // Check if user is authenticated and redirect to dashboard
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (session) {
-          router.push("/dashboard");
-        }
-      } catch {
-        // User not authenticated, stay on landing page
-      }
-    };
-    checkAuth();
-  }, [router]);
+	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Job Application Assistant</h1>
-          <div className="space-x-2">
-            <Button variant="outline" asChild>
-              <Link href="/sign-in">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/sign-up">Sign Up</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+	useEffect(() => {
+		// Check if user is authenticated to show appropriate header buttons
+		const checkAuth = async () => {
+			try {
+				const session = await authClient.getSession();
+				setIsAuthenticated(!!session);
+			} catch {
+				setIsAuthenticated(false);
+			}
+		};
 
-      <main className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            Streamline Your Job Search
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Create tailored resumes, generate personalized cover letters, and track your applications all in one place.
-          </p>
-          <Button size="lg" asChild>
-            <Link href="/sign-up">Get Started</Link>
-          </Button>
-        </div>
+		checkAuth();
+	}, []);
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-4 w-full">
-          <Card className="h-full w-full min-w-0 overflow-hidden">
-            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
-              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
-                Resume Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
-              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
-                Create and manage multiple versions of your resume. Customize them for different job applications.
-              </CardDescription>
-            </CardContent>
-          </Card>
+	return (
+		<div className="min-h-screen bg-background">
+			<Header isAuthenticated={isAuthenticated} />
 
-          <Card className="h-full w-full min-w-0 overflow-hidden">
-            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
-              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
-                AI Cover Letters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
-              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
-                Generate personalized cover letters using AI based on job descriptions and your resume.
-              </CardDescription>
-            </CardContent>
-          </Card>
+			{/* Main Content */}
+			<main>
+				<HeroSection />
+				<FeaturesSection />
+				<TechStackSection />
+				<GettingStartedSection />
+				<CommunitySection />
+			</main>
 
-          <Card className="h-full w-full min-w-0 overflow-hidden sm:col-span-2 lg:col-span-1">
-            <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
-              <CardTitle className="text-base sm:text-lg lg:text-xl leading-tight truncate">
-                Application Tracking
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
-              <CardDescription className="text-xs sm:text-sm lg:text-base leading-relaxed break-words">
-                Keep track of all your job applications, their status, and important dates in one dashboard.
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
-  );
+			<Footer />
+		</div>
+	);
 }

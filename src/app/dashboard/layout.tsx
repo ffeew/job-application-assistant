@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { authClient } from "@/app/utils/authClient";
 import {
 	LayoutDashboard,
@@ -95,8 +96,9 @@ export default function DashboardLayout({
 				} transition-transform duration-200 ease-in-out md:translate-x-0`}
 			>
 				<div className="flex flex-col h-full">
-					<div className="flex items-center px-6 py-4 border-b">
+					<div className="flex items-center justify-between px-6 py-4 border-b">
 						<h1 className="text-xl font-bold">Job Assistant</h1>
+						<ThemeToggle />
 					</div>
 
 					<nav className="flex-1 px-4 py-6 space-y-2">
