@@ -449,15 +449,19 @@ export default function JobApplicationResumePage({
 							<CardHeader>
 								<CardTitle className="flex items-center space-x-2">
 									<Sparkles className="h-5 w-5 text-purple-600" />
-									<span>AI Optimization Results</span>
+									<span className="text-purple-600">
+										AI Optimization Results
+									</span>
 								</CardTitle>
-								<CardDescription>
+								<CardDescription className="text-muted-foreground">
 									AI has analyzed the job description and optimized your content
 								</CardDescription>
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div>
-									<h4 className="font-medium text-sm">Strategy</h4>
+									<h4 className="font-medium text-sm text-purple-900">
+										Strategy
+									</h4>
 									<p className="text-sm text-muted-foreground">
 										{aiSelection.overallStrategy}
 									</p>
@@ -465,7 +469,7 @@ export default function JobApplicationResumePage({
 
 								{aiSelection.keyMatchingPoints.length > 0 && (
 									<div>
-										<h4 className="font-medium text-sm mb-2">
+										<h4 className="font-medium text-sm mb-2 text-purple-900">
 											Key Matching Points
 										</h4>
 										<div className="flex flex-wrap gap-1">
@@ -473,7 +477,7 @@ export default function JobApplicationResumePage({
 												<Badge
 													key={index}
 													variant="outline"
-													className="text-xs"
+													className="text-xs border-purple-300 text-purple-800"
 												>
 													{point}
 												</Badge>
@@ -482,21 +486,27 @@ export default function JobApplicationResumePage({
 									</div>
 								)}
 
-								<div className="grid grid-cols-2 gap-4 text-sm">
+								<div className="grid grid-cols-2 gap-4 text-sm text-purple-800">
 									<div>
-										<span className="font-medium">Work Exp:</span>{" "}
+										<span className="font-medium text-purple-900">
+											Work Exp:
+										</span>{" "}
 										{aiSelection.selectedWorkExperiences.length}
 									</div>
 									<div>
-										<span className="font-medium">Skills:</span>{" "}
+										<span className="font-medium text-purple-900">Skills:</span>{" "}
 										{aiSelection.selectedSkills.length}
 									</div>
 									<div>
-										<span className="font-medium">Projects:</span>{" "}
+										<span className="font-medium text-purple-900">
+											Projects:
+										</span>{" "}
 										{aiSelection.selectedProjects.length}
 									</div>
 									<div>
-										<span className="font-medium">Education:</span>{" "}
+										<span className="font-medium text-purple-900">
+											Education:
+										</span>{" "}
 										{aiSelection.selectedEducation.length}
 									</div>
 								</div>

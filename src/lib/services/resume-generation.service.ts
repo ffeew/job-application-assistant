@@ -276,6 +276,9 @@ export class ResumeGenerationService {
         timeout: 30000
       });
 
+      // Add additional wait to ensure content is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       const pdfBuffer = await page.pdf({
         format: 'letter',
         margin: {
