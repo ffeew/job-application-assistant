@@ -26,11 +26,20 @@ export default function SignInPage() {
         email,
         password,
       });
-      // Redirect to dashboard on success
-      router.push("/dashboard");
+      
+      // Wait a bit for the session to be properly established
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify session is established before redirecting
+      const session = await authClient.getSession();
+      if (session?.data?.user) {
+        router.push("/dashboard");
+      } else {
+        setError("Authentication failed. Please try again.");
+        setIsLoading(false);
+      }
     } catch {
       setError("Invalid email or password");
-    } finally {
       setIsLoading(false);
     }
   };

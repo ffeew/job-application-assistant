@@ -47,11 +47,20 @@ export default function SignUpPage() {
 				password,
 				name,
 			});
-			// Redirect to dashboard on success
-			router.push("/dashboard");
+			
+			// Wait a bit for the session to be properly established
+			await new Promise(resolve => setTimeout(resolve, 100));
+			
+			// Verify session is established before redirecting
+			const session = await authClient.getSession();
+			if (session?.data?.user) {
+				router.push("/dashboard");
+			} else {
+				setError("Account creation failed. Please try again.");
+				setIsLoading(false);
+			}
 		} catch {
 			setError("Failed to create account. Email might already be in use.");
-		} finally {
 			setIsLoading(false);
 		}
 	};
