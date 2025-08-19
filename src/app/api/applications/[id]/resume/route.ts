@@ -52,7 +52,7 @@ export async function POST(
         validatedRequest
       );
 
-      return new Response(new Uint8Array(pdf), {
+      return new Response(Uint8Array.from(pdf), {
         status: 200,
         headers: {
           'Content-Type': 'application/pdf',
