@@ -16,6 +16,7 @@ const envSchema = z.object({
 
   // AI Configuration (Groq)
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features").optional(),
+  GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
 
   // Next.js configuration
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),

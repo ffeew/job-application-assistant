@@ -221,6 +221,54 @@ export const generateResumeSchema = z.object({
   contentSelection: resumeContentSelectionSchema,
 });
 
+// AI-powered resume generation schemas
+export const contentRelevanceScoreSchema = z.object({
+  id: z.number(),
+  type: z.enum(['work', 'education', 'skill', 'project', 'certification', 'achievement']),
+  score: z.number().min(0).max(100),
+  reasoning: z.string(),
+  matchedKeywords: z.array(z.string()),
+});
+
+export const intelligentContentSelectionSchema = z.object({
+  selectedWorkExperiences: z.array(z.number()),
+  selectedEducation: z.array(z.number()),
+  selectedSkills: z.array(z.number()),
+  selectedProjects: z.array(z.number()),
+  selectedCertifications: z.array(z.number()),
+  selectedAchievements: z.array(z.number()),
+  relevanceScores: z.array(contentRelevanceScoreSchema),
+  overallStrategy: z.string(),
+  keyMatchingPoints: z.array(z.string()),
+});
+
+export const jobApplicationResumeRequestSchema = z.object({
+  applicationId: z.string().min(1, "Application ID is required"),
+  title: z.string().min(1, "Resume title is required"),
+  template: z.enum(["professional", "modern", "minimal", "creative"]).default("professional"),
+  useAISelection: z.boolean().default(true),
+  maxWorkExperiences: z.number().int().min(1).max(10).default(4),
+  maxProjects: z.number().int().min(0).max(8).default(3),
+  maxSkills: z.number().int().min(5).max(20).default(12),
+  manualOverrides: z.object({
+    workExperienceIds: z.array(z.number()).optional(),
+    educationIds: z.array(z.number()).optional(),
+    skillIds: z.array(z.number()).optional(),
+    projectIds: z.array(z.number()).optional(),
+    certificationIds: z.array(z.number()).optional(),
+    achievementIds: z.array(z.number()).optional(),
+  }).optional(),
+});
+
+export const jobAnalysisResponseSchema = z.object({
+  requirements: z.array(z.string()),
+  skills: z.array(z.string()),
+  keywords: z.array(z.string()),
+  seniority: z.enum(['entry', 'mid', 'senior', 'executive']),
+  industry: z.string(),
+  summary: z.string(),
+});
+
 // Type exports
 export type CreateUserProfileRequest = z.infer<typeof createUserProfileSchema>;
 export type UpdateUserProfileRequest = z.infer<typeof updateUserProfileSchema>;
@@ -258,3 +306,9 @@ export type ProfileQuery = z.infer<typeof profileQuerySchema>;
 export type BulkUpdateOrderRequest = z.infer<typeof bulkUpdateOrderSchema>;
 export type ResumeContentSelection = z.infer<typeof resumeContentSelectionSchema>;
 export type GenerateResumeRequest = z.infer<typeof generateResumeSchema>;
+
+// AI-powered resume generation types
+export type ContentRelevanceScore = z.infer<typeof contentRelevanceScoreSchema>;
+export type IntelligentContentSelection = z.infer<typeof intelligentContentSelectionSchema>;
+export type JobApplicationResumeRequest = z.infer<typeof jobApplicationResumeRequestSchema>;
+export type JobAnalysisResponse = z.infer<typeof jobAnalysisResponseSchema>;
