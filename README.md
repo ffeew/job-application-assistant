@@ -1,6 +1,17 @@
 # Job Application Assistant
 
-A comprehensive Next.js application that streamlines your job search with AI-powered resume and cover letter tools. Track applications, manage multiple resumes, and generate personalized cover letters all in one place.
+A comprehensive Next.js application that streamlines your job search with **AI-powered job-specific resume generation** and intelligent cover letter tools. Track applications, manage comprehensive professional profiles, and generate tailored resumes that maximize your interview potential.
+
+## 🚀 **NEW: AI-Powered Job-Specific Resume Generation**
+
+**Transform your job application success with intelligent resume optimization!**
+
+- **🧠 Smart Content Selection**: AI analyzes job descriptions to select your most relevant experiences, skills, and projects
+- **🎯 Job-Application Integration**: Generate tailored resumes directly from your job applications  
+- **📊 Relevance Scoring**: AI provides transparency with 0-100 relevance scores and reasoning for each selection
+- **🔧 Fine-Tuned Control**: Customize AI parameters and manually override selections
+- **💡 Strategy Insights**: See exactly why AI chose specific content and what keywords matched
+- **⚡ One-Click Generation**: Prominent "Generate Tailored Resume" buttons throughout the application interface
 
 ## ✨ Features
 
@@ -23,21 +34,34 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 - **🏅 Achievements** - Awards, recognitions, and career highlights
 - **👥 References** - Professional contacts with relationship tracking
 
-#### **Intelligent Resume Generation**
-- **Smart Content Selection** - Choose which profile sections and specific items to include
+#### **🤖 AI-Powered Job-Specific Resume Generation**
+- **Intelligent Content Selection** - AI analyzes job descriptions to select most relevant profile content
+- **Job-Application Integration** - Generate tailored resumes directly from job applications
+- **Smart Profile Matching** - AI scores and ranks your experiences, skills, and projects by relevance
+- **Optimization Strategy** - AI provides transparent explanations for content selections
+- **Keyword Analysis** - Automatic extraction and matching of job requirements
+- **Customizable Limits** - Control maximum work experiences (1-8), projects (0-6), and skills (5-20)
+- **Manual Override Support** - Fine-tune AI selections with manual content choices
 - **Multiple Template Support** - Professional, Modern, Minimal, and Creative templates
-- **Real-time Preview** - See exactly how your resume will look before generating
+- **Real-time Preview** - See exactly how your tailored resume will look before generating
 - **1-Page PDF Optimization** - ATS-friendly formatting with proper constraints
-- **Automatic Data Validation** - Ensures complete profile data before generation
-- **Bulk Export Options** - Generate multiple resume versions for different job applications
+- **Fallback Selection** - Graceful degradation when AI analysis isn't available
 
-### 🤖 AI-Powered Cover Letters
+### 🤖 AI-Powered Cover Letters & Resume Optimization
 
+#### **Smart Cover Letter Generation**
 - Generate personalized cover letters using Groq AI
 - **Preferred Models**: `openai/gpt-oss-120b` and `moonshotai/kimi-k2-instruct`
 - Based on job descriptions and your structured profile data
 - Customizable and editable generated content
 - AI optimization for different job types and companies
+
+#### **Intelligent Resume Content Selection**
+- AI analyzes job descriptions to extract key requirements, skills, and keywords
+- Smart scoring system ranks your profile entries by relevance (0-100 scale)
+- Provides reasoning and matched keywords for each selection
+- Automatic content optimization to maximize interview potential
+- Transparent AI decision-making with strategy explanations
 
 ### 📊 Application Tracking & Analytics
 
@@ -77,9 +101,10 @@ A comprehensive Next.js application that streamlines your job search with AI-pow
 ### AI Integration
 
 - **Vercel AI SDK** - AI integration framework
-- **Groq** - Fast AI inference for cover letter generation
+- **Groq** - Fast AI inference for cover letter generation and resume optimization
 - **Preferred Models**: `openai/gpt-oss-120b`, `moonshotai/kimi-k2-instruct`
 - **Puppeteer** - Server-side PDF generation for resumes
+- **AI Content Selection Service** - Intelligent job-specific resume optimization
 
 ### Frontend
 
@@ -187,6 +212,9 @@ src/
 │   │   └── reset-password/
 │   ├── dashboard/                # Protected dashboard
 │   │   ├── applications/
+│   │   │   ├── [id]/
+│   │   │   │   └── resume/       # 🆕 AI-powered job-specific resume generation
+│   │   │   └── new/
 │   │   ├── resumes/
 │   │   │   ├── generate/         # Resume generation from profile data
 │   │   │   └── new/             # Manual resume creation
@@ -201,16 +229,22 @@ src/
 │   │       ├── achievements/
 │   │       └── references/
 │   └── api/                      # API routes
+│       ├── applications/
+│       │   └── [id]/
+│       │       └── resume/       # 🆕 Job-specific resume generation API
 ├── lib/                          # Shared utilities
 │   ├── auth.ts                   # BetterAuth configuration
 │   ├── env.ts                    # Environment validation
 │   ├── db/                       # Database configuration
 │   ├── validators/               # Zod validation schemas
 │   ├── services/                 # Business logic layer
+│   │   ├── ai-content-selection.service.ts  # 🆕 AI job description analysis
+│   │   └── resume-generation.service.ts     # 🆕 Enhanced with AI integration
 │   ├── controllers/              # API request handlers
 │   ├── resume-templates/         # Resume generation templates
 │   └── utils/                    # Helper utilities
 ├── hooks/                        # Custom React Query hooks
+│   └── use-job-application-resume.ts        # 🆕 Job-specific resume generation
 └── components/                   # Reusable UI components
 ```
 
@@ -268,6 +302,12 @@ This application follows a clean architecture with separation between frontend a
   - Career achievements and awards
   - Professional references and contacts
 - `use-resume-generation.ts` - Intelligent resume generation from structured profile data
+- `use-job-application-resume.ts` - 🆕 **AI-powered job-specific resume generation**:
+  - Job description analysis and content matching
+  - Intelligent profile entry selection with relevance scoring
+  - Customizable AI optimization parameters
+  - PDF/HTML/Preview generation with AI insights
+  - Manual override capabilities for fine-tuning
 
 **Example Hook Structure:**
 
@@ -437,11 +477,16 @@ The application includes **8 comprehensive profile sections**, each with full CR
    - Include Professional References
 
 3. **📄 Generate Professional Resumes**
-   - Navigate to Resume Generation
-   - Choose which profile sections to include
-   - Select from multiple professional templates
-   - Preview your resume before generating
-   - Download as optimized PDF
+   - **🆕 Job-Specific AI Generation**: Generate tailored resumes directly from job applications
+     - AI analyzes job descriptions and selects most relevant content
+     - Provides optimization strategy and keyword matching insights
+     - Customizable AI parameters (work experiences, projects, skills limits)
+     - Manual override options for fine-tuning
+   - **Traditional Generation**: Create resumes from your complete profile
+     - Choose which profile sections to include
+     - Select from multiple professional templates
+     - Preview your resume before generating
+     - Download as optimized PDF
 
 4. **🤖 Create AI Cover Letters**
    - Input job descriptions
@@ -450,7 +495,8 @@ The application includes **8 comprehensive profile sections**, each with full CR
    - Save multiple versions for different applications
 
 5. **📊 Track Applications**
-   - Add job applications with company details
+   - Add job applications with company details and job descriptions
+   - **🆕 Generate Tailored Resume**: One-click AI-powered resume generation for each application
    - Update status as you progress through interviews
    - Monitor your application statistics on the dashboard
    - Review activity timeline and success rates
@@ -464,7 +510,8 @@ The application includes **8 comprehensive profile sections**, each with full CR
 | `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes      | Public auth URL for client-side             |
 | `TURSO_CONNECTION_URL`        | Yes      | Turso database connection string            |
 | `TURSO_AUTH_TOKEN`            | Yes      | Turso authentication token                  |
-| `GROQ_API_KEY`                | No       | Groq API key for AI cover letter generation |
+| `GROQ_API_KEY`                | No       | Groq API key for AI cover letters & resume optimization |
+| `GROQ_MODEL`                  | No       | AI model to use (default: openai/gpt-oss-120b) |
 | `NODE_ENV`                    | No       | Environment (development/production)        |
 | `PORT`                        | No       | Server port (default: 3000)                 |
 

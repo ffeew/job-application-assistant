@@ -42,10 +42,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 When working with AI features in this application, use the following Groq models in order of preference:
 
-1. **`openai/gpt-oss-120b`** - Primary model for cover letter generation and AI features
+1. **`openai/gpt-oss-120b`** - Primary model for cover letter generation and AI-powered resume optimization
 2. **`moonshotai/kimi-k2-instruct`** - Secondary model if primary is unavailable
 
-These models provide the best performance and quality for the application's AI-powered features.
+These models provide the best performance and quality for the application's AI-powered features including:
+- **Job Description Analysis** - Extract requirements, skills, and keywords from job postings
+- **Intelligent Content Selection** - Score and rank profile entries by relevance (0-100 scale)
+- **Resume Optimization** - Select most relevant experiences, skills, and projects for specific jobs
+- **Cover Letter Generation** - Create personalized cover letters based on job descriptions
 
 ## TypeScript Coding Standards
 
@@ -87,7 +91,7 @@ function handleData(data: any): any {
 
 ## Project Architecture
 
-This is a fully functional Next.js 15 application for a job application assistant that helps users create cover letters, customize resumes, and track applications.
+This is a fully functional Next.js 15 application for a job application assistant that helps users create AI-powered cover letters, generate job-specific optimized resumes, and track applications with intelligent insights.
 
 ### Technology Stack
 
@@ -99,7 +103,7 @@ This is a fully functional Next.js 15 application for a job application assistan
 - **State Management**: Zustand
 - **Data Fetching**: React Query (TanStack Query) with custom hooks
 - **Validation**: Zod v4 (including environment variable validation)
-- **AI Integration**: Vercel AI SDK with Groq (preferred models: `openai/gpt-oss-120b`, `moonshotai/kimi-k2-instruct`)
+- **AI Integration**: Vercel AI SDK with Groq for cover letters and intelligent resume optimization (preferred models: `openai/gpt-oss-120b`, `moonshotai/kimi-k2-instruct`)
 - **Dark Mode Support**: Next-Themes
 - **UI Library**: Shadcn UI
 - **Icons**: Lucide Icons
@@ -110,14 +114,18 @@ This is a fully functional Next.js 15 application for a job application assistan
 ### Key Directories
 
 - `src/app/` - Next.js App Router pages and layouts
+  - `src/app/dashboard/applications/[id]/resume/` - **NEW**: AI-powered job-specific resume generation
 - `src/lib/` - Shared utilities and configuration
 - `src/lib/auth.ts` - BetterAuth configuration with Drizzle adapter
 - `src/lib/db/` - Database configuration and schemas
 - `src/lib/validators/` - Zod validation schemas shared between frontend and backend
 - `src/lib/services/` - Business logic layer with database operations
+  - `src/lib/services/ai-content-selection.service.ts` - **NEW**: AI job description analysis and content scoring
+  - `src/lib/services/resume-generation.service.ts` - **ENHANCED**: Integrated with AI content selection
 - `src/lib/controllers/` - Request handling and service orchestration
-- `src/lib/env.ts` - Environment variable validation with Zod
+- `src/lib/env.ts` - Environment variable validation with Zod (includes `GROQ_MODEL` configuration)
 - `src/hooks/` - Custom React Query hooks for data management
+  - `src/hooks/use-job-application-resume.ts` - **NEW**: Job-specific resume generation hooks
 - `src/components/providers/` - Application providers (QueryClient, etc.)
 - `src/components/ui/` - Reusable UI components (Shadcn UI + custom components)
 
@@ -166,6 +174,7 @@ The application uses React Query for all data fetching with direct API calls and
   - `use-applications.ts` - Job application management with direct `/api/applications/*` calls
   - `use-cover-letters.ts` - Cover letter generation and management with direct `/api/cover-letters/*` calls
   - `use-profile.ts` - Comprehensive profile data management with direct `/api/profile/*` calls
+  - `use-job-application-resume.ts` - **NEW**: AI-powered job-specific resume generation with direct `/api/applications/[id]/resume` calls
 
 #### React Query Hook Architecture
 
@@ -227,7 +236,15 @@ Authentication is configured through BetterAuth with SQLite provider using the D
 4. **AI Cover Letter Generation** - Groq-powered personalized cover letters (uses `openai/gpt-oss-120b` or `moonshotai/kimi-k2-instruct`)
 5. **Structured Profile Management** - Comprehensive user profiles with experiences, education, skills, projects, certifications, achievements, and references
 6. **Professional Resume Generation** - HTML/PDF resume generation with 1-page templates and content selection
-7. **Dashboard Analytics** - Real-time stats and activity tracking
+7. **🆕 AI-Powered Job-Specific Resume Generation** - Revolutionary intelligent resume optimization:
+   - **Job Description Analysis** - AI extracts requirements, skills, and keywords from job postings
+   - **Intelligent Content Selection** - AI scores and ranks profile entries by relevance (0-100 scale)
+   - **Smart Profile Matching** - Automatically selects most relevant experiences, skills, and projects
+   - **Transparent AI Decision Making** - Shows strategy, reasoning, and matched keywords
+   - **Customizable Parameters** - Control limits for work experiences (1-8), projects (0-6), skills (5-20)
+   - **Manual Override Support** - Fine-tune AI selections with manual content choices
+   - **Job-Application Integration** - Generate tailored resumes directly from applications with "Generate Tailored Resume" buttons
+8. **Dashboard Analytics** - Real-time stats and activity tracking
 
 ### Path Aliases
 
@@ -312,6 +329,11 @@ export async function GET(request: NextRequest) {
   - `useCreateResume()` for creating resumes
   - `useUpdateResume()` for updating resumes
   - Similar patterns for applications and cover letters
+- **NEW AI-Powered Resume Generation**:
+  - `useApplicationResumeInfo(applicationId)` - Fetch application info for resume generation
+  - `useGenerateJobApplicationPDF()` - Generate and download job-specific resume PDFs
+  - `useGenerateJobApplicationPreview()` - Generate HTML previews with AI insights
+  - `useGenerateJobApplicationHTML()` - Generate HTML resumes with AI optimization
 
 **Adding New Data Operations**:
 1. If hook doesn't exist, add it to the appropriate hook file in `src/hooks/`
@@ -406,3 +428,122 @@ Each form follows the same pattern:
 - **Loading states**: Show loading indicators during form submission
 - **Cancel functionality**: Provide cancel buttons that reset form state
 - **Success callbacks**: Use `onSuccess` callbacks to trigger cache invalidation and UI updates
+
+## AI Development Guidelines
+
+### AI-Powered Resume Generation Architecture
+
+The application implements intelligent resume generation using a multi-layered approach:
+
+#### **AIContentSelectionService** (`src/lib/services/ai-content-selection.service.ts`)
+
+**Core Capabilities**:
+- **Job Description Analysis** - Extracts requirements, skills, keywords, seniority level, and industry
+- **Intelligent Content Scoring** - Ranks profile entries by relevance (0-100 scale) 
+- **Smart Selection Algorithm** - Chooses optimal content combinations within specified limits
+- **Transparent Decision Making** - Provides reasoning and matched keywords for each selection
+
+**Key Methods**:
+```typescript
+// Analyze job description and extract structured data
+async analyzeJobDescription(jobDescription: string): Promise<JobAnalysisResponse>
+
+// Select optimal profile content based on job requirements  
+async selectOptimalContent(
+  jobDescription: string,
+  profileData: ProfileData,
+  maxWorkExperiences: number = 4,
+  maxProjects: number = 3, 
+  maxSkills: number = 12
+): Promise<IntelligentContentSelection>
+```
+
+#### **Enhanced ResumeGenerationService** (`src/lib/services/resume-generation.service.ts`)
+
+**New AI-Integrated Methods**:
+```typescript
+// Generate job-specific resume HTML with AI content selection
+async generateJobApplicationResumeHTML(
+  userId: string,
+  application: ApplicationResponse,
+  request: JobApplicationResumeRequest
+): Promise<{ html: string; aiSelection?: IntelligentContentSelection }>
+
+// Generate job-specific resume PDF with AI optimization
+async generateJobApplicationResumePDF(
+  userId: string, 
+  application: ApplicationResponse,
+  request: JobApplicationResumeRequest
+): Promise<{ pdf: Buffer; aiSelection?: IntelligentContentSelection }>
+```
+
+### AI Integration Best Practices
+
+#### **Environment Configuration**
+```typescript
+// Environment variables for AI features
+GROQ_API_KEY=your-groq-api-key-here          // Required for AI features
+GROQ_MODEL=openai/gpt-oss-120b               // Default AI model (optional)
+```
+
+#### **Error Handling and Fallbacks**
+- **Always provide fallback behavior** when AI analysis fails
+- **Graceful degradation** - If AI is unavailable, use manual selection methods
+- **Transparent error reporting** - Log AI failures but don't expose them to users
+- **Timeout handling** - AI requests should have reasonable timeouts
+
+#### **AI Response Processing**
+```typescript
+// Always validate AI responses with proper error handling
+try {
+  const { text } = await generateText({
+    model: groq(this.model),
+    prompt: analysisPrompt,
+    temperature: 0.2, // Lower temperature for consistent results
+  });
+
+  // Parse JSON responses safely
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[0]);
+  }
+  throw new Error("Failed to parse AI response");
+} catch (error) {
+  console.error("AI analysis failed:", error);
+  return this.getFallbackSelection(profileData, limits);
+}
+```
+
+#### **Type Safety with AI Responses** 
+```typescript
+// Use proper TypeScript interfaces for AI response validation
+interface JobAnalysisResponse {
+  requirements: string[];
+  skills: string[];
+  keywords: string[];
+  seniority: 'entry' | 'mid' | 'senior' | 'executive';
+  industry: string;
+  summary: string;
+}
+
+// Validate AI responses against expected schemas
+private validateAndFormatSelection(
+  selection: {
+    selectedWorkExperiences?: number[];
+    selectedEducation?: number[];
+    // ... other fields
+  },
+  profileData: ProfileData
+): IntelligentContentSelection
+```
+
+### AI Feature Development Workflow
+
+1. **Add AI Logic to Services** - Implement AI analysis in service layer
+2. **Create Proper Validators** - Define Zod schemas for AI requests/responses  
+3. **Build API Endpoints** - Expose AI functionality through REST APIs
+4. **Develop React Hooks** - Create React Query hooks for AI operations
+5. **Design UI Components** - Build user interfaces that show AI insights transparently
+6. **Implement Fallbacks** - Ensure graceful degradation when AI is unavailable
+7. **Add Error Handling** - Proper error boundaries and user feedback
+8. **Test Edge Cases** - Validate behavior with malformed job descriptions, network failures, etc.
