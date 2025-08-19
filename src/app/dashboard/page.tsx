@@ -261,7 +261,11 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground">{activityItem.description}</p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        {formatRelativeTime(activityItem.createdAt.toISOString())}
+                        {formatRelativeTime(
+                          typeof activityItem.createdAt === 'string' 
+                            ? activityItem.createdAt 
+                            : activityItem.createdAt.toISOString()
+                        )}
                       </p>
                     </div>
                   </div>
