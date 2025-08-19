@@ -200,18 +200,18 @@ export default function ProfilePage() {
 						onValueChange={setActiveTab}
 						className="w-full"
 					>
-						<TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 w-full h-auto gap-2 p-2">
+						<TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 w-full h-auto gap-2">
 							{tabs.map((tab) => (
 								<TabsTrigger
 									key={tab.value}
 									value={tab.value}
-									className="relative flex flex-col items-center justify-center gap-2 h-auto py-3 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[4rem] sm:min-h-[5rem]"
+									className="relative flex flex-col items-center justify-center gap-2 h-auto py-3 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground "
 								>
 									<tab.icon className="h-4 w-4 shrink-0" />
 									<span className="text-center text-[10px] sm:text-xs leading-tight break-words">
 										{tab.label}
 									</span>
-									<span className="absolute top-1.5 right-1.5 bg-blue-100 text-blue-800 data-[state=active]:bg-primary-foreground data-[state=active]:text-primary text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center">
+									<span className="absolute top-1.5 right-1.5 bg-blue-100 text-blue-800 data-[state=active]:bg-primary-foreground data-[state=active]:text-primary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
 										{tab.count}
 									</span>
 								</TabsTrigger>
