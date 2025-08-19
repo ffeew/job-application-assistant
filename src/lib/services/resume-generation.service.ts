@@ -280,7 +280,7 @@ export class ResumeGenerationService {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const pdfBuffer = await page.pdf({
-        format: 'letter',
+        format: 'A4',
         margin: {
           top: '0.5in',
           bottom: '0.5in',
