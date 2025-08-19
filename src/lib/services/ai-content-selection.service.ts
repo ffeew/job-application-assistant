@@ -1,5 +1,6 @@
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { createGroq } from "@ai-sdk/groq";
+import { z } from "zod";
 import { env } from "@/lib/env";
 import type {
   UserProfileResponse,
@@ -13,6 +14,36 @@ import type {
 
 const groq = createGroq({
   apiKey: env.GROQ_API_KEY,
+});
+
+// Zod schemas for AI response validation
+const jobAnalysisSchema = z.object({
+  requirements: z.array(z.string()),
+  skills: z.array(z.string()),
+  keywords: z.array(z.string()),
+  seniority: z.enum(['entry', 'mid', 'senior', 'executive']),
+  industry: z.string(),
+  summary: z.string(),
+});
+
+const contentRelevanceScoreSchema = z.object({
+  id: z.number(),
+  type: z.enum(['work', 'education', 'skill', 'project', 'certification', 'achievement']),
+  score: z.number().min(0).max(100),
+  reasoning: z.string(),
+  matchedKeywords: z.array(z.string()),
+});
+
+const intelligentContentSelectionSchema = z.object({
+  selectedWorkExperiences: z.array(z.number()),
+  selectedEducation: z.array(z.number()),
+  selectedSkills: z.array(z.number()),
+  selectedProjects: z.array(z.number()),
+  selectedCertifications: z.array(z.number()),
+  selectedAchievements: z.array(z.number()),
+  relevanceScores: z.array(contentRelevanceScoreSchema),
+  overallStrategy: z.string(),
+  keyMatchingPoints: z.array(z.string()),
 });
 
 interface ProfileData {
@@ -48,45 +79,23 @@ interface IntelligentContentSelection {
 export class AIContentSelectionService {
   private model = env.GROQ_MODEL || "openai/gpt-oss-120b";
 
-  async analyzeJobDescription(jobDescription: string): Promise<{
-    requirements: string[];
-    skills: string[];
-    keywords: string[];
-    seniority: 'entry' | 'mid' | 'senior' | 'executive';
-    industry: string;
-    summary: string;
-  }> {
+  async analyzeJobDescription(jobDescription: string): Promise<z.infer<typeof jobAnalysisSchema>> {
     const prompt = `Analyze this job description and extract key information:
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-Please extract and return ONLY a JSON object with the following structure:
-{
-  "requirements": ["requirement1", "requirement2", ...],
-  "skills": ["skill1", "skill2", ...],
-  "keywords": ["keyword1", "keyword2", ...],
-  "seniority": "entry|mid|senior|executive",
-  "industry": "industry name",
-  "summary": "brief summary of the role"
-}
-
 Focus on technical skills, qualifications, experience requirements, and key responsibilities. Be concise and specific.`;
 
     try {
-      const { text } = await generateText({
+      const { object } = await generateObject({
         model: groq(this.model),
+        schema: jobAnalysisSchema,
         prompt,
         temperature: 0.3,
       });
 
-      // Parse the JSON response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-
-      throw new Error("Failed to parse job analysis response");
+      return object;
     } catch (error) {
       console.error("Error analyzing job description:", error);
       throw new Error("Failed to analyze job description");
@@ -112,20 +121,14 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     );
 
     try {
-      const { text } = await generateText({
+      const { object } = await generateObject({
         model: groq(this.model),
+        schema: intelligentContentSelectionSchema,
         prompt: contentPrompt,
         temperature: 0.2,
       });
 
-      // Parse the JSON response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0]);
-        return this.validateAndFormatSelection(result, profileData);
-      }
-
-      throw new Error("Failed to parse content selection response");
+      return this.validateAndFormatSelection(object, profileData);
     } catch (error) {
       console.error("Error selecting optimal content:", error);
       // Return fallback selection
@@ -211,26 +214,7 @@ SELECTION LIMITS:
 - All Certifications: Include all relevant
 - All Achievements: Include all relevant
 
-Please analyze and return ONLY a JSON object with this structure:
-{
-  "selectedWorkExperiences": [id1, id2, ...],
-  "selectedEducation": [id1, id2, ...],
-  "selectedSkills": [id1, id2, ...],
-  "selectedProjects": [id1, id2, ...],
-  "selectedCertifications": [id1, id2, ...],
-  "selectedAchievements": [id1, id2, ...],
-  "relevanceScores": [
-    {
-      "id": number,
-      "type": "work|education|skill|project|certification|achievement",
-      "score": number, // 0-100
-      "reasoning": "why this is relevant",
-      "matchedKeywords": ["keyword1", "keyword2"]
-    }
-  ],
-  "overallStrategy": "explanation of the selection strategy",
-  "keyMatchingPoints": ["point1", "point2", "point3"]
-}
+Analyze the profile content and select the most relevant items for this job application. For each selected item, provide a relevance score (0-100), reasoning, and matched keywords.
 
 Prioritize:
 1. Direct skill matches
@@ -244,17 +228,7 @@ Be selective - quality over quantity. Choose items that directly support the app
   }
 
   private validateAndFormatSelection(
-    selection: {
-      selectedWorkExperiences?: number[];
-      selectedEducation?: number[];
-      selectedSkills?: number[];
-      selectedProjects?: number[];
-      selectedCertifications?: number[];
-      selectedAchievements?: number[];
-      relevanceScores?: ContentRelevanceScore[];
-      overallStrategy?: string;
-      keyMatchingPoints?: string[];
-    },
+    selection: z.infer<typeof intelligentContentSelectionSchema>,
     profileData: ProfileData
   ): IntelligentContentSelection {
     // Ensure all required fields exist and contain valid IDs
@@ -266,21 +240,21 @@ Be selective - quality over quantity. Choose items that directly support the app
     const validAchievementIds = profileData.achievements.map(ach => ach.id);
 
     return {
-      selectedWorkExperiences: (selection.selectedWorkExperiences || [])
-        .filter((id: number) => validWorkIds.includes(id)),
-      selectedEducation: (selection.selectedEducation || [])
-        .filter((id: number) => validEducationIds.includes(id)),
-      selectedSkills: (selection.selectedSkills || [])
-        .filter((id: number) => validSkillIds.includes(id)),
-      selectedProjects: (selection.selectedProjects || [])
-        .filter((id: number) => validProjectIds.includes(id)),
-      selectedCertifications: (selection.selectedCertifications || [])
-        .filter((id: number) => validCertIds.includes(id)),
-      selectedAchievements: (selection.selectedAchievements || [])
-        .filter((id: number) => validAchievementIds.includes(id)),
-      relevanceScores: selection.relevanceScores || [],
-      overallStrategy: selection.overallStrategy || "No strategy provided",
-      keyMatchingPoints: selection.keyMatchingPoints || [],
+      selectedWorkExperiences: selection.selectedWorkExperiences
+        .filter(id => validWorkIds.includes(id)),
+      selectedEducation: selection.selectedEducation
+        .filter(id => validEducationIds.includes(id)),
+      selectedSkills: selection.selectedSkills
+        .filter(id => validSkillIds.includes(id)),
+      selectedProjects: selection.selectedProjects
+        .filter(id => validProjectIds.includes(id)),
+      selectedCertifications: selection.selectedCertifications
+        .filter(id => validCertIds.includes(id)),
+      selectedAchievements: selection.selectedAchievements
+        .filter(id => validAchievementIds.includes(id)),
+      relevanceScores: selection.relevanceScores,
+      overallStrategy: selection.overallStrategy,
+      keyMatchingPoints: selection.keyMatchingPoints,
     };
   }
 
