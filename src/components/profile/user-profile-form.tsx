@@ -128,7 +128,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 								</p>
 							)}
 						</div>
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="lastName">Last Name</Label>
 							<Input
 								id="lastName"
@@ -144,7 +144,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -158,7 +158,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 								</p>
 							)}
 						</div>
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="phone">Phone</Label>
 							<Input
 								id="phone"
@@ -173,7 +173,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 						</div>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="address">Address</Label>
 						<Input
 							id="address"
@@ -188,7 +188,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="city">City</Label>
 							<Input id="city" {...register("city")} placeholder="New York" />
 							{errors.city && (
@@ -197,7 +197,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 								</p>
 							)}
 						</div>
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="state">State/Province</Label>
 							<Input id="state" {...register("state")} placeholder="NY" />
 							{errors.state && (
@@ -206,7 +206,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 								</p>
 							)}
 						</div>
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="zipCode">ZIP/Postal Code</Label>
 							<Input
 								id="zipCode"
@@ -221,7 +221,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 						</div>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="country">Country</Label>
 						<Input
 							id="country"
@@ -238,7 +238,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold">Professional Links</h3>
 
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="linkedinUrl">LinkedIn URL</Label>
 							<Input
 								id="linkedinUrl"
@@ -253,7 +253,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 							)}
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="githubUrl">GitHub URL</Label>
 							<Input
 								id="githubUrl"
@@ -268,7 +268,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 							)}
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="portfolioUrl">Portfolio URL</Label>
 							<Input
 								id="portfolioUrl"
@@ -284,7 +284,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 						</div>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="professionalSummary">Professional Summary</Label>
 						<Textarea
 							id="professionalSummary"

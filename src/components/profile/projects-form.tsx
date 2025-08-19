@@ -77,7 +77,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="title">Project Title *</Label>
             <Input
               id="title"
@@ -89,7 +89,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             )}
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -102,7 +102,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             )}
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="technologies">Technologies Used</Label>
             <Input
               id="technologies"
@@ -115,7 +115,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input
                 id="startDate"
@@ -126,7 +126,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
@@ -156,7 +156,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="projectUrl">Project URL</Label>
               <Input
                 id="projectUrl"
@@ -168,7 +168,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
                 <p className="text-red-500 text-sm mt-1">{errors.projectUrl.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="githubUrl">GitHub URL</Label>
               <Input
                 id="githubUrl"

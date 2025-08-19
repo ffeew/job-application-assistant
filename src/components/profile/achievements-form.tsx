@@ -73,7 +73,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="title">Achievement Title *</Label>
             <Input
               id="title"
@@ -85,7 +85,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             )}
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -99,7 +99,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="date">Date Received</Label>
               <Input
                 id="date"
@@ -110,7 +110,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
                 <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="organization">Awarding Organization</Label>
               <Input
                 id="organization"
@@ -123,7 +123,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="url">Related URL</Label>
             <Input
               id="url"

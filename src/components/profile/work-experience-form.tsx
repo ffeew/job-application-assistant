@@ -78,7 +78,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="jobTitle">Job Title *</Label>
               <Input
                 id="jobTitle"
@@ -89,7 +89,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
                 <p className="text-red-500 text-sm mt-1">{errors.jobTitle.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="company">Company *</Label>
               <Input
                 id="company"
@@ -102,7 +102,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
             <Input
               id="location"
@@ -115,7 +115,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="startDate">Start Date *</Label>
               <Input
                 id="startDate"
@@ -126,7 +126,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
@@ -155,7 +155,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             <Label htmlFor="isCurrent">I currently work here</Label>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -168,7 +168,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             )}
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="technologies">Technologies</Label>
             <Input
               id="technologies"

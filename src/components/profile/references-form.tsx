@@ -82,7 +82,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="name">Full Name *</Label>
             <Input
               id="name"
@@ -95,7 +95,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="title">Job Title</Label>
               <Input
                 id="title"
@@ -106,7 +106,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
                 <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="company">Company</Label>
               <Input
                 id="company"
@@ -119,7 +119,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="relationship">Relationship</Label>
             <select
               id="relationship"
@@ -137,7 +137,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -149,7 +149,7 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
                 <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
