@@ -11,6 +11,7 @@ import {
 	FileText,
 	Briefcase,
 	PenTool,
+	User,
 	LogOut,
 	Menu,
 	X,
@@ -18,6 +19,7 @@ import {
 
 const navigation = [
 	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+	{ name: "Profile", href: "/dashboard/profile", icon: User },
 	{ name: "Resumes", href: "/dashboard/resumes", icon: FileText },
 	{ name: "Applications", href: "/dashboard/applications", icon: Briefcase },
 	{ name: "Cover Letters", href: "/dashboard/cover-letters", icon: PenTool },
