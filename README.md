@@ -517,6 +517,8 @@ The application includes **8 comprehensive profile sections**, each with full CR
 
 ## 🤝 Contributing
 
+Before opening a pull request, skim through [`AGENTS.md`](AGENTS.md) for the contributor playbook that covers structure, coding standards, and review expectations.
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)

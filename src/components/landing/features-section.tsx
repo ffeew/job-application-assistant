@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { FeatureCard } from "./shared/feature-card";
 import {
   FileText,
@@ -12,95 +13,109 @@ const features = [
   {
     icon: FileText,
     title: "Smart Resume Builder",
-    description: "Create professional, ATS-optimized resumes with our intelligent builder. Choose from multiple templates and customize for each application.",
+    description:
+      "Create professional, ATS-optimized resumes with AI scoring, manual overrides, and instant previews tuned per application.",
     benefits: [
-      "Multiple professional templates",
-      "ATS optimization",
-      "PDF export ready"
+      "AI relevance scoring with reasoning",
+      "Live preview + manual overrides",
+      "1-click PDF or HTML export",
     ],
     iconBgColor: "bg-blue-100 dark:bg-blue-900",
-    iconColor: "text-blue-600 dark:text-blue-400"
+    iconColor: "text-blue-600 dark:text-blue-400",
   },
   {
     icon: PenTool,
     title: "AI Cover Letters",
-    description: "Generate personalized, compelling cover letters in seconds using advanced AI tailored to specific job descriptions and company culture.",
+    description:
+      "Generate compelling cover letters in seconds with AI that adapts to role, tone, and company culture.",
     benefits: [
       "Job-specific customization",
       "Company research integration",
-      "Multiple tone options"
+      "Multiple tone options",
     ],
     iconBgColor: "bg-purple-100 dark:bg-purple-900",
-    iconColor: "text-purple-600 dark:text-purple-400"
+    iconColor: "text-purple-600 dark:text-purple-400",
   },
   {
     icon: BarChart3,
     title: "Application Tracking",
-    description: "Never lose track of your applications again. Monitor status, set reminders, and analyze your job search performance with detailed analytics.",
+    description:
+      "Visualize every pipeline stage, set nudges, and surface insights that keep your search on track.",
     benefits: [
       "Visual pipeline tracking",
       "Automated reminders",
-      "Success analytics"
+      "Success analytics",
     ],
     iconBgColor: "bg-green-100 dark:bg-green-900",
-    iconColor: "text-green-600 dark:text-green-400"
+    iconColor: "text-green-600 dark:text-green-400",
   },
   {
     icon: Target,
     title: "Profile Management",
-    description: "Centralize your professional information including work experience, education, skills, and achievements for quick resume customization.",
+    description:
+      "Centralize experience, skills, education, and achievements for instant reuse across resumes.",
     benefits: [
       "Complete profile builder",
       "Skills assessment",
-      "Achievement tracking"
+      "Achievement tracking",
     ],
     iconBgColor: "bg-orange-100 dark:bg-orange-900",
-    iconColor: "text-orange-600 dark:text-orange-400"
+    iconColor: "text-orange-600 dark:text-orange-400",
   },
   {
     icon: TrendingUp,
     title: "Success Analytics",
-    description: "Track your job search performance with detailed metrics, identify what works, and optimize your approach for better results.",
+    description:
+      "Understand what works with dashboards that track response rates, interviews, and offers.",
     benefits: [
       "Response rate tracking",
       "Interview conversion",
-      "Performance insights"
+      "Performance insights",
     ],
     iconBgColor: "bg-indigo-100 dark:bg-indigo-900",
-    iconColor: "text-indigo-600 dark:text-indigo-400"
+    iconColor: "text-indigo-600 dark:text-indigo-400",
   },
   {
     icon: Zap,
     title: "Fast & Secure",
-    description: "Built with modern technology for lightning-fast performance. Your data is encrypted and secure with enterprise-grade protection.",
+    description:
+      "Lightning-fast performance paired with enterprise-grade security and privacy controls.",
     benefits: [
       "End-to-end encryption",
       "GDPR compliant",
-      "Lightning fast"
+      "Lightning fast",
     ],
     iconBgColor: "bg-red-100 dark:bg-red-900",
-    iconColor: "text-red-600 dark:text-red-400"
-  }
+    iconColor: "text-red-600 dark:text-red-400",
+  },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Everything You Need to Land Your Next Role
+    <section
+      id="features"
+      className="relative overflow-hidden bg-background py-24 sm:py-28"
+    >
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-secondary/10 via-transparent to-background" />
+      <div className="container relative mx-auto px-4">
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <Badge
+            variant="secondary"
+            className="rounded-full px-4 py-1 text-xs tracking-[0.3em]"
+          >
+            WORKFLOW SUITE
+          </Badge>
+          <h2 className="mt-6 text-balance text-3xl font-semibold leading-tight md:text-4xl">
+            Everything you need to craft magnetic applications
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Our comprehensive suite of tools helps you create compelling
-            applications and track your progress throughout your job search
-            journey.
+          <p className="mt-4 text-lg text-muted-foreground">
+            Purpose-built modules cover the full lifecycle—from capturing experience to exporting personalized resumes and measuring outcomes.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} />
+            <FeatureCard key={feature.title} index={index + 1} {...feature} />
           ))}
         </div>
       </div>
