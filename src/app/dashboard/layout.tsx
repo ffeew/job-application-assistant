@@ -15,6 +15,7 @@ import {
 	LogOut,
 	Menu,
 	X,
+	MessageSquareText,
 } from "lucide-react";
 
 const navigation = [
@@ -23,6 +24,11 @@ const navigation = [
 	{ name: "Resumes", href: "/dashboard/resumes", icon: FileText },
 	{ name: "Applications", href: "/dashboard/applications", icon: Briefcase },
 	{ name: "Cover Letters", href: "/dashboard/cover-letters", icon: PenTool },
+	{
+		name: "Conversation Starters",
+		href: "/dashboard/conversation-starters",
+		icon: MessageSquareText,
+	},
 ];
 
 export default function DashboardLayout({
