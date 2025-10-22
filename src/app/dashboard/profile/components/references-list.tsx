@@ -7,7 +7,7 @@ import { Plus, Edit, Trash2, Users, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteReference } from "@/app/dashboard/profile/mutations/use-delete-reference";
 import { ReferencesForm } from "./references-form";
-import type { ReferenceResponse } from "@/lib/validators/profile.validator";
+import type { ReferenceResponse } from "@/app/api/profile/validators";
 
 interface ReferencesListProps {
 	references: ReferenceResponse[];

@@ -1,20 +1,20 @@
-import puppeteer from 'puppeteer';
-import { ProfileService } from './profile.service';
-import { AIContentSelectionService } from './ai-content-selection.service';
-import { generateProfessionalResumeHTML } from '@/lib/resume-templates/professional-html';
+import puppeteer from "puppeteer";
+import { generateProfessionalResumeHTML } from "@/lib/resume-templates/professional-html";
 import type {
+  AchievementResponse,
+  CertificationResponse,
+  EducationResponse,
   GenerateResumeRequest,
+  IntelligentContentSelection,
   JobApplicationResumeRequest,
+  ProjectResponse,
+  SkillResponse,
   UserProfileResponse,
   WorkExperienceResponse,
-  EducationResponse,
-  SkillResponse,
-  ProjectResponse,
-  CertificationResponse,
-  AchievementResponse,
-  IntelligentContentSelection,
-} from '@/lib/validators/profile.validator';
-import type { ApplicationResponse } from '@/lib/validators/applications.validator';
+} from "../profile/validators";
+import type { ApplicationResponse } from "../applications/validators";
+import { ProfileService } from "../profile/service";
+import { AIContentSelectionService } from "./ai-content-selection.service";
 
 interface ResumeData {
   profile: UserProfileResponse | null;

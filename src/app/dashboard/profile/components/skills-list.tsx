@@ -8,7 +8,7 @@ import { Plus, Edit, Trash2, Code } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteSkill } from "@/app/dashboard/profile/mutations/use-delete-skill";
 import { SkillForm } from "./skills-form";
-import type { SkillResponse } from "@/lib/validators/profile.validator";
+import type { SkillResponse } from "@/app/api/profile/validators";
 
 interface SkillsListProps {
   skills: SkillResponse[];

@@ -13,8 +13,8 @@ import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useCreateApplication } from "@/app/dashboard/applications/mutations/use-create-application";
-import { createApplicationSchema } from "@/lib/validators/applications.validator";
-import type { CreateApplicationRequest } from "@/lib/validators/applications.validator";
+import { createApplicationSchema } from "@/app/api/applications/validators";
+import type { CreateApplicationRequest } from "@/app/api/applications/validators";
 
 export default function NewApplicationPage() {
   const router = useRouter();

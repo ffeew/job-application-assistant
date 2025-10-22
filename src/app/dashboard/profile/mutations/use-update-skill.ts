@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateSkillRequest, SkillResponse } from '@/lib/validators/profile.validator';
+import type { UpdateSkillRequest, SkillResponse } from '@/app/api/profile/validators';
 import { skillsKeys } from '../queries/use-skills';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 

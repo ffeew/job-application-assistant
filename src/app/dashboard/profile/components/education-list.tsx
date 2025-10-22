@@ -7,7 +7,7 @@ import { Plus, Edit, Trash2, GraduationCap, Calendar, MapPin } from "lucide-reac
 import { toast } from "sonner";
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
 import { EducationForm } from "./education-form";
-import type { EducationResponse } from "@/lib/validators/profile.validator";
+import type { EducationResponse } from "@/app/api/profile/validators";
 
 interface EducationListProps {
   education: EducationResponse[];

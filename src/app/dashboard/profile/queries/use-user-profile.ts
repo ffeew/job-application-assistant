@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { UserProfileResponse } from '@/lib/validators/profile.validator';
+import type { UserProfileResponse } from '@/app/api/profile/validators';
 
 // Direct API call function
 const userProfileApi = {

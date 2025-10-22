@@ -169,7 +169,7 @@ Each hook file contains:
 - **Query hooks**: For data fetching (e.g., `useResumes()`, `useApplication(id)`)
 - **Mutation hooks**: For data modification (e.g., `useCreateResume()`, `useUpdateApplication()`)
 - **Query keys**: Organized cache invalidation patterns
-- **Type safety**: Uses validator types directly from `@/lib/validators`
+- **Type safety**: Uses validator types directly from the colocated API modules such as `@/app/api/profile/validators`
 
 **Example Hook Structure**:
 ```typescript
@@ -341,7 +341,7 @@ import { useCreateApplication } from '@/app/dashboard/applications/mutations/use
 2. Create in `queries/` (read) or `mutations/` (write) directory
 3. Follow existing patterns with direct API calls
 4. Export query keys for cache invalidation
-5. Use validator types from `@/lib/validators`
+5. Use validator types from the colocated API validator modules (e.g. `@/app/api/profile/validators`)
 
 **Component Imports**:
 - Feature components: `@/app/dashboard/[feature]/components/*`
@@ -434,8 +434,8 @@ export function useCreateApplication() {
 ```typescript
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserProfileSchema } from "@/lib/validators/profile.validator";
-import type { CreateUserProfileRequest } from "@/lib/validators/profile.validator";
+import { createUserProfileSchema } from "@/app/api/profile/validators";
+import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 
 export function MyForm() {
   const form = useForm({
@@ -472,7 +472,7 @@ export function MyForm() {
 
 #### Form Development Rules
 
-1. **Always use Zod resolvers**: Import schemas from `@/lib/validators` and use `zodResolver`
+1. **Always use Zod resolvers**: Import schemas from the colocated API validator modules (e.g. `@/app/api/profile/validators`) and use `zodResolver`
 2. **Type safety with `unknown`**: Use `unknown` for form data parameters, then cast after validation
 3. **Field-level errors**: Display validation errors below each field using `{errors.fieldName && ...}`
 4. **Proper registration**: Use `{...register("fieldName")}` for all form inputs

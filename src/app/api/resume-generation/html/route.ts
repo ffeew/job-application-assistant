@@ -1,8 +1,36 @@
-import { NextRequest } from "next/server";
-import { ResumeGenerationController } from "@/lib/controllers/resume-generation.controller";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { ResumeGenerationService } from "../service";
+import { generateResumeSchema } from "../../profile/validators";
 
-const controller = new ResumeGenerationController();
+const resumeGenerationService = new ResumeGenerationService();
 
 export async function POST(request: NextRequest) {
-  return controller.generateResumeHTML(request);
+  try {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validatedData = generateResumeSchema.parse(body);
+
+    const html = await resumeGenerationService.generateResumeHTML(
+      session.user.id,
+      validatedData,
+    );
+
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html",
+      },
+    });
+  } catch (error) {
+    console.error("Error generating resume HTML:", error);
+    return NextResponse.json(
+      { error: "Failed to generate resume HTML" },
+      { status: 500 },
+    );
+  }
 }

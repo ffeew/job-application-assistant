@@ -398,7 +398,7 @@ All forms in this application use **React Hook Form with Zod validation** for ro
 ```typescript
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserProfileSchema } from "@/lib/validators/profile.validator";
+import { createUserProfileSchema } from "@/app/api/profile/validators";
 
 export function MyForm() {
   const form = useForm({
@@ -434,7 +434,7 @@ export function MyForm() {
 
 #### Form Development Rules
 
-1. **Always use Zod resolvers** - Import schemas from `@/lib/validators`
+1. **Always use Zod resolvers** - Import schemas from the colocated API validator modules such as `@/app/api/profile/validators`
 2. **Type safety with `unknown`** - Use `unknown` for form data, then cast after validation
 3. **Field-level errors** - Display validation errors below each field
 4. **Proper registration** - Use `{...register("fieldName")}` for all inputs

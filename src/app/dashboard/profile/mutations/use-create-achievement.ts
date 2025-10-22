@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateAchievementRequest, AchievementResponse } from '@/lib/validators/profile.validator';
+import type { CreateAchievementRequest, AchievementResponse } from '@/app/api/profile/validators';
 import { achievementsKeys } from '../queries/use-achievements';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';

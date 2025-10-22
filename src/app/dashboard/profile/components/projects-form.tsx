@@ -11,8 +11,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-project";
 import { useUpdateProject } from "@/app/dashboard/profile/mutations/use-update-project";
-import { createProjectSchema } from "@/lib/validators/profile.validator";
-import type { ProjectResponse, CreateProjectRequest } from "@/lib/validators/profile.validator";
+import { createProjectSchema } from "@/app/api/profile/validators";
+import type { ProjectResponse, CreateProjectRequest } from "@/app/api/profile/validators";
 
 interface ProjectsFormProps {
   project?: ProjectResponse;

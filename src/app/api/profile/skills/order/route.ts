@@ -1,8 +1,27 @@
-import { NextRequest } from "next/server";
-import { ProfileController } from "@/lib/controllers/profile.controller";
+import { NextRequest, NextResponse } from "next/server";
+import { ProfileService } from "../../service";
+import { bulkUpdateOrderSchema } from "../../validators";
+import { getUserId } from "../../utils";
 
-const controller = new ProfileController();
+const profileService = new ProfileService();
 
 export async function PUT(request: NextRequest) {
-  return controller.bulkUpdateSkillsOrder(request);
+  try {
+    const userId = await getUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validatedData = bulkUpdateOrderSchema.parse(body);
+
+    await profileService.bulkUpdateSkillsOrder(userId, validatedData);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error updating skills order:", error);
+    return NextResponse.json(
+      { error: "Failed to update skills order" },
+      { status: 500 },
+    );
+  }
 }

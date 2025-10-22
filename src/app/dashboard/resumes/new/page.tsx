@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useCreateResume } from "@/app/dashboard/resumes/mutations/use-create-resume";
-import type { CreateResumeRequest } from "@/lib/validators/resumes.validator";
+import type { CreateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
 
 // Content structure for the resume

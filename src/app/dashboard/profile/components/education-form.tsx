@@ -11,8 +11,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
-import { createEducationSchema } from "@/lib/validators/profile.validator";
-import type { EducationResponse, CreateEducationRequest } from "@/lib/validators/profile.validator";
+import { createEducationSchema } from "@/app/api/profile/validators";
+import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
 
 interface EducationFormProps {
   education?: EducationResponse;

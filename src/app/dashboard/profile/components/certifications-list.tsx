@@ -7,7 +7,7 @@ import { Plus, Edit, Trash2, Award, Calendar, ExternalLink } from "lucide-react"
 import { toast } from "sonner";
 import { useDeleteCertification } from "@/app/dashboard/profile/mutations/use-delete-certification";
 import { CertificationsForm } from "./certifications-form";
-import type { CertificationResponse } from "@/lib/validators/profile.validator";
+import type { CertificationResponse } from "@/app/api/profile/validators";
 
 interface CertificationsListProps {
   certifications: CertificationResponse[];

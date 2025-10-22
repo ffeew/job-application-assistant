@@ -1,8 +1,27 @@
-import { NextRequest } from "next/server";
-import { ProfileController } from "@/lib/controllers/profile.controller";
+import { NextRequest, NextResponse } from "next/server";
+import { ProfileService } from "../../service";
+import { bulkUpdateOrderSchema } from "../../validators";
+import { getUserId } from "../../utils";
 
-const controller = new ProfileController();
+const profileService = new ProfileService();
 
 export async function PUT(request: NextRequest) {
-  return controller.bulkUpdateWorkExperienceOrder(request);
+  try {
+    const userId = await getUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validatedData = bulkUpdateOrderSchema.parse(body);
+
+    await profileService.bulkUpdateWorkExperienceOrder(userId, validatedData);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error updating work experience order:", error);
+    return NextResponse.json(
+      { error: "Failed to update work experience order" },
+      { status: 500 },
+    );
+  }
 }

@@ -7,7 +7,7 @@ import type {
   CertificationResponse,
   AchievementResponse,
   ResumeContentSelection,
-} from '@/lib/validators/profile.validator';
+} from '@/app/api/profile/validators';
 
 interface ResumeData {
   profile: UserProfileResponse | null;

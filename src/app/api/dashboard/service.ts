@@ -1,12 +1,12 @@
 import { db } from "@/lib/db/db";
-import { jobApplications, resumes, coverLetters } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
-import type { 
-  DashboardStats, 
-  DashboardActivity, 
+import { coverLetters, jobApplications, resumes } from "@/lib/db/schema";
+import { desc, eq } from "drizzle-orm";
+import type {
+  ActivityItem,
   ActivityQuery,
-  ActivityItem 
-} from "@/lib/validators";
+  DashboardActivity,
+  DashboardStats,
+} from "./validators";
 
 export class DashboardService {
   async getDashboardStats(userId: string): Promise<DashboardStats> {

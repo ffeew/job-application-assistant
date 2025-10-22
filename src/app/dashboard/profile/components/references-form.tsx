@@ -10,8 +10,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create-reference";
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
-import { createReferenceSchema } from "@/lib/validators/profile.validator";
-import type { ReferenceResponse, CreateReferenceRequest } from "@/lib/validators/profile.validator";
+import { createReferenceSchema } from "@/app/api/profile/validators";
+import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
 
 interface ReferencesFormProps {
   reference?: ReferenceResponse;

@@ -1,12 +1,60 @@
-import { NextRequest } from "next/server";
-import { ProfileController } from "@/lib/controllers/profile.controller";
+import { NextRequest, NextResponse } from "next/server";
+import { ProfileService } from "../service";
+import {
+  createWorkExperienceSchema,
+  profileQuerySchema,
+} from "../validators";
+import { getUserId } from "../utils";
 
-const controller = new ProfileController();
+const profileService = new ProfileService();
 
 export async function GET(request: NextRequest) {
-  return controller.getWorkExperiences(request);
+  try {
+    const userId = await getUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const query = profileQuerySchema.parse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    const experiences = await profileService.getWorkExperiences(
+      userId,
+      query,
+    );
+
+    return NextResponse.json(experiences);
+  } catch (error) {
+    console.error("Error fetching work experiences:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch work experiences" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
-  return controller.createWorkExperience(request);
+  try {
+    const userId = await getUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const validatedData = createWorkExperienceSchema.parse(body);
+
+    const experience = await profileService.createWorkExperience(
+      userId,
+      validatedData,
+    );
+
+    return NextResponse.json(experience, { status: 201 });
+  } catch (error) {
+    console.error("Error creating work experience:", error);
+    return NextResponse.json(
+      { error: "Failed to create work experience" },
+      { status: 500 },
+    );
+  }
 }

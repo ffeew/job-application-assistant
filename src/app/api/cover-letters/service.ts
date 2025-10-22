@@ -1,18 +1,18 @@
 import { db } from "@/lib/db/db";
 import { coverLetters } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
 import type {
-  CreateCoverLetterRequest,
-  UpdateCoverLetterRequest,
-  CoverLettersQuery,
   CoverLetterResponse,
+  CoverLettersQuery,
+  CreateCoverLetterRequest,
   GenerateCoverLetterRequest,
-  GenerateCoverLetterResponse
-} from "@/lib/validators";
+  GenerateCoverLetterResponse,
+  UpdateCoverLetterRequest,
+} from "./validators";
 
 export class CoverLettersService {
   async getCoverLetters(userId: string, query?: CoverLettersQuery): Promise<CoverLetterResponse[]> {

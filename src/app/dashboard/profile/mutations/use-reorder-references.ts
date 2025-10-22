@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { BulkUpdateOrderRequest } from '@/lib/validators/profile.validator';
+import type { BulkUpdateOrderRequest } from '@/app/api/profile/validators';
 import { referencesKeys } from '../queries/use-references';
 
 // Direct API call function

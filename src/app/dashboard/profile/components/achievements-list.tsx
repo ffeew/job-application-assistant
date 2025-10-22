@@ -7,7 +7,7 @@ import { Plus, Edit, Trash2, Trophy, Calendar, ExternalLink } from "lucide-react
 import { toast } from "sonner";
 import { useDeleteAchievement } from "@/app/dashboard/profile/mutations/use-delete-achievement";
 import { AchievementsForm } from "./achievements-form";
-import type { AchievementResponse } from "@/lib/validators/profile.validator";
+import type { AchievementResponse } from "@/app/api/profile/validators";
 
 interface AchievementsListProps {
   achievements: AchievementResponse[];

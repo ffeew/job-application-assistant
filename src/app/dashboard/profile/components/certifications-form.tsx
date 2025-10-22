@@ -10,8 +10,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateCertification } from "@/app/dashboard/profile/mutations/use-create-certification";
 import { useUpdateCertification } from "@/app/dashboard/profile/mutations/use-update-certification";
-import { createCertificationSchema } from "@/lib/validators/profile.validator";
-import type { CertificationResponse, CreateCertificationRequest } from "@/lib/validators/profile.validator";
+import { createCertificationSchema } from "@/app/api/profile/validators";
+import type { CertificationResponse, CreateCertificationRequest } from "@/app/api/profile/validators";
 
 interface CertificationsFormProps {
   certification?: CertificationResponse;

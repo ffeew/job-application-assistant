@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { EducationResponse, ProfileQuery } from '@/lib/validators/profile.validator';
+import type { EducationResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const educationApi = {

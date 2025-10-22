@@ -1,13 +1,13 @@
 import { db } from "@/lib/db/db";
 import { resumes } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import type { 
-  CreateResumeRequest, 
-  UpdateResumeRequest, 
+import type {
+  CreateResumeRequest,
+  ResumeResponse,
   ResumesQuery,
-  ResumeResponse 
-} from "@/lib/validators";
+  UpdateResumeRequest,
+} from "./validators";
 
 export class ResumesService {
   async getResumes(userId: string, query?: ResumesQuery): Promise<ResumeResponse[]> {

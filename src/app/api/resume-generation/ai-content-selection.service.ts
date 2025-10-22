@@ -3,14 +3,14 @@ import { createGroq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import type {
+  AchievementResponse,
+  CertificationResponse,
+  EducationResponse,
+  ProjectResponse,
+  SkillResponse,
   UserProfileResponse,
   WorkExperienceResponse,
-  EducationResponse,
-  SkillResponse,
-  ProjectResponse,
-  CertificationResponse,
-  AchievementResponse,
-} from "@/lib/validators/profile.validator";
+} from "../profile/validators";
 
 const groq = createGroq({
   apiKey: env.GROQ_API_KEY,

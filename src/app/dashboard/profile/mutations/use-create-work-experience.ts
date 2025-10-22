@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateWorkExperienceRequest, WorkExperienceResponse } from '@/lib/validators/profile.validator';
+import type { CreateWorkExperienceRequest, WorkExperienceResponse } from '@/app/api/profile/validators';
 import { workExperiencesKeys } from '../queries/use-work-experiences';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';

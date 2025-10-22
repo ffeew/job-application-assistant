@@ -8,7 +8,7 @@ import { Plus, Edit, Trash2, Briefcase, Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteWorkExperience } from "@/app/dashboard/profile/mutations/use-delete-work-experience";
 import { WorkExperienceForm } from "./work-experience-form";
-import type { WorkExperienceResponse } from "@/lib/validators/profile.validator";
+import type { WorkExperienceResponse } from "@/app/api/profile/validators";
 
 interface WorkExperienceListProps {
   experiences: WorkExperienceResponse[];

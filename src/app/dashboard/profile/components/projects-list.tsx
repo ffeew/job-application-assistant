@@ -9,7 +9,7 @@ import { GithubIcon } from "@/components/ui/github-icon";
 import { toast } from "sonner";
 import { useDeleteProject } from "@/app/dashboard/profile/mutations/use-delete-project";
 import { ProjectsForm } from "./projects-form";
-import type { ProjectResponse } from "@/lib/validators/profile.validator";
+import type { ProjectResponse } from "@/app/api/profile/validators";
 
 interface ProjectsListProps {
   projects: ProjectResponse[];

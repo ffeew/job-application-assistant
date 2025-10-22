@@ -9,7 +9,7 @@ import type {
   ProjectResponse,
   CertificationResponse,
   AchievementResponse,
-} from "@/lib/validators/profile.validator";
+} from "@/app/api/profile/validators";
 
 interface ResumeData {
   profile: UserProfileResponse | null;

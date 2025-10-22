@@ -11,8 +11,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateAchievement } from "@/app/dashboard/profile/mutations/use-create-achievement";
 import { useUpdateAchievement } from "@/app/dashboard/profile/mutations/use-update-achievement";
-import { createAchievementSchema } from "@/lib/validators/profile.validator";
-import type { AchievementResponse, CreateAchievementRequest } from "@/lib/validators/profile.validator";
+import { createAchievementSchema } from "@/app/api/profile/validators";
+import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
 
 interface AchievementsFormProps {
   achievement?: AchievementResponse;

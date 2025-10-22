@@ -11,8 +11,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
 import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-update-work-experience";
-import { createWorkExperienceSchema } from "@/lib/validators/profile.validator";
-import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/lib/validators/profile.validator";
+import { createWorkExperienceSchema } from "@/app/api/profile/validators";
+import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/app/api/profile/validators";
 
 interface WorkExperienceFormProps {
   experience?: WorkExperienceResponse;

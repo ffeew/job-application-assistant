@@ -26,8 +26,8 @@ import {
 import Link from "next/link";
 import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
 import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
-import { generateResumeSchema } from "@/lib/validators/profile.validator";
-import type { GenerateResumeRequest } from "@/lib/validators/profile.validator";
+import { generateResumeSchema } from "@/app/api/profile/validators";
+import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 
 export default function GenerateResumePage() {
 	const [previewHTML, setPreviewHTML] = useState<string | null>(null);

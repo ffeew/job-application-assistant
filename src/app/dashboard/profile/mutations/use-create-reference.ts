@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateReferenceRequest, ReferenceResponse } from '@/lib/validators/profile.validator';
+import type { CreateReferenceRequest, ReferenceResponse } from '@/app/api/profile/validators';
 import { referencesKeys } from '../queries/use-references';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';

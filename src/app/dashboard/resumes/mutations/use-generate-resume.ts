@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import type { GenerateResumeRequest } from "@/lib/validators/profile.validator";
+import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 
 interface ResumeValidationResult {
   valid: boolean;

@@ -10,8 +10,8 @@ import { Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-skill";
 import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-skill";
-import { createSkillSchema } from "@/lib/validators/profile.validator";
-import type { SkillResponse, CreateSkillRequest } from "@/lib/validators/profile.validator";
+import { createSkillSchema } from "@/app/api/profile/validators";
+import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/validators";
 
 interface SkillFormProps {
   skill?: SkillResponse;

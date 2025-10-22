@@ -18,11 +18,11 @@ import { Save, User } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-create-user-profile";
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
-import { createUserProfileSchema } from "@/lib/validators/profile.validator";
+import { createUserProfileSchema } from "@/app/api/profile/validators";
 import type {
 	UserProfileResponse,
 	CreateUserProfileRequest,
-} from "@/lib/validators/profile.validator";
+} from "@/app/api/profile/validators";
 
 interface UserProfileFormProps {
 	profile: UserProfileResponse | null;

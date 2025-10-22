@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import type {
   JobApplicationResumeRequest,
   IntelligentContentSelection,
-} from '@/lib/validators/profile.validator';
+} from '@/app/api/profile/validators';
 
 interface ResumeGenerationResponse {
   html: string;

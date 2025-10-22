@@ -1,14 +1,13 @@
-
+import { db } from "@/lib/db/db";
 import { jobApplications } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type {
+  ApplicationResponse,
+  ApplicationsQuery,
   CreateApplicationRequest,
   UpdateApplicationRequest,
-  ApplicationsQuery,
-  ApplicationResponse
-} from "@/lib/validators";
-import { db } from "@/lib/db/db";
+} from "./validators";
 
 export class ApplicationsService {
   async getApplications(userId: string, query?: ApplicationsQuery): Promise<ApplicationResponse[]> {

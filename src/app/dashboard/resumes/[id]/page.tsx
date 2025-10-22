@@ -12,7 +12,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useResume } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
-import type { UpdateResumeRequest } from "@/lib/validators/resumes.validator";
+import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
 
 interface ResumeContent {

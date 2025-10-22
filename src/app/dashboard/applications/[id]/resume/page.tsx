@@ -33,11 +33,11 @@ import {
 	useGenerateJobApplicationPreview,
 	useGenerateJobApplicationPDF,
 } from "@/app/dashboard/applications/mutations/use-generate-job-application-resume";
-import { jobApplicationResumeRequestSchema } from "@/lib/validators/profile.validator";
+import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import type {
 	JobApplicationResumeRequest,
 	IntelligentContentSelection,
-} from "@/lib/validators/profile.validator";
+} from "@/app/api/profile/validators";
 
 export default function JobApplicationResumePage({
 	params,

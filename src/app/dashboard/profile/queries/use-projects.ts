@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ProjectResponse, ProfileQuery } from '@/lib/validators/profile.validator';
+import type { ProjectResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const projectsApi = {
