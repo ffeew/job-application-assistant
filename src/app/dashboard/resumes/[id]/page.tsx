@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import { useResume, useUpdateResume } from "@/hooks/use-resumes";
+import { useResume } from "@/app/dashboard/resumes/queries/use-resumes";
+import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import type { UpdateResumeRequest } from "@/lib/validators/resumes.validator";
 import { toast } from "sonner";
 

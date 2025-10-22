@@ -19,10 +19,8 @@ import {
 	Calendar,
 	FileText,
 } from "lucide-react";
-import {
-	useApplications,
-	useDeleteApplication,
-} from "@/hooks/use-applications";
+import { useApplications } from "@/app/dashboard/applications/queries/use-applications";
+import { useDeleteApplication } from "@/app/dashboard/applications/mutations/use-delete-application";
 
 const statusColors = {
 	applied: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",

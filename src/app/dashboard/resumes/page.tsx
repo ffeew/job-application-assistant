@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FileText, Edit, Trash2, Star, Wand2 } from "lucide-react";
-import { useResumes, useDeleteResume, useUpdateResume } from "@/hooks";
+import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
+import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
+import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import { toast } from "sonner";
 
 export default function ResumesPage() {

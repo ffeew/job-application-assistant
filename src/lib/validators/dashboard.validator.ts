@@ -21,7 +21,7 @@ export const activityItemSchema = z.object({
   action: z.enum(["created", "updated", "deleted"]),
   title: z.string(),
   description: z.string().optional(),
-  createdAt: z.date(),
+  createdAt: z.string(), // ISO 8601 date string from JSON serialization
 });
 
 // Dashboard activity response

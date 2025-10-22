@@ -25,7 +25,8 @@ import {
 import { ArrowLeft, Save, FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useApplication, useUpdateApplication } from "@/hooks/use-applications";
+import { useApplication } from "@/app/dashboard/applications/queries/use-applications";
+import { useUpdateApplication } from "@/app/dashboard/applications/mutations/use-update-application";
 import { updateApplicationSchema } from "@/lib/validators/applications.validator";
 import type { UpdateApplicationRequest } from "@/lib/validators/applications.validator";
 

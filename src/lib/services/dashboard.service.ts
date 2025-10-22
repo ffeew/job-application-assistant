@@ -41,7 +41,9 @@ export class DashboardService {
   }
 
   async getDashboardActivity(userId: string, query?: ActivityQuery): Promise<DashboardActivity> {
-    const activities: ActivityItem[] = [];
+    // Use a temporary type for internal processing with Date objects
+    type ActivityItemWithDate = Omit<ActivityItem, 'createdAt'> & { createdAt: Date };
+    const activities: ActivityItemWithDate[] = [];
 
     // Get recent applications
     if (!query?.type || query.type === 'application') {
@@ -100,7 +102,7 @@ export class DashboardService {
           type: 'cover_letter',
           action: 'created',
           title: letter.title,
-          description: letter.isAiGenerated 
+          description: letter.isAiGenerated
             ? `Generated AI cover letter: ${letter.title}`
             : `Created cover letter: ${letter.title}`,
           createdAt: letter.createdAt,
@@ -108,9 +110,13 @@ export class DashboardService {
       });
     }
 
-    // Sort by creation date and limit
+    // Sort by creation date, limit, and convert dates to ISO strings
     return activities
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, query?.limit || 10);
+      .slice(0, query?.limit || 10)
+      .map(activity => ({
+        ...activity,
+        createdAt: activity.createdAt.toISOString(),
+      }));
   }
 }

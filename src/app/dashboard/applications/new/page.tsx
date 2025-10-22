@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useCreateApplication } from "@/hooks/use-applications";
+import { useCreateApplication } from "@/app/dashboard/applications/mutations/use-create-application";
 import { createApplicationSchema } from "@/lib/validators/applications.validator";
 import type { CreateApplicationRequest } from "@/lib/validators/applications.validator";
 

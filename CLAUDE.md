@@ -111,23 +111,17 @@ This is a fully functional Next.js 15 application for a job application assistan
 - **Package Manager**: Bun (indicated by bun.lock)
 - **Runtime**: Node.js 20+ (TypeScript 5)
 
-### Key Directories
+### Project Structure
 
-- `src/app/` - Next.js App Router pages and layouts
-  - `src/app/dashboard/applications/[id]/resume/` - **NEW**: AI-powered job-specific resume generation
-- `src/lib/` - Shared utilities and configuration
-- `src/lib/auth.ts` - BetterAuth configuration with Drizzle adapter
-- `src/lib/db/` - Database configuration and schemas
-- `src/lib/validators/` - Zod validation schemas shared between frontend and backend
-- `src/lib/services/` - Business logic layer with database operations
-  - `src/lib/services/ai-content-selection.service.ts` - **NEW**: AI job description analysis and content scoring
-  - `src/lib/services/resume-generation.service.ts` - **ENHANCED**: Integrated with AI content selection
-- `src/lib/controllers/` - Request handling and service orchestration
-- `src/lib/env.ts` - Environment variable validation with Zod (includes `GROQ_MODEL` configuration)
-- `src/hooks/` - Custom React Query hooks for data management
-  - `src/hooks/use-job-application-resume.ts` - **NEW**: Job-specific resume generation hooks
-- `src/components/providers/` - Application providers (QueryClient, etc.)
-- `src/components/ui/` - Reusable UI components (Shadcn UI + custom components)
+This is a **feature-based architecture** where each feature is self-contained:
+
+- **`src/app/dashboard/[feature]/`** - Each feature has its own `queries/`, `mutations/`, and `components/` directories
+- **`src/app/components/`** - App-wide shared components (layout, landing, providers)
+- **`src/components/ui/`** - Shadcn UI primitives only
+- **`src/lib/`** - Backend layer (validators, services, controllers)
+- **`src/lib/validators/`** - Zod schemas shared between frontend/backend
+- **`src/lib/services/`** - Business logic and database operations
+- **`src/lib/controllers/`** - HTTP request handling
 
 ### API Architecture
 
@@ -166,17 +160,9 @@ The application follows a clean 3-layer API architecture:
 
 ### Frontend Data Management
 
-The application uses React Query for all data fetching with direct API calls and custom hooks:
+The application uses **React Query with feature-based hooks** co-located with their features.
 
-- **Custom React Query Hooks** (`src/hooks/`):
-  - `use-dashboard.ts` - Dashboard stats and activity data with direct `/api/dashboard/*` calls
-  - `use-resumes.ts` - Resume CRUD operations with direct `/api/resumes/*` calls
-  - `use-applications.ts` - Job application management with direct `/api/applications/*` calls
-  - `use-cover-letters.ts` - Cover letter generation and management with direct `/api/cover-letters/*` calls
-  - `use-profile.ts` - Comprehensive profile data management with direct `/api/profile/*` calls
-  - `use-job-application-resume.ts` - **NEW**: AI-powered job-specific resume generation with direct `/api/applications/[id]/resume` calls
-
-#### React Query Hook Architecture
+#### Hook Organization Pattern
 
 Each hook file contains:
 - **Direct API functions**: Simple fetch calls to backend endpoints
@@ -187,6 +173,8 @@ Each hook file contains:
 
 **Example Hook Structure**:
 ```typescript
+// src/app/dashboard/resumes/queries/use-resumes.ts
+
 // Direct API calls
 const resumesApi = {
   getAll: async (): Promise<Resume[]> => {
@@ -194,23 +182,47 @@ const resumesApi = {
     if (!response.ok) throw new Error('Failed to fetch resumes');
     return response.json();
   },
-  // ... other methods
+
+  getById: async (id: string): Promise<Resume> => {
+    const response = await fetch(`/api/resumes/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch resume');
+    return response.json();
+  },
 };
 
-// React Query hooks
+// Query keys
+export const resumesKeys = {
+  all: ['resumes'] as const,
+  lists: () => [...resumesKeys.all, 'list'] as const,
+  details: () => [...resumesKeys.all, 'detail'] as const,
+  detail: (id: string) => [...resumesKeys.details(), id] as const,
+};
+
+// Hooks
 export function useResumes() {
   return useQuery({
-    queryKey: resumeKeys.lists(),
+    queryKey: resumesKeys.lists(),
     queryFn: resumesApi.getAll,
+  });
+}
+
+export function useResume(id: string) {
+  return useQuery({
+    queryKey: resumesKeys.detail(id),
+    queryFn: () => resumesApi.getById(id),
+    enabled: !!id,
   });
 }
 ```
 
 **Benefits**:
+- **Feature Co-Location**: Hooks live with the features that use them
+- **Clear Feature Boundaries**: Easy to see what data each feature manages
+- **Better Scalability**: Add new features without cluttering shared folders
+- **Improved Discoverability**: Related code is organized together
+- **Single Responsibility**: Each hook file handles one specific operation
 - **Simplified Architecture**: No intermediate API client layer
 - **Direct Type Safety**: Uses validator types without re-exports
-- **Better Performance**: Fewer abstraction layers
-- **Easier Debugging**: Clear path from hook to API endpoint
 
 ### Environment Configuration
 
@@ -228,23 +240,15 @@ The project uses Turso (SQLite) as the database with Drizzle ORM. Connection req
 
 Authentication is configured through BetterAuth with SQLite provider using the Drizzle adapter.
 
-### Features Implemented
+### Core Features
 
-1. **User Authentication** - Email/password with BetterAuth
-2. **Resume Management** - Create, edit, delete resumes with JSON content storage
-3. **Job Application Tracking** - Track applications with status updates and detailed information
-4. **AI Cover Letter Generation** - Groq-powered personalized cover letters (uses `openai/gpt-oss-120b` or `moonshotai/kimi-k2-instruct`)
-5. **Structured Profile Management** - Comprehensive user profiles with experiences, education, skills, projects, certifications, achievements, and references
-6. **Professional Resume Generation** - HTML/PDF resume generation with 1-page templates and content selection
-7. **🆕 AI-Powered Job-Specific Resume Generation** - Revolutionary intelligent resume optimization:
-   - **Job Description Analysis** - AI extracts requirements, skills, and keywords from job postings
-   - **Intelligent Content Selection** - AI scores and ranks profile entries by relevance (0-100 scale)
-   - **Smart Profile Matching** - Automatically selects most relevant experiences, skills, and projects
-   - **Transparent AI Decision Making** - Shows strategy, reasoning, and matched keywords
-   - **Customizable Parameters** - Control limits for work experiences (1-8), projects (0-6), skills (5-20)
-   - **Manual Override Support** - Fine-tune AI selections with manual content choices
-   - **Job-Application Integration** - Generate tailored resumes directly from applications with "Generate Tailored Resume" buttons
-8. **Dashboard Analytics** - Real-time stats and activity tracking
+- **Authentication** - Email/password with BetterAuth
+- **Profile Management** - Comprehensive profiles with work experience, education, skills, projects, certifications, achievements, references
+- **Resume Management** - Create/edit resumes with JSON storage, HTML/PDF generation
+- **Job Applications** - Track applications with status updates
+- **Cover Letters** - AI-powered personalized generation via Groq
+- **AI Resume Optimization** - Job-specific resume generation with intelligent content selection based on job descriptions
+- **Dashboard** - Real-time stats and activity tracking
 
 ### Path Aliases
 
@@ -309,43 +313,117 @@ export async function GET(request: NextRequest) {
 
 ### Development Notes
 
-- All pages use React Query hooks for data fetching with proper error handling and loading states
-- Environment variables are validated at startup - app won't start with invalid configuration
-- API follows clean architecture with validators, services, and controllers
-- Frontend React Query hooks use validator types directly for type safety
-- No client-side fetch() calls - all data fetching goes through React Query hooks
-- Uses Geist fonts (Geist Sans and Geist Mono) for typography
-- Configured for both light and dark mode support
-- Proper TypeScript throughout with strict type checking
+- All data fetching uses React Query hooks (no direct `fetch()` calls)
+- Environment variables validated at startup (Zod schemas)
+- Backend: Clean 3-layer architecture (validators → services → controllers)
+- Frontend: Feature-based architecture with co-located hooks
+- TypeScript strict mode enabled throughout
 
 ### Frontend Development Guidelines
 
 **Data Fetching**:
-- **ALWAYS** use React Query hooks for data fetching, never direct `fetch()` calls
-- Import hooks from `@/hooks` (e.g., `import { useResumes } from '@/hooks/use-resumes'`)
-- Use appropriate hooks for CRUD operations:
-  - `useResumes()` for fetching all resumes
-  - `useResume(id)` for fetching a single resume
-  - `useCreateResume()` for creating resumes
-  - `useUpdateResume()` for updating resumes
-  - Similar patterns for applications and cover letters
-- **NEW AI-Powered Resume Generation**:
-  - `useApplicationResumeInfo(applicationId)` - Fetch application info for resume generation
-  - `useGenerateJobApplicationPDF()` - Generate and download job-specific resume PDFs
-  - `useGenerateJobApplicationPreview()` - Generate HTML previews with AI insights
-  - `useGenerateJobApplicationHTML()` - Generate HTML resumes with AI optimization
+- **ALWAYS** use React Query hooks, never direct `fetch()` calls
+- Import from feature directories: `@/app/dashboard/[feature]/queries/use-[feature]s`
+- Queries and mutations are separated into different directories
+- List and detail queries are combined in the same file (e.g., `useResumes()` and `useResume(id)` both in `use-resumes.ts`)
 
-**Adding New Data Operations**:
-1. If hook doesn't exist, add it to the appropriate hook file in `src/hooks/`
-2. Follow the established pattern with direct API calls and React Query
-3. Use validator types from `@/lib/validators` for type safety
-4. Include proper error handling and cache invalidation
+**Example Import Pattern**:
+```typescript
+// Queries (data fetching)
+import { useApplications, useApplication } from '@/app/dashboard/applications/queries/use-applications';
 
-**Component Patterns**:
-- Use loading states from React Query (`isLoading`, `isPending`)
-- Handle error states appropriately (`error`, `isError`)
-- Leverage React Query's caching and background refetching
-- Use mutations for create/update/delete operations with proper `onSuccess` callbacks
+// Mutations (data modification)
+import { useCreateApplication } from '@/app/dashboard/applications/mutations/use-create-application';
+```
+
+**Adding New Hooks**:
+1. Determine the feature it belongs to
+2. Create in `queries/` (read) or `mutations/` (write) directory
+3. Follow existing patterns with direct API calls
+4. Export query keys for cache invalidation
+5. Use validator types from `@/lib/validators`
+
+**Component Imports**:
+- Feature components: `@/app/dashboard/[feature]/components/*`
+- Shared components: `@/app/components/*`
+- UI primitives: `@/components/ui/*`
+
+### Feature-Based Architecture Principles
+
+This application follows a **feature-based architecture** where each feature is self-contained with its own data management and components.
+
+#### Directory Structure for Features
+
+```
+src/app/dashboard/[feature]/
+├── queries/              # Data fetching hooks
+│   ├── use-[feature]s.ts        # List + detail queries combined
+│   └── use-[feature]-*.ts       # Additional query hooks
+├── mutations/            # Data modification hooks
+│   ├── use-create-[feature].ts
+│   ├── use-update-[feature].ts
+│   ├── use-delete-[feature].ts
+│   └── use-*.ts                 # Additional mutations
+├── components/           # Feature-specific components
+│   ├── [feature]-content.tsx    # Main content component
+│   ├── [feature]-form.tsx       # Create/edit form
+│   └── [feature]-card.tsx       # Display card
+└── [routes]/            # Next.js pages
+    ├── page.tsx
+    ├── [id]/page.tsx
+    └── new/page.tsx
+```
+
+#### When to Create a New Feature
+
+Create a new feature directory when:
+- The feature has its own data model (database table)
+- The feature requires multiple CRUD operations
+- The feature has 3+ related pages or components
+- The feature should be independently testable
+
+#### Component Organization Rules
+
+1. **Single-Use Components** → Feature's `components/` directory
+2. **Feature-Shared Components** → Stay within the feature folder
+3. **Multi-Feature Components** → Move to `/app/components/shared/` only when used by 3+ features
+4. **Layout Components** → `/app/components/layout/` (dashboard, header, sidebar)
+5. **UI Primitives** → `/components/ui/` (Shadcn components only)
+
+#### Query vs Mutation Separation
+
+**Queries** (`queries/` directory):
+- Fetch data from the server
+- Can be combined (list + detail in same file)
+- Export query keys for cache management
+- Read-only operations
+
+**Mutations** (`mutations/` directory):
+- Modify server data (create, update, delete)
+- One mutation per file for clarity
+- Import query keys to invalidate caches
+- Write operations
+
+#### Cache Invalidation Strategy
+
+When creating mutations, invalidate related caches:
+```typescript
+export function useCreateApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) => api.create(data),
+    onSuccess: () => {
+      // Invalidate the feature's list
+      queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
+      // Invalidate dashboard stats if the feature affects them
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      // Invalidate dashboard activity feed
+      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+    },
+  });
+}
+```
 
 ### Form Development with React Hook Form
 
@@ -400,25 +478,14 @@ export function MyForm() {
 4. **Proper registration**: Use `{...register("fieldName")}` for all form inputs
 5. **Loading states**: Use `isSubmitting` from formState to disable submit buttons
 
-#### Profile Form Components
+#### Profile Form Pattern
 
-The application includes comprehensive profile forms using this pattern:
-
-- **`UserProfileForm`** - Personal information with react-hook-form and Zod validation
-- **`WorkExperienceForm`** - Work experience CRUD with date handling and current position logic
-- **`EducationForm`** - Education history with degree validation
-- **`SkillsForm`** - Skills with category and proficiency level dropdowns
-- **`ProjectsForm`** - Project portfolio with technology tags
-- **`CertificationsForm`** - Professional certifications with verification
-- **`AchievementsForm`** - Career achievements and awards
-- **`ReferencesForm`** - Professional references with contact details
-
-Each form follows the same pattern:
-- Uses appropriate Zod schema for validation
-- Handles both create and edit operations
-- Integrates with React Query mutations
-- Provides proper error handling and loading states
-- Uses `unknown` type casting with validation comments
+All profile forms follow the same pattern:
+- Use React Hook Form with Zod validation
+- Handle both create and edit operations
+- Integrate with React Query mutations
+- Display field-level validation errors
+- Use `unknown` type casting after validation
 
 #### Form Best Practices
 
@@ -431,119 +498,27 @@ Each form follows the same pattern:
 
 ## AI Development Guidelines
 
-### AI-Powered Resume Generation Architecture
+### AI Integration
 
-The application implements intelligent resume generation using a multi-layered approach:
+- **Service**: `AIContentSelectionService` analyzes job descriptions and selects optimal resume content
+- **Models**: Use Groq with `openai/gpt-oss-120b` (primary) or `moonshotai/kimi-k2-instruct` (fallback)
+- **Environment**: Requires `GROQ_API_KEY`, optional `GROQ_MODEL` override
 
-#### **AIContentSelectionService** (`src/lib/services/ai-content-selection.service.ts`)
+### Best Practices
 
-**Core Capabilities**:
-- **Job Description Analysis** - Extracts requirements, skills, keywords, seniority level, and industry
-- **Intelligent Content Scoring** - Ranks profile entries by relevance (0-100 scale) 
-- **Smart Selection Algorithm** - Chooses optimal content combinations within specified limits
-- **Transparent Decision Making** - Provides reasoning and matched keywords for each selection
+**Error Handling**:
+- Always provide fallback behavior when AI fails
+- Graceful degradation to manual selection
+- Log errors but don't expose to users
 
-**Key Methods**:
-```typescript
-// Analyze job description and extract structured data
-async analyzeJobDescription(jobDescription: string): Promise<JobAnalysisResponse>
+**AI Response Processing**:
+- Use low temperature (0.2) for consistent results
+- Parse JSON responses safely with try/catch
+- Validate responses against TypeScript interfaces
 
-// Select optimal profile content based on job requirements  
-async selectOptimalContent(
-  jobDescription: string,
-  profileData: ProfileData,
-  maxWorkExperiences: number = 4,
-  maxProjects: number = 3, 
-  maxSkills: number = 12
-): Promise<IntelligentContentSelection>
-```
-
-#### **Enhanced ResumeGenerationService** (`src/lib/services/resume-generation.service.ts`)
-
-**New AI-Integrated Methods**:
-```typescript
-// Generate job-specific resume HTML with AI content selection
-async generateJobApplicationResumeHTML(
-  userId: string,
-  application: ApplicationResponse,
-  request: JobApplicationResumeRequest
-): Promise<{ html: string; aiSelection?: IntelligentContentSelection }>
-
-// Generate job-specific resume PDF with AI optimization
-async generateJobApplicationResumePDF(
-  userId: string, 
-  application: ApplicationResponse,
-  request: JobApplicationResumeRequest
-): Promise<{ pdf: Buffer; aiSelection?: IntelligentContentSelection }>
-```
-
-### AI Integration Best Practices
-
-#### **Environment Configuration**
-```typescript
-// Environment variables for AI features
-GROQ_API_KEY=your-groq-api-key-here          // Required for AI features
-GROQ_MODEL=openai/gpt-oss-120b               // Default AI model (optional)
-```
-
-#### **Error Handling and Fallbacks**
-- **Always provide fallback behavior** when AI analysis fails
-- **Graceful degradation** - If AI is unavailable, use manual selection methods
-- **Transparent error reporting** - Log AI failures but don't expose them to users
-- **Timeout handling** - AI requests should have reasonable timeouts
-
-#### **AI Response Processing**
-```typescript
-// Always validate AI responses with proper error handling
-try {
-  const { text } = await generateText({
-    model: groq(this.model),
-    prompt: analysisPrompt,
-    temperature: 0.2, // Lower temperature for consistent results
-  });
-
-  // Parse JSON responses safely
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
-  }
-  throw new Error("Failed to parse AI response");
-} catch (error) {
-  console.error("AI analysis failed:", error);
-  return this.getFallbackSelection(profileData, limits);
-}
-```
-
-#### **Type Safety with AI Responses** 
-```typescript
-// Use proper TypeScript interfaces for AI response validation
-interface JobAnalysisResponse {
-  requirements: string[];
-  skills: string[];
-  keywords: string[];
-  seniority: 'entry' | 'mid' | 'senior' | 'executive';
-  industry: string;
-  summary: string;
-}
-
-// Validate AI responses against expected schemas
-private validateAndFormatSelection(
-  selection: {
-    selectedWorkExperiences?: number[];
-    selectedEducation?: number[];
-    // ... other fields
-  },
-  profileData: ProfileData
-): IntelligentContentSelection
-```
-
-### AI Feature Development Workflow
-
-1. **Add AI Logic to Services** - Implement AI analysis in service layer
-2. **Create Proper Validators** - Define Zod schemas for AI requests/responses  
-3. **Build API Endpoints** - Expose AI functionality through REST APIs
-4. **Develop React Hooks** - Create React Query hooks for AI operations
-5. **Design UI Components** - Build user interfaces that show AI insights transparently
-6. **Implement Fallbacks** - Ensure graceful degradation when AI is unavailable
-7. **Add Error Handling** - Proper error boundaries and user feedback
-8. **Test Edge Cases** - Validate behavior with malformed job descriptions, network failures, etc.
+**Development Workflow**:
+1. Implement AI logic in service layer
+2. Create Zod validators for requests/responses
+3. Build API endpoints
+4. Create React Query hooks
+5. Ensure fallback behavior

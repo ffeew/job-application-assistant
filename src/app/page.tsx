@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/app/utils/authClient";
-import { Header } from "@/components/landing/header";
-import { HeroSection } from "@/components/landing/hero-section";
-import { FeaturesSection } from "@/components/landing/features-section";
-import { TechStackSection } from "@/components/landing/tech-stack-section";
-import { GettingStartedSection } from "@/components/landing/getting-started-section";
-import { CommunitySection } from "@/components/landing/community-section";
-import { Footer } from "@/components/landing/footer";
+import { Header } from "@/app/components/landing/header";
+import { HeroSection } from "@/app/components/landing/hero-section";
+import { FeaturesSection } from "@/app/components/landing/features-section";
+import { TechStackSection } from "@/app/components/landing/tech-stack-section";
+import { GettingStartedSection } from "@/app/components/landing/getting-started-section";
+import { CommunitySection } from "@/app/components/landing/community-section";
+import { Footer } from "@/app/components/landing/footer";
 
 export default function Home() {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

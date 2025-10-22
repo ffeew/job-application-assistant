@@ -28,11 +28,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useApplicationResumeInfo } from "@/app/dashboard/applications/queries/use-application-resume-info";
 import {
-	useApplicationResumeInfo,
 	useGenerateJobApplicationPreview,
 	useGenerateJobApplicationPDF,
-} from "@/hooks/use-job-application-resume";
+} from "@/app/dashboard/applications/mutations/use-generate-job-application-resume";
 import { jobApplicationResumeRequestSchema } from "@/lib/validators/profile.validator";
 import type {
 	JobApplicationResumeRequest,

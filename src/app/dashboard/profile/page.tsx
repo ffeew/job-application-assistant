@@ -22,24 +22,22 @@ import {
 	Trophy,
 	Users,
 } from "lucide-react";
-import {
-	useUserProfile,
-	useWorkExperiences,
-	useEducation,
-	useSkills,
-	useProjects,
-	useCertifications,
-	useAchievements,
-	useReferences,
-} from "@/hooks/use-profile";
-import { UserProfileForm } from "@/components/profile/user-profile-form";
-import { WorkExperienceList } from "@/components/profile/work-experience-list-new";
-import { EducationList } from "@/components/profile/education-list";
-import { SkillsList } from "@/components/profile/skills-list";
-import { ProjectsList } from "@/components/profile/projects-list";
-import { CertificationsList } from "@/components/profile/certifications-list";
-import { AchievementsList } from "@/components/profile/achievements-list";
-import { ReferencesList } from "@/components/profile/references-list";
+import { useUserProfile } from "@/app/dashboard/profile/queries/use-user-profile";
+import { useWorkExperiences } from "@/app/dashboard/profile/queries/use-work-experiences";
+import { useEducation } from "@/app/dashboard/profile/queries/use-education";
+import { useSkills } from "@/app/dashboard/profile/queries/use-skills";
+import { useProjects } from "@/app/dashboard/profile/queries/use-projects";
+import { useCertifications } from "@/app/dashboard/profile/queries/use-certifications";
+import { useAchievements } from "@/app/dashboard/profile/queries/use-achievements";
+import { useReferences } from "@/app/dashboard/profile/queries/use-references";
+import { UserProfileForm } from "@/app/dashboard/profile/components/user-profile-form";
+import { WorkExperienceList } from "@/app/dashboard/profile/components/work-experience-list-new";
+import { EducationList } from "@/app/dashboard/profile/components/education-list";
+import { SkillsList } from "@/app/dashboard/profile/components/skills-list";
+import { ProjectsList } from "@/app/dashboard/profile/components/projects-list";
+import { CertificationsList } from "@/app/dashboard/profile/components/certifications-list";
+import { AchievementsList } from "@/app/dashboard/profile/components/achievements-list";
+import { ReferencesList } from "@/app/dashboard/profile/components/references-list";
 
 export default function ProfilePage() {
 	const router = useRouter();

@@ -24,10 +24,8 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
-import {
-	useResumeData,
-	useResumeGeneration,
-} from "@/hooks/use-resume-generation";
+import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
+import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
 import { generateResumeSchema } from "@/lib/validators/profile.validator";
 import type { GenerateResumeRequest } from "@/lib/validators/profile.validator";
 

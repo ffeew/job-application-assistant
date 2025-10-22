@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Sparkles, Save } from "lucide-react";
 import Link from "next/link";
-import { useResumes } from "@/hooks/use-resumes";
-import { useApplications } from "@/hooks/use-applications";
-import { useCreateCoverLetter, useGenerateCoverLetter } from "@/hooks/use-cover-letters";
+import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
+import { useApplications } from "@/app/dashboard/applications/queries/use-applications";
+import { useCreateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-create-cover-letter";
+import { useGenerateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-generate-cover-letter";
 import { toast } from "sonner";
 
 export default function NewCoverLetterPage() {

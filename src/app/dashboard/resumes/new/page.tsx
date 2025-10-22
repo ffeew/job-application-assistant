@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import { useCreateResume } from "@/hooks/use-resumes";
+import { useCreateResume } from "@/app/dashboard/resumes/mutations/use-create-resume";
 import type { CreateResumeRequest } from "@/lib/validators/resumes.validator";
 import { toast } from "sonner";
 

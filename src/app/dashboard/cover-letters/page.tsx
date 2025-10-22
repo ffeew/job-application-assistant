@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, PenTool, Eye, Trash2, Sparkles } from "lucide-react";
-import { useCoverLetters, useDeleteCoverLetter } from "@/hooks/use-cover-letters";
+import { useCoverLetters } from "@/app/dashboard/cover-letters/queries/use-cover-letters";
+import { useDeleteCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-delete-cover-letter";
 
 export default function CoverLettersPage() {
   const { data: coverLetters = [], isLoading, error, refetch } = useCoverLetters();
