@@ -18,12 +18,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. **`npm run typecheck`** - Verify TypeScript type correctness
 
 ### Quality Standards
+
 - **All ESLint errors must be fixed** - No exceptions
 - **All TypeScript errors must be resolved** - Ensure type safety
 - **Address ESLint warnings** when possible (prefer fixing over disabling)
 - **Use proper TypeScript types** - **NEVER use `any`**, always use specific interfaces/types, `unknown`, or proper generics
 
 ### Common Issues to Fix
+
 - **Unused variables/imports** - Remove or prefix with underscore if intentionally unused
 - **Missing dependencies in useEffect** - Add to dependency array or use ESLint disable comment
 - **Unescaped entities** - Use `&apos;` for apostrophes in JSX
@@ -31,8 +33,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Missing error handling** - Properly handle catch blocks and error states
 
 ### Before Task Completion
+
 1. Run `npm run lint` and fix ALL errors and warnings
-2. Run `npm run typecheck` and resolve ALL type errors  
+2. Run `npm run typecheck` and resolve ALL type errors
 3. Test the changes work as expected
 4. Only then consider the task complete
 
@@ -46,6 +49,7 @@ When working with AI features in this application, use the following Groq models
 2. **`moonshotai/kimi-k2-instruct`** - Secondary model if primary is unavailable
 
 These models provide the best performance and quality for the application's AI-powered features including:
+
 - **Job Description Analysis** - Extract requirements, skills, and keywords from job postings
 - **Intelligent Content Selection** - Score and rank profile entries by relevance (0-100 scale)
 - **Resume Optimization** - Select most relevant experiences, skills, and projects for specific jobs
@@ -54,40 +58,60 @@ These models provide the best performance and quality for the application's AI-p
 ## TypeScript Coding Standards
 
 ### Strict Type Safety
+
 - **NEVER use `any` type** - Always use proper types, interfaces, or `unknown`
 - **Use specific types** - Prefer `string | number` over `unknown` when possible
 - **Leverage type inference** - Let TypeScript infer types when they're obvious
 - **Use generics** - For reusable functions and components
 
 ### Proper Type Patterns
+
 ```typescript
 // ✅ Good - Specific types
 interface UserProfile {
-  id: number;
-  name: string;
-  email: string | null;
+	id: number;
+	name: string;
+	email: string | null;
 }
 
 // ✅ Good - Using unknown for dynamic data
 function parseJson(data: string): unknown {
-  return JSON.parse(data);
+	return JSON.parse(data);
 }
 
 // ✅ Good - Proper generics
 function apiCall<T>(endpoint: string): Promise<T> {
-  return fetch(endpoint).then(res => res.json());
+	return fetch(endpoint).then((res) => res.json());
 }
 
 // ❌ Bad - Using any
 function handleData(data: any): any {
-  return data.something;
+	return data.something;
 }
 ```
 
 ### Database Type Conversion
+
 - Use utility functions like `nullToUndefined()` to convert database `null` to TypeScript `undefined`
 - Create proper interfaces that match database schema
 - Use type assertions only when absolutely necessary with proper runtime checks
+
+## CSS & Styling Guidelines
+
+**This application uses Tailwind CSS v4 for styling.** Follow these guidelines for consistent, maintainable styling:
+
+### Layout & Spacing Best Practices
+
+**ALWAYS prefer Flexbox with `gap` utilities over `space-*` utilities:**
+
+### Spacing Scale
+
+Use consistent spacing values:
+
+- `gap-2` (8px) - Tight spacing (label to input, icon to text)
+- `gap-3` (12px) - Button groups, small component spacing
+- `gap-4` (16px) - Default form fields, card spacing
+- `gap-6` (24px) - Section spacing, page layout
 
 ## Project Architecture
 
@@ -115,8 +139,9 @@ This is a fully functional Next.js 15 application for a job application assistan
 
 This is a **feature-based architecture** where each feature is self-contained:
 
-- **`src/app/dashboard/[feature]/`** - Each feature has its own `queries/`, `mutations/`, and `components/` directories
+- **`src/app/dashboard/[feature]/`** - Each feature has its own `queries/`, `mutations/`, and `components/` directories (including feature-specific skeleton components)
 - **`src/app/components/`** - App-wide shared components (layout, landing, providers)
+- **`src/components/skeletons/`** - Shared skeleton components (used across 3+ features)
 - **`src/components/ui/`** - Shadcn UI primitives only
 - **`src/lib/`** - Backend layer (validators, services, controllers)
 - **`src/lib/validators/`** - Zod schemas shared between frontend/backend
@@ -128,6 +153,7 @@ This is a **feature-based architecture** where each feature is self-contained:
 The application follows a clean 3-layer API architecture:
 
 #### 1. **Validators** (`src/lib/validators/`)
+
 - **Purpose**: Define and validate API input/output using Zod schemas
 - **Type Safety**: Inferred types are shared between frontend and backend
 - **Structure**: One validator file per domain (e.g., `applications.validator.ts`)
@@ -137,6 +163,7 @@ The application follows a clean 3-layer API architecture:
   - Shared TypeScript types
 
 #### 2. **Services** (`src/lib/services/`)
+
 - **Purpose**: Contains all business logic and database operations
 - **Structure**: One service class per domain (e.g., `ApplicationsService`)
 - **Responsibilities**:
@@ -145,6 +172,7 @@ The application follows a clean 3-layer API architecture:
   - Data transformation
 
 #### 3. **Controllers** (`src/lib/controllers/`)
+
 - **Purpose**: Handle HTTP requests and orchestrate services
 - **Structure**: One controller class per domain (e.g., `ApplicationsController`)
 - **Responsibilities**:
@@ -154,6 +182,7 @@ The application follows a clean 3-layer API architecture:
   - Service coordination
 
 #### 4. **Routes** (`src/app/api/`)
+
 - **Purpose**: Thin layer that delegates to controllers
 - **Pattern**: Each route file imports the appropriate controller
 - **Example**: `export async function GET(request) { return controller.getApplications(request); }`
@@ -165,6 +194,7 @@ The application uses **React Query with feature-based hooks** co-located with th
 #### Hook Organization Pattern
 
 Each hook file contains:
+
 - **Direct API functions**: Simple fetch calls to backend endpoints
 - **Query hooks**: For data fetching (e.g., `useResumes()`, `useApplication(id)`)
 - **Mutation hooks**: For data modification (e.g., `useCreateResume()`, `useUpdateApplication()`)
@@ -172,50 +202,52 @@ Each hook file contains:
 - **Type safety**: Uses validator types directly from the colocated API modules such as `@/app/api/profile/validators`
 
 **Example Hook Structure**:
+
 ```typescript
 // src/app/dashboard/resumes/queries/use-resumes.ts
 
 // Direct API calls
 const resumesApi = {
-  getAll: async (): Promise<Resume[]> => {
-    const response = await fetch('/api/resumes');
-    if (!response.ok) throw new Error('Failed to fetch resumes');
-    return response.json();
-  },
+	getAll: async (): Promise<Resume[]> => {
+		const response = await fetch("/api/resumes");
+		if (!response.ok) throw new Error("Failed to fetch resumes");
+		return response.json();
+	},
 
-  getById: async (id: string): Promise<Resume> => {
-    const response = await fetch(`/api/resumes/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch resume');
-    return response.json();
-  },
+	getById: async (id: string): Promise<Resume> => {
+		const response = await fetch(`/api/resumes/${id}`);
+		if (!response.ok) throw new Error("Failed to fetch resume");
+		return response.json();
+	},
 };
 
 // Query keys
 export const resumesKeys = {
-  all: ['resumes'] as const,
-  lists: () => [...resumesKeys.all, 'list'] as const,
-  details: () => [...resumesKeys.all, 'detail'] as const,
-  detail: (id: string) => [...resumesKeys.details(), id] as const,
+	all: ["resumes"] as const,
+	lists: () => [...resumesKeys.all, "list"] as const,
+	details: () => [...resumesKeys.all, "detail"] as const,
+	detail: (id: string) => [...resumesKeys.details(), id] as const,
 };
 
 // Hooks
 export function useResumes() {
-  return useQuery({
-    queryKey: resumesKeys.lists(),
-    queryFn: resumesApi.getAll,
-  });
+	return useQuery({
+		queryKey: resumesKeys.lists(),
+		queryFn: resumesApi.getAll,
+	});
 }
 
 export function useResume(id: string) {
-  return useQuery({
-    queryKey: resumesKeys.detail(id),
-    queryFn: () => resumesApi.getById(id),
-    enabled: !!id,
-  });
+	return useQuery({
+		queryKey: resumesKeys.detail(id),
+		queryFn: () => resumesApi.getById(id),
+		enabled: !!id,
+	});
 }
 ```
 
 **Benefits**:
+
 - **Feature Co-Location**: Hooks live with the features that use them
 - **Clear Feature Boundaries**: Easy to see what data each feature manages
 - **Better Scalability**: Add new features without cluttering shared folders
@@ -227,6 +259,7 @@ export function useResume(id: string) {
 ### Environment Configuration
 
 Environment variables are validated using Zod schema in `src/lib/env.ts`:
+
 - Comprehensive validation for all required variables
 - Type-safe environment object exported throughout the app
 - Helpful error messages for missing or invalid configuration
@@ -235,6 +268,7 @@ Environment variables are validated using Zod schema in `src/lib/env.ts`:
 ### Database Setup
 
 The project uses Turso (SQLite) as the database with Drizzle ORM. Connection requires:
+
 - `TURSO_CONNECTION_URL` environment variable (validated)
 - `TURSO_AUTH_TOKEN` environment variable (validated)
 
@@ -259,47 +293,52 @@ Use `@/*` to reference files in the `src/` directory (configured in tsconfig.jso
 When creating new API endpoints, follow this structure:
 
 1. **Create Validator** (`src/lib/validators/[domain].validator.ts`):
+
 ```typescript
 import { z } from "zod";
 
 export const createItemSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  // ... other fields
+	name: z.string().min(1, "Name is required"),
+	// ... other fields
 });
 
 export type CreateItemRequest = z.infer<typeof createItemSchema>;
 ```
 
 2. **Create Service** (`src/lib/services/[domain].service.ts`):
+
 ```typescript
 export class ItemsService {
-  async getItems(userId: string): Promise<ItemResponse[]> {
-    // Business logic and database operations
-  }
+	async getItems(userId: string): Promise<ItemResponse[]> {
+		// Business logic and database operations
+	}
 }
 ```
 
 3. **Create Controller** (`src/lib/controllers/[domain].controller.ts`):
+
 ```typescript
 export class ItemsController {
-  private itemsService = new ItemsService();
+	private itemsService = new ItemsService();
 
-  async getItems(request: NextRequest) {
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    
-    const items = await this.itemsService.getItems(session.user.id);
-    return NextResponse.json(items);
-  }
+	async getItems(request: NextRequest) {
+		const session = await auth.api.getSession({ headers: request.headers });
+		if (!session)
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+		const items = await this.itemsService.getItems(session.user.id);
+		return NextResponse.json(items);
+	}
 }
 ```
 
 4. **Create Route** (`src/app/api/items/route.ts`):
+
 ```typescript
 import { ItemsController } from "@/lib/controllers";
 const controller = new ItemsController();
 export async function GET(request: NextRequest) {
-  return controller.getItems(request);
+	return controller.getItems(request);
 }
 ```
 
@@ -314,6 +353,8 @@ export async function GET(request: NextRequest) {
 ### Development Notes
 
 - All data fetching uses React Query hooks (no direct `fetch()` calls)
+- All loading states use skeleton components (no text-based "Loading..." messages)
+- All layouts use flexbox with `gap` utilities (prefer over `space-*` utilities)
 - Environment variables validated at startup (Zod schemas)
 - Backend: Clean 3-layer architecture (validators → services → controllers)
 - Frontend: Feature-based architecture with co-located hooks
@@ -322,21 +363,27 @@ export async function GET(request: NextRequest) {
 ### Frontend Development Guidelines
 
 **Data Fetching**:
+
 - **ALWAYS** use React Query hooks, never direct `fetch()` calls
 - Import from feature directories: `@/app/dashboard/[feature]/queries/use-[feature]s`
 - Queries and mutations are separated into different directories
 - List and detail queries are combined in the same file (e.g., `useResumes()` and `useResume(id)` both in `use-resumes.ts`)
 
 **Example Import Pattern**:
+
 ```typescript
 // Queries (data fetching)
-import { useApplications, useApplication } from '@/app/dashboard/applications/queries/use-applications';
+import {
+	useApplications,
+	useApplication,
+} from "@/app/dashboard/applications/queries/use-applications";
 
 // Mutations (data modification)
-import { useCreateApplication } from '@/app/dashboard/applications/mutations/use-create-application';
+import { useCreateApplication } from "@/app/dashboard/applications/mutations/use-create-application";
 ```
 
 **Adding New Hooks**:
+
 1. Determine the feature it belongs to
 2. Create in `queries/` (read) or `mutations/` (write) directory
 3. Follow existing patterns with direct API calls
@@ -344,8 +391,10 @@ import { useCreateApplication } from '@/app/dashboard/applications/mutations/use
 5. Use validator types from the colocated API validator modules (e.g. `@/app/api/profile/validators`)
 
 **Component Imports**:
+
 - Feature components: `@/app/dashboard/[feature]/components/*`
 - Shared components: `@/app/components/*`
+- Shared skeletons: `@/components/skeletons/*`
 - UI primitives: `@/components/ui/*`
 
 ### Feature-Based Architecture Principles
@@ -377,6 +426,7 @@ src/app/dashboard/[feature]/
 #### When to Create a New Feature
 
 Create a new feature directory when:
+
 - The feature has its own data model (database table)
 - The feature requires multiple CRUD operations
 - The feature has 3+ related pages or components
@@ -384,21 +434,27 @@ Create a new feature directory when:
 
 #### Component Organization Rules
 
+Follow the **lowest common ancestor principle** - place components as close as possible to where they're used:
+
 1. **Single-Use Components** → Feature's `components/` directory
 2. **Feature-Shared Components** → Stay within the feature folder
-3. **Multi-Feature Components** → Move to `/app/components/shared/` only when used by 3+ features
-4. **Layout Components** → `/app/components/layout/` (dashboard, header, sidebar)
-5. **UI Primitives** → `/components/ui/` (Shadcn components only)
+3. **Feature-Specific Skeletons** → Feature's `components/` directory (e.g., `applications/components/applications-list-skeleton.tsx`)
+4. **Multi-Feature Components** → Move to `/app/components/shared/` only when used by 3+ features
+5. **Multi-Feature Skeletons** → `/components/skeletons/` only when used by 3+ features (e.g., `card-skeleton.tsx`)
+6. **Layout Components** → `/app/components/layout/` (dashboard, header, sidebar)
+7. **UI Primitives** → `/components/ui/` (Shadcn components only)
 
 #### Query vs Mutation Separation
 
 **Queries** (`queries/` directory):
+
 - Fetch data from the server
 - Can be combined (list + detail in same file)
 - Export query keys for cache management
 - Read-only operations
 
 **Mutations** (`mutations/` directory):
+
 - Modify server data (create, update, delete)
 - One mutation per file for clarity
 - Import query keys to invalidate caches
@@ -407,21 +463,24 @@ Create a new feature directory when:
 #### Cache Invalidation Strategy
 
 When creating mutations, invalidate related caches:
+
 ```typescript
 export function useCreateApplication() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (data) => api.create(data),
-    onSuccess: () => {
-      // Invalidate the feature's list
-      queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
-      // Invalidate dashboard stats if the feature affects them
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      // Invalidate dashboard activity feed
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
-    },
-  });
+	return useMutation({
+		mutationFn: (data) => api.create(data),
+		onSuccess: () => {
+			// Invalidate the feature's list
+			queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
+			// Invalidate dashboard stats if the feature affects them
+			queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+			// Invalidate dashboard activity feed
+			queryClient.invalidateQueries({
+				queryKey: dashboardActivityKeys.activity(),
+			});
+		},
+	});
 }
 ```
 
@@ -438,35 +497,41 @@ import { createUserProfileSchema } from "@/app/api/profile/validators";
 import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 
 export function MyForm() {
-  const form = useForm({
-    resolver: zodResolver(createUserProfileSchema),
-    defaultValues: {
-      firstName: null,
-      lastName: null,
-      // ... other fields
-    },
-  });
+	const form = useForm({
+		resolver: zodResolver(createUserProfileSchema),
+		defaultValues: {
+			firstName: null,
+			lastName: null,
+			// ... other fields
+		},
+	});
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = form;
 
-  const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
-    const validatedData = data as CreateUserProfileRequest;
-    mutation.mutate(validatedData);
-  };
+	const onSubmit = async (data: unknown) => {
+		// Data is validated by Zod resolver, safe to cast
+		const validatedData = data as CreateUserProfileRequest;
+		mutation.mutate(validatedData);
+	};
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="firstName">First Name</Label>
-        <Input id="firstName" {...register("firstName")} />
-        {errors.firstName && (
-          <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
-        )}
-      </div>
-      {/* More fields... */}
-    </form>
-  );
+	return (
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+			<div className="flex flex-col gap-2">
+				<Label htmlFor="firstName">First Name</Label>
+				<Input id="firstName" {...register("firstName")} />
+				{errors.firstName && (
+					<p className="text-red-500 text-sm mt-1">
+						{errors.firstName.message}
+					</p>
+				)}
+			</div>
+			{/* More fields... */}
+		</form>
+	);
 }
 ```
 
@@ -477,10 +542,12 @@ export function MyForm() {
 3. **Field-level errors**: Display validation errors below each field using `{errors.fieldName && ...}`
 4. **Proper registration**: Use `{...register("fieldName")}` for all form inputs
 5. **Loading states**: Use `isSubmitting` from formState to disable submit buttons
+6. **Form layout**: Use `flex flex-col gap-4` for forms, `flex flex-col gap-2` for field groups (label + input)
 
 #### Profile Form Pattern
 
 All profile forms follow the same pattern:
+
 - Use React Hook Form with Zod validation
 - Handle both create and edit operations
 - Integrate with React Query mutations
@@ -496,6 +563,10 @@ All profile forms follow the same pattern:
 - **Cancel functionality**: Provide cancel buttons that reset form state
 - **Success callbacks**: Use `onSuccess` callbacks to trigger cache invalidation and UI updates
 
+## Loading States & Skeleton Components
+
+**All loading states in this application use skeleton components**
+
 ## AI Development Guidelines
 
 ### AI Integration
@@ -507,16 +578,19 @@ All profile forms follow the same pattern:
 ### Best Practices
 
 **Error Handling**:
+
 - Always provide fallback behavior when AI fails
 - Graceful degradation to manual selection
 - Log errors but don't expose to users
 
 **AI Response Processing**:
+
 - Use low temperature (0.2) for consistent results
 - Parse JSON responses safely with try/catch
 - Validate responses against TypeScript interfaces
 
 **Development Workflow**:
+
 1. Implement AI logic in service layer
 2. Create Zod validators for requests/responses
 3. Build API endpoints
