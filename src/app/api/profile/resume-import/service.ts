@@ -39,7 +39,24 @@ const mistralClient = new Mistral({
   apiKey: env.MISTRAL_API_KEY,
 });
 
-const aiProfileSchema = createUserProfileSchema.extend({
+
+const aiProfileGenerationSchema = z.object({
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+  state: z.string().nullable(),
+  zipCode: z.string().nullable(),
+  country: z.string().nullable(),
+  linkedinUrl: z.string().nullable(),
+  githubUrl: z.string().nullable(),
+  portfolioUrl: z.string().nullable(),
+  professionalSummary: z.string().nullable(),
+});
+
+const aiProfileSchema = aiProfileGenerationSchema.extend({
   warnings: z.array(z.string()).optional(),
 });
 
@@ -143,7 +160,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       schema: aiProfileSchema,
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
-      maxOutputTokens: 800,
+      maxOutputTokens: 2000,
     });
 
     const { warnings: modelWarningsRaw, ...rawProfile } = result.object;
@@ -462,27 +479,30 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const normalizedMime = mimeType.toLowerCase();
 
     if (normalizedMime === "application/pdf") {
-      return this.processPdfWithMistral(fileBuffer);
+      return this.processPdfWithMistral(mistralClient, fileBuffer);
     }
 
     if (
       normalizedMime === "application/msword" ||
       normalizedMime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      return this.processDocWithMistral(fileBuffer, normalizedMime);
+      return this.processDocWithMistral(mistralClient, fileBuffer, normalizedMime);
     }
 
     if (normalizedMime === "application/octet-stream") {
       // Best effort: assume PDF
-      return this.processPdfWithMistral(fileBuffer);
+      return this.processPdfWithMistral(mistralClient, fileBuffer);
     }
 
     throw new ResumeImportError("Unsupported resume file type for OCR.", 415);
   }
 
-  private async processPdfWithMistral(fileBuffer: Buffer): Promise<unknown> {
+  private async processPdfWithMistral(
+    client: Mistral,
+    fileBuffer: Buffer,
+  ): Promise<unknown> {
     const base64File = fileBuffer.toString("base64");
-    return mistralClient.ocr.process({
+    return client.ocr.process({
       model: "mistral-ocr-latest",
       document: {
         type: "document_url",
@@ -492,11 +512,12 @@ Populate the provided schema using only facts that appear in the resume. Use nul
   }
 
   private async processDocWithMistral(
+    client: Mistral,
     fileBuffer: Buffer,
     mimeType: string,
   ): Promise<unknown> {
     const extension = mimeType === "application/msword" ? "doc" : "docx";
-    const uploaded = await mistralClient.files.upload({
+    const uploaded = await client.files.upload({
       file: {
         fileName: `${randomUUID()}.${extension}`,
         content: fileBuffer,
@@ -505,11 +526,11 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     });
 
     try {
-      const signedUrl = await mistralClient.files.getSignedUrl({
+      const signedUrl = await client.files.getSignedUrl({
         fileId: uploaded.id,
       });
 
-      return await mistralClient.ocr.process({
+      return await client.ocr.process({
         model: "mistral-ocr-latest",
         document: {
           type: "document_url",
@@ -518,7 +539,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       });
     } finally {
       try {
-        await mistralClient.files.delete({
+        await client.files.delete({
           fileId: uploaded.id,
         });
       } catch (cleanupError) {
