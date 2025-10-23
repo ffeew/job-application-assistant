@@ -8,8 +8,6 @@ import type {
   GenerateConversationStarterResponse,
 } from "./validators";
 
-const DEFAULT_MODEL = "llama3-8b-8192";
-
 type ResumeContent = {
   personalInfo?: {
     name?: string;
@@ -63,10 +61,10 @@ const buildProfileSummary = (
         : null,
     profile?.city || profile?.country
       ? `Location: ${[profile?.city, profile?.country]
-          .filter((part): part is string =>
-            Boolean(part && part.trim().length > 0),
-          )
-          .join(", ")}`
+        .filter((part): part is string =>
+          Boolean(part && part.trim().length > 0),
+        )
+        .join(", ")}`
       : null,
     resumeContent?.experience
       ? `Recent experience highlights: ${truncate(resumeContent.experience, 500)}`
@@ -84,19 +82,13 @@ const buildProfileSummary = (
 };
 
 export class ConversationStartersService {
-  private model = env.GROQ_MODEL || DEFAULT_MODEL;
+  private model = env.GROQ_MODEL;
 
   async generateConversationStarter(
     profile: UserProfileResponse | null,
     resume: ResumeResponse | null,
     data: GenerateConversationStarterRequest,
   ): Promise<GenerateConversationStarterResponse> {
-    if (!env.GROQ_API_KEY) {
-      throw new Error(
-        "AI service not configured. Please contact the workspace administrator.",
-      );
-    }
-
     const { prospectDetails, additionalContext } = data;
 
     const profileSummary = buildProfileSummary(profile, resume);

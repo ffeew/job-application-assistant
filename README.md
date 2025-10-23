@@ -3,13 +3,16 @@
 Job Application Assistant is a full-stack Next.js App Router project that centralizes the job search workflow. It lets candidates maintain a structured professional profile, track applications, and use AI-powered tools to generate resumes, cover letters, and outreach messages.
 
 ## Highlights
+
 - Structured profile builder covering personal details, work experience, education, skills, projects, certifications, achievements, and references.
+- One-click resume import that runs Mistral OCR to prefill the personal profile form from an uploaded resume.
 - Resume library with CRUD, default resume selection, HTML previews, and PDF export using the professional template.
 - Job-specific resume tailoring that calls Groq to analyze job descriptions, select relevant content, and produce an A4 PDF with optional manual overrides.
 - AI cover letter generator and conversation starter assistant that pull from saved profile/resume data (requires `GROQ_API_KEY`).
 - Application tracker and dashboard that surface counts, status breakdowns, and recent activity using Drizzle queries.
 
 ## Tech Stack
+
 - **Framework**: Next.js 15.4 (App Router), React 19, TypeScript 5
 - **Data & Auth**: Drizzle ORM + Turso (libSQL), BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
@@ -19,10 +22,12 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 20+
 - [Bun](https://bun.sh/) 1.1+ (recommended) or npm
 - Turso database credentials
 - Groq API key for AI functionality
+- Mistral API key for resume OCR imports
 
 ### Setup
 
@@ -37,6 +42,7 @@ bun run dev             # visit http://localhost:3000
 ```
 
 ### Useful scripts
+
 - `bun run dev` – start the Turbopack dev server
 - `bun run build` – production build (includes lint and type checks)
 - `bun run start` – serve the production build
@@ -47,20 +53,21 @@ bun run dev             # visit http://localhost:3000
 
 ## Environment variables
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `BETTER_AUTH_SECRET` | Yes | 32+ character secret used by BetterAuth |
-| `BETTER_AUTH_URL` | Yes | Server-side auth URL (e.g. `http://localhost:3000`) |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes | Client-side auth URL |
-| `TURSO_CONNECTION_URL` | Yes | libSQL connection string from Turso |
-| `TURSO_AUTH_TOKEN` | Yes | Turso auth token |
-| `GROQ_API_KEY` | Yes* | Groq API key used for resume tailoring, cover letters, and conversation starters |
-| `GROQ_MODEL` | No | Optional Groq model override; defaults to `openai/gpt-oss-120b` |
-| `NEXT_PUBLIC_APP_URL` | No | Optional absolute app URL used in client code |
-| `NODE_ENV` | No | Defaults to `development` |
-| `PORT` | No | Server port, defaults to `3000` |
+| Variable                      | Required | Description                                                                      |
+| ----------------------------- | -------- | -------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`          | Yes      | 32+ character secret used by BetterAuth                                          |
+| `BETTER_AUTH_URL`             | Yes      | Server-side auth URL (e.g. `http://localhost:3000`)                              |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes      | Client-side auth URL                                                             |
+| `TURSO_CONNECTION_URL`        | Yes      | libSQL connection string from Turso                                              |
+| `TURSO_AUTH_TOKEN`            | Yes      | Turso auth token                                                                 |
+| `GROQ_API_KEY`                | Yes\*    | Groq API key used for resume tailoring, cover letters, and conversation starters |
+| `GROQ_MODEL`                  | No       | Optional Groq model override; defaults to `openai/gpt-oss-120b`                  |
+| `MISTRAL_API_KEY`             | Yes\*    | Mistral OCR API key used to import resumes into the profile form                 |
+| `NEXT_PUBLIC_APP_URL`         | No       | Optional absolute app URL used in client code                                    |
+| `NODE_ENV`                    | No       | Defaults to `development`                                                        |
+| `PORT`                        | No       | Server port, defaults to `3000`                                                  |
 
-\*AI-powered routes return errors if `GROQ_API_KEY` is missing.
+\*AI-powered routes return errors if the corresponding key is missing (Groq for content generation, Mistral for resume imports).
 
 ## Project structure
 
@@ -77,32 +84,40 @@ bun run dev             # visit http://localhost:3000
 ## Feature overview
 
 ### Authentication & access control
+
 - BetterAuth email/password flows with sign-in, sign-up, password reset, and middleware-protected dashboard routes.
 - `src/lib/auth.ts` and `middleware.ts` enforce session checks on server requests.
 
 ### Profile management
+
 - Eight profile sections (personal info, work experience, education, skills, projects, certifications, achievements, references) with React Hook Form + Zod validation.
+- Personal info card includes a resume uploader that calls `/api/profile/resume-import` to run Mistral OCR and prefill the form when `MISTRAL_API_KEY` is configured.
 - CRUD flows implemented with TanStack Query (`queries/` and `mutations/` folders) and Drizzle-backed API routes.
 
 ### Resume tooling
+
 - Resume list with default selection and JSON storage of resume content.
 - `/dashboard/resumes/generate` builds a resume from profile content and exports PDF/HTML via Puppeteer using the `professional` template.
 - General resume generation currently ships with the professional template; additional templates can be added under `src/lib/resume-templates/`.
 
 ### Job-specific resume tailoring
+
 - `/dashboard/applications/[id]/resume` uses job descriptions plus Groq (`AIContentSelectionService`) to score and select relevant profile entries.
 - Supports configurable limits, preview rendering, A4 PDF export, and manual overrides when AI output needs tweaks.
 
 ### AI cover letters & conversation starters
+
 - Cover letters (`src/app/api/cover-letters/service.ts`) generate drafts with Groq and store edits alongside application/resume references.
 - Conversation starters combine profile and default resume context to craft outreach messages.
 - Both features surface clear errors if the Groq key is missing to encourage graceful fallbacks.
 
 ### Application tracking & dashboard
+
 - CRUD for job applications with status, notes, job description, and recruiter info.
 - Dashboard aggregates counts, offer rate, and recent activity via dedicated queries under `dashboard/queries`.
 
 ## Architecture notes
+
 - Each API feature lives in `src/app/api/<feature>/` with `route.ts`, `service.ts`, and Zod validators to keep handlers thin.
 - Drizzle ORM interacts with Turso via `src/lib/db/db.ts`; migrations are tracked in `/migrations` and configured in `drizzle.config.ts`.
 - Front-end data access is handled through co-located `queries` and `mutations` that wrap REST endpoints with TanStack Query.
@@ -110,17 +125,21 @@ bun run dev             # visit http://localhost:3000
 - Resume PDFs are generated server-side with Puppeteer; previews reuse the same HTML with additional styling.
 
 ## Database & migrations
+
 - Update the schema in `src/lib/db/schema/`, then run `bun run db:generate` to create SQL migrations.
 - Apply changes locally with `bun run db:push`; use `bunx drizzle-kit push` to push to Turso once ready.
 - Keep the generated SQL in `migrations/` under version control.
 
 ## Quality checks & testing
+
 - Run `bun run lint` and `bun run typecheck` before opening a pull request. Both commands are required and run automatically during `bun run build`.
 - There are currently no automated tests; add `*.test.ts(x)` files next to the code when introducing critical logic.
 
 ## Contributing
+
 - Review the contributor playbook in `AGENTS.md` for coding standards, naming conventions, and review expectations.
 - Keep commits focused and include migrations alongside schema changes.
 
 ## License
+
 No license file is included. Contact the maintainers before reusing or distributing this code.

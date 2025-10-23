@@ -7,19 +7,22 @@ const envSchema = z.object({
 
   // Better Auth configuration
   BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
-  BETTER_AUTH_URL: z.string().url(),
-  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url(),
+  BETTER_AUTH_URL: z.url(),
+  NEXT_PUBLIC_BETTER_AUTH_URL: z.url(),
 
   // Database configuration (Turso)
   TURSO_CONNECTION_URL: z.string().startsWith("libsql://", "TURSO_CONNECTION_URL must be a valid Turso connection string"),
   TURSO_AUTH_TOKEN: z.string().min(1, "TURSO_AUTH_TOKEN is required"),
 
   // AI Configuration (Groq)
-  GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features").optional(),
+  GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features"),
   GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
 
+  // OCR configuration (Mistral)
+  MISTRAL_API_KEY: z.string().min(1, "MISTRAL_API_KEY is required for resume imports"),
+
   // Next.js configuration
-  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_APP_URL: z.url().optional(),
 
   // Port configuration
   PORT: z.string().default("3000").transform(Number).pipe(z.number().int().positive()),

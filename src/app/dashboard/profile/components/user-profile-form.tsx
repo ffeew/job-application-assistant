@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Save, User } from "lucide-react";
+import { Loader2, Save, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-create-user-profile";
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
@@ -23,6 +23,10 @@ import type {
 	UserProfileResponse,
 	CreateUserProfileRequest,
 } from "@/app/api/profile/validators";
+import {
+	type ResumeImportResponse,
+	resumeImportResponseSchema,
+} from "@/app/api/profile/resume-import/validators";
 
 interface UserProfileFormProps {
 	profile: UserProfileResponse | null;
@@ -50,6 +54,10 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 			professionalSummary: null,
 		},
 	});
+
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
+	const [isImporting, setIsImporting] = useState(false);
+	const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
 	const {
 		register,
@@ -99,16 +107,127 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 		});
 	};
 
+	const handleResumeImportClick = () => {
+		fileInputRef.current?.click();
+	};
+
+	const handleResumeFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) {
+			return;
+		}
+
+		const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+		if (file.size > MAX_FILE_SIZE_BYTES) {
+			toast.error("Resume is too large. Please upload a file under 8 MB.");
+			event.target.value = "";
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append("file", file);
+
+		setIsImporting(true);
+		setImportWarnings([]);
+
+		try {
+			const response = await fetch("/api/profile/resume-import", {
+				method: "POST",
+				body: formData,
+			});
+
+			const raw = (await response.json().catch(() => null)) as unknown;
+
+			if (!response.ok) {
+				const errorMessage =
+					raw &&
+					typeof raw === "object" &&
+					raw !== null &&
+					"error" in raw &&
+					typeof (raw as { error?: unknown }).error === "string"
+						? (raw as { error: string }).error
+						: "Failed to import resume. Please try again.";
+				toast.error(errorMessage);
+				return;
+			}
+
+			let payload: ResumeImportResponse;
+			try {
+				payload = resumeImportResponseSchema.parse(raw);
+			} catch (parseError) {
+				console.error("Unexpected resume import response:", parseError, raw);
+				toast.error("Received an unexpected response while importing the resume.");
+				return;
+			}
+
+			reset(payload.profile);
+			setImportWarnings(payload.warnings);
+
+			if (payload.warnings.length > 0) {
+				toast.success(
+					"Resume imported. Review the highlighted notes before saving."
+				);
+			} else {
+				toast.success("Resume imported. Review and save your profile.");
+			}
+		} catch (error) {
+			console.error("Resume import failed:", error);
+			toast.error("Failed to import resume. Please try again.");
+		} finally {
+			setIsImporting(false);
+			event.target.value = "";
+		}
+	};
+
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<User className="h-5 w-5" />
-					Personal Information
-				</CardTitle>
+			<CardHeader className="space-y-4">
+				<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<User className="h-5 w-5" />
+						Personal Information
+					</CardTitle>
+					<div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
+						<input
+							ref={fileInputRef}
+							type="file"
+							accept=".pdf,.doc,.docx,.txt"
+							className="hidden"
+							onChange={handleResumeFileChange}
+						/>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={handleResumeImportClick}
+							disabled={isImporting}
+							className="w-full justify-center md:w-auto"
+						>
+							{isImporting ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<Upload className="mr-2 h-4 w-4" />
+							)}
+							{isImporting ? "Importing..." : "Import from Resume"}
+						</Button>
+						<p className="text-xs text-muted-foreground md:text-right">
+							Supports PDF, DOC, and DOCX files.
+						</p>
+					</div>
+				</div>
 				<CardDescription>
 					Basic personal information for your professional profile
 				</CardDescription>
+				{importWarnings.length > 0 && (
+					<div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-500/60 dark:bg-yellow-950/70 dark:text-yellow-100">
+						<p className="font-semibold">Check the imported details:</p>
+						<ul className="mt-2 list-disc space-y-1 pl-4">
+							{importWarnings.map((warning) => (
+								<li key={warning}>{warning}</li>
+							))}
+						</ul>
+					</div>
+				)}
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

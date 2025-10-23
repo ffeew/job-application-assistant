@@ -77,7 +77,7 @@ interface IntelligentContentSelection {
 }
 
 export class AIContentSelectionService {
-  private model = env.GROQ_MODEL || "openai/gpt-oss-120b";
+  private model = env.GROQ_MODEL;
 
   async analyzeJobDescription(jobDescription: string): Promise<z.infer<typeof jobAnalysisSchema>> {
     const prompt = `Analyze this job description and extract key information:

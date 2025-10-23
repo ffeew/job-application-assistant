@@ -144,10 +144,6 @@ export class CoverLettersService {
   }
 
   async generateCoverLetter(data: GenerateCoverLetterRequest): Promise<GenerateCoverLetterResponse> {
-    if (!env.GROQ_API_KEY) {
-      throw new Error("AI service not configured. Please contact administrator.");
-    }
-
     const prompt = `You are an expert cover letter writer. Create a professional, personalized cover letter based on the following information:
 
 Company: ${data.company}
@@ -177,7 +173,7 @@ Format the cover letter properly with appropriate salutations and structure. Do 
       });
 
       const result = await generateText({
-        model: groq("llama3-8b-8192"),
+        model: groq(env.GROQ_MODEL),
         prompt,
         temperature: 0.7,
         maxOutputTokens: 1000,
