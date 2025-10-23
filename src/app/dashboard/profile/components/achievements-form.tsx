@@ -73,8 +73,8 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
         <CardTitle>{achievement ? "Edit Achievement" : "Add Achievement"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="title">Achievement Title *</Label>
             <Input
               id="title"
@@ -86,7 +86,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -100,7 +100,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="date">Date Received</Label>
               <Input
                 id="date"
@@ -111,7 +111,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
                 <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="organization">Awarding Organization</Label>
               <Input
                 id="organization"
@@ -124,7 +124,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="url">Related URL</Label>
             <Input
               id="url"
@@ -137,7 +137,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             )}
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

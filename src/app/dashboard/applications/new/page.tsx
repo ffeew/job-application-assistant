@@ -57,8 +57,8 @@ export default function NewApplicationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/applications">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -82,7 +82,7 @@ export default function NewApplicationPage() {
                 Basic information about the job opportunity
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="company">Company *</Label>
@@ -153,7 +153,7 @@ export default function NewApplicationPage() {
                 Current status and dates
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="status">Status</Label>
@@ -220,7 +220,7 @@ export default function NewApplicationPage() {
                 People you&apos;ve been in contact with regarding this application
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="contactName">Contact Name</Label>
@@ -279,7 +279,7 @@ export default function NewApplicationPage() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" asChild>
               <Link href="/dashboard/applications">Cancel</Link>
             </Button>

@@ -77,9 +77,9 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
         <CardTitle>{experience ? "Edit Work Experience" : "Add Work Experience"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="jobTitle">Job Title *</Label>
               <Input
                 id="jobTitle"
@@ -90,7 +90,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
                 <p className="text-red-500 text-sm mt-1">{errors.jobTitle.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="company">Company *</Label>
               <Input
                 id="company"
@@ -103,7 +103,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="location">Location</Label>
             <Input
               id="location"
@@ -116,7 +116,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date *</Label>
               <Input
                 id="startDate"
@@ -127,7 +127,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
@@ -141,7 +141,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               id="isCurrent"
@@ -156,7 +156,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             <Label htmlFor="isCurrent">I currently work here</Label>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -169,7 +169,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="technologies">Technologies</Label>
             <Input
               id="technologies"
@@ -181,7 +181,7 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             )}
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

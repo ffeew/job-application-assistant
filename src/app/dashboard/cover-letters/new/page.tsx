@@ -104,8 +104,8 @@ export default function NewCoverLetterPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/cover-letters">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -121,7 +121,7 @@ export default function NewCoverLetterPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Job Information</CardTitle>
@@ -129,7 +129,7 @@ export default function NewCoverLetterPage() {
                 Select an existing application or enter job details manually
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               {applications.length > 0 && (
                 <div>
                   <Label>Select Application (Optional)</Label>
@@ -233,7 +233,7 @@ export default function NewCoverLetterPage() {
           </Button>
         </div>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Generated Cover Letter</CardTitle>
@@ -241,7 +241,7 @@ export default function NewCoverLetterPage() {
                 Review and edit your AI-generated cover letter
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               {generatedContent ? (
                 <>
                   <div>

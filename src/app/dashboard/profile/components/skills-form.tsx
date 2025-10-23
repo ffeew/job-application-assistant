@@ -87,9 +87,9 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
         <CardTitle>{skill ? "Edit Skill" : "Add Skill"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">Skill Name *</Label>
               <Input
                 id="name"
@@ -100,7 +100,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
                 <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="category">Category *</Label>
               <select
                 id="category"
@@ -118,7 +118,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="proficiencyLevel">Proficiency Level</Label>
               <select
                 id="proficiencyLevel"
@@ -134,7 +134,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
                 <p className="text-red-500 text-sm mt-1">{errors.proficiencyLevel.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="yearsOfExperience">Years of Experience</Label>
               <Input
                 id="yearsOfExperience"
@@ -149,7 +149,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

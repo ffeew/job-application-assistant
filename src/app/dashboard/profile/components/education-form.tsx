@@ -77,9 +77,9 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
         <CardTitle>{education ? "Edit Education" : "Add Education"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="degree">Degree *</Label>
               <Input
                 id="degree"
@@ -90,7 +90,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
                 <p className="text-red-500 text-sm mt-1">{errors.degree.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="fieldOfStudy">Field of Study</Label>
               <Input
                 id="fieldOfStudy"
@@ -104,7 +104,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="institution">Institution *</Label>
               <Input
                 id="institution"
@@ -115,7 +115,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
                 <p className="text-red-500 text-sm mt-1">{errors.institution.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
@@ -129,7 +129,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input
                 id="startDate"
@@ -140,7 +140,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
@@ -154,7 +154,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="gpa">GPA</Label>
               <Input
                 id="gpa"
@@ -165,7 +165,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
                 <p className="text-red-500 text-sm mt-1">{errors.gpa.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="honors">Honors</Label>
               <Input
                 id="honors"
@@ -178,7 +178,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="relevantCoursework">Relevant Coursework</Label>
             <Textarea
               id="relevantCoursework"
@@ -191,7 +191,7 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
             )}
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

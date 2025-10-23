@@ -73,8 +73,8 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
         <CardTitle>{certification ? "Edit Certification" : "Add Certification"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="name">Certification Name *</Label>
             <Input
               id="name"
@@ -86,7 +86,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="issuingOrganization">Issuing Organization *</Label>
             <Input
               id="issuingOrganization"
@@ -99,7 +99,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="issueDate">Issue Date</Label>
               <Input
                 id="issueDate"
@@ -110,7 +110,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
                 <p className="text-red-500 text-sm mt-1">{errors.issueDate.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="expirationDate">Expiration Date</Label>
               <Input
                 id="expirationDate"
@@ -124,7 +124,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="credentialId">Credential ID</Label>
               <Input
                 id="credentialId"
@@ -135,7 +135,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
                 <p className="text-red-500 text-sm mt-1">{errors.credentialId.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="credentialUrl">Credential URL</Label>
               <Input
                 id="credentialUrl"
@@ -149,7 +149,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

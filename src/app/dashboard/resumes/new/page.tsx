@@ -100,15 +100,15 @@ export default function NewResumePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/resumes">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Resumes
           </Link>
         </Button>
-        <div>
+        <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold">Create New Resume</h1>
           <p className="text-muted-foreground">
             Fill in your information to create a new resume.
@@ -125,8 +125,8 @@ export default function NewResumePage() {
                 Basic information about this resume
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="title">Resume Title</Label>
                 <Input
                   id="title"
@@ -137,7 +137,7 @@ export default function NewResumePage() {
                   <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="isDefault"
@@ -152,16 +152,16 @@ export default function NewResumePage() {
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+            <CardContent className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
                     {...register("personalInfo.name")}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -170,15 +170,15 @@ export default function NewResumePage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     {...register("personalInfo.phone")}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
@@ -196,7 +196,7 @@ export default function NewResumePage() {
                 Brief overview of your background and career objectives
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <Textarea
                 placeholder="Write a brief summary of your professional background..."
                 {...register("summary")}
@@ -212,7 +212,7 @@ export default function NewResumePage() {
                 List your work experience, starting with the most recent
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <Textarea
                 placeholder="Job Title - Company Name (Start Date - End Date)&#10;• Responsibility or achievement&#10;• Another responsibility or achievement&#10;&#10;Previous Job Title - Previous Company..."
                 {...register("experience")}
@@ -228,7 +228,7 @@ export default function NewResumePage() {
                 Your educational background
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <Textarea
                 placeholder="Degree - School Name (Graduation Year)&#10;Relevant coursework, honors, or achievements..."
                 {...register("education")}
@@ -244,7 +244,7 @@ export default function NewResumePage() {
                 Technical and soft skills relevant to your career
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <Textarea
                 placeholder="• Programming Languages: Python, JavaScript, Java&#10;• Frameworks: React, Node.js, Django&#10;• Tools: Git, Docker, AWS&#10;• Soft Skills: Team Leadership, Communication, Problem Solving"
                 {...register("skills")}
@@ -253,7 +253,7 @@ export default function NewResumePage() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" asChild>
               <Link href="/dashboard/resumes">Cancel</Link>
             </Button>

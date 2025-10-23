@@ -60,13 +60,13 @@ export default function SignInPage() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-4">
+					<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 						{error && (
 							<div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
 								{error}
 							</div>
 						)}
-						<div className="space-y-2">
+						<div className="flex flex-col gap-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -77,7 +77,7 @@ export default function SignInPage() {
 								required
 							/>
 						</div>
-						<div className="space-y-2">
+						<div className="flex flex-col gap-2">
 							<Label htmlFor="password">Password</Label>
 							<Input
 								id="password"

@@ -77,8 +77,8 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
         <CardTitle>{project ? "Edit Project" : "Add Project"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="title">Project Title *</Label>
             <Input
               id="title"
@@ -90,7 +90,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -103,7 +103,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="technologies">Technologies Used</Label>
             <Input
               id="technologies"
@@ -116,7 +116,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input
                 id="startDate"
@@ -127,7 +127,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
@@ -141,7 +141,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               id="isOngoing"
@@ -157,7 +157,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="projectUrl">Project URL</Label>
               <Input
                 id="projectUrl"
@@ -169,7 +169,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
                 <p className="text-red-500 text-sm mt-1">{errors.projectUrl.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="githubUrl">GitHub URL</Label>
               <Input
                 id="githubUrl"
@@ -183,7 +183,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel
