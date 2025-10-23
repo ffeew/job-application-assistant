@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useApplications } from "@/app/dashboard/applications/queries/use-applications";
 import { useDeleteApplication } from "@/app/dashboard/applications/mutations/use-delete-application";
+import { ApplicationsListSkeleton } from "./components/applications-list-skeleton";
 
 const statusColors = {
 	applied: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
@@ -54,11 +55,7 @@ export default function ApplicationsPage() {
 	};
 
 	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center py-8">
-				<div className="text-lg">Loading applications...</div>
-			</div>
-		);
+		return <ApplicationsListSkeleton />;
 	}
 
 	if (error) {

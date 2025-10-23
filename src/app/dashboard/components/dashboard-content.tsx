@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FileText, Briefcase, PenTool, Plus } from "lucide-react";
 import { useDashboardStats } from "../queries/use-dashboard-stats";
 import { useDashboardActivity } from "../queries/use-dashboard-activity";
+import { DashboardSkeleton } from "./dashboard-skeleton";
 
 const formatRelativeTime = (timestamp: string | Date) => {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
@@ -64,30 +65,7 @@ export function DashboardContent() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Loading your job search activity...</p>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                <div className="h-4 w-4 bg-muted rounded animate-pulse" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-16 bg-muted rounded animate-pulse mb-2" />
-                <div className="h-3 w-20 bg-muted rounded animate-pulse" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (isError) {

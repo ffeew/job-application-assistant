@@ -29,6 +29,7 @@ import { useApplication } from "@/app/dashboard/applications/queries/use-applica
 import { useUpdateApplication } from "@/app/dashboard/applications/mutations/use-update-application";
 import { updateApplicationSchema } from "@/app/api/applications/validators";
 import type { UpdateApplicationRequest } from "@/app/api/applications/validators";
+import { ApplicationDetailSkeleton } from "../components/application-detail-skeleton";
 
 export default function EditApplicationPage({
 	params,
@@ -129,11 +130,7 @@ export default function EditApplicationPage({
 	};
 
 	if (!resolvedParams || isLoading) {
-		return (
-			<div className="flex items-center justify-center py-8">
-				<div className="text-lg">Loading application...</div>
-			</div>
-		);
+		return <ApplicationDetailSkeleton />;
 	}
 
 	return (

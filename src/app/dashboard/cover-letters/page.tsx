@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, PenTool, Eye, Trash2, Sparkles } from "lucide-react";
 import { useCoverLetters } from "@/app/dashboard/cover-letters/queries/use-cover-letters";
 import { useDeleteCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-delete-cover-letter";
+import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 
 export default function CoverLettersPage() {
   const { data: coverLetters = [], isLoading, error, refetch } = useCoverLetters();
@@ -21,8 +22,10 @@ export default function CoverLettersPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-lg">Loading cover letters...</div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <CardSkeleton key={i} />
+        ))}
       </div>
     );
   }

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useDeleteWorkExperience } from "@/app/dashboard/profile/mutations/use-delete-work-experience";
 import { WorkExperienceForm } from "./work-experience-form";
 import type { WorkExperienceResponse } from "@/app/api/profile/validators";
+import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface WorkExperienceListProps {
   experiences: WorkExperienceResponse[];
@@ -59,10 +60,9 @@ export function WorkExperienceList({ experiences, isLoading }: WorkExperienceLis
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ProfileItemSkeleton key={i} />
+        ))}
       </div>
     );
   }

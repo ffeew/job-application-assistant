@@ -38,6 +38,7 @@ import { ProjectsList } from "@/app/dashboard/profile/components/projects-list";
 import { CertificationsList } from "@/app/dashboard/profile/components/certifications-list";
 import { AchievementsList } from "@/app/dashboard/profile/components/achievements-list";
 import { ReferencesList } from "@/app/dashboard/profile/components/references-list";
+import { ProfilePageSkeleton } from "./components/profile-page-skeleton";
 
 export default function ProfilePage() {
 	const router = useRouter();
@@ -147,20 +148,7 @@ export default function ProfilePage() {
 	];
 
 	if (profileLoading) {
-		return (
-			<div className="space-y-6 p-4 sm:p-6">
-				<div>
-					<h1 className="text-2xl sm:text-3xl font-bold">Profile Management</h1>
-					<p className="text-muted-foreground text-sm sm:text-base">
-						Manage your professional profile information
-					</p>
-				</div>
-				<div className="animate-pulse space-y-4">
-					<div className="h-12 bg-gray-200 rounded"></div>
-					<div className="h-96 bg-gray-200 rounded"></div>
-				</div>
-			</div>
-		);
+		return <ProfilePageSkeleton />;
 	}
 
 	return (

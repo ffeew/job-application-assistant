@@ -28,6 +28,7 @@ import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
 import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
 import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
+import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 
 export default function GenerateResumePage() {
 	const [previewHTML, setPreviewHTML] = useState<string | null>(null);
@@ -114,9 +115,9 @@ export default function GenerateResumePage() {
 						</p>
 					</div>
 				</div>
-				<div className="animate-pulse space-y-4">
-					<div className="h-32 bg-gray-200 rounded"></div>
-					<div className="h-64 bg-gray-200 rounded"></div>
+				<div className="space-y-4">
+					<CardSkeleton />
+					<CardSkeleton />
 				</div>
 			</div>
 		);

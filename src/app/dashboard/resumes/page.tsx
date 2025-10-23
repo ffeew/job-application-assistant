@@ -8,6 +8,7 @@ import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import { toast } from "sonner";
+import { ResumesListSkeleton } from "./components/resumes-list-skeleton";
 
 export default function ResumesPage() {
   const { data: resumes = [], isLoading } = useResumes();
@@ -49,11 +50,7 @@ export default function ResumesPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-lg">Loading resumes...</div>
-      </div>
-    );
+    return <ResumesListSkeleton />;
   }
 
   return (

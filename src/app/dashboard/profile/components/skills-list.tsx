@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useDeleteSkill } from "@/app/dashboard/profile/mutations/use-delete-skill";
 import { SkillForm } from "./skills-form";
 import type { SkillResponse } from "@/app/api/profile/validators";
+import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface SkillsListProps {
   skills: SkillResponse[];
@@ -60,7 +61,13 @@ export function SkillsList({ skills, isLoading }: SkillsListProps) {
   }, {} as Record<string, SkillResponse[]>);
 
   if (isLoading) {
-    return <div className="animate-pulse h-32 bg-gray-200 rounded"></div>;
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ProfileItemSkeleton key={i} />
+        ))}
+      </div>
+    );
   }
 
   return (

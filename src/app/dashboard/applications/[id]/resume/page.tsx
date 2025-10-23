@@ -38,6 +38,7 @@ import type {
 	JobApplicationResumeRequest,
 	IntelligentContentSelection,
 } from "@/app/api/profile/validators";
+import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 
 export default function JobApplicationResumePage({
 	params,
@@ -171,9 +172,9 @@ export default function JobApplicationResumePage({
 						<p className="text-muted-foreground">Loading application data...</p>
 					</div>
 				</div>
-				<div className="animate-pulse space-y-4">
-					<div className="h-32 bg-gray-200 rounded"></div>
-					<div className="h-64 bg-gray-200 rounded"></div>
+				<div className="space-y-4">
+					<CardSkeleton />
+					<CardSkeleton />
 				</div>
 			</div>
 		);

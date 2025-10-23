@@ -14,6 +14,7 @@ import { useResume } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
+import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
 
 interface ResumeContent {
   personalInfo: {
@@ -143,11 +144,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
   };
 
   if (!resolvedParams || resumeLoading || loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-lg">Loading resume...</div>
-      </div>
-    );
+    return <ResumeDetailSkeleton />;
   }
 
   return (

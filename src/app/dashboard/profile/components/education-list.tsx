@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
 import { EducationForm } from "./education-form";
 import type { EducationResponse } from "@/app/api/profile/validators";
+import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface EducationListProps {
   education: EducationResponse[];
@@ -59,8 +60,10 @@ export function EducationList({ education, isLoading }: EducationListProps) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ProfileItemSkeleton key={i} />
+        ))}
       </div>
     );
   }

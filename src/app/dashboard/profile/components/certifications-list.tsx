@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useDeleteCertification } from "@/app/dashboard/profile/mutations/use-delete-certification";
 import { CertificationsForm } from "./certifications-form";
 import type { CertificationResponse } from "@/app/api/profile/validators";
+import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface CertificationsListProps {
   certifications: CertificationResponse[];
@@ -60,8 +61,10 @@ export function CertificationsList({ certifications, isLoading }: Certifications
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ProfileItemSkeleton key={i} />
+        ))}
       </div>
     );
   }
