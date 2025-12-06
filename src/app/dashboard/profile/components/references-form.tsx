@@ -15,42 +15,53 @@ import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profil
 
 interface ReferencesFormProps {
   reference?: ReferenceResponse;
+  initialValues?: Partial<CreateReferenceRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateReferenceRequest) => Promise<void>;
 }
 
-const relationships = [
-  { value: "manager", label: "Manager" },
-  { value: "colleague", label: "Colleague" },
-  { value: "client", label: "Client" },
-  { value: "professor", label: "Professor" },
-  { value: "mentor", label: "Mentor" },
-  { value: "other", label: "Other" },
-];
-
-export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFormProps) {
+export function ReferencesForm({
+  reference,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: ReferencesFormProps) {
   const createMutation = useCreateReference();
   const updateMutation = useUpdateReference();
 
   const form = useForm({
     resolver: zodResolver(createReferenceSchema),
     defaultValues: {
-      name: reference?.name || "",
-      title: reference?.title || null,
-      company: reference?.company || null,
-      email: reference?.email || null,
-      phone: reference?.phone || null,
-      relationship: reference?.relationship || null,
-      displayOrder: reference?.displayOrder || 0,
+      name: reference?.name || initialValues?.name || "",
+      title: reference?.title ?? initialValues?.title ?? null,
+      company: reference?.company ?? initialValues?.company ?? null,
+      email: reference?.email ?? initialValues?.email ?? null,
+      phone: reference?.phone ?? initialValues?.phone ?? null,
+      relationship: reference?.relationship ?? initialValues?.relationship ?? null,
+      displayOrder: reference?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateReferenceRequest;
-    
+
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving reference draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (reference) {
       updateMutation.mutate({ id: reference.id, data: validatedData }, {
         onSuccess: () => {
@@ -83,80 +94,51 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Full Name *</Label>
-            <Input
-              id="name"
-              {...register("name")}
-              placeholder="John Smith"
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Job Title</Label>
-              <Input
-                id="title"
-                {...register("title")}
-                placeholder="Senior Software Engineer"
-              />
+              <Label htmlFor="name">Name *</Label>
+              <Input id="name" {...register("name")} placeholder="Jane Smith" />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" {...register("title")} placeholder="Engineering Manager" />
               {errors.title && (
                 <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                {...register("company")}
-                placeholder="Tech Corp"
-              />
+              <Input id="company" {...register("company")} placeholder="Acme Corp" />
               {errors.company && (
                 <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
               )}
             </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="relationship">Relationship</Label>
-            <select
-              id="relationship"
-              {...register("relationship")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="">Select relationship</option>
-              {relationships.map(rel => (
-                <option key={rel.value} value={rel.value}>{rel.label}</option>
-              ))}
-            </select>
-            {errors.relationship && (
-              <p className="text-red-500 text-sm mt-1">{errors.relationship.message}</p>
-            )}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="relationship">Relationship</Label>
+              <Input id="relationship" {...register("relationship")} placeholder="Manager" />
+              {errors.relationship && (
+                <p className="text-red-500 text-sm mt-1">{errors.relationship.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register("email")}
-                placeholder="john.smith@example.com"
-              />
+              <Input id="email" type="email" {...register("email")} placeholder="jane@example.com" />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                {...register("phone")}
-                placeholder="+1 (555) 123-4567"
-              />
+              <Input id="phone" {...register("phone")} placeholder="+1 (555) 123-4567" />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
               )}
@@ -170,7 +152,13 @@ export function ReferencesForm({ reference, onCancel, onSuccess }: ReferencesFor
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : reference ? "Update Reference" : "Add Reference"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : reference
+                    ? "Update Reference"
+                    : "Add Reference"}
             </Button>
           </div>
         </form>

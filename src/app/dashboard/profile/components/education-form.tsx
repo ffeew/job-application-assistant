@@ -16,27 +16,37 @@ import type { EducationResponse, CreateEducationRequest } from "@/app/api/profil
 
 interface EducationFormProps {
   education?: EducationResponse;
+  initialValues?: Partial<CreateEducationRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateEducationRequest) => Promise<void>;
 }
 
-export function EducationForm({ education, onCancel, onSuccess }: EducationFormProps) {
+export function EducationForm({
+  education,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: EducationFormProps) {
   const createMutation = useCreateEducation();
   const updateMutation = useUpdateEducation();
 
   const form = useForm({
     resolver: zodResolver(createEducationSchema),
     defaultValues: {
-      degree: education?.degree || "",
-      fieldOfStudy: education?.fieldOfStudy || null,
-      institution: education?.institution || "",
-      location: education?.location || null,
-      startDate: education?.startDate || null,
-      endDate: education?.endDate || null,
-      gpa: education?.gpa || null,
-      honors: education?.honors || null,
-      relevantCoursework: education?.relevantCoursework || null,
-      displayOrder: education?.displayOrder || 0,
+      degree: education?.degree || initialValues?.degree || "",
+      fieldOfStudy: education?.fieldOfStudy ?? initialValues?.fieldOfStudy ?? null,
+      institution: education?.institution || initialValues?.institution || "",
+      location: education?.location ?? initialValues?.location ?? null,
+      startDate: education?.startDate ?? initialValues?.startDate ?? null,
+      endDate: education?.endDate ?? initialValues?.endDate ?? null,
+      gpa: education?.gpa ?? initialValues?.gpa ?? null,
+      honors: education?.honors ?? initialValues?.honors ?? null,
+      relevantCoursework: education?.relevantCoursework ?? initialValues?.relevantCoursework ?? null,
+      displayOrder: education?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
@@ -46,6 +56,17 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
     // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateEducationRequest;
     
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving education draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (education) {
       updateMutation.mutate({ id: education.id, data: validatedData }, {
         onSuccess: () => {
@@ -198,7 +219,13 @@ export function EducationForm({ education, onCancel, onSuccess }: EducationFormP
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : education ? "Update Education" : "Add Education"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : education
+                    ? "Update Education"
+                    : "Add Education"}
             </Button>
           </div>
         </form>

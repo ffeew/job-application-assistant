@@ -20,44 +20,185 @@ import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-crea
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import type {
-	UserProfileResponse,
+	CreateAchievementRequest,
+	CreateCertificationRequest,
+	CreateEducationRequest,
+	CreateProjectRequest,
+	CreateReferenceRequest,
+	CreateSkillRequest,
 	CreateUserProfileRequest,
+	CreateWorkExperienceRequest,
+	UserProfileResponse,
 } from "@/app/api/profile/validators";
 import {
 	type ResumeImportResponse,
 	resumeImportResponseSchema,
 } from "@/app/api/profile/resume-import/validators";
+import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
+const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+
+const formatSummary = (
+	...parts: Array<string | null | undefined>
+): string | null => {
+	const filtered = parts
+		.map((part) => (typeof part === "string" ? part.trim() : ""))
+		.filter((part) => part.length > 0);
+
+	if (filtered.length === 0) {
+		return null;
+	}
+
+	return filtered.join(" · ");
+};
+
+type PreviewInput = {
+	workExperiences: CreateWorkExperienceRequest[];
+	education: CreateEducationRequest[];
+	skills: CreateSkillRequest[];
+	projects: CreateProjectRequest[];
+	certifications: CreateCertificationRequest[];
+	achievements: CreateAchievementRequest[];
+	references: CreateReferenceRequest[];
+};
+
+const buildPreviewSections = (data: PreviewInput) => {
+	const sections = [
+		{
+			label: "Work Experience",
+			items: data.workExperiences
+				.map((experience) =>
+					formatSummary(
+						experience.jobTitle,
+						experience.company,
+						experience.location ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "Education",
+			items: data.education
+				.map((education) =>
+					formatSummary(
+						education.degree,
+						education.institution,
+						education.fieldOfStudy ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "Skills",
+			items: data.skills
+				.map((skill, index) =>
+					formatSummary(
+						skill.name || `Skill ${index + 1}`,
+						skill.category,
+						skill.proficiencyLevel ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "Projects",
+			items: data.projects
+				.map((project) =>
+					formatSummary(
+						project.title,
+						project.description ?? undefined,
+						project.technologies ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "Certifications",
+			items: data.certifications
+				.map((certification) =>
+					formatSummary(
+						certification.name,
+						certification.issuingOrganization,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "Achievements",
+			items: data.achievements
+				.map((achievement) =>
+					formatSummary(
+						achievement.title,
+						achievement.organization ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+		{
+			label: "References",
+			items: data.references
+				.map((reference) =>
+					formatSummary(
+						reference.name,
+						reference.company ?? undefined,
+						reference.relationship ?? undefined,
+					)
+				)
+				.filter((item): item is string => Boolean(item)),
+		},
+	];
+
+	return sections.filter((section) => section.items.length > 0);
+};
 
 interface UserProfileFormProps {
 	profile: UserProfileResponse | null;
+	onImportPreview: (data: ResumeImportResponse) => void;
 }
 
-export function UserProfileForm({ profile }: UserProfileFormProps) {
+export function UserProfileForm({ profile, onImportPreview }: UserProfileFormProps) {
 	const createMutation = useCreateUserProfile();
 	const updateMutation = useUpdateUserProfile();
+const form = useForm({
+	resolver: zodResolver(createUserProfileSchema),
+	defaultValues: {
+		firstName: null,
+		lastName: null,
+		email: null,
+		phone: null,
+		address: null,
+		city: null,
+		state: null,
+		zipCode: null,
+		country: null,
+		linkedinUrl: null,
+		githubUrl: null,
+		portfolioUrl: null,
+		professionalSummary: null,
+	},
+});
 
-	const form = useForm({
-		resolver: zodResolver(createUserProfileSchema),
-		defaultValues: {
-			firstName: null,
-			lastName: null,
-			email: null,
-			phone: null,
-			address: null,
-			city: null,
-			state: null,
-			zipCode: null,
-			country: null,
-			linkedinUrl: null,
-			githubUrl: null,
-			portfolioUrl: null,
-			professionalSummary: null,
-		},
+const fileInputRef = useRef<HTMLInputElement | null>(null);
+const [isImporting, setIsImporting] = useState(false);
+
+	const profileDraft = useImportReviewStore((state) => state.profile);
+	const pendingWorkExperiences = useImportReviewStore((state) => state.workExperiences);
+	const pendingEducation = useImportReviewStore((state) => state.education);
+	const pendingSkills = useImportReviewStore((state) => state.skills);
+	const pendingProjects = useImportReviewStore((state) => state.projects);
+	const pendingCertifications = useImportReviewStore((state) => state.certifications);
+	const pendingAchievements = useImportReviewStore((state) => state.achievements);
+	const pendingReferences = useImportReviewStore((state) => state.references);
+
+	const previewSections = buildPreviewSections({
+		workExperiences: pendingWorkExperiences.map((item) => item.request),
+		education: pendingEducation.map((item) => item.request),
+		skills: pendingSkills.map((item) => item.request),
+		projects: pendingProjects.map((item) => item.request),
+		certifications: pendingCertifications.map((item) => item.request),
+		achievements: pendingAchievements.map((item) => item.request),
+		references: pendingReferences.map((item) => item.request),
 	});
-
-	const fileInputRef = useRef<HTMLInputElement | null>(null);
-	const [isImporting, setIsImporting] = useState(false);
-	const [importWarnings, setImportWarnings] = useState<string[]>([]);
+	const hasPreviewSections = previewSections.length > 0;
 
 	const {
 		register,
@@ -117,7 +258,6 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 			return;
 		}
 
-		const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 		if (file.size > MAX_FILE_SIZE_BYTES) {
 			toast.error("Resume is too large. Please upload a file under 8 MB.");
 			event.target.value = "";
@@ -127,8 +267,7 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 		const formData = new FormData();
 		formData.append("file", file);
 
-		setIsImporting(true);
-		setImportWarnings([]);
+	setIsImporting(true);
 
 		try {
 			const response = await fetch("/api/profile/resume-import", {
@@ -161,15 +300,8 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 			}
 
 			reset(payload.profile);
-			setImportWarnings(payload.warnings);
-
-			if (payload.warnings.length > 0) {
-				toast.success(
-					"Resume imported. Review the highlighted notes before saving."
-				);
-			} else {
-				toast.success("Resume imported. Review and save your profile.");
-			}
+			onImportPreview(payload);
+			toast.success("Resume imported. Review the pending details below before saving.");
 		} catch (error) {
 			console.error("Resume import failed:", error);
 			toast.error("Failed to import resume. Please try again.");
@@ -214,21 +346,48 @@ export function UserProfileForm({ profile }: UserProfileFormProps) {
 							Supports PDF, DOC, and DOCX files.
 						</p>
 					</div>
+		</div>
+		<CardDescription>
+			Basic personal information for your professional profile
+		</CardDescription>
+		{profileDraft.warnings.length > 0 && (
+			<div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-500/60 dark:bg-yellow-950/70 dark:text-yellow-100">
+				<p className="font-semibold">Check the imported details:</p>
+				<ul className="mt-2 list-disc space-y-1 pl-4">
+					{profileDraft.warnings.map((warning) => (
+						<li key={warning}>{warning}</li>
+					))}
+				</ul>
+			</div>
+		)}
+		{hasPreviewSections && (
+			<div className="rounded-md border border-muted bg-muted/40 p-3 text-sm text-foreground">
+				<p className="font-semibold">Imported resume details pending review</p>
+				<p className="mt-1 text-xs text-muted-foreground">
+					Nothing has been saved yet. Review the summary below, then switch to each tab to edit and store the entries you want to keep.
+				</p>
+				<div className="mt-3 space-y-3">
+					{previewSections.map((section) => (
+						<div key={section.label}>
+							<p className="text-xs font-semibold uppercase tracking-wide text-foreground">
+								{section.label} ({section.items.length})
+							</p>
+							<ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+								{section.items.slice(0, 3).map((item, index) => (
+									<li key={`${section.label}-${index}`}>{item}</li>
+								))}
+								{section.items.length > 3 && (
+									<li className="italic text-muted-foreground/80">
+										+{section.items.length - 3} more…
+									</li>
+								)}
+							</ul>
+						</div>
+					))}
 				</div>
-				<CardDescription>
-					Basic personal information for your professional profile
-				</CardDescription>
-				{importWarnings.length > 0 && (
-					<div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-500/60 dark:bg-yellow-950/70 dark:text-yellow-100">
-						<p className="font-semibold">Check the imported details:</p>
-						<ul className="mt-2 list-disc space-y-1 pl-4">
-							{importWarnings.map((warning) => (
-								<li key={warning}>{warning}</li>
-							))}
-						</ul>
-					</div>
-				)}
-			</CardHeader>
+			</div>
+		)}
+	</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -7,7 +7,17 @@ import { z } from "zod";
 import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
-import { resumeImportResponseSchema, type ResumeImportResponse } from "./validators";
+import {
+  resumeImportResponseSchema,
+  type ResumeImportAchievement,
+  type ResumeImportCertification,
+  type ResumeImportEducation,
+  type ResumeImportProject,
+  type ResumeImportReference,
+  type ResumeImportResponse,
+  type ResumeImportSkill,
+  type ResumeImportWorkExperience,
+} from "./validators";
 
 const SUMMARY_SECTION_PATTERNS = [
   /^summary$/i,
@@ -54,21 +64,131 @@ const aiProfileGenerationSchema = z.object({
   githubUrl: z.string().nullable(),
   portfolioUrl: z.string().nullable(),
   professionalSummary: z.string().nullable(),
+  workExperiences: z
+    .array(
+      z.object({
+        jobTitle: z.string().nullable(),
+        company: z.string().nullable(),
+        location: z.string().nullable(),
+        startDate: z.string().nullable(),
+        endDate: z.string().nullable(),
+        isCurrent: z.boolean().nullable(),
+        description: z.string().nullable(),
+        technologies: z.array(z.string()).optional(),
+      }),
+    )
+    .default([]),
+  education: z
+    .array(
+      z.object({
+        degree: z.string().nullable(),
+        fieldOfStudy: z.string().nullable(),
+        institution: z.string().nullable(),
+        location: z.string().nullable(),
+        startDate: z.string().nullable(),
+        endDate: z.string().nullable(),
+        gpa: z.string().nullable(),
+        honors: z.string().nullable(),
+        relevantCoursework: z.array(z.string()).optional(),
+      }),
+    )
+    .default([]),
+  skills: z
+    .array(
+      z.object({
+        name: z.string().nullable(),
+        category: z.string().nullable(),
+        proficiencyLevel: z.string().nullable(),
+        yearsOfExperience: z.number().nullable(),
+      }),
+    )
+    .default([]),
+  projects: z
+    .array(
+      z.object({
+        title: z.string().nullable(),
+        description: z.string().nullable(),
+        technologies: z.array(z.string()).optional(),
+        projectUrl: z.string().nullable(),
+        githubUrl: z.string().nullable(),
+        startDate: z.string().nullable(),
+        endDate: z.string().nullable(),
+        isOngoing: z.boolean().nullable(),
+      }),
+    )
+    .default([]),
+  certifications: z
+    .array(
+      z.object({
+        name: z.string().nullable(),
+        issuingOrganization: z.string().nullable(),
+        issueDate: z.string().nullable(),
+        expirationDate: z.string().nullable(),
+        credentialId: z.string().nullable(),
+        credentialUrl: z.string().nullable(),
+      }),
+    )
+    .default([]),
+  achievements: z
+    .array(
+      z.object({
+        title: z.string().nullable(),
+        description: z.string().nullable(),
+        organization: z.string().nullable(),
+        date: z.string().nullable(),
+        url: z.string().nullable(),
+      }),
+    )
+    .default([]),
+  references: z
+    .array(
+      z.object({
+        name: z.string().nullable(),
+        title: z.string().nullable(),
+        company: z.string().nullable(),
+        email: z.string().nullable(),
+        phone: z.string().nullable(),
+        relationship: z.string().nullable(),
+      }),
+    )
+    .default([]),
 });
 
 const aiProfileSchema = aiProfileGenerationSchema.extend({
   warnings: z.array(z.string()).optional(),
 });
 
+const SKILL_CATEGORIES = new Set(["technical", "soft", "language", "tool", "framework", "other"]);
+const SKILL_PROFICIENCY_LEVELS = new Set(["beginner", "intermediate", "advanced", "expert"]);
+const REFERENCE_RELATIONSHIPS = new Set(["manager", "colleague", "client", "professor", "mentor", "other"]);
+
+type AiProfile = z.infer<typeof aiProfileSchema>;
+
+type SectionNormalizationResult<T> = {
+  items: T[];
+  warnings: string[];
+};
+
+type NormalizedResumeData = {
+  profile: CreateUserProfileRequest;
+  workExperiences: ResumeImportWorkExperience[];
+  education: ResumeImportEducation[];
+  skills: ResumeImportSkill[];
+  projects: ResumeImportProject[];
+  certifications: ResumeImportCertification[];
+  achievements: ResumeImportAchievement[];
+  references: ResumeImportReference[];
+  warnings: string[];
+};
+
 export class ResumeImportService {
   async importProfileFromResume(params: ImportParams): Promise<ResumeImportResponse> {
     const markdown = await this.extractMarkdown(params);
-    const { profile, warnings } = await this.extractProfile(markdown);
+    const extraction = await this.extractProfile(markdown);
 
     return resumeImportResponseSchema.parse({
-      profile,
+      ...extraction,
       markdown,
-      warnings,
     });
   }
 
@@ -113,11 +233,18 @@ export class ResumeImportService {
 
   private async extractProfile(
     markdown: string,
-  ): Promise<{ profile: CreateUserProfileRequest; warnings: string[]; }> {
+  ): Promise<NormalizedResumeData> {
     if (!markdown || markdown.trim().length === 0) {
       const profile = createUserProfileSchema.parse(this.emptyProfile());
       return {
         profile,
+        workExperiences: [],
+        education: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        achievements: [],
+        references: [],
         warnings: ["The uploaded resume did not contain readable text."],
       };
     }
@@ -129,23 +256,29 @@ export class ResumeImportService {
       } catch (error) {
         console.error("AI-based resume parsing failed. Falling back to heuristics.", error);
         const fallback = this.fallbackExtractProfile(markdown);
-        fallback.warnings.push(
-          "AI parsing failed. Populating fields using basic text extraction—please review and edit.",
-        );
-        return fallback;
+        return {
+          ...fallback,
+          warnings: [
+            ...fallback.warnings,
+            "AI parsing failed. Populating fields using basic text extraction—please review and edit.",
+          ],
+        };
       }
     }
 
     const fallback = this.fallbackExtractProfile(markdown);
-    fallback.warnings.push(
-      "Structured AI parsing is not configured. Imported values use basic text extraction—please review.",
-    );
-    return fallback;
+    return {
+      ...fallback,
+      warnings: [
+        ...fallback.warnings,
+        "Structured AI parsing is not configured. Imported values use basic text extraction—please review.",
+      ],
+    };
   }
 
   private async aiExtractProfile(
     markdown: string,
-  ): Promise<{ profile: CreateUserProfileRequest; warnings: string[]; }> {
+  ): Promise<NormalizedResumeData> {
     const groq = createGroq({
       apiKey: env.GROQ_API_KEY,
     });
@@ -160,28 +293,54 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       schema: aiProfileSchema,
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 20000,
     });
 
-    const { warnings: modelWarningsRaw, ...rawProfile } = result.object;
-    const normalized = this.normalizeProfile(rawProfile as Record<string, unknown>);
-    const profile = createUserProfileSchema.parse(normalized);
+    const aiData = aiProfileSchema.parse(result.object);
+
+    const profile = this.normalizeProfile(aiData);
+    const workExperiences = this.normalizeWorkExperiences(aiData.workExperiences);
+    const education = this.normalizeEducation(aiData.education);
+    const skills = this.normalizeSkills(aiData.skills);
+    const projects = this.normalizeProjects(aiData.projects);
+    const certifications = this.normalizeCertifications(aiData.certifications);
+    const achievements = this.normalizeAchievements(aiData.achievements);
+    const references = this.normalizeReferences(aiData.references);
 
     const modelWarnings =
-      Array.isArray(modelWarningsRaw)
-        ? modelWarningsRaw.filter(
+      Array.isArray(aiData.warnings)
+        ? aiData.warnings.filter(
           (item): item is string => typeof item === "string" && item.trim().length > 0,
         )
         : [];
 
-    const warnings = this.collectWarnings(profile, modelWarnings);
+    const warnings = this.collectWarnings(profile, [
+      ...modelWarnings,
+      ...workExperiences.warnings,
+      ...education.warnings,
+      ...skills.warnings,
+      ...projects.warnings,
+      ...certifications.warnings,
+      ...achievements.warnings,
+      ...references.warnings,
+    ]);
 
-    return { profile, warnings };
+    return {
+      profile,
+      workExperiences: workExperiences.items,
+      education: education.items,
+      skills: skills.items,
+      projects: projects.items,
+      certifications: certifications.items,
+      achievements: achievements.items,
+      references: references.items,
+      warnings,
+    };
   }
 
   private fallbackExtractProfile(
     markdown: string,
-  ): { profile: CreateUserProfileRequest; warnings: string[]; } {
+  ): NormalizedResumeData {
     const text = markdown.replace(/\r/g, "\n");
     const lines = text
       .split("\n")
@@ -248,7 +407,17 @@ Populate the provided schema using only facts that appear in the resume. Use nul
 
     return {
       profile,
-      warnings: this.collectWarnings(profile, warnings),
+      workExperiences: [],
+      education: [],
+      skills: [],
+      projects: [],
+      certifications: [],
+      achievements: [],
+      references: [],
+      warnings: this.collectWarnings(profile, [
+        ...warnings,
+        "Structured sections could not be inferred automatically.",
+      ]),
     };
   }
 
@@ -270,58 +439,281 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     };
   }
 
-  private normalizeProfile(data: Record<string, unknown>): CreateUserProfileRequest {
-    let firstName =
-      this.stringOrNull(
-        data.firstName ??
-        data.first_name ??
-        data.givenName ??
-        data.given_name ??
-        data.name_first,
-      ) ?? null;
-    let lastName =
-      this.stringOrNull(
-        data.lastName ??
-        data.last_name ??
-        data.familyName ??
-        data.family_name ??
-        data.surname,
-      ) ?? null;
-
-    if (!firstName && !lastName) {
-      const fullName = this.stringOrNull(data.fullName ?? data.full_name ?? data.name);
-      if (fullName) {
-        const parts = fullName.split(/\s+/).filter((part) => part.length > 0);
-        if (parts.length === 1) {
-          firstName = parts[0];
-        } else if (parts.length >= 2) {
-          firstName = parts[0];
-          lastName = parts.slice(1).join(" ");
-        }
-      }
-    }
+  private normalizeProfile(data: AiProfile): CreateUserProfileRequest {
+    const firstName = this.stringOrNull(data.firstName);
+    const lastName = this.stringOrNull(data.lastName);
 
     return {
       firstName,
       lastName,
       email: this.stringOrNull(data.email),
-      phone: this.sanitizePhone(this.stringOrNull(data.phone ?? data.phoneNumber)),
+      phone: this.sanitizePhone(this.stringOrNull(data.phone)),
       address: this.stringOrNull(data.address),
       city: this.stringOrNull(data.city),
-      state: this.stringOrNull(data.state ?? data.region),
-      zipCode: this.stringOrNull(data.zipCode ?? data.postalCode ?? data.zip),
+      state: this.stringOrNull(data.state),
+      zipCode: this.stringOrNull(data.zipCode),
       country: this.stringOrNull(data.country),
-      linkedinUrl: this.stringOrNull(data.linkedinUrl ?? data.linkedin),
-      githubUrl: this.stringOrNull(data.githubUrl ?? data.github),
+      linkedinUrl: this.stringOrNull(data.linkedinUrl),
+      githubUrl: this.stringOrNull(data.githubUrl),
       portfolioUrl: this.stringOrNull(
-        data.portfolioUrl ?? data.website ?? data.site ?? data.personalSite,
+        data.portfolioUrl,
       ),
       professionalSummary: this.truncateSummary(
         this.stringOrNull(
-          data.professionalSummary ?? data.summary ?? data.profile ?? data.objective,
+          data.professionalSummary,
         ),
       ),
     };
+  }
+
+  private normalizeWorkExperiences(data: AiProfile["workExperiences"]): SectionNormalizationResult<ResumeImportWorkExperience> {
+    const warnings: string[] = [];
+    const items: ResumeImportWorkExperience[] = [];
+
+    data?.forEach((experience, index) => {
+      if (!experience) {
+        return;
+      }
+
+      const jobTitle = this.stringOrNull(experience.jobTitle);
+      const company = this.stringOrNull(experience.company);
+      const location = this.stringOrNull(experience.location);
+      const description = this.stringOrNull(experience.description);
+      const startDate = this.normalizeResumeDate(this.stringOrNull(experience.startDate));
+      let endDate = this.normalizeResumeDate(this.stringOrNull(experience.endDate));
+      let isCurrent: boolean | null =
+        typeof experience.isCurrent === "boolean" ? experience.isCurrent : null;
+
+      if (!isCurrent && typeof experience.endDate === "string" && /present|current/i.test(experience.endDate)) {
+        isCurrent = true;
+        endDate = null;
+      }
+
+      if (!jobTitle || !company) {
+        warnings.push(`Skipped a work experience entry at position ${index + 1} due to missing job title or company.`);
+        return;
+      }
+
+      if (!startDate) {
+        warnings.push(`Work experience "${jobTitle} at ${company}" is missing a recognizable start date.`);
+      }
+
+      items.push({
+        jobTitle,
+        company,
+        location,
+        startDate,
+        endDate,
+        isCurrent,
+        description,
+        technologies: this.normalizeStringArray(experience.technologies),
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeEducation(data: AiProfile["education"]): SectionNormalizationResult<ResumeImportEducation> {
+    const warnings: string[] = [];
+    const items: ResumeImportEducation[] = [];
+
+    data?.forEach((education, index) => {
+      if (!education) {
+        return;
+      }
+
+      const degree = this.stringOrNull(education.degree);
+      const institution = this.stringOrNull(education.institution);
+      const fieldOfStudy = this.stringOrNull(education.fieldOfStudy);
+      const location = this.stringOrNull(education.location);
+      const gpa = this.stringOrNull(education.gpa);
+      const honors = this.stringOrNull(education.honors);
+      const startDate = this.normalizeResumeDate(this.stringOrNull(education.startDate));
+      const endDate = this.normalizeResumeDate(this.stringOrNull(education.endDate));
+      const relevantCoursework = this.normalizeStringArray(education.relevantCoursework);
+
+      if (!degree || !institution) {
+        warnings.push(`Skipped an education entry at position ${index + 1} due to missing degree or institution.`);
+        return;
+      }
+
+      items.push({
+        degree,
+        institution,
+        fieldOfStudy,
+        location,
+        startDate,
+        endDate,
+        gpa,
+        honors,
+        relevantCoursework,
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeSkills(data: AiProfile["skills"]): SectionNormalizationResult<ResumeImportSkill> {
+    const warnings: string[] = [];
+    const items: ResumeImportSkill[] = [];
+    const seen = new Set<string>();
+
+    data?.forEach((skill, index) => {
+      if (!skill) {
+        return;
+      }
+
+      const name = this.stringOrNull(skill.name);
+      if (!name) {
+        warnings.push(`Skipped a skill entry at position ${index + 1} due to missing name.`);
+        return;
+      }
+
+      const key = name.toLowerCase();
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+
+      const category = this.normalizeSkillCategory(this.stringOrNull(skill.category));
+      const proficiencyLevel = this.normalizeSkillLevel(this.stringOrNull(skill.proficiencyLevel));
+      const yearsOfExperience = this.normalizeYearsOfExperience(skill.yearsOfExperience);
+
+      items.push({
+        name,
+        category,
+        proficiencyLevel,
+        yearsOfExperience,
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeProjects(data: AiProfile["projects"]): SectionNormalizationResult<ResumeImportProject> {
+    const warnings: string[] = [];
+    const items: ResumeImportProject[] = [];
+
+    data?.forEach((project, index) => {
+      if (!project) {
+        return;
+      }
+
+      const title = this.stringOrNull(project.title);
+      if (!title) {
+        warnings.push(`Skipped a project entry at position ${index + 1} due to missing title.`);
+        return;
+      }
+
+      const startDate = this.normalizeResumeDate(this.stringOrNull(project.startDate));
+      const endDateRaw = this.stringOrNull(project.endDate);
+      const endDate = this.normalizeResumeDate(endDateRaw);
+      const derivedOngoing =
+        endDate === null && typeof endDateRaw === "string" && /present|current/i.test(endDateRaw)
+          ? true
+          : null;
+      const isOngoing =
+        typeof project.isOngoing === "boolean"
+          ? project.isOngoing
+          : derivedOngoing;
+
+      items.push({
+        title,
+        description: this.stringOrNull(project.description),
+        technologies: this.normalizeStringArray(project.technologies),
+        projectUrl: this.normalizeUrl(project.projectUrl),
+        githubUrl: this.normalizeUrl(project.githubUrl),
+        startDate,
+        endDate,
+        isOngoing: isOngoing ?? null,
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeCertifications(data: AiProfile["certifications"]): SectionNormalizationResult<ResumeImportCertification> {
+    const warnings: string[] = [];
+    const items: ResumeImportCertification[] = [];
+
+    data?.forEach((certification, index) => {
+      if (!certification) {
+        return;
+      }
+
+      const name = this.stringOrNull(certification.name);
+      const issuingOrganization = this.stringOrNull(certification.issuingOrganization);
+      if (!name || !issuingOrganization) {
+        warnings.push(`Skipped a certification entry at position ${index + 1} due to missing name or issuing organization.`);
+        return;
+      }
+
+      items.push({
+        name,
+        issuingOrganization,
+        issueDate: this.normalizeResumeDate(this.stringOrNull(certification.issueDate)),
+        expirationDate: this.normalizeResumeDate(this.stringOrNull(certification.expirationDate)),
+        credentialId: this.stringOrNull(certification.credentialId),
+        credentialUrl: this.normalizeUrl(certification.credentialUrl),
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeAchievements(data: AiProfile["achievements"]): SectionNormalizationResult<ResumeImportAchievement> {
+    const warnings: string[] = [];
+    const items: ResumeImportAchievement[] = [];
+
+    data?.forEach((achievement, index) => {
+      if (!achievement) {
+        return;
+      }
+
+      const title = this.stringOrNull(achievement.title);
+      if (!title) {
+        warnings.push(`Skipped an achievement entry at position ${index + 1} due to missing title.`);
+        return;
+      }
+
+      items.push({
+        title,
+        description: this.stringOrNull(achievement.description),
+        organization: this.stringOrNull(achievement.organization),
+        date: this.normalizeResumeDate(this.stringOrNull(achievement.date)),
+        url: this.normalizeUrl(achievement.url),
+      });
+    });
+
+    return { items, warnings };
+  }
+
+  private normalizeReferences(data: AiProfile["references"]): SectionNormalizationResult<ResumeImportReference> {
+    const warnings: string[] = [];
+    const items: ResumeImportReference[] = [];
+
+    data?.forEach((reference, index) => {
+      if (!reference) {
+        return;
+      }
+
+      const name = this.stringOrNull(reference.name);
+      if (!name) {
+        warnings.push(`Skipped a reference entry at position ${index + 1} due to missing name.`);
+        return;
+      }
+
+      items.push({
+        name,
+        title: this.stringOrNull(reference.title),
+        company: this.stringOrNull(reference.company),
+        email: this.stringOrNull(reference.email),
+        phone: this.sanitizePhone(this.stringOrNull(reference.phone)),
+        relationship: this.normalizeReferenceRelationship(this.stringOrNull(reference.relationship)),
+      });
+    });
+
+    return { items, warnings };
   }
 
   private stringOrNull(value: unknown): string | null {
@@ -348,6 +740,106 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     }
 
     return value.length > 600 ? `${value.slice(0, 597)}...` : value;
+  }
+
+  private normalizeStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => this.stringOrNull(item))
+        .filter((item): item is string => Boolean(item));
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(/[\n,;•]+/)
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+    }
+
+    return [];
+  }
+
+  private normalizeResumeDate(value: string | null): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+
+    if (/^\d{4}-(0[1-9]|1[0-2])$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    if (/^\d{4}$/.test(trimmed)) {
+      return `${trimmed}-01`;
+    }
+
+    if (/present|current/i.test(trimmed)) {
+      return null;
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    const year = parsed.getUTCFullYear();
+    const month = (parsed.getUTCMonth() + 1).toString().padStart(2, "0");
+    return `${year}-${month}`;
+  }
+
+  private normalizeUrl(value: string | null): string | null {
+    const urlString = this.stringOrNull(value);
+    if (!urlString) {
+      return null;
+    }
+
+    const prefixed = /^[a-zA-Z]+:\/\//.test(urlString) ? urlString : `https://${urlString}`;
+    try {
+      const url = new URL(prefixed);
+      return url.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  private normalizeSkillCategory(value: string | null): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const normalized = value.toLowerCase();
+    return SKILL_CATEGORIES.has(normalized) ? normalized : null;
+  }
+
+  private normalizeSkillLevel(value: string | null): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const normalized = value.toLowerCase();
+    return SKILL_PROFICIENCY_LEVELS.has(normalized) ? normalized : null;
+  }
+
+  private normalizeYearsOfExperience(value: number | null): number | null {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return null;
+    }
+
+    const rounded = Math.max(0, Math.round(value));
+    return Number.isFinite(rounded) ? rounded : null;
+  }
+
+  private normalizeReferenceRelationship(value: string | null): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const normalized = value.toLowerCase();
+    return REFERENCE_RELATIONSHIPS.has(normalized) ? normalized : null;
   }
 
   private extractMarkdownFromOcrResponse(response: unknown): string | null {

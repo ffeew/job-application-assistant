@@ -16,32 +16,52 @@ import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/pr
 
 interface AchievementsFormProps {
   achievement?: AchievementResponse;
+  initialValues?: Partial<CreateAchievementRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateAchievementRequest) => Promise<void>;
 }
 
-export function AchievementsForm({ achievement, onCancel, onSuccess }: AchievementsFormProps) {
+export function AchievementsForm({
+  achievement,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: AchievementsFormProps) {
   const createMutation = useCreateAchievement();
   const updateMutation = useUpdateAchievement();
 
   const form = useForm({
     resolver: zodResolver(createAchievementSchema),
     defaultValues: {
-      title: achievement?.title || "",
-      description: achievement?.description || null,
-      date: achievement?.date || null,
-      organization: achievement?.organization || null,
-      url: achievement?.url || null,
-      displayOrder: achievement?.displayOrder || 0,
+      title: achievement?.title || initialValues?.title || "",
+      description: achievement?.description ?? initialValues?.description ?? null,
+      organization: achievement?.organization ?? initialValues?.organization ?? null,
+      date: achievement?.date ?? initialValues?.date ?? null,
+      url: achievement?.url ?? initialValues?.url ?? null,
+      displayOrder: achievement?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateAchievementRequest;
-    
+
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving achievement draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (achievement) {
       updateMutation.mutate({ id: achievement.id, data: validatedData }, {
         onSuccess: () => {
@@ -75,14 +95,34 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="title">Achievement Title *</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               {...register("title")}
-              placeholder="Employee of the Year"
+              placeholder="Employee of the Quarter"
             />
             {errors.title && (
               <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="organization">Organization</Label>
+            <Input
+              id="organization"
+              {...register("organization")}
+              placeholder="Acme Corp"
+            />
+            {errors.organization && (
+              <p className="text-red-500 text-sm mt-1">{errors.organization.message}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" type="month" {...register("date")} />
+            {errors.date && (
+              <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
             )}
           </div>
 
@@ -91,7 +131,7 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             <Textarea
               id="description"
               {...register("description")}
-              placeholder="Describe the achievement, what it recognizes, and its significance..."
+              placeholder="Highlight what this achievement represents..."
               rows={3}
             />
             {errors.description && (
@@ -99,38 +139,13 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="date">Date Received</Label>
-              <Input
-                id="date"
-                type="month"
-                {...register("date")}
-              />
-              {errors.date && (
-                <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="organization">Awarding Organization</Label>
-              <Input
-                id="organization"
-                {...register("organization")}
-                placeholder="Company Name, Institution, etc."
-              />
-              {errors.organization && (
-                <p className="text-red-500 text-sm mt-1">{errors.organization.message}</p>
-              )}
-            </div>
-          </div>
-
           <div className="flex flex-col gap-2">
-            <Label htmlFor="url">Related URL</Label>
+            <Label htmlFor="url">Supporting Link</Label>
             <Input
               id="url"
               type="url"
               {...register("url")}
-              placeholder="https://example.com/award-details"
+              placeholder="https://example.com/achievement"
             />
             {errors.url && (
               <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
@@ -144,7 +159,13 @@ export function AchievementsForm({ achievement, onCancel, onSuccess }: Achieveme
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : achievement ? "Update Achievement" : "Add Achievement"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : achievement
+                    ? "Update Achievement"
+                    : "Add Achievement"}
             </Button>
           </div>
         </form>

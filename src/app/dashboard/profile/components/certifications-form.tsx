@@ -15,33 +15,53 @@ import type { CertificationResponse, CreateCertificationRequest } from "@/app/ap
 
 interface CertificationsFormProps {
   certification?: CertificationResponse;
+  initialValues?: Partial<CreateCertificationRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateCertificationRequest) => Promise<void>;
 }
 
-export function CertificationsForm({ certification, onCancel, onSuccess }: CertificationsFormProps) {
+export function CertificationsForm({
+  certification,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: CertificationsFormProps) {
   const createMutation = useCreateCertification();
   const updateMutation = useUpdateCertification();
 
   const form = useForm({
     resolver: zodResolver(createCertificationSchema),
     defaultValues: {
-      name: certification?.name || "",
-      issuingOrganization: certification?.issuingOrganization || "",
-      issueDate: certification?.issueDate || null,
-      expirationDate: certification?.expirationDate || null,
-      credentialId: certification?.credentialId || null,
-      credentialUrl: certification?.credentialUrl || null,
-      displayOrder: certification?.displayOrder || 0,
+      name: certification?.name || initialValues?.name || "",
+      issuingOrganization: certification?.issuingOrganization || initialValues?.issuingOrganization || "",
+      issueDate: certification?.issueDate ?? initialValues?.issueDate ?? null,
+      expirationDate: certification?.expirationDate ?? initialValues?.expirationDate ?? null,
+      credentialId: certification?.credentialId ?? initialValues?.credentialId ?? null,
+      credentialUrl: certification?.credentialUrl ?? initialValues?.credentialUrl ?? null,
+      displayOrder: certification?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateCertificationRequest;
-    
+
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving certification draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (certification) {
       updateMutation.mutate({ id: certification.id, data: validatedData }, {
         onSuccess: () => {
@@ -74,49 +94,42 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Certification Name *</Label>
-            <Input
-              id="name"
-              {...register("name")}
-              placeholder="AWS Certified Solutions Architect"
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="issuingOrganization">Issuing Organization *</Label>
-            <Input
-              id="issuingOrganization"
-              {...register("issuingOrganization")}
-              placeholder="Amazon Web Services"
-            />
-            {errors.issuingOrganization && (
-              <p className="text-red-500 text-sm mt-1">{errors.issuingOrganization.message}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="name">Certification Name *</Label>
+              <Input
+                id="name"
+                {...register("name")}
+                placeholder="AWS Certified Solutions Architect"
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="issuingOrganization">Issuing Organization *</Label>
+              <Input
+                id="issuingOrganization"
+                {...register("issuingOrganization")}
+                placeholder="Amazon Web Services"
+              />
+              {errors.issuingOrganization && (
+                <p className="text-red-500 text-sm mt-1">{errors.issuingOrganization.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="issueDate">Issue Date</Label>
-              <Input
-                id="issueDate"
-                type="month"
-                {...register("issueDate")}
-              />
+              <Input id="issueDate" type="month" {...register("issueDate")} />
               {errors.issueDate && (
                 <p className="text-red-500 text-sm mt-1">{errors.issueDate.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="expirationDate">Expiration Date</Label>
-              <Input
-                id="expirationDate"
-                type="month"
-                {...register("expirationDate")}
-              />
+              <Input id="expirationDate" type="month" {...register("expirationDate")} />
               {errors.expirationDate && (
                 <p className="text-red-500 text-sm mt-1">{errors.expirationDate.message}</p>
               )}
@@ -126,11 +139,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="credentialId">Credential ID</Label>
-              <Input
-                id="credentialId"
-                {...register("credentialId")}
-                placeholder="ABC123DEF456"
-              />
+              <Input id="credentialId" {...register("credentialId")} placeholder="ABC-12345" />
               {errors.credentialId && (
                 <p className="text-red-500 text-sm mt-1">{errors.credentialId.message}</p>
               )}
@@ -141,7 +150,7 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
                 id="credentialUrl"
                 type="url"
                 {...register("credentialUrl")}
-                placeholder="https://www.credly.com/badges/..."
+                placeholder="https://example.com/credential"
               />
               {errors.credentialUrl && (
                 <p className="text-red-500 text-sm mt-1">{errors.credentialUrl.message}</p>
@@ -156,7 +165,13 @@ export function CertificationsForm({ certification, onCancel, onSuccess }: Certi
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : certification ? "Update Certification" : "Add Certification"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : certification
+                    ? "Update Certification"
+                    : "Add Certification"}
             </Button>
           </div>
         </form>

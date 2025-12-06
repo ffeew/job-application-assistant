@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Award, Calendar, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, Award, Calendar, ExternalLink, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteCertification } from "@/app/dashboard/profile/mutations/use-delete-certification";
+import { useCreateCertification } from "@/app/dashboard/profile/mutations/use-create-certification";
 import { CertificationsForm } from "./certifications-form";
-import type { CertificationResponse } from "@/app/api/profile/validators";
+import type { CertificationResponse, CreateCertificationRequest } from "@/app/api/profile/validators";
+import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface CertificationsListProps {
@@ -15,12 +17,17 @@ interface CertificationsListProps {
   isLoading: boolean;
 }
 
-
 export function CertificationsList({ certifications, isLoading }: CertificationsListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingCertification, setEditingCertification] = useState<CertificationResponse | null>(null);
+  const [editingPendingId, setEditingPendingId] = useState<string | null>(null);
+  const [savingPendingId, setSavingPendingId] = useState<string | null>(null);
 
   const deleteMutation = useDeleteCertification();
+  const createMutation = useCreateCertification();
+  const pendingItems = useImportReviewStore((state) => state.certifications);
+  const updatePendingItem = useImportReviewStore((state) => state.updateCertificationDraft);
+  const removePendingItem = useImportReviewStore((state) => state.removeCertificationDraft);
 
   const startAdding = () => {
     setIsAdding(true);
@@ -37,7 +44,6 @@ export function CertificationsList({ certifications, isLoading }: Certifications
     setEditingCertification(null);
   };
 
-
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this certification?")) {
       deleteMutation.mutate(id, {
@@ -52,11 +58,30 @@ export function CertificationsList({ certifications, isLoading }: Certifications
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return "";
     const [year, month] = dateString.split("-");
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${months[parseInt(month) - 1]} ${year}`;
+    return `${months[parseInt(month, 10) - 1]} ${year}`;
+  };
+
+  const handleSavePending = async (id: string, data: CreateCertificationRequest) => {
+    setSavingPendingId(id);
+    try {
+      await createMutation.mutateAsync(data);
+      removePendingItem(id);
+      toast.success("Certification saved to your profile.");
+    } catch (error) {
+      console.error("Failed to save certification:", error);
+      toast.error("Failed to save certification. Please try again.");
+    } finally {
+      setSavingPendingId(null);
+    }
+  };
+
+  const handleUpdatePending = async (id: string, data: CreateCertificationRequest) => {
+    updatePendingItem(id, data);
+    toast.success("Draft updated.");
   };
 
   if (isLoading) {
@@ -71,6 +96,91 @@ export function CertificationsList({ certifications, isLoading }: Certifications
 
   return (
     <div className="space-y-4">
+      {pendingItems.length > 0 && (
+        <Card className="border-dashed border-primary/40 bg-primary/5">
+          <CardContent className="space-y-4 pt-6">
+            <div>
+              <p className="text-sm font-semibold text-primary">
+                Pending certification draft{pendingItems.length === 1 ? "" : "s"}
+              </p>
+              <p className="text-xs text-primary/80">
+                Review, edit, or save these entries individually.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {pendingItems.map((item) => (
+                <div key={item.id} className="rounded-md border border-primary/20 bg-primary/10 p-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1 text-sm text-primary">
+                      <p className="font-semibold">
+                        {[item.request.name, item.request.issuingOrganization]
+                          .filter(Boolean)
+                          .join(" · ") || "Pending certification"}
+                      </p>
+                      {item.request.credentialId && (
+                        <p className="text-xs text-primary/80">ID: {item.request.credentialId}</p>
+                      )}
+                      {item.warnings.length > 0 && (
+                        <ul className="list-disc space-y-1 pl-4 text-xs text-amber-700">
+                          {item.warnings.map((warning) => (
+                            <li key={`${item.id}-warning-${warning}`}>{warning}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingPendingId(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit draft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removePendingItem(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <X className="mr-1 h-3 w-3" />
+                        Discard
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSavePending(item.id, item.request)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        {savingPendingId === item.id ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="mr-1 h-3 w-3" />
+                        )}
+                        {savingPendingId === item.id ? "Saving" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                  {editingPendingId === item.id && (
+                    <div className="mt-4">
+                      <CertificationsForm
+                        onCancel={() => setEditingPendingId(null)}
+                        onSuccess={() => setEditingPendingId(null)}
+                        submitLabel="Save Draft"
+                        initialValues={item.request}
+                        onSubmitOverride={async (data) => {
+                          await handleUpdatePending(item.id, data);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -147,7 +257,7 @@ export function CertificationsList({ certifications, isLoading }: Certifications
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Issued: {formatDate(certification.issueDate)}
-                      {certification.expirationDate && ` - Expires: ${formatDate(certification.expirationDate)}`}
+                      {certification.expirationDate && ` · Expires: ${formatDate(certification.expirationDate)}`}
                     </div>
                   )}
                 </div>

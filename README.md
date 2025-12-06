@@ -5,7 +5,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 ## Highlights
 
 - Structured profile builder covering personal details, work experience, education, skills, projects, certifications, achievements, and references.
-- One-click resume import that runs Mistral OCR to prefill the personal profile form from an uploaded resume.
+- One-click resume import that runs Mistral OCR to prefill personal details and stage suggested entries for work history, education, skills, and more—review everything before saving.
 - Resume library with CRUD, default resume selection, HTML previews, and PDF export using the professional template.
 - Job-specific resume tailoring that calls Groq to analyze job descriptions, select relevant content, and produce an A4 PDF with optional manual overrides.
 - AI cover letter generator and conversation starter assistant that pull from saved profile/resume data (requires `GROQ_API_KEY`).

@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Edit, Trash2, GraduationCap, Calendar, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, GraduationCap, Calendar, MapPin, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
+import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { EducationForm } from "./education-form";
-import type { EducationResponse } from "@/app/api/profile/validators";
+import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
+import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface EducationListProps {
@@ -15,12 +17,17 @@ interface EducationListProps {
   isLoading: boolean;
 }
 
-
 export function EducationList({ education, isLoading }: EducationListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingEducation, setEditingEducation] = useState<EducationResponse | null>(null);
+  const [editingPendingId, setEditingPendingId] = useState<string | null>(null);
+  const [savingPendingId, setSavingPendingId] = useState<string | null>(null);
 
   const deleteMutation = useDeleteEducation();
+  const createMutation = useCreateEducation();
+  const pendingItems = useImportReviewStore((state) => state.education);
+  const updatePendingItem = useImportReviewStore((state) => state.updateEducationDraft);
+  const removePendingItem = useImportReviewStore((state) => state.removeEducationDraft);
 
   const startAdding = () => {
     setIsAdding(true);
@@ -51,11 +58,30 @@ export function EducationList({ education, isLoading }: EducationListProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return "";
     const [year, month] = dateString.split("-");
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${months[parseInt(month) - 1]} ${year}`;
+    return `${months[parseInt(month, 10) - 1]} ${year}`;
+  };
+
+  const handleSavePending = async (id: string, data: CreateEducationRequest) => {
+    setSavingPendingId(id);
+    try {
+      await createMutation.mutateAsync(data);
+      removePendingItem(id);
+      toast.success("Education saved to your profile.");
+    } catch (error) {
+      console.error("Failed to save education:", error);
+      toast.error("Failed to save education. Please try again.");
+    } finally {
+      setSavingPendingId(null);
+    }
+  };
+
+  const handleUpdatePending = async (id: string, data: CreateEducationRequest) => {
+    updatePendingItem(id, data);
+    toast.success("Draft updated.");
   };
 
   if (isLoading) {
@@ -70,6 +96,91 @@ export function EducationList({ education, isLoading }: EducationListProps) {
 
   return (
     <div className="space-y-4">
+      {pendingItems.length > 0 && (
+        <Card className="border-dashed border-primary/40 bg-primary/5">
+          <CardContent className="space-y-4 pt-6">
+            <div>
+              <p className="text-sm font-semibold text-primary">
+                Pending education draft{pendingItems.length === 1 ? "" : "s"}
+              </p>
+              <p className="text-xs text-primary/80">
+                Review, edit, or save these entries individually.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {pendingItems.map((item) => (
+                <div key={item.id} className="rounded-md border border-primary/20 bg-primary/10 p-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1 text-sm text-primary">
+                      <p className="font-semibold">
+                        {[item.request.degree, item.request.institution]
+                          .filter(Boolean)
+                          .join(" · ") || "Pending education"}
+                      </p>
+                      {item.request.fieldOfStudy && (
+                        <p className="text-xs text-primary/80">{item.request.fieldOfStudy}</p>
+                      )}
+                      {item.warnings.length > 0 && (
+                        <ul className="list-disc space-y-1 pl-4 text-xs text-amber-700">
+                          {item.warnings.map((warning) => (
+                            <li key={`${item.id}-warning-${warning}`}>{warning}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingPendingId(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit draft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removePendingItem(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <X className="mr-1 h-3 w-3" />
+                        Discard
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSavePending(item.id, item.request)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        {savingPendingId === item.id ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="mr-1 h-3 w-3" />
+                        )}
+                        {savingPendingId === item.id ? "Saving" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                  {editingPendingId === item.id && (
+                    <div className="mt-4">
+                      <EducationForm
+                        onCancel={() => setEditingPendingId(null)}
+                        onSuccess={() => setEditingPendingId(null)}
+                        submitLabel="Save Draft"
+                        initialValues={item.request}
+                        onSubmitOverride={async (data) => {
+                          await handleUpdatePending(item.id, data);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -143,7 +254,7 @@ export function EducationList({ education, isLoading }: EducationListProps) {
                   {(edu.startDate || edu.endDate) && (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {formatDate(edu.startDate || "")} - {formatDate(edu.endDate || "")}
+                      {formatDate(edu.startDate)} - {formatDate(edu.endDate)}
                     </div>
                   )}
                   {edu.location && (
@@ -162,9 +273,9 @@ export function EducationList({ education, isLoading }: EducationListProps) {
                 )}
 
                 {edu.relevantCoursework && (
-                  <div className="text-sm">
-                    <strong>Relevant Coursework:</strong> {edu.relevantCoursework}
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Relevant coursework:</strong> {edu.relevantCoursework}
+                  </p>
                 )}
               </CardContent>
             </Card>

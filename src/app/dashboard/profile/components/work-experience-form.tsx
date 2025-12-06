@@ -16,26 +16,36 @@ import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/app/
 
 interface WorkExperienceFormProps {
   experience?: WorkExperienceResponse;
+  initialValues?: Partial<CreateWorkExperienceRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateWorkExperienceRequest) => Promise<void>;
 }
 
-export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExperienceFormProps) {
+export function WorkExperienceForm({
+  experience,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: WorkExperienceFormProps) {
   const createMutation = useCreateWorkExperience();
   const updateMutation = useUpdateWorkExperience();
 
   const form = useForm({
     resolver: zodResolver(createWorkExperienceSchema),
     defaultValues: {
-      jobTitle: experience?.jobTitle || "",
-      company: experience?.company || "",
-      location: experience?.location || null,
-      startDate: experience?.startDate || "",
-      endDate: experience?.endDate || null,
-      isCurrent: experience?.isCurrent || false,
-      description: experience?.description || null,
-      technologies: experience?.technologies || null,
-      displayOrder: experience?.displayOrder || 0,
+      jobTitle: experience?.jobTitle || initialValues?.jobTitle || "",
+      company: experience?.company || initialValues?.company || "",
+      location: experience?.location ?? initialValues?.location ?? null,
+      startDate: experience?.startDate || initialValues?.startDate || "",
+      endDate: experience?.endDate ?? initialValues?.endDate ?? null,
+      isCurrent: experience?.isCurrent ?? initialValues?.isCurrent ?? false,
+      description: experience?.description ?? initialValues?.description ?? null,
+      technologies: experience?.technologies ?? initialValues?.technologies ?? null,
+      displayOrder: experience?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
@@ -46,6 +56,17 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
     // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateWorkExperienceRequest;
     
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving draft work experience:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (experience) {
       updateMutation.mutate({ id: experience.id, data: validatedData }, {
         onSuccess: () => {
@@ -188,7 +209,13 @@ export function WorkExperienceForm({ experience, onCancel, onSuccess }: WorkExpe
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : experience ? "Update Experience" : "Add Experience"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : experience
+                    ? "Update Experience"
+                    : "Add Experience"}
             </Button>
           </div>
         </form>

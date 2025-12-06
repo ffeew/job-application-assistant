@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Briefcase, Calendar, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, Briefcase, Calendar, MapPin, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteWorkExperience } from "@/app/dashboard/profile/mutations/use-delete-work-experience";
 import { WorkExperienceForm } from "./work-experience-form";
-import type { WorkExperienceResponse } from "@/app/api/profile/validators";
+import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/app/api/profile/validators";
+import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
+import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "./profile-item-skeleton";
 
 interface WorkExperienceListProps {
@@ -19,7 +21,13 @@ interface WorkExperienceListProps {
 export function WorkExperienceList({ experiences, isLoading }: WorkExperienceListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingExperience, setEditingExperience] = useState<WorkExperienceResponse | null>(null);
+  const [editingPendingId, setEditingPendingId] = useState<string | null>(null);
+  const [savingPendingId, setSavingPendingId] = useState<string | null>(null);
   const deleteMutation = useDeleteWorkExperience();
+  const createMutation = useCreateWorkExperience();
+  const pendingItems = useImportReviewStore((state) => state.workExperiences);
+  const updatePendingItem = useImportReviewStore((state) => state.updateWorkExperienceDraft);
+  const removePendingItem = useImportReviewStore((state) => state.removeWorkExperienceDraft);
 
   const startAdding = () => {
     setIsAdding(true);
@@ -57,6 +65,25 @@ export function WorkExperienceList({ experiences, isLoading }: WorkExperienceLis
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
+	const handleSavePending = async (id: string, data: CreateWorkExperienceRequest) => {
+		setSavingPendingId(id);
+		try {
+			await createMutation.mutateAsync(data);
+			removePendingItem(id);
+			toast.success("Work experience saved to your profile.");
+		} catch (error) {
+			console.error("Failed to save work experience:", error);
+			toast.error("Failed to save work experience. Please try again.");
+		} finally {
+			setSavingPendingId(null);
+		}
+	};
+
+	const handleUpdatePending = async (id: string, data: CreateWorkExperienceRequest) => {
+		updatePendingItem(id, data);
+		toast.success("Draft updated.");
+	};
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -69,6 +96,90 @@ export function WorkExperienceList({ experiences, isLoading }: WorkExperienceLis
 
   return (
     <div className="space-y-4">
+      {pendingItems.length > 0 && (
+        <Card className="border-dashed border-primary/40 bg-primary/5">
+          <CardContent className="space-y-4 pt-6">
+            <div>
+              <p className="text-sm font-semibold text-primary">
+                Pending work experience draft{pendingItems.length === 1 ? "" : "s"}
+              </p>
+              <p className="text-xs text-primary/80">
+                Review, edit, or save these entries individually.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {pendingItems.map((item) => (
+                <div key={item.id} className="rounded-md border border-primary/20 bg-primary/10 p-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1 text-sm text-primary">
+                      <p className="font-semibold">
+                        {[item.request.jobTitle, item.request.company]
+                          .filter(Boolean)
+                          .join(" · ") || "Pending experience"}
+                      </p>
+                      {item.request.location && (
+                        <p className="text-xs text-primary/80">{item.request.location}</p>
+                      )}
+                      {item.warnings.length > 0 && (
+                        <ul className="list-disc space-y-1 pl-4 text-xs text-amber-700">
+                          {item.warnings.map((warning) => (
+                            <li key={`${item.id}-warning-${warning}`}>{warning}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingPendingId(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit draft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removePendingItem(item.id)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        <X className="mr-1 h-3 w-3" />
+                        Discard
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSavePending(item.id, item.request)}
+                        disabled={savingPendingId === item.id}
+                      >
+                        {savingPendingId === item.id ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="mr-1 h-3 w-3" />
+                        )}
+                        {savingPendingId === item.id ? "Saving" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                  {editingPendingId === item.id && (
+                    <div className="mt-4">
+                      <WorkExperienceForm
+                        onCancel={() => setEditingPendingId(null)}
+                        onSuccess={() => setEditingPendingId(null)}
+                        submitLabel="Save Draft"
+                        initialValues={item.request}
+                        onSubmitOverride={async (data) => {
+                          await handleUpdatePending(item.id, data);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">

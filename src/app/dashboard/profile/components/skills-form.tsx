@@ -15,8 +15,11 @@ import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/valida
 
 interface SkillFormProps {
   skill?: SkillResponse;
+  initialValues?: Partial<CreateSkillRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateSkillRequest) => Promise<void>;
 }
 
 const skillCategories = [
@@ -35,27 +38,44 @@ const proficiencyLevels = [
   { value: "expert", label: "Expert" },
 ];
 
-export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
+export function SkillForm({
+  skill,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: SkillFormProps) {
   const createMutation = useCreateSkill();
   const updateMutation = useUpdateSkill();
 
   const form = useForm({
     resolver: zodResolver(createSkillSchema),
     defaultValues: {
-      name: skill?.name || "",
-      category: skill?.category || "technical",
-      proficiencyLevel: skill?.proficiencyLevel || null,
-      yearsOfExperience: skill?.yearsOfExperience || null,
-      displayOrder: skill?.displayOrder || 0,
+      name: skill?.name || initialValues?.name || "",
+      category: skill?.category || initialValues?.category || "technical",
+      proficiencyLevel: skill?.proficiencyLevel ?? initialValues?.proficiencyLevel ?? null,
+      yearsOfExperience: skill?.yearsOfExperience ?? initialValues?.yearsOfExperience ?? null,
+      displayOrder: skill?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateSkillRequest;
-    
+
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving skill draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (skill) {
       updateMutation.mutate({ id: skill.id, data: validatedData }, {
         onSuccess: () => {
@@ -107,7 +127,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
                 {...register("category")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
-                {skillCategories.map(cat => (
+                {skillCategories.map((cat) => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
@@ -126,7 +146,7 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="">Select level</option>
-                {proficiencyLevels.map(level => (
+                {proficiencyLevels.map((level) => (
                   <option key={level.value} value={level.value}>{level.label}</option>
                 ))}
               </select>
@@ -156,7 +176,13 @@ export function SkillForm({ skill, onCancel, onSuccess }: SkillFormProps) {
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : skill ? "Update Skill" : "Add Skill"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : skill
+                    ? "Update Skill"
+                    : "Add Skill"}
             </Button>
           </div>
         </form>

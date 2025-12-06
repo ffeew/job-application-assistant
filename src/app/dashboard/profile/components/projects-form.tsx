@@ -16,26 +16,36 @@ import type { ProjectResponse, CreateProjectRequest } from "@/app/api/profile/va
 
 interface ProjectsFormProps {
   project?: ProjectResponse;
+  initialValues?: Partial<CreateProjectRequest>;
   onCancel: () => void;
   onSuccess: () => void;
+  submitLabel?: string;
+  onSubmitOverride?: (data: CreateProjectRequest) => Promise<void>;
 }
 
-export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps) {
+export function ProjectsForm({
+  project,
+  initialValues,
+  onCancel,
+  onSuccess,
+  submitLabel,
+  onSubmitOverride,
+}: ProjectsFormProps) {
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
 
   const form = useForm({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
-      title: project?.title || "",
-      description: project?.description || null,
-      technologies: project?.technologies || null,
-      startDate: project?.startDate || null,
-      endDate: project?.endDate || null,
-      isOngoing: project?.isOngoing || false,
-      projectUrl: project?.projectUrl || null,
-      githubUrl: project?.githubUrl || null,
-      displayOrder: project?.displayOrder || 0,
+      title: project?.title || initialValues?.title || "",
+      description: project?.description ?? initialValues?.description ?? null,
+      technologies: project?.technologies ?? initialValues?.technologies ?? null,
+      startDate: project?.startDate ?? initialValues?.startDate ?? null,
+      endDate: project?.endDate ?? initialValues?.endDate ?? null,
+      isOngoing: project?.isOngoing ?? initialValues?.isOngoing ?? false,
+      projectUrl: project?.projectUrl ?? initialValues?.projectUrl ?? null,
+      githubUrl: project?.githubUrl ?? initialValues?.githubUrl ?? null,
+      displayOrder: project?.displayOrder ?? initialValues?.displayOrder ?? 0,
     },
   });
 
@@ -43,9 +53,19 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
   const isOngoing = watch("isOngoing");
 
   const onSubmit = async (data: unknown) => {
-    // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateProjectRequest;
-    
+
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(validatedData);
+        onSuccess();
+      } catch (error) {
+        console.error("Error saving project draft:", error);
+        toast.error("Failed to save draft. Please try again.");
+      }
+      return;
+    }
+
     if (project) {
       updateMutation.mutate({ id: project.id, data: validatedData }, {
         onSuccess: () => {
@@ -118,11 +138,7 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="month"
-                {...register("startDate")}
-              />
+              <Input id="startDate" type="month" {...register("startDate")} />
               {errors.startDate && (
                 <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
               )}
@@ -190,7 +206,13 @@ export function ProjectsForm({ project, onCancel, onSuccess }: ProjectsFormProps
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : project ? "Update Project" : "Add Project"}
+              {isSubmitting
+                ? "Saving..."
+                : submitLabel
+                  ? submitLabel
+                  : project
+                    ? "Update Project"
+                    : "Add Project"}
             </Button>
           </div>
         </form>
