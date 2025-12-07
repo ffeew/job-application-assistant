@@ -28,7 +28,7 @@ export const generateCoverLetterSchema = z.object({
   company: z.string().min(1, "Company is required"),
   position: z.string().min(1, "Position is required"),
   jobDescription: z.string().optional(),
-  resumeContent: z.any().optional(), // Can be parsed JSON object
+  resumeContent: z.unknown().optional(), // Can be parsed JSON object
   applicantName: z.string().optional(),
 });
 

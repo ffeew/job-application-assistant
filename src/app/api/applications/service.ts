@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/db";
 import { jobApplications } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { randomUUID } from "node:crypto";
 import type {
   ApplicationResponse,
   ApplicationsQuery,
@@ -74,7 +74,7 @@ export class ApplicationsService {
   }
 
   async createApplication(userId: string, data: CreateApplicationRequest): Promise<ApplicationResponse> {
-    const id = nanoid();
+    const id = randomUUID();
     const now = new Date();
 
     const [application] = await db
@@ -98,6 +98,10 @@ export class ApplicationsService {
         updatedAt: now,
       })
       .returning();
+
+    if (!application) {
+      throw new Error("Failed to create application");
+    }
 
     return {
       ...application,

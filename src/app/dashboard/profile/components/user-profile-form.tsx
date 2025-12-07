@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Loader2, Save, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-create-user-profile";
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
+import { useImportResume } from "@/app/dashboard/profile/mutations/use-import-resume";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import type {
 	CreateAchievementRequest,
@@ -30,10 +31,7 @@ import type {
 	CreateWorkExperienceRequest,
 	UserProfileResponse,
 } from "@/app/api/profile/validators";
-import {
-	type ResumeImportResponse,
-	resumeImportResponseSchema,
-} from "@/app/api/profile/resume-import/validators";
+import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
@@ -158,6 +156,8 @@ interface UserProfileFormProps {
 export function UserProfileForm({ profile, onImportPreview }: UserProfileFormProps) {
 	const createMutation = useCreateUserProfile();
 	const updateMutation = useUpdateUserProfile();
+	const importResumeMutation = useImportResume();
+
 const form = useForm({
 	resolver: zodResolver(createUserProfileSchema),
 	defaultValues: {
@@ -178,7 +178,6 @@ const form = useForm({
 });
 
 const fileInputRef = useRef<HTMLInputElement | null>(null);
-const [isImporting, setIsImporting] = useState(false);
 
 	const profileDraft = useImportReviewStore((state) => state.profile);
 	const pendingWorkExperiences = useImportReviewStore((state) => state.workExperiences);
@@ -252,7 +251,7 @@ const [isImporting, setIsImporting] = useState(false);
 		fileInputRef.current?.click();
 	};
 
-	const handleResumeFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+	const handleResumeFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (!file) {
 			return;
@@ -264,51 +263,20 @@ const [isImporting, setIsImporting] = useState(false);
 			return;
 		}
 
-		const formData = new FormData();
-		formData.append("file", file);
-
-	setIsImporting(true);
-
-		try {
-			const response = await fetch("/api/profile/resume-import", {
-				method: "POST",
-				body: formData,
-			});
-
-			const raw = (await response.json().catch(() => null)) as unknown;
-
-			if (!response.ok) {
-				const errorMessage =
-					raw &&
-					typeof raw === "object" &&
-					raw !== null &&
-					"error" in raw &&
-					typeof (raw as { error?: unknown }).error === "string"
-						? (raw as { error: string }).error
-						: "Failed to import resume. Please try again.";
-				toast.error(errorMessage);
-				return;
-			}
-
-			let payload: ResumeImportResponse;
-			try {
-				payload = resumeImportResponseSchema.parse(raw);
-			} catch (parseError) {
-				console.error("Unexpected resume import response:", parseError, raw);
-				toast.error("Received an unexpected response while importing the resume.");
-				return;
-			}
-
-			reset(payload.profile);
-			onImportPreview(payload);
-			toast.success("Resume imported. Review the pending details below before saving.");
-		} catch (error) {
-			console.error("Resume import failed:", error);
-			toast.error("Failed to import resume. Please try again.");
-		} finally {
-			setIsImporting(false);
-			event.target.value = "";
-		}
+		importResumeMutation.mutate(file, {
+			onSuccess: (payload) => {
+				reset(payload.profile);
+				onImportPreview(payload);
+				toast.success("Resume imported. Review the pending details below before saving.");
+			},
+			onError: (error) => {
+				console.error("Resume import failed:", error);
+				toast.error(error.message || "Failed to import resume. Please try again.");
+			},
+			onSettled: () => {
+				event.target.value = "";
+			},
+		});
 	};
 
 	return (
@@ -332,15 +300,15 @@ const [isImporting, setIsImporting] = useState(false);
 							variant="outline"
 							size="sm"
 							onClick={handleResumeImportClick}
-							disabled={isImporting}
+							disabled={importResumeMutation.isPending}
 							className="w-full justify-center md:w-auto"
 						>
-							{isImporting ? (
+							{importResumeMutation.isPending ? (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							) : (
 								<Upload className="mr-2 h-4 w-4" />
 							)}
-							{isImporting ? "Importing..." : "Import from Resume"}
+							{importResumeMutation.isPending ? "Importing..." : "Import from Resume"}
 						</Button>
 						<p className="text-xs text-muted-foreground md:text-right">
 							Supports PDF, DOC, and DOCX files.

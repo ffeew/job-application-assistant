@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/db";
 import { resumes } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { randomUUID } from "node:crypto";
 import type {
   CreateResumeRequest,
   ResumeResponse,
@@ -47,7 +47,7 @@ export class ResumesService {
   }
 
   async createResume(userId: string, data: CreateResumeRequest): Promise<ResumeResponse> {
-    const id = nanoid();
+    const id = randomUUID();
     const now = new Date();
 
     // If this is being set as default, unset all other defaults first
@@ -67,6 +67,10 @@ export class ResumesService {
         updatedAt: now,
       })
       .returning();
+
+    if (!resume) {
+      throw new Error("Failed to create resume");
+    }
 
     return { ...resume, isDefault: Boolean(resume.isDefault) };
   }

@@ -59,7 +59,14 @@ export default function NewCoverLetterPage() {
     }
 
     const selectedResumeData = resumes.find(r => r.id === selectedResume);
-    const resumeContent = selectedResumeData ? JSON.parse(selectedResumeData.content) : null;
+    let resumeContent = null;
+    if (selectedResumeData) {
+      try {
+        resumeContent = JSON.parse(selectedResumeData.content);
+      } catch {
+        console.error("Failed to parse resume content");
+      }
+    }
 
     generateCoverLetterMutation.mutate({
       company: manualCompany,

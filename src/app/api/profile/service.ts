@@ -64,6 +64,10 @@ export class ProfileService {
       })
       .returning();
 
+    if (!profile) {
+      throw new Error("Failed to create user profile");
+    }
+
     return profile;
   }
 
@@ -128,6 +132,10 @@ export class ProfileService {
         updatedAt: now,
       })
       .returning();
+
+    if (!experience) {
+      throw new Error("Failed to create work experience");
+    }
 
     return experience;
   }
@@ -208,6 +216,10 @@ export class ProfileService {
         updatedAt: now,
       })
       .returning();
+
+    if (!educationRecord) {
+      throw new Error("Failed to create education record");
+    }
 
     return educationRecord;
   }
@@ -295,6 +307,10 @@ export class ProfileService {
       })
       .returning();
 
+    if (!skill) {
+      throw new Error("Failed to create skill");
+    }
+
     return skill;
   }
 
@@ -372,6 +388,10 @@ export class ProfileService {
         updatedAt: now,
       })
       .returning();
+
+    if (!project) {
+      throw new Error("Failed to create project");
+    }
 
     return project;
   }
@@ -451,6 +471,10 @@ export class ProfileService {
       })
       .returning();
 
+    if (!certification) {
+      throw new Error("Failed to create certification");
+    }
+
     return certification;
   }
 
@@ -529,6 +553,10 @@ export class ProfileService {
       })
       .returning();
 
+    if (!achievement) {
+      throw new Error("Failed to create achievement");
+    }
+
     return achievement;
   }
 
@@ -606,6 +634,10 @@ export class ProfileService {
         updatedAt: now,
       })
       .returning();
+
+    if (!reference) {
+      throw new Error("Failed to create reference");
+    }
 
     return reference;
   }

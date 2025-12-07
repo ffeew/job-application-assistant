@@ -84,7 +84,19 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
   // Populate form when resume data is loaded
   useEffect(() => {
     if (resume) {
-      const content: ResumeContent = JSON.parse(resume.content);
+      let content: ResumeContent;
+      try {
+        content = JSON.parse(resume.content);
+      } catch {
+        console.error("Failed to parse resume content");
+        content = {
+          personalInfo: { name: "", email: "", phone: "", address: "" },
+          summary: "",
+          experience: "",
+          education: "",
+          skills: "",
+        };
+      }
       reset({
         title: resume.title,
         isDefault: resume.isDefault,

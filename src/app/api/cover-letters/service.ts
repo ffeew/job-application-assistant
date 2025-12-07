@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/db";
 import { coverLetters } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { randomUUID } from "node:crypto";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
@@ -68,7 +68,7 @@ export class CoverLettersService {
   }
 
   async createCoverLetter(userId: string, data: CreateCoverLetterRequest): Promise<CoverLetterResponse> {
-    const id = nanoid();
+    const id = randomUUID();
     const now = new Date();
 
     const [coverLetter] = await db
@@ -85,6 +85,10 @@ export class CoverLettersService {
         updatedAt: now,
       })
       .returning();
+
+    if (!coverLetter) {
+      throw new Error("Failed to create cover letter");
+    }
 
     return {
       ...coverLetter,

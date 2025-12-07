@@ -1,22 +1,37 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { Resend } from "resend";
 import { db } from "./db/db";
+import { env } from "./env";
 
-// Basic email sending function (replace with your email service)
+// Email sending function with Resend integration
 async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
-  // TODO: Replace with actual email service (Resend, SendGrid, etc.)
-  console.log(`
-Email would be sent to: ${to}
+  // If Resend API key is not configured, log to console (development mode)
+  if (!env.RESEND_API_KEY) {
+    console.log(`
+[DEV] Email would be sent to: ${to}
 Subject: ${subject}
 Content: ${text}
-  `);
-  
-  // For development, we'll just log the email
-  // In production, integrate with your email service:
-  // - Resend: https://resend.com/
-  // - SendGrid: https://sendgrid.com/
-  // - NodeMailer with SMTP
+    `);
+    return;
+  }
+
+  // Send email using Resend in production
+  const resend = new Resend(env.RESEND_API_KEY);
+  const fromEmail = env.RESEND_FROM_EMAIL || "noreply@example.com";
+
+  try {
+    await resend.emails.send({
+      from: `Job Application Assistant <${fromEmail}>`,
+      to,
+      subject,
+      text,
+    });
+  } catch (error) {
+    console.error("Failed to send email via Resend:", error);
+    throw new Error("Failed to send email. Please try again later.");
+  }
 }
 
 export const auth = betterAuth({
