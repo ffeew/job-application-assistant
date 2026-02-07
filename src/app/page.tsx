@@ -4,17 +4,17 @@ import { useEffect, useState } from "react";
 import { authClient } from "@/app/utils/authClient";
 import { Header } from "@/app/components/landing/header";
 import { HeroSection } from "@/app/components/landing/hero-section";
+import { TrustBar } from "@/app/components/landing/trust-bar";
 import { FeaturesSection } from "@/app/components/landing/features-section";
-import { TechStackSection } from "@/app/components/landing/tech-stack-section";
-import { GettingStartedSection } from "@/app/components/landing/getting-started-section";
-import { CommunitySection } from "@/app/components/landing/community-section";
+import { HowItWorksSection } from "@/app/components/landing/how-it-works-section";
+import { CTASection } from "@/app/components/landing/cta-section";
+import { ForDevelopersSection } from "@/app/components/landing/for-developers-section";
 import { Footer } from "@/app/components/landing/footer";
 
 export default function Home() {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
 	useEffect(() => {
-		// Check if user is authenticated to show appropriate header buttons
 		const checkAuth = async () => {
 			try {
 				const session = await authClient.getSession();
@@ -31,13 +31,13 @@ export default function Home() {
 		<div className="min-h-screen bg-background">
 			<Header isAuthenticated={isAuthenticated} />
 
-			{/* Main Content */}
 			<main>
 				<HeroSection />
+				<TrustBar />
 				<FeaturesSection />
-				<TechStackSection />
-				<GettingStartedSection />
-				<CommunitySection />
+				<HowItWorksSection />
+				<CTASection />
+				<ForDevelopersSection />
 			</main>
 
 			<Footer />
