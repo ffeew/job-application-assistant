@@ -1,5 +1,5 @@
 import { createGroq } from "@ai-sdk/groq";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { Mistral } from "@mistralai/mistralai";
 import { randomUUID } from "node:crypto";
 import { Buffer } from "node:buffer";
@@ -288,15 +288,15 @@ The resume content has already been converted to GitHub-Flavored Markdown via OC
 
 Populate the provided schema using only facts that appear in the resume. Use null for fields that are missing, keep URLs complete, and limit the professional summary to 600 characters or fewer. Do not invent information.`;
 
-    const result = await generateObject({
+    const result = await generateText({
       model: groq(env.GROQ_MODEL),
-      schema: aiProfileSchema,
+      output: Output.object({ schema: aiProfileSchema }),
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
       maxOutputTokens: 20000,
     });
 
-    const aiData = aiProfileSchema.parse(result.object);
+    const aiData = aiProfileSchema.parse(result.output);
 
     const profile = this.normalizeProfile(aiData);
     const workExperiences = this.normalizeWorkExperiences(aiData.workExperiences);

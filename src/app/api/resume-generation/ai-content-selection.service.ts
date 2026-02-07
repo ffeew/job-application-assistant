@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { env } from "@/lib/env";
@@ -88,14 +88,14 @@ ${jobDescription}
 Focus on technical skills, qualifications, experience requirements, and key responsibilities. Be concise and specific.`;
 
     try {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: groq(this.model),
-        schema: jobAnalysisSchema,
+        output: Output.object({ schema: jobAnalysisSchema }),
         prompt,
         temperature: 0.3,
       });
 
-      return object;
+      return output;
     } catch (error) {
       console.error("Error analyzing job description:", error);
       throw new Error("Failed to analyze job description");
@@ -121,14 +121,14 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     );
 
     try {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: groq(this.model),
-        schema: intelligentContentSelectionSchema,
+        output: Output.object({ schema: intelligentContentSelectionSchema }),
         prompt: contentPrompt,
         temperature: 0.2,
       });
 
-      return this.validateAndFormatSelection(object, profileData);
+      return this.validateAndFormatSelection(output, profileData);
     } catch (error) {
       console.error("Error selecting optimal content:", error);
       // Return fallback selection
