@@ -9,8 +9,118 @@ import {
 	Zap,
 	CheckCircle,
 	Shield,
+	Sparkles,
 } from "lucide-react";
 import { useScrollAnimation } from "@/app/hooks/use-scroll-animation";
+
+function ResumeBuilderPreview() {
+	return (
+		<div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+			<div className="flex items-start justify-between">
+				<div className="flex flex-col gap-1">
+					<div className="h-3 w-24 rounded bg-foreground/80" />
+					<div className="h-2 w-16 rounded bg-muted-foreground/40" />
+				</div>
+				<div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-1">
+					<Sparkles className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+					<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+						92%
+					</span>
+				</div>
+			</div>
+			<div className="flex flex-col gap-2">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-4/5 rounded bg-muted-foreground/20" />
+				<div className="h-2 w-3/5 rounded bg-muted-foreground/20" />
+			</div>
+			<div className="flex flex-wrap gap-1.5">
+				<span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+					React
+				</span>
+				<span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+					TypeScript
+				</span>
+				<span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+					Node.js
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function CoverLetterPreview() {
+	return (
+		<div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-20 rounded bg-muted-foreground/30" />
+				<div className="h-2 w-28 rounded bg-muted-foreground/30" />
+			</div>
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-11/12 rounded bg-muted-foreground/20" />
+				<div className="h-2 w-4/5 rounded bg-muted-foreground/20" />
+			</div>
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="flex items-center gap-1">
+					<div className="h-2 w-3/5 rounded bg-muted-foreground/20" />
+					<div className="h-3 w-0.5 animate-pulse rounded bg-primary" />
+				</div>
+			</div>
+			<div className="mt-1 flex items-center gap-1.5">
+				<div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+				<span className="text-[10px] text-muted-foreground">
+					Generating...
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function ApplicationTrackerPreview() {
+	return (
+		<div className="flex gap-2">
+			<div className="flex flex-1 flex-col gap-2">
+				<div className="rounded-md bg-muted/50 px-2 py-1 text-center text-[10px] font-medium text-muted-foreground">
+					Applied
+				</div>
+				<div className="flex flex-col gap-1.5">
+					<div className="rounded-md border border-border/60 bg-card p-2">
+						<div className="h-2 w-12 rounded bg-foreground/60" />
+						<div className="mt-1 h-1.5 w-8 rounded bg-muted-foreground/30" />
+					</div>
+					<div className="rounded-md border border-border/60 bg-card p-2">
+						<div className="h-2 w-10 rounded bg-foreground/60" />
+						<div className="mt-1 h-1.5 w-9 rounded bg-muted-foreground/30" />
+					</div>
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col gap-2">
+				<div className="rounded-md bg-amber-500/15 px-2 py-1 text-center text-[10px] font-medium text-amber-600 dark:text-amber-400">
+					Interview
+				</div>
+				<div className="flex flex-col gap-1.5">
+					<div className="rounded-md border border-amber-500/30 bg-card p-2">
+						<div className="h-2 w-11 rounded bg-foreground/60" />
+						<div className="mt-1 h-1.5 w-7 rounded bg-muted-foreground/30" />
+					</div>
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col gap-2">
+				<div className="rounded-md bg-emerald-500/15 px-2 py-1 text-center text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+					Offer
+				</div>
+				<div className="flex flex-col gap-1.5">
+					<div className="rounded-md border border-emerald-500/30 bg-card p-2">
+						<div className="h-2 w-9 rounded bg-foreground/60" />
+						<div className="mt-1 h-1.5 w-6 rounded bg-muted-foreground/30" />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 const heroFeatures = [
 	{
@@ -24,6 +134,7 @@ const heroFeatures = [
 			"One-click PDF and HTML export",
 		],
 		imagePosition: "right" as const,
+		Preview: ResumeBuilderPreview,
 	},
 	{
 		icon: PenTool,
@@ -36,6 +147,7 @@ const heroFeatures = [
 			"Multiple tone and style options",
 		],
 		imagePosition: "left" as const,
+		Preview: CoverLetterPreview,
 	},
 	{
 		icon: BarChart3,
@@ -48,6 +160,7 @@ const heroFeatures = [
 			"Success rate analytics",
 		],
 		imagePosition: "right" as const,
+		Preview: ApplicationTrackerPreview,
 	},
 ];
 
@@ -74,13 +187,13 @@ const secondaryFeatures = [
 
 function HeroFeatureItem({
 	feature,
-	index,
 }: {
 	feature: (typeof heroFeatures)[number];
 	index: number;
 }) {
 	const { ref, isVisible } = useScrollAnimation();
 	const Icon = feature.icon;
+	const { Preview } = feature;
 	const isImageRight = feature.imagePosition === "right";
 
 	return (
@@ -114,19 +227,12 @@ function HeroFeatureItem({
 				</ul>
 			</div>
 
-			{/* Visual placeholder */}
+			{/* Feature preview */}
 			<div className="flex items-center justify-center">
 				<div className="relative w-full max-w-md">
 					<div className="absolute inset-0 -z-10 rounded-[24px] bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-2xl" />
-					<div className="flex aspect-[4/3] items-center justify-center rounded-[24px] border border-border/40 bg-card/50 backdrop-blur-sm">
-						<div className="flex flex-col items-center gap-3 p-8">
-							<div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-								<Icon className="h-8 w-8 text-primary/60" />
-							</div>
-							<p className="text-sm text-muted-foreground">
-								Feature {index + 1} preview
-							</p>
-						</div>
+					<div className="flex aspect-[4/3] items-center justify-center rounded-[24px] border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
+						<Preview />
 					</div>
 				</div>
 			</div>
