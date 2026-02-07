@@ -4,18 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-- **Start development server**: `npm run dev` (uses Turbopack for faster builds)
-- **Build for production**: `npm run build`
-- **Start production server**: `npm start`
-- **Lint code**: `npm run lint`
-- **Type check**: `npm run typecheck`
+- **Start development server**: `bun run dev` (uses Turbopack for faster builds)
+- **Build for production**: `bun run build`
+- **Start production server**: `bun run start`
+- **Lint code**: `bun run lint`
+- **Type check**: `bun run typecheck`
 
 ## Code Quality Requirements
 
 **CRITICAL**: After completing any coding task or making changes to the codebase, you MUST run both:
 
-1. **`npm run lint`** - Check for ESLint errors and warnings
-2. **`npm run typecheck`** - Verify TypeScript type correctness
+1. **`bun run lint`** - Check for ESLint errors and warnings
+2. **`bun run typecheck`** - Verify TypeScript type correctness
 
 ### Quality Standards
 
@@ -34,8 +34,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Before Task Completion
 
-1. Run `npm run lint` and fix ALL errors and warnings
-2. Run `npm run typecheck` and resolve ALL type errors
+1. Run `bun run lint` and fix ALL errors and warnings
+2. Run `bun run typecheck` and resolve ALL type errors
 3. Test the changes work as expected
 4. Only then consider the task complete
 
@@ -132,8 +132,8 @@ This is a fully functional Next.js 15 application for a job application assistan
 - **UI Library**: Shadcn UI
 - **Icons**: Lucide Icons
 - **Notifications**: Sonner toast notifications for user feedback
-- **Package Manager**: Bun (indicated by bun.lock)
-- **Runtime**: Node.js 20+ (TypeScript 5)
+- **Package Manager**: Bun
+- **Runtime**: Bun (TypeScript 5)
 
 ### Project Structure
 
