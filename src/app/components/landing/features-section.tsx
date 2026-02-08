@@ -208,7 +208,7 @@ function HeroFeatureItem({
 				<div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-2 ring-primary/20">
 					<Icon className="h-8 w-8 text-primary" />
 				</div>
-				<h3 className="font-display text-3xl leading-tight md:text-4xl">
+				<h3 className="font-bold text-3xl leading-tight tracking-tight md:text-4xl">
 					{feature.title}
 				</h3>
 				<p className="mt-4 text-lg leading-relaxed text-muted-foreground">
@@ -250,12 +250,12 @@ function SecondaryFeaturesGrid() {
 				return (
 					<div
 						key={feature.title}
-						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-secondary/40 hover:shadow-xl hover:shadow-secondary/10 ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
+						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
 					>
 						<div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 ring-2 ring-primary/20">
 							<Icon className="h-7 w-7 text-primary" />
 						</div>
-						<h4 className="font-display text-xl">{feature.title}</h4>
+						<h4 className="font-bold text-xl tracking-tight">{feature.title}</h4>
 						<p className="text-sm leading-relaxed text-muted-foreground">
 							{feature.description}
 						</p>
@@ -286,7 +286,7 @@ export function FeaturesSection() {
 					>
 						Features
 					</Badge>
-					<h2 className="font-display text-balance text-4xl leading-tight md:text-5xl">
+					<h2 className="font-bold text-balance text-4xl leading-tight tracking-tight md:text-5xl">
 						Everything you need to stand out
 					</h2>
 					<p className="mt-6 text-lg leading-relaxed text-muted-foreground">

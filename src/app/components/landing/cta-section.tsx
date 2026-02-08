@@ -15,9 +15,9 @@ export function CTASection() {
 
 			<div className="container mx-auto px-4">
 				<div
-					className={`mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-secondary/30 bg-gradient-to-br from-primary/8 via-secondary/5 to-transparent p-10 text-center shadow-2xl shadow-secondary/15 sm:p-12 lg:p-16 ${isVisible ? "animate-scale-in" : "before-animate"}`}
+					className={`mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-primary/30 bg-gradient-to-br from-primary/8 via-primary/5 to-transparent p-10 text-center shadow-2xl shadow-primary/15 sm:p-12 lg:p-16 ${isVisible ? "animate-scale-in" : "before-animate"}`}
 				>
-					<h2 className="font-display text-balance text-4xl leading-tight md:text-5xl">
+					<h2 className="font-bold text-balance text-4xl leading-tight tracking-tight md:text-5xl">
 						Ready to transform your job search?
 					</h2>
 					<p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
@@ -39,7 +39,7 @@ export function CTASection() {
 						<Button
 							size="lg"
 							variant="outline"
-							className="h-14 rounded-full border-2 border-secondary/30 px-10 text-lg hover:border-secondary/50 hover:bg-secondary/5"
+							className="h-14 rounded-full border-2 border-primary/30 px-10 text-lg hover:border-primary/50 hover:bg-primary/5"
 							asChild
 						>
 							<Link

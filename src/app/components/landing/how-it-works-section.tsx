@@ -47,7 +47,7 @@ export function HowItWorksSection() {
 					>
 						How it works
 					</Badge>
-					<h2 className="font-display text-balance text-4xl leading-tight md:text-5xl">
+					<h2 className="font-bold text-balance text-4xl leading-tight tracking-tight md:text-5xl">
 						Three steps to better applications
 					</h2>
 					<p className="mt-6 text-lg leading-relaxed text-muted-foreground">
@@ -64,7 +64,7 @@ export function HowItWorksSection() {
 								key={step.number}
 								className={`group relative flex flex-col gap-6 rounded-3xl border border-border/60 bg-background p-8 transition-all duration-300 hover:-translate-y-2 hover:border-primary/40 hover:shadow-xl ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
 							>
-								<div className="absolute right-6 top-6 font-display text-6xl leading-none text-border/80 transition-colors group-hover:text-primary/20">
+								<div className="absolute right-6 top-6 font-bold text-6xl leading-none text-border/80 transition-colors group-hover:text-primary/20">
 									{step.number}
 								</div>
 
@@ -73,7 +73,7 @@ export function HowItWorksSection() {
 								</div>
 
 								<div className="relative z-10">
-									<h3 className="font-display text-2xl leading-tight">
+									<h3 className="font-bold text-2xl leading-tight tracking-tight">
 										{step.title}
 									</h3>
 									<p className="mt-3 text-base leading-relaxed text-muted-foreground">

@@ -83,7 +83,7 @@ export function ForDevelopersSection() {
 						>
 							Developers
 						</Badge>
-						<span className="font-display text-xl md:text-2xl">
+						<span className="font-bold text-xl tracking-tight md:text-2xl">
 							Built for developers
 						</span>
 					</div>

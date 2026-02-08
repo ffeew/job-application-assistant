@@ -7,7 +7,6 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-serif-display: var(--font-serif-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -43,99 +42,100 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Monochrome with Purple Accents Theme */
 :root {
   --radius: 0.75rem;
-  /* Forest & Copper Theme - Light Mode */
-  --background: oklch(0.985 0.008 145);
-  --foreground: oklch(0.18 0.04 160);
-  --card: oklch(0.995 0.004 145);
-  --card-foreground: oklch(0.18 0.04 160);
-  --popover: oklch(0.995 0.004 145);
-  --popover-foreground: oklch(0.18 0.04 160);
-  --primary: oklch(0.45 0.15 155);
-  --primary-foreground: oklch(0.98 0.005 145);
-  --secondary: oklch(0.55 0.12 55);
-  --secondary-foreground: oklch(0.98 0.01 55);
-  --muted: oklch(0.94 0.015 150);
-  --muted-foreground: oklch(0.45 0.03 155);
-  --accent: oklch(0.92 0.04 55);
-  --accent-foreground: oklch(0.35 0.10 50);
-  --destructive: oklch(0.55 0.22 25);
-  --border: oklch(0.88 0.02 150);
-  --input: oklch(0.88 0.02 150);
-  --ring: oklch(0.45 0.15 155);
-  --chart-1: oklch(0.45 0.15 155);
-  --chart-2: oklch(0.55 0.12 55);
-  --chart-3: oklch(0.55 0.12 170);
-  --chart-4: oklch(0.60 0.08 40);
-  --chart-5: oklch(0.50 0.10 130);
-  --sidebar: oklch(0.97 0.012 150);
-  --sidebar-foreground: oklch(0.18 0.04 160);
-  --sidebar-primary: oklch(0.45 0.15 155);
-  --sidebar-primary-foreground: oklch(0.98 0.005 145);
-  --sidebar-accent: oklch(0.92 0.04 55);
-  --sidebar-accent-foreground: oklch(0.35 0.10 50);
-  --sidebar-border: oklch(0.88 0.02 150);
-  --sidebar-ring: oklch(0.45 0.15 155);
+  /* Light Mode - Pure Neutral Gray with Purple Accents */
+  --background: #FAFAFA;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #8B5CF6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0F0F0;
+  --secondary-foreground: #1A1A1A;
+  --muted: #F0F0F0;
+  --muted-foreground: #666666;
+  --accent: #8B5CF620;
+  --accent-foreground: #8B5CF6;
+  --destructive: #EF4444;
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #8B5CF6;
+  --chart-1: #8B5CF6;
+  --chart-2: #3B82F6;
+  --chart-3: #22C55E;
+  --chart-4: #F59E0B;
+  --chart-5: #EF4444;
+  --sidebar: #F5F5F5;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #8B5CF620;
+  --sidebar-accent-foreground: #8B5CF6;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #8B5CF6;
 
-  /* Status colors */
-  --status-applied: oklch(0.55 0.14 235);
-  --status-applied-bg: oklch(0.95 0.04 235);
-  --status-interviewing: oklch(0.60 0.14 70);
-  --status-interviewing-bg: oklch(0.95 0.05 70);
-  --status-offer: oklch(0.55 0.16 155);
-  --status-offer-bg: oklch(0.94 0.05 155);
-  --status-rejected: oklch(0.55 0.18 25);
-  --status-rejected-bg: oklch(0.95 0.04 25);
-  --status-withdrawn: oklch(0.55 0.02 150);
-  --status-withdrawn-bg: oklch(0.94 0.01 150);
+  /* Status colors - light mode */
+  --status-applied: #3B82F6;
+  --status-applied-bg: #3B82F615;
+  --status-interviewing: #F59E0B;
+  --status-interviewing-bg: #F59E0B15;
+  --status-offer: #22C55E;
+  --status-offer-bg: #22C55E15;
+  --status-rejected: #EF4444;
+  --status-rejected-bg: #EF444415;
+  --status-withdrawn: #6B7280;
+  --status-withdrawn-bg: #6B728015;
 }
 
 .dark {
-  /* Forest & Copper Theme - Dark Mode */
-  --background: oklch(0.14 0.03 160);
-  --foreground: oklch(0.93 0.01 145);
-  --card: oklch(0.18 0.035 158);
-  --card-foreground: oklch(0.93 0.01 145);
-  --popover: oklch(0.18 0.035 158);
-  --popover-foreground: oklch(0.93 0.01 145);
-  --primary: oklch(0.62 0.16 155);
-  --primary-foreground: oklch(0.12 0.03 160);
-  --secondary: oklch(0.65 0.14 50);
-  --secondary-foreground: oklch(0.12 0.02 55);
-  --muted: oklch(0.24 0.025 158);
-  --muted-foreground: oklch(0.65 0.02 150);
-  --accent: oklch(0.30 0.06 50);
-  --accent-foreground: oklch(0.90 0.05 50);
-  --destructive: oklch(0.60 0.20 25);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.62 0.16 155);
-  --chart-1: oklch(0.62 0.16 155);
-  --chart-2: oklch(0.65 0.14 50);
-  --chart-3: oklch(0.60 0.12 170);
-  --chart-4: oklch(0.68 0.10 45);
-  --chart-5: oklch(0.58 0.10 135);
-  --sidebar: oklch(0.16 0.03 158);
-  --sidebar-foreground: oklch(0.93 0.01 145);
-  --sidebar-primary: oklch(0.62 0.16 155);
-  --sidebar-primary-foreground: oklch(0.12 0.03 160);
-  --sidebar-accent: oklch(0.30 0.06 50);
-  --sidebar-accent-foreground: oklch(0.90 0.05 50);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.16 155);
+  /* Dark Mode - Pure Neutral Gray with Purple Accents */
+  --background: #121212;
+  --foreground: #F5F5F5;
+  --card: #1E1E1E;
+  --card-foreground: #F5F5F5;
+  --popover: #1E1E1E;
+  --popover-foreground: #F5F5F5;
+  --primary: #A78BFA;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2A2A2A;
+  --secondary-foreground: #F5F5F5;
+  --muted: #2A2A2A;
+  --muted-foreground: #A0A0A0;
+  --accent: #A78BFA20;
+  --accent-foreground: #A78BFA;
+  --destructive: #F87171;
+  --border: #333333;
+  --input: #333333;
+  --ring: #A78BFA;
+  --chart-1: #A78BFA;
+  --chart-2: #60A5FA;
+  --chart-3: #4ADE80;
+  --chart-4: #FBBF24;
+  --chart-5: #F87171;
+  --sidebar: #1A1A1A;
+  --sidebar-foreground: #F5F5F5;
+  --sidebar-primary: #A78BFA;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #A78BFA20;
+  --sidebar-accent-foreground: #A78BFA;
+  --sidebar-border: #333333;
+  --sidebar-ring: #A78BFA;
 
   /* Status colors - dark mode */
-  --status-applied: oklch(0.65 0.14 235);
-  --status-applied-bg: oklch(0.25 0.06 235);
-  --status-interviewing: oklch(0.70 0.14 70);
-  --status-interviewing-bg: oklch(0.28 0.06 70);
-  --status-offer: oklch(0.65 0.16 155);
-  --status-offer-bg: oklch(0.25 0.06 155);
-  --status-rejected: oklch(0.65 0.16 25);
-  --status-rejected-bg: oklch(0.25 0.06 25);
-  --status-withdrawn: oklch(0.60 0.02 150);
-  --status-withdrawn-bg: oklch(0.25 0.02 150);
+  --status-applied: #60A5FA;
+  --status-applied-bg: #60A5FA20;
+  --status-interviewing: #FBBF24;
+  --status-interviewing-bg: #FBBF2420;
+  --status-offer: #4ADE80;
+  --status-offer-bg: #4ADE8020;
+  --status-rejected: #F87171;
+  --status-rejected-bg: #F8717120;
+  --status-withdrawn: #6B7280;
+  --status-withdrawn-bg: #6B728020;
 }
 
 @layer base {
@@ -145,39 +145,6 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-@layer utilities {
-  .font-display {
-    font-family: var(--font-serif-display), Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.025em;
-  }
-
-  /* Glow effects */
-  .glow-copper {
-    box-shadow:
-      0 0 20px oklch(0.55 0.12 55 / 15%),
-      0 0 40px oklch(0.55 0.12 55 / 10%);
-  }
-
-  .glow-forest {
-    box-shadow:
-      0 0 20px oklch(0.45 0.15 155 / 20%),
-      0 0 40px oklch(0.45 0.15 155 / 10%);
-  }
-}
-
-.dark .glow-copper {
-  box-shadow:
-    0 0 30px oklch(0.65 0.14 50 / 20%),
-    0 0 60px oklch(0.65 0.14 50 / 10%);
-}
-
-.dark .glow-forest {
-  box-shadow:
-    0 0 30px oklch(0.62 0.16 155 / 25%),
-    0 0 60px oklch(0.62 0.16 155 / 12%);
 }
 
 /* Scroll-triggered animations */

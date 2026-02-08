@@ -95,13 +95,14 @@ export default function DashboardLayout({
 			<div className="md:hidden fixed top-4 left-4 z-50">
 				<Button
 					variant="outline"
-					size="sm"
+					size="icon"
+					className="h-12 w-12"
 					onClick={toggleSidebar}
 				>
 					{sidebarOpen ? (
-						<X className="h-4 w-4" />
+						<X className="h-5 w-5" />
 					) : (
-						<Menu className="h-4 w-4" />
+						<Menu className="h-5 w-5" />
 					)}
 				</Button>
 			</div>
@@ -115,26 +116,26 @@ export default function DashboardLayout({
 				<div className="flex flex-col h-full">
 					<div className="flex items-center justify-between px-6 py-5 border-b border-border/60">
 						<h1 className="text-xl font-bold tracking-tight">
-							Job <span className="text-secondary">Assistant</span>
+							Job <span className="text-primary">Assistant</span>
 						</h1>
 						<ThemeToggle />
 					</div>
 
-					<nav className="flex-1 px-4 py-6 space-y-2">
+					<nav className="flex-1 px-3 py-6 space-y-1">
 						{navigation.map((item) => {
 							const isActive = pathname === item.href;
 							return (
 								<Link
 									key={item.name}
 									href={item.href}
-									className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+									className={`flex items-center min-h-12 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
 										isActive
-											? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-											: "text-muted-foreground hover:text-foreground hover:bg-accent"
+											? "bg-primary/10 text-primary border-l-2 border-primary"
+											: "text-muted-foreground hover:text-foreground hover:bg-muted"
 									}`}
 									onClick={() => setSidebarOpen(false)}
 								>
-									<item.icon className="mr-3 h-4 w-4" />
+									<item.icon className={`mr-3 h-4 w-4 ${isActive ? "text-primary" : ""}`} />
 									{item.name}
 								</Link>
 							);

@@ -28,14 +28,14 @@ export function HeroSection() {
 					>
 						<Badge
 							variant="outline"
-							className="inline-flex w-fit items-center gap-2 rounded-full border-secondary/40 bg-secondary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-secondary"
+							className="inline-flex w-fit items-center gap-2 rounded-full border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
 						>
 							<Sparkles className="h-3.5 w-3.5" />
 							AI-Powered Job Search
 						</Badge>
 
 						<div className="flex flex-col gap-6">
-							<h1 className="font-display text-balance text-6xl leading-[1.05] tracking-tight md:text-7xl lg:text-8xl">
+							<h1 className="font-bold text-balance text-6xl leading-[1.05] tracking-tight md:text-7xl lg:text-8xl">
 								Land your dream role with intelligent resumes
 							</h1>
 							<p className="max-w-xl text-balance text-lg leading-relaxed text-muted-foreground md:text-xl">
@@ -59,7 +59,7 @@ export function HeroSection() {
 							<Button
 								size="lg"
 								variant="outline"
-								className="h-14 rounded-full border-2 border-secondary/30 px-10 text-lg hover:border-secondary/50 hover:bg-secondary/5"
+								className="h-14 rounded-full border-2 border-primary/30 px-10 text-lg hover:border-primary/50 hover:bg-primary/5"
 								asChild
 							>
 								<Link href="#how-it-works">See how it works</Link>
@@ -69,15 +69,15 @@ export function HeroSection() {
 						{/* Trust indicators */}
 						<div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
 							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-secondary" />
+								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
 								<span>Open source</span>
 							</div>
 							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-secondary" />
+								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
 								<span>Self-hosted</span>
 							</div>
 							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-secondary" />
+								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
 								<span>Privacy-first</span>
 							</div>
 						</div>

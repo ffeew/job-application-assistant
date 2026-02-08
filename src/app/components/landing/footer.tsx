@@ -46,7 +46,7 @@ export function Footer() {
 								<Briefcase className="h-5 w-5" />
 							</span>
 							<div>
-								<h3 className="font-display text-lg">
+								<h3 className="font-bold text-lg tracking-tight">
 									Job Application Assistant
 								</h3>
 								<p className="text-xs uppercase tracking-wider text-muted-foreground">

@@ -34,7 +34,7 @@ export function MobileMenu({ isAuthenticated }: MobileMenuProps) {
 			</SheetTrigger>
 			<SheetContent side="right" className="w-[300px] sm:w-[350px]">
 				<SheetHeader>
-					<SheetTitle className="font-display text-left text-xl">
+					<SheetTitle className="font-bold text-left text-xl tracking-tight">
 						Menu
 					</SheetTitle>
 				</SheetHeader>
