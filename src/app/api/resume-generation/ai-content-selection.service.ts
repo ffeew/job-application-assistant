@@ -229,8 +229,6 @@ SELECTION LIMITS:
 
 Analyze the profile content and select the most relevant items for this job application. For each selected item, provide a relevance score (0-100), reasoning, and matched keywords.
 
-CRITICAL: Each ID array must contain INDIVIDUAL numeric IDs as separate elements. For example, to select items with ID 2 and ID 3, return [2, 3] — NOT [23]. Each number in the array is one item's ID.
-
 Prioritize:
 1. Direct skill matches
 2. Relevant work experience
@@ -242,48 +240,59 @@ Prioritize:
 Be selective - quality over quantity. Choose items that directly support the application.`;
   }
 
+  /**
+   * Extract selected IDs from relevanceScores instead of the broken selectedXxx arrays.
+   * Groq's json_schema structured output concatenates number arrays (e.g., [2,3] → [23]),
+   * but relevanceScores entries have correct individual IDs.
+   */
   private validateAndFormatSelection(
     selection: z.infer<typeof intelligentContentSelectionSchema>,
     profileData: ProfileData
   ): IntelligentContentSelection {
-    // Ensure all required fields exist and contain valid IDs
-    const validWorkIds = profileData.workExperiences.map(exp => exp.id);
-    const validEducationIds = profileData.education.map(edu => edu.id);
-    const validSkillIds = profileData.skills.map(skill => skill.id);
-    const validProjectIds = profileData.projects.map(project => project.id);
-    const validCertIds = profileData.certifications.map(cert => cert.id);
-    const validAchievementIds = profileData.achievements.map(ach => ach.id);
+    const validIds = {
+      work: new Set(profileData.workExperiences.map(exp => exp.id)),
+      education: new Set(profileData.education.map(edu => edu.id)),
+      skill: new Set(profileData.skills.map(skill => skill.id)),
+      project: new Set(profileData.projects.map(project => project.id)),
+      certification: new Set(profileData.certifications.map(cert => cert.id)),
+      achievement: new Set(profileData.achievements.map(ach => ach.id)),
+    };
 
-    console.log('[AI Selection] Raw AI IDs:', {
-      workExperiences: selection.selectedWorkExperiences,
-      education: selection.selectedEducation,
-      skills: selection.selectedSkills,
-      projects: selection.selectedProjects,
-      certifications: selection.selectedCertifications,
-      achievements: selection.selectedAchievements,
-    });
-    console.log('[AI Selection] Valid profile IDs:', {
-      workExperiences: validWorkIds,
-      education: validEducationIds,
-      skills: validSkillIds,
-      projects: validProjectIds,
-      certifications: validCertIds,
-      achievements: validAchievementIds,
-    });
+    // Extract IDs from relevanceScores, validated against actual profile data
+    const idsFromScores = {
+      selectedWorkExperiences: [] as number[],
+      selectedEducation: [] as number[],
+      selectedSkills: [] as number[],
+      selectedProjects: [] as number[],
+      selectedCertifications: [] as number[],
+      selectedAchievements: [] as number[],
+    };
+
+    for (const score of selection.relevanceScores) {
+      switch (score.type) {
+        case 'work':
+          if (validIds.work.has(score.id)) idsFromScores.selectedWorkExperiences.push(score.id);
+          break;
+        case 'education':
+          if (validIds.education.has(score.id)) idsFromScores.selectedEducation.push(score.id);
+          break;
+        case 'skill':
+          if (validIds.skill.has(score.id)) idsFromScores.selectedSkills.push(score.id);
+          break;
+        case 'project':
+          if (validIds.project.has(score.id)) idsFromScores.selectedProjects.push(score.id);
+          break;
+        case 'certification':
+          if (validIds.certification.has(score.id)) idsFromScores.selectedCertifications.push(score.id);
+          break;
+        case 'achievement':
+          if (validIds.achievement.has(score.id)) idsFromScores.selectedAchievements.push(score.id);
+          break;
+      }
+    }
 
     return {
-      selectedWorkExperiences: selection.selectedWorkExperiences
-        .filter(id => validWorkIds.includes(id)),
-      selectedEducation: selection.selectedEducation
-        .filter(id => validEducationIds.includes(id)),
-      selectedSkills: selection.selectedSkills
-        .filter(id => validSkillIds.includes(id)),
-      selectedProjects: selection.selectedProjects
-        .filter(id => validProjectIds.includes(id)),
-      selectedCertifications: selection.selectedCertifications
-        .filter(id => validCertIds.includes(id)),
-      selectedAchievements: selection.selectedAchievements
-        .filter(id => validAchievementIds.includes(id)),
+      ...idsFromScores,
       relevanceScores: selection.relevanceScores,
       overallStrategy: selection.overallStrategy,
       keyMatchingPoints: selection.keyMatchingPoints,
