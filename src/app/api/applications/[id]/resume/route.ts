@@ -43,7 +43,7 @@ export async function POST(
     const format = new URL(request.url).searchParams.get("format") ?? "html";
 
     if (format === "pdf") {
-      const { pdf, aiSelection } =
+      const { pdf } =
         await resumeGenerationService.generateJobApplicationResumePDF(
           session.user.id,
           application,
@@ -55,7 +55,6 @@ export async function POST(
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="${validatedRequest.title.replace(/[^a-zA-Z0-9]/g, "_")}_${application.company.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`,
-          "X-AI-Selection": aiSelection ? JSON.stringify(aiSelection) : "",
         },
       });
     }

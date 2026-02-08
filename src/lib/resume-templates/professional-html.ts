@@ -101,9 +101,8 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
     .resume-container {
       max-width: 8.27in;
       min-height: 11.69in;
-      max-height: 11.69in;
       margin: 0 auto;
-      padding: 0.5in;
+      padding: 0;
       font-family: 'Georgia', serif;
       font-size: 11px;
       line-height: 1.4;
@@ -259,7 +258,7 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
       .resume-container {
         max-height: none;
         margin: 0;
-        padding: 0.5in;
+        padding: 0;
         box-shadow: none;
       }
       
@@ -520,7 +519,7 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
         
         @page {
           size: A4;
-          margin: 0;
+          margin: 0.5in;
         }
         
         @media print {
