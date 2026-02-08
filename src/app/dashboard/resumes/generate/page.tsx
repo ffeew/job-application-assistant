@@ -25,32 +25,41 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
-import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
+import {
+	useValidateResume,
+	useGenerateResumePDF,
+	useGenerateResumePreview,
+} from "@/app/dashboard/resumes/mutations/use-generate-resume";
 import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 import { useResumeGenerationStore } from "@/app/dashboard/resumes/store/use-resume-generation-store";
+import { downloadPDF } from "@/lib/utils";
 
 export default function GenerateResumePage() {
 	// Zustand store selectors
 	const previewHTML = useResumeGenerationStore((state) => state.previewHTML);
 	const setPreviewHTML = useResumeGenerationStore((state) => state.setPreviewHTML);
+	const generationStatus = useResumeGenerationStore((state) => state.generationStatus);
+	const setGenerationStatus = useResumeGenerationStore((state) => state.setGenerationStatus);
+	const generationError = useResumeGenerationStore((state) => state.generationError);
+	const setGenerationError = useResumeGenerationStore((state) => state.setGenerationError);
 
 	const {
 		data: resumeData,
 		isLoading: dataLoading,
 		error: dataError,
 	} = useResumeData();
-	const {
-		generateResume,
-		generatePreview,
-		isValidating,
-		isGenerating,
-		isGeneratingPreview,
-		validationError,
-		generationError,
-		previewError,
-	} = useResumeGeneration();
+
+	// Simple mutation hooks
+	const validateMutation = useValidateResume();
+	const pdfMutation = useGenerateResumePDF();
+	const previewMutation = useGenerateResumePreview();
+
+	// Derived state
+	const isValidating = generationStatus === "validating";
+	const isGenerating = generationStatus === "generating";
+	const isGeneratingPreview = previewMutation.isPending;
 
 	const form = useForm({
 		resolver: zodResolver(generateResumeSchema),
@@ -84,10 +93,29 @@ export default function GenerateResumePage() {
 		// Data is validated by Zod resolver, safe to cast
 		const validatedData = data as GenerateResumeRequest;
 		try {
-			await generateResume(validatedData, "pdf");
-			// PDF download is handled automatically in the hook
+			// Validation step
+			setGenerationStatus("validating");
+			setGenerationError(null);
+			const validation = await validateMutation.mutateAsync(validatedData);
+
+			if (!validation.valid) {
+				setGenerationStatus("error");
+				setGenerationError(`Validation failed: ${validation.errors.join(", ")}`);
+				return;
+			}
+
+			// Generation step
+			setGenerationStatus("generating");
+			const blob = await pdfMutation.mutateAsync(validatedData);
+
+			// Download using utility
+			downloadPDF(blob, validatedData.title);
+			setGenerationStatus("complete");
+			toast.success("Resume generated successfully!");
 		} catch (error) {
 			console.error("Error generating resume:", error);
+			setGenerationStatus("error");
+			setGenerationError(error instanceof Error ? error.message : "Error generating resume");
 			toast.error(error instanceof Error ? error.message : "Error generating resume. Please try again.");
 		}
 	};
@@ -95,7 +123,7 @@ export default function GenerateResumePage() {
 	const handlePreview = async () => {
 		const formData = form.getValues() as GenerateResumeRequest;
 		try {
-			const html = await generatePreview(formData);
+			const html = await previewMutation.mutateAsync(formData);
 			setPreviewHTML(html);
 		} catch (error) {
 			console.error("Error generating preview:", error);
@@ -428,10 +456,10 @@ export default function GenerateResumePage() {
 									</Button>
 								</div>
 
-								{(validationError || generationError) && (
+								{generationError && (
 									<div className="p-3 bg-red-50 border border-red-200 rounded-md">
 										<p className="text-red-800 text-sm">
-											{validationError?.message || generationError?.message}
+											{generationError}
 										</p>
 									</div>
 								)}
@@ -472,10 +500,10 @@ export default function GenerateResumePage() {
 								</div>
 							)}
 
-							{previewError && (
+							{previewMutation.error && (
 								<div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
 									<p className="text-red-800 text-sm">
-										Failed to generate preview: {previewError.message}
+										Failed to generate preview: {previewMutation.error.message}
 									</p>
 								</div>
 							)}

@@ -39,6 +39,7 @@ import type {
 	IntelligentContentSelection,
 } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { downloadPDF } from "@/lib/utils";
 
 export default function JobApplicationResumePage({
 	params,
@@ -57,16 +58,16 @@ export default function JobApplicationResumePage({
 		isLoading,
 		error,
 	} = useApplicationResumeInfo(resolvedParams?.id || "");
-	const {
-		generatePreview,
-		isGenerating: isGeneratingPreview,
-		error: previewError,
-	} = useGenerateJobApplicationPreview();
-	const {
-		generatePDF,
-		isGenerating: isGeneratingPDF,
-		error: pdfError,
-	} = useGenerateJobApplicationPDF();
+
+	// Simple mutation hooks
+	const previewMutation = useGenerateJobApplicationPreview();
+	const pdfMutation = useGenerateJobApplicationPDF();
+
+	// Derived state
+	const isGeneratingPreview = previewMutation.isPending;
+	const isGeneratingPDF = pdfMutation.isPending;
+	const previewError = previewMutation.error;
+	const pdfError = pdfMutation.error;
 
 	const form = useForm({
 		resolver: zodResolver(
@@ -119,7 +120,11 @@ export default function JobApplicationResumePage({
 			"applicationId"
 		>;
 		try {
-			generatePDF(resolvedParams.id, validatedData);
+			const blob = await pdfMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: validatedData,
+			});
+			downloadPDF(blob, validatedData.title);
 			toast.success("Resume generated successfully!");
 		} catch (error) {
 			console.error("Error generating resume:", error);
@@ -135,7 +140,10 @@ export default function JobApplicationResumePage({
 			"applicationId"
 		>;
 		try {
-			const result = await generatePreview(resolvedParams.id, formData);
+			const result = await previewMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: formData,
+			});
 			setPreviewHTML(result.html);
 			setAiSelection(result.aiSelection || null);
 

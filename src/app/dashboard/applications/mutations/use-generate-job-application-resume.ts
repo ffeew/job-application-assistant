@@ -1,10 +1,10 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 import type {
   JobApplicationResumeRequest,
   IntelligentContentSelection,
-} from '@/app/api/profile/validators';
+} from "@/app/api/profile/validators";
 
-interface ResumeGenerationResponse {
+export interface JobApplicationResumeResponse {
   html: string;
   aiSelection?: IntelligentContentSelection;
   application: {
@@ -14,100 +14,73 @@ interface ResumeGenerationResponse {
   };
 }
 
-// Direct API call function
+// API calls for job application resume generation
 const jobApplicationResumeApi = {
-  generate: async (
+  generatePDF: async (
     applicationId: string,
-    data: Omit<JobApplicationResumeRequest, 'applicationId'>,
-    format: 'html' | 'pdf' | 'preview' = 'html'
-  ): Promise<ResumeGenerationResponse | Blob> => {
-    const response = await fetch(`/api/applications/${applicationId}/resume?format=${format}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    data: Omit<JobApplicationResumeRequest, "applicationId">
+  ): Promise<Blob> => {
+    const response = await fetch(
+      `/api/applications/${applicationId}/resume?format=pdf`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to generate resume');
+      throw new Error(errorData.error || "Failed to generate PDF");
     }
 
-    if (format === 'pdf') {
-      return response.blob();
+    return response.blob();
+  },
+
+  generatePreview: async (
+    applicationId: string,
+    data: Omit<JobApplicationResumeRequest, "applicationId">
+  ): Promise<JobApplicationResumeResponse> => {
+    const response = await fetch(
+      `/api/applications/${applicationId}/resume?format=preview`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to generate preview");
     }
 
     return response.json();
   },
 };
 
-// Hook to generate job application resume
-export function useJobApplicationResumeGeneration() {
+// Hook to generate job application resume PDF - returns blob (caller handles download)
+export function useGenerateJobApplicationPDF() {
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       applicationId,
       data,
-      format = 'html',
     }: {
       applicationId: string;
-      data: Omit<JobApplicationResumeRequest, 'applicationId'>;
-      format?: 'html' | 'pdf' | 'preview';
-    }) => {
-      const result = await jobApplicationResumeApi.generate(applicationId, data, format);
-
-      if (format === 'pdf' && result instanceof Blob) {
-        // Handle PDF download
-        const url = URL.createObjectURL(result);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${data.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return { success: true, format: 'pdf' };
-      }
-
-      return result as ResumeGenerationResponse;
-    },
+      data: Omit<JobApplicationResumeRequest, "applicationId">;
+    }) => jobApplicationResumeApi.generatePDF(applicationId, data),
   });
 }
 
-// Convenience hooks for different formats
-export function useGenerateJobApplicationPDF() {
-  const mutation = useJobApplicationResumeGeneration();
-
-  return {
-    generatePDF: (applicationId: string, data: Omit<JobApplicationResumeRequest, 'applicationId'>) =>
-      mutation.mutate({ applicationId, data, format: 'pdf' }),
-    isGenerating: mutation.isPending,
-    error: mutation.error,
-  };
-}
-
+// Hook to generate job application resume preview
 export function useGenerateJobApplicationPreview() {
-  const mutation = useJobApplicationResumeGeneration();
-
-  return {
-    generatePreview: async (applicationId: string, data: Omit<JobApplicationResumeRequest, 'applicationId'>) => {
-      const result = await mutation.mutateAsync({ applicationId, data, format: 'preview' });
-      return result as ResumeGenerationResponse;
-    },
-    isGenerating: mutation.isPending,
-    error: mutation.error,
-  };
-}
-
-export function useGenerateJobApplicationHTML() {
-  const mutation = useJobApplicationResumeGeneration();
-
-  return {
-    generateHTML: async (applicationId: string, data: Omit<JobApplicationResumeRequest, 'applicationId'>) => {
-      const result = await mutation.mutateAsync({ applicationId, data, format: 'html' });
-      return result as ResumeGenerationResponse;
-    },
-    isGenerating: mutation.isPending,
-    error: mutation.error,
-  };
+  return useMutation({
+    mutationFn: ({
+      applicationId,
+      data,
+    }: {
+      applicationId: string;
+      data: Omit<JobApplicationResumeRequest, "applicationId">;
+    }) => jobApplicationResumeApi.generatePreview(applicationId, data),
+  });
 }

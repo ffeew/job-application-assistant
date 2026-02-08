@@ -54,31 +54,17 @@ const resumeGenerationApi = {
   },
 };
 
-// Hook to validate resume
+// Hook to validate resume - returns validation result
 export function useValidateResume() {
   return useMutation({
     mutationFn: resumeGenerationApi.validate,
   });
 }
 
-// Hook to generate resume PDF
+// Hook to generate resume PDF - returns blob (caller handles download)
 export function useGenerateResumePDF() {
   return useMutation({
-    mutationFn: async (request: GenerateResumeRequest) => {
-      const blob = await resumeGenerationApi.generatePDF(request);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${request.title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      return blob;
-    },
+    mutationFn: resumeGenerationApi.generatePDF,
   });
 }
 
@@ -94,43 +80,4 @@ export function useGenerateResumePreview() {
   return useMutation({
     mutationFn: resumeGenerationApi.generatePreview,
   });
-}
-
-// Combined hook for resume generation workflow
-export function useResumeGeneration() {
-  const validateMutation = useValidateResume();
-  const generatePDFMutation = useGenerateResumePDF();
-  const generateHTMLMutation = useGenerateResumeHTML();
-  const generatePreviewMutation = useGenerateResumePreview();
-
-  const generateResume = async (request: GenerateResumeRequest, format: "pdf" | "html" = "pdf") => {
-    // First validate the resume
-    const validation = await validateMutation.mutateAsync(request);
-
-    if (!validation.valid) {
-      throw new Error(`Resume validation failed: ${validation.errors.join(", ")}`);
-    }
-
-    // Generate in requested format
-    if (format === "pdf") {
-      return generatePDFMutation.mutateAsync(request);
-    } else {
-      return generateHTMLMutation.mutateAsync(request);
-    }
-  };
-
-  const generatePreview = async (request: GenerateResumeRequest) => {
-    return generatePreviewMutation.mutateAsync(request);
-  };
-
-  return {
-    generateResume,
-    generatePreview,
-    isValidating: validateMutation.isPending,
-    isGenerating: generatePDFMutation.isPending || generateHTMLMutation.isPending,
-    isGeneratingPreview: generatePreviewMutation.isPending,
-    validationError: validateMutation.error,
-    generationError: generatePDFMutation.error || generateHTMLMutation.error,
-    previewError: generatePreviewMutation.error,
-  };
 }

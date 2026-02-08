@@ -484,6 +484,42 @@ export function useCreateApplication() {
 }
 ```
 
+### Zustand vs Custom Hooks Decision Guide
+
+This application uses both Zustand stores and custom hooks for state management. Use this guide to decide which approach is appropriate:
+
+#### Use Zustand Store When:
+
+- **Shared state**: State is accessed by multiple unrelated components
+- **Persistent state**: State needs to survive navigation or page changes
+- **Complex workflows**: Orchestrating multi-step processes (validate → generate → download)
+- **Multiple mutations**: Coordinating 3+ mutations that need shared state
+- **Cross-cutting UI state**: Form state, dialogs, navigation that multiple components read/write
+- **Side effect separation**: When DOM manipulation (downloads, clipboard) should be separate from data fetching
+
+#### Use Custom Hooks When:
+
+- **Single query**: Simple `useQuery` wrapper for fetching one resource
+- **Single mutation**: Simple `useMutation` wrapper for one write operation
+- **Derived state**: Computing values from server data within a single component
+- **Component-scoped state**: State that only one component needs
+
+#### Red Flags (Refactor Hook → Store):
+
+- Hook creates 3+ internal mutations and combines their states
+- Hook manages multiple independent pieces of state
+- Hook mixes side effects (DOM manipulation, file downloads) with data fetching
+- Same hook logic is duplicated across multiple components
+- Hook returns 5+ derived state properties
+- Hook orchestrates a workflow with validation steps before main action
+
+#### Store Organization:
+
+```
+src/app/dashboard/[feature]/store/
+└── use-[feature]-store.ts    # Feature-specific Zustand store
+```
+
 ### Form Development with React Hook Form
 
 **All forms in this application use React Hook Form with Zod validation**. This provides robust validation, better UX, and strong type safety.
