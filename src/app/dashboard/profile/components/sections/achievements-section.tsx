@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ interface AchievementsSectionProps {
 }
 
 export function AchievementsSection({ achievements, isLoading }: AchievementsSectionProps) {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
 	const editingState = useProfileUIStore((state) => state.editingState);
 	const isSheetOpen = useProfileUIStore((state) => state.isSheetOpen);
 	const startAdding = useProfileUIStore((state) => state.startAdding);
@@ -35,6 +33,9 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 	const cancelEditing = useProfileUIStore((state) => state.cancelEditing);
 	const savingItemId = useProfileUIStore((state) => state.savingItemId);
 	const setSavingItemId = useProfileUIStore((state) => state.setSavingItemId);
+	const deleteConfirmation = useProfileUIStore((state) => state.deleteConfirmation);
+	const openDeleteConfirmation = useProfileUIStore((state) => state.openDeleteConfirmation);
+	const closeDeleteConfirmation = useProfileUIStore((state) => state.closeDeleteConfirmation);
 	const pendingItems = useImportReviewStore((state) => state.achievements);
 	const removePendingItem = useImportReviewStore((state) => state.removeAchievementDraft);
 	const createMutation = useCreateAchievement();
@@ -44,9 +45,9 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 	const editingAchievement = isEditingAchievement && editingState?.itemId ? achievements.find((a) => a.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
-		if (deleteId === null) return;
-		deleteMutation.mutate(deleteId, {
-			onSuccess: () => { toast.success("Achievement deleted!"); setDeleteId(null); },
+		if (!deleteConfirmation || deleteConfirmation.section !== "achievements") return;
+		deleteMutation.mutate(deleteConfirmation.itemId, {
+			onSuccess: () => { toast.success("Achievement deleted!"); closeDeleteConfirmation(); },
 			onError: () => toast.error("Error deleting achievement."),
 		});
 	};
@@ -121,7 +122,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 									</div>
 									<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
 										<Button variant="ghost" size="icon" onClick={() => startEditing("achievements", achievement.id)}><Edit className="h-4 w-4" /></Button>
-										<Button variant="ghost" size="icon" onClick={() => setDeleteId(achievement.id)}><Trash2 className="h-4 w-4" /></Button>
+										<Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation("achievements", achievement.id)}><Trash2 className="h-4 w-4" /></Button>
 									</div>
 								</div>
 							</CardContent>
@@ -137,7 +138,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 				</SheetContent>
 			</Sheet>
 
-			<AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+			<AlertDialog open={deleteConfirmation?.section === "achievements"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader><AlertDialogTitle>Delete achievement?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
 					<AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction></AlertDialogFooter>

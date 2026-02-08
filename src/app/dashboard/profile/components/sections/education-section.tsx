@@ -38,7 +38,6 @@ import {
 	X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
 import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
@@ -54,8 +53,6 @@ interface EducationSectionProps {
 }
 
 export function EducationSection({ education, isLoading }: EducationSectionProps) {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
-
 	const editingState = useProfileUIStore((state) => state.editingState);
 	const isSheetOpen = useProfileUIStore((state) => state.isSheetOpen);
 	const startAdding = useProfileUIStore((state) => state.startAdding);
@@ -63,6 +60,9 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 	const cancelEditing = useProfileUIStore((state) => state.cancelEditing);
 	const savingItemId = useProfileUIStore((state) => state.savingItemId);
 	const setSavingItemId = useProfileUIStore((state) => state.setSavingItemId);
+	const deleteConfirmation = useProfileUIStore((state) => state.deleteConfirmation);
+	const openDeleteConfirmation = useProfileUIStore((state) => state.openDeleteConfirmation);
+	const closeDeleteConfirmation = useProfileUIStore((state) => state.closeDeleteConfirmation);
 
 	const pendingItems = useImportReviewStore((state) => state.education);
 	const removePendingItem = useImportReviewStore((state) => state.removeEducationDraft);
@@ -76,11 +76,11 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 		: null;
 
 	const handleDelete = () => {
-		if (deleteId === null) return;
-		deleteMutation.mutate(deleteId, {
+		if (!deleteConfirmation || deleteConfirmation.section !== "education") return;
+		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
 				toast.success("Education deleted successfully!");
-				setDeleteId(null);
+				closeDeleteConfirmation();
 			},
 			onError: (error) => {
 				console.error("Error deleting education:", error);
@@ -215,7 +215,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 										<Button variant="ghost" size="icon" onClick={() => startEditing("education", edu.id)}>
 											<Edit className="h-4 w-4" />
 										</Button>
-										<Button variant="ghost" size="icon" onClick={() => setDeleteId(edu.id)}>
+										<Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation("education", edu.id)}>
 											<Trash2 className="h-4 w-4" />
 										</Button>
 									</div>
@@ -240,7 +240,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 			</Sheet>
 
 			{/* Delete confirmation */}
-			<AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+			<AlertDialog open={deleteConfirmation?.section === "education"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete education?</AlertDialogTitle>

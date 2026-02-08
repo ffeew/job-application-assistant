@@ -17,6 +17,11 @@ export type EditingState = {
 	itemId?: number;
 } | null;
 
+interface DeleteConfirmation {
+	section: ProfileSection;
+	itemId: number;
+}
+
 interface ProfileUIState {
 	// Navigation (persisted to localStorage)
 	activeSection: ProfileSection;
@@ -39,6 +44,11 @@ interface ProfileUIState {
 	// Saving indicator
 	savingItemId: number | string | null;
 	setSavingItemId: (id: number | string | null) => void;
+
+	// Delete confirmation dialog state
+	deleteConfirmation: DeleteConfirmation | null;
+	openDeleteConfirmation: (section: ProfileSection, itemId: number) => void;
+	closeDeleteConfirmation: () => void;
 }
 
 export const useProfileUIStore = create<ProfileUIState>()(
@@ -97,6 +107,12 @@ export const useProfileUIStore = create<ProfileUIState>()(
 			// Saving state
 			savingItemId: null,
 			setSavingItemId: (id) => set({ savingItemId: id }),
+
+			// Delete confirmation state
+			deleteConfirmation: null,
+			openDeleteConfirmation: (section, itemId) =>
+				set({ deleteConfirmation: { section, itemId } }),
+			closeDeleteConfirmation: () => set({ deleteConfirmation: null }),
 		}),
 		{
 			name: "profile-ui-state",

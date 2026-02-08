@@ -185,8 +185,8 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                 Basic information about this resume
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="title">Resume Title</Label>
                 <Input
                   id="title"
@@ -197,7 +197,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                   <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="isDefault"
@@ -212,16 +212,16 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
                     {...register("personalInfo.name")}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -231,14 +231,14 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     {...register("personalInfo.phone")}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"

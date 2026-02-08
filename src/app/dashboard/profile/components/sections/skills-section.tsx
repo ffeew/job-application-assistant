@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -65,8 +65,6 @@ interface SkillsSectionProps {
 }
 
 export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
-
 	const editingState = useProfileUIStore((state) => state.editingState);
 	const isSheetOpen = useProfileUIStore((state) => state.isSheetOpen);
 	const startAdding = useProfileUIStore((state) => state.startAdding);
@@ -74,6 +72,9 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 	const cancelEditing = useProfileUIStore((state) => state.cancelEditing);
 	const savingItemId = useProfileUIStore((state) => state.savingItemId);
 	const setSavingItemId = useProfileUIStore((state) => state.setSavingItemId);
+	const deleteConfirmation = useProfileUIStore((state) => state.deleteConfirmation);
+	const openDeleteConfirmation = useProfileUIStore((state) => state.openDeleteConfirmation);
+	const closeDeleteConfirmation = useProfileUIStore((state) => state.closeDeleteConfirmation);
 
 	const pendingItems = useImportReviewStore((state) => state.skills);
 	const removePendingItem = useImportReviewStore((state) => state.removeSkillDraft);
@@ -98,11 +99,11 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 	}, [skills]);
 
 	const handleDelete = () => {
-		if (deleteId === null) return;
-		deleteMutation.mutate(deleteId, {
+		if (!deleteConfirmation || deleteConfirmation.section !== "skills") return;
+		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
 				toast.success("Skill deleted!");
-				setDeleteId(null);
+				closeDeleteConfirmation();
 			},
 			onError: () => toast.error("Error deleting skill."),
 		});
@@ -237,7 +238,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 														variant="ghost"
 														size="icon"
 														className="h-6 w-6"
-														onClick={() => setDeleteId(skill.id)}
+														onClick={() => openDeleteConfirmation("skills", skill.id)}
 													>
 														<Trash2 className="h-3 w-3" />
 													</Button>
@@ -266,7 +267,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 			</Sheet>
 
 			{/* Delete confirmation */}
-			<AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+			<AlertDialog open={deleteConfirmation?.section === "skills"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete skill?</AlertDialogTitle>

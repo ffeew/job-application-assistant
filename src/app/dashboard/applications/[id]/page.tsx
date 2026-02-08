@@ -171,9 +171,9 @@ export default function EditApplicationPage({
 								Basic information about the job opportunity
 							</CardDescription>
 						</CardHeader>
-						<CardContent className="space-y-4">
+						<CardContent className="flex flex-col gap-4">
 							<div className="grid grid-cols-2 gap-4">
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="company">Company *</Label>
 									<Input
 										id="company"
@@ -186,7 +186,7 @@ export default function EditApplicationPage({
 										</p>
 									)}
 								</div>
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="position">Position *</Label>
 									<Input
 										id="position"
@@ -201,7 +201,7 @@ export default function EditApplicationPage({
 								</div>
 							</div>
 							<div className="grid grid-cols-2 gap-4">
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="status">Status</Label>
 									<Controller
 										name="status"
@@ -232,7 +232,7 @@ export default function EditApplicationPage({
 										</p>
 									)}
 								</div>
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="appliedAt">Application Date</Label>
 									<Input
 										id="appliedAt"
@@ -253,8 +253,8 @@ export default function EditApplicationPage({
 						<CardHeader>
 							<CardTitle>Additional Details</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-4">
-							<div>
+						<CardContent className="flex flex-col gap-4">
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="location">Location</Label>
 								<Input
 									id="location"
@@ -267,7 +267,7 @@ export default function EditApplicationPage({
 									</p>
 								)}
 							</div>
-							<div>
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="notes">Notes</Label>
 								<Textarea
 									id="notes"

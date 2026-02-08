@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,23 +14,34 @@ import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useApplications } from "@/app/dashboard/applications/queries/use-applications";
 import { useCreateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-create-cover-letter";
 import { useGenerateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-generate-cover-letter";
+import { useCoverLetterStore } from "@/app/dashboard/cover-letters/store/use-cover-letter-store";
 import { toast } from "sonner";
 
 export default function NewCoverLetterPage() {
-  const [selectedResume, setSelectedResume] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState("");
-  const [manualCompany, setManualCompany] = useState("");
-  const [manualPosition, setManualPosition] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
-  const [applicantName, setApplicantName] = useState("");
-  const [generatedContent, setGeneratedContent] = useState("");
-  const [title, setTitle] = useState("");
-  
   const router = useRouter();
   const { data: resumes = [] } = useResumes();
   const { data: applications = [] } = useApplications();
   const generateCoverLetterMutation = useGenerateCoverLetter();
   const createCoverLetterMutation = useCreateCoverLetter();
+
+  // Zustand store selectors
+  const selectedResume = useCoverLetterStore((state) => state.selectedResume);
+  const selectedApplication = useCoverLetterStore((state) => state.selectedApplication);
+  const manualCompany = useCoverLetterStore((state) => state.manualCompany);
+  const manualPosition = useCoverLetterStore((state) => state.manualPosition);
+  const jobDescription = useCoverLetterStore((state) => state.jobDescription);
+  const applicantName = useCoverLetterStore((state) => state.applicantName);
+  const generatedContent = useCoverLetterStore((state) => state.generatedContent);
+  const title = useCoverLetterStore((state) => state.title);
+
+  // Zustand store actions
+  const setSelectedResume = useCoverLetterStore((state) => state.setSelectedResume);
+  const setSelectedApplication = useCoverLetterStore((state) => state.setSelectedApplication);
+  const setManualFields = useCoverLetterStore((state) => state.setManualFields);
+  const setApplicantName = useCoverLetterStore((state) => state.setApplicantName);
+  const setTitle = useCoverLetterStore((state) => state.setTitle);
+  const setGeneratedContent = useCoverLetterStore((state) => state.setGeneratedContent);
+  const reset = useCoverLetterStore((state) => state.reset);
 
   // Set default resume when resumes are loaded
   useEffect(() => {
@@ -38,16 +49,14 @@ export default function NewCoverLetterPage() {
       const defaultResume = resumes.find((r: { isDefault: boolean }) => r.isDefault) || resumes[0];
       setSelectedResume(defaultResume.id);
     }
-  }, [resumes, selectedResume]);
+  }, [resumes, selectedResume, setSelectedResume]);
 
   const handleApplicationChange = (applicationId: string) => {
     setSelectedApplication(applicationId);
     if (applicationId) {
       const app = applications.find(a => a.id === applicationId);
       if (app) {
-        setManualCompany(app.company);
-        setManualPosition(app.position);
-        setJobDescription(app.jobDescription || "");
+        setManualFields(app.company, app.position, app.jobDescription || "");
       }
     }
   };
@@ -101,6 +110,7 @@ export default function NewCoverLetterPage() {
     }, {
       onSuccess: () => {
         toast.success("Cover letter saved successfully!");
+        reset(); // Clear the store after successful save
         router.push("/dashboard/cover-letters");
       },
       onError: (error) => {
@@ -138,7 +148,7 @@ export default function NewCoverLetterPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               {applications.length > 0 && (
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label>Select Application (Optional)</Label>
                   <Select value={selectedApplication} onValueChange={handleApplicationChange}>
                     <SelectTrigger>
@@ -155,29 +165,29 @@ export default function NewCoverLetterPage() {
                   </Select>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="company">Company *</Label>
                   <Input
                     id="company"
                     placeholder="Company name"
                     value={manualCompany}
-                    onChange={(e) => setManualCompany(e.target.value)}
+                    onChange={(e) => setManualFields(e.target.value, manualPosition, jobDescription)}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="position">Position *</Label>
                   <Input
                     id="position"
                     placeholder="Job position"
                     value={manualPosition}
-                    onChange={(e) => setManualPosition(e.target.value)}
+                    onChange={(e) => setManualFields(manualCompany, e.target.value, jobDescription)}
                   />
                 </div>
               </div>
 
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="applicantName">Your Name (Optional)</Label>
                 <Input
                   id="applicantName"
@@ -187,13 +197,13 @@ export default function NewCoverLetterPage() {
                 />
               </div>
 
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="jobDescription">Job Description</Label>
                 <Textarea
                   id="jobDescription"
                   placeholder="Paste the job description here for better personalization..."
                   value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
+                  onChange={(e) => setManualFields(manualCompany, manualPosition, e.target.value)}
                   rows={6}
                 />
               </div>
@@ -229,8 +239,8 @@ export default function NewCoverLetterPage() {
             </CardContent>
           </Card>
 
-          <Button 
-            onClick={handleGenerateCoverLetter} 
+          <Button
+            onClick={handleGenerateCoverLetter}
             disabled={generateCoverLetterMutation.isPending || !manualCompany || !manualPosition}
             size="lg"
             className="w-full"
@@ -251,7 +261,7 @@ export default function NewCoverLetterPage() {
             <CardContent className="flex flex-col gap-4">
               {generatedContent ? (
                 <>
-                  <div>
+                  <div className="flex flex-col gap-2">
                     <Label htmlFor="title">Title</Label>
                     <Input
                       id="title"
@@ -260,7 +270,7 @@ export default function NewCoverLetterPage() {
                       placeholder="Cover letter title"
                     />
                   </div>
-                  <div>
+                  <div className="flex flex-col gap-2">
                     <Label htmlFor="content">Content</Label>
                     <Textarea
                       id="content"

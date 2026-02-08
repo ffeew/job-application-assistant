@@ -39,7 +39,6 @@ import {
 	X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
 import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
 import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-update-work-experience";
 import { useDeleteWorkExperience } from "@/app/dashboard/profile/mutations/use-delete-work-experience";
@@ -58,8 +57,6 @@ interface ExperienceSectionProps {
 }
 
 export function ExperienceSection({ experiences, isLoading }: ExperienceSectionProps) {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
-
 	const editingState = useProfileUIStore((state) => state.editingState);
 	const isSheetOpen = useProfileUIStore((state) => state.isSheetOpen);
 	const startAdding = useProfileUIStore((state) => state.startAdding);
@@ -70,6 +67,9 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 	const editingPendingId = useProfileUIStore((state) => state.editingPendingId);
 	const startEditingPending = useProfileUIStore((state) => state.startEditingPending);
 	const cancelEditingPending = useProfileUIStore((state) => state.cancelEditingPending);
+	const deleteConfirmation = useProfileUIStore((state) => state.deleteConfirmation);
+	const openDeleteConfirmation = useProfileUIStore((state) => state.openDeleteConfirmation);
+	const closeDeleteConfirmation = useProfileUIStore((state) => state.closeDeleteConfirmation);
 
 	const pendingItems = useImportReviewStore((state) => state.workExperiences);
 	const updatePendingItem = useImportReviewStore((state) => state.updateWorkExperienceDraft);
@@ -86,11 +86,11 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 		: null;
 
 	const handleDelete = () => {
-		if (deleteId === null) return;
-		deleteMutation.mutate(deleteId, {
+		if (!deleteConfirmation || deleteConfirmation.section !== "experience") return;
+		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
 				toast.success("Work experience deleted successfully!");
-				setDeleteId(null);
+				closeDeleteConfirmation();
 			},
 			onError: (error) => {
 				console.error("Error deleting work experience:", error);
@@ -307,7 +307,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 										<Button
 											variant="ghost"
 											size="icon"
-											onClick={() => setDeleteId(experience.id)}
+											onClick={() => openDeleteConfirmation("experience", experience.id)}
 										>
 											<Trash2 className="h-4 w-4" />
 										</Button>
@@ -341,7 +341,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 			</Sheet>
 
 			{/* Delete confirmation */}
-			<AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+			<AlertDialog open={deleteConfirmation?.section === "experience"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete work experience?</AlertDialogTitle>

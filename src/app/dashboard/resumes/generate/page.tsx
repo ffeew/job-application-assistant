@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,12 @@ import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-gener
 import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { useResumeGenerationStore } from "@/app/dashboard/resumes/store/use-resume-generation-store";
 
 export default function GenerateResumePage() {
-	const [previewHTML, setPreviewHTML] = useState<string | null>(null);
+	// Zustand store selectors
+	const previewHTML = useResumeGenerationStore((state) => state.previewHTML);
+	const setPreviewHTML = useResumeGenerationStore((state) => state.setPreviewHTML);
 
 	const {
 		data: resumeData,
@@ -210,7 +212,7 @@ export default function GenerateResumePage() {
 									include
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="flex flex-col gap-4">
 								<div className="flex flex-col gap-2">
 									<Label htmlFor="title">Resume Title</Label>
 									<Input

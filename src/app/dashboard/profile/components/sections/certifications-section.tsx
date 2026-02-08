@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,6 @@ interface CertificationsSectionProps {
 }
 
 export function CertificationsSection({ certifications, isLoading }: CertificationsSectionProps) {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
 	const editingState = useProfileUIStore((state) => state.editingState);
 	const isSheetOpen = useProfileUIStore((state) => state.isSheetOpen);
 	const startAdding = useProfileUIStore((state) => state.startAdding);
@@ -34,6 +32,9 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 	const cancelEditing = useProfileUIStore((state) => state.cancelEditing);
 	const savingItemId = useProfileUIStore((state) => state.savingItemId);
 	const setSavingItemId = useProfileUIStore((state) => state.setSavingItemId);
+	const deleteConfirmation = useProfileUIStore((state) => state.deleteConfirmation);
+	const openDeleteConfirmation = useProfileUIStore((state) => state.openDeleteConfirmation);
+	const closeDeleteConfirmation = useProfileUIStore((state) => state.closeDeleteConfirmation);
 	const pendingItems = useImportReviewStore((state) => state.certifications);
 	const removePendingItem = useImportReviewStore((state) => state.removeCertificationDraft);
 	const createMutation = useCreateCertification();
@@ -43,9 +44,9 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 	const editingCert = isEditingCert && editingState?.itemId ? certifications.find((c) => c.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
-		if (deleteId === null) return;
-		deleteMutation.mutate(deleteId, {
-			onSuccess: () => { toast.success("Certification deleted!"); setDeleteId(null); },
+		if (!deleteConfirmation || deleteConfirmation.section !== "certifications") return;
+		deleteMutation.mutate(deleteConfirmation.itemId, {
+			onSuccess: () => { toast.success("Certification deleted!"); closeDeleteConfirmation(); },
 			onError: () => toast.error("Error deleting certification."),
 		});
 	};
@@ -123,7 +124,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 									</div>
 									<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
 										<Button variant="ghost" size="icon" onClick={() => startEditing("certifications", cert.id)}><Edit className="h-4 w-4" /></Button>
-										<Button variant="ghost" size="icon" onClick={() => setDeleteId(cert.id)}><Trash2 className="h-4 w-4" /></Button>
+										<Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation("certifications", cert.id)}><Trash2 className="h-4 w-4" /></Button>
 									</div>
 								</div>
 							</CardContent>
@@ -139,7 +140,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 				</SheetContent>
 			</Sheet>
 
-			<AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+			<AlertDialog open={deleteConfirmation?.section === "certifications"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader><AlertDialogTitle>Delete certification?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
 					<AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction></AlertDialogFooter>

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { authClient } from "@/app/utils/authClient";
+import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 import {
 	LayoutDashboard,
 	FileText,
@@ -36,9 +37,17 @@ export default function DashboardLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [sidebarOpen, setSidebarOpen] = useState(false);
+	// Zustand store selectors
+	const user = useDashboardStore((state) => state.user);
+	const isLoading = useDashboardStore((state) => state.isLoading);
+	const sidebarOpen = useDashboardStore((state) => state.sidebarOpen);
+
+	// Zustand store actions
+	const setUser = useDashboardStore((state) => state.setUser);
+	const setLoading = useDashboardStore((state) => state.setLoading);
+	const toggleSidebar = useDashboardStore((state) => state.toggleSidebar);
+	const setSidebarOpen = useDashboardStore((state) => state.setSidebarOpen);
+
 	const pathname = usePathname();
 	const router = useRouter();
 
@@ -59,7 +68,7 @@ export default function DashboardLayout({
 		};
 
 		checkAuth();
-	}, [router]);
+	}, [router, setUser, setLoading]);
 
 	const handleSignOut = async () => {
 		try {
@@ -72,7 +81,7 @@ export default function DashboardLayout({
 		}
 	};
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-lg">Loading...</div>
@@ -87,7 +96,7 @@ export default function DashboardLayout({
 				<Button
 					variant="outline"
 					size="sm"
-					onClick={() => setSidebarOpen(!sidebarOpen)}
+					onClick={toggleSidebar}
 				>
 					{sidebarOpen ? (
 						<X className="h-4 w-4" />

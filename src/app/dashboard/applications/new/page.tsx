@@ -84,7 +84,7 @@ export default function NewApplicationPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="company">Company *</Label>
                   <Input
                     id="company"
@@ -95,7 +95,7 @@ export default function NewApplicationPage() {
                     <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
                   )}
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="position">Position *</Label>
                   <Input
                     id="position"
@@ -108,7 +108,7 @@ export default function NewApplicationPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
@@ -119,7 +119,7 @@ export default function NewApplicationPage() {
                     <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
                   )}
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="salaryRange">Salary Range</Label>
                   <Input
                     id="salaryRange"
@@ -131,7 +131,7 @@ export default function NewApplicationPage() {
                   )}
                 </div>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="jobUrl">Job Posting URL</Label>
                 <Input
                   id="jobUrl"
@@ -155,7 +155,7 @@ export default function NewApplicationPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="status">Status</Label>
                   <Controller
                     name="status"
@@ -179,7 +179,7 @@ export default function NewApplicationPage() {
                     <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
                   )}
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="appliedAt">Application Date</Label>
                   <Input
                     id="appliedAt"
@@ -222,7 +222,7 @@ export default function NewApplicationPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="contactName">Contact Name</Label>
                   <Input
                     id="contactName"
@@ -233,7 +233,7 @@ export default function NewApplicationPage() {
                     <p className="text-red-500 text-sm mt-1">{errors.contactName.message}</p>
                   )}
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="contactEmail">Contact Email</Label>
                   <Input
                     id="contactEmail"
@@ -246,7 +246,7 @@ export default function NewApplicationPage() {
                   )}
                 </div>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="recruiterId">Recruiter ID/Name</Label>
                 <Input
                   id="recruiterId"
