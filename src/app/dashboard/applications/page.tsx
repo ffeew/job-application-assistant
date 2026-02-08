@@ -100,12 +100,9 @@ export default function ApplicationsPage() {
 						<Card key={status}>
 							<CardContent className="p-3 sm:p-4">
 								<div className="flex items-center justify-between min-w-0">
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-medium capitalize truncate">
-											{status}
-										</p>
-										<p className="text-xl sm:text-2xl font-bold">{count}</p>
-									</div>
+									<p className="text-sm font-medium capitalize truncate">
+										{status}
+									</p>
 									<Badge className={`${color} ml-2 flex-shrink-0`}>
 										{count}
 									</Badge>
