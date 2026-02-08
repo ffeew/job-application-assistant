@@ -104,13 +104,14 @@ export class ResumeGenerationService {
       });
 
       // Generate PDF with specific settings for resume
+      // Use zero margins - let the HTML/CSS control the layout to match preview
       const pdfBuffer = await page.pdf({
         format: 'letter',
         margin: {
-          top: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in',
-          right: '0.5in'
+          top: '0',
+          bottom: '0',
+          left: '0',
+          right: '0'
         },
         printBackground: true,
         preferCSSPageSize: true,
@@ -279,13 +280,14 @@ export class ResumeGenerationService {
       // Add additional wait to ensure content is fully rendered
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Use zero margins - let the HTML/CSS control the layout to match preview
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: {
-          top: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in',
-          right: '0.5in'
+          top: '0',
+          bottom: '0',
+          left: '0',
+          right: '0'
         },
         printBackground: true,
         preferCSSPageSize: true,

@@ -520,7 +520,7 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
         
         @page {
           size: letter;
-          margin: 0.5in;
+          margin: 0;
         }
         
         @media print {
