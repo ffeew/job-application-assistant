@@ -26,7 +26,10 @@ const resumeGenerationApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });
-    if (!response.ok) throw new Error("Failed to generate PDF");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to generate PDF");
+    }
     return response.blob();
   },
 
