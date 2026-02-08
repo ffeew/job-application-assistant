@@ -10,12 +10,12 @@ export function CTASection() {
 	const { ref, isVisible } = useScrollAnimation();
 
 	return (
-		<section ref={ref} className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-36">
-			<div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+		<section ref={ref} className="relative overflow-hidden bg-background py-24 sm:py-32 lg:py-40">
+			<div className="absolute inset-0 -z-10 bg-gradient-to-b from-secondary/5 via-transparent to-transparent" />
 
 			<div className="container mx-auto px-4">
 				<div
-					className={`mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-primary/20 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent p-10 text-center shadow-2xl shadow-primary/10 sm:p-12 lg:p-16 ${isVisible ? "animate-scale-in" : "before-animate"}`}
+					className={`mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-secondary/30 bg-gradient-to-br from-primary/8 via-secondary/5 to-transparent p-10 text-center shadow-2xl shadow-secondary/15 sm:p-12 lg:p-16 ${isVisible ? "animate-scale-in" : "before-animate"}`}
 				>
 					<h2 className="font-display text-balance text-4xl leading-tight md:text-5xl">
 						Ready to transform your job search?
@@ -28,7 +28,7 @@ export function CTASection() {
 					<div className="mt-10 flex flex-wrap items-center justify-center gap-4">
 						<Button
 							size="lg"
-							className="h-12 rounded-full px-8 text-base shadow-lg shadow-primary/20"
+							className="h-14 rounded-full px-10 text-lg shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40"
 							asChild
 						>
 							<Link href="/sign-up">
@@ -39,7 +39,7 @@ export function CTASection() {
 						<Button
 							size="lg"
 							variant="outline"
-							className="h-12 rounded-full border-border px-8 text-base"
+							className="h-14 rounded-full border-2 border-secondary/30 px-10 text-lg hover:border-secondary/50 hover:bg-secondary/5"
 							asChild
 						>
 							<Link

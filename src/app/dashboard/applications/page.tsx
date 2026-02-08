@@ -24,12 +24,11 @@ import { useDeleteApplication } from "@/app/dashboard/applications/mutations/use
 import { ApplicationsListSkeleton } from "./components/applications-list-skeleton";
 
 const statusColors = {
-	applied: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-	interviewing:
-		"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-	offer: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-	rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-	withdrawn: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+	applied: "bg-[--status-applied-bg] text-[--status-applied]",
+	interviewing: "bg-[--status-interviewing-bg] text-[--status-interviewing]",
+	offer: "bg-[--status-offer-bg] text-[--status-offer]",
+	rejected: "bg-[--status-rejected-bg] text-[--status-rejected]",
+	withdrawn: "bg-[--status-withdrawn-bg] text-[--status-withdrawn]",
 };
 
 export default function ApplicationsPage() {

@@ -205,8 +205,8 @@ function HeroFeatureItem({
 		>
 			{/* Content */}
 			<div className="flex flex-col justify-center">
-				<div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-					<Icon className="h-7 w-7 text-primary" />
+				<div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-2 ring-primary/20">
+					<Icon className="h-8 w-8 text-primary" />
 				</div>
 				<h3 className="font-display text-3xl leading-tight md:text-4xl">
 					{feature.title}
@@ -250,10 +250,10 @@ function SecondaryFeaturesGrid() {
 				return (
 					<div
 						key={feature.title}
-						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
+						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-secondary/40 hover:shadow-xl hover:shadow-secondary/10 ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
 					>
-						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-							<Icon className="h-6 w-6 text-primary" />
+						<div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 ring-2 ring-primary/20">
+							<Icon className="h-7 w-7 text-primary" />
 						</div>
 						<h4 className="font-display text-xl">{feature.title}</h4>
 						<p className="text-sm leading-relaxed text-muted-foreground">
@@ -272,7 +272,7 @@ export function FeaturesSection() {
 	return (
 		<section
 			id="features"
-			className="relative bg-background py-20 sm:py-28 lg:py-36"
+			className="relative bg-background py-24 sm:py-32 lg:py-40"
 		>
 			<div className="container mx-auto px-4">
 				{/* Section header */}

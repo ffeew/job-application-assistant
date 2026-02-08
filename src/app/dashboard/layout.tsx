@@ -113,8 +113,10 @@ export default function DashboardLayout({
 				} transition-transform duration-200 ease-in-out md:translate-x-0`}
 			>
 				<div className="flex flex-col h-full">
-					<div className="flex items-center justify-between px-6 py-4 border-b">
-						<h1 className="text-xl font-bold">Job Assistant</h1>
+					<div className="flex items-center justify-between px-6 py-5 border-b border-border/60">
+						<h1 className="text-xl font-bold tracking-tight">
+							Job <span className="text-secondary">Assistant</span>
+						</h1>
 						<ThemeToggle />
 					</div>
 
@@ -125,10 +127,10 @@ export default function DashboardLayout({
 								<Link
 									key={item.name}
 									href={item.href}
-									className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+									className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
 										isActive
-											? "bg-primary text-primary-foreground"
-											: "text-muted-foreground hover:text-foreground hover:bg-muted"
+											? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+											: "text-muted-foreground hover:text-foreground hover:bg-accent"
 									}`}
 									onClick={() => setSidebarOpen(false)}
 								>
