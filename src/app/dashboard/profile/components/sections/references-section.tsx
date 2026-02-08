@@ -176,7 +176,7 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} placeholder="John Smith" />{errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title</Label><Input id="title" {...register("title")} placeholder="Senior Manager" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="company">Company</Label><Input id="company" {...register("company")} placeholder="Tech Corp" /></div>

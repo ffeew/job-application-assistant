@@ -380,7 +380,7 @@ function ProfileForm({
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="space-y-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Basic Information

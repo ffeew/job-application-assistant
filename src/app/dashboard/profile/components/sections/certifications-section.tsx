@@ -182,7 +182,7 @@ function CertificationForm({ certification, onSuccess, onCancel }: { certificati
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="name">Certification Name *</Label><Input id="name" {...register("name")} placeholder="AWS Solutions Architect" />{errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="issuingOrganization">Issuing Organization *</Label><Input id="issuingOrganization" {...register("issuingOrganization")} placeholder="Amazon Web Services" />{errors.issuingOrganization && <p className="text-red-500 text-sm">{errors.issuingOrganization.message}</p>}</div>
 			<div className="grid grid-cols-2 gap-4">

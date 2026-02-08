@@ -101,7 +101,7 @@ export function ProfileSidebar({ counts, onImportPreview }: ProfileSidebarProps)
 	};
 
 	return (
-		<div className="flex h-full w-64 flex-col border-r bg-muted/30">
+		<div className="flex h-full w-64 flex-col border-r bg-muted/40">
 			<div className="p-4 border-b">
 				<h2 className="text-lg font-semibold">Profile</h2>
 				<p className="text-sm text-muted-foreground">Manage your information</p>

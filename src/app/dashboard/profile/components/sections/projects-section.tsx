@@ -196,7 +196,7 @@ function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectRespon
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Project Name" />{errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="description">Description</Label><Textarea id="description" {...register("description")} placeholder="What does this project do?" rows={3} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="technologies">Technologies</Label><Input id="technologies" {...register("technologies")} placeholder="React, Node.js, PostgreSQL" /><p className="text-xs text-muted-foreground">Separate with commas</p></div>

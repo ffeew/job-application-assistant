@@ -317,7 +317,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillResponse | nul
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="name">Skill Name *</Label>
 				<Input id="name" {...register("name")} placeholder="React" />

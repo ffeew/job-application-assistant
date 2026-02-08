@@ -178,7 +178,7 @@ function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: A
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Best Innovation Award" />{errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="organization">Organization</Label><Input id="organization" {...register("organization")} placeholder="Company or Institution" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="date">Date</Label><Input id="date" type="month" {...register("date")} /></div>

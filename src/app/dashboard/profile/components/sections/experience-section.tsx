@@ -427,7 +427,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="space-y-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
