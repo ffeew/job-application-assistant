@@ -24,6 +24,7 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
 import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
 import { generateResumeSchema } from "@/app/api/profile/validators";
@@ -85,6 +86,7 @@ export default function GenerateResumePage() {
 			// PDF download is handled automatically in the hook
 		} catch (error) {
 			console.error("Error generating resume:", error);
+			toast.error(error instanceof Error ? error.message : "Error generating resume. Please try again.");
 		}
 	};
 
@@ -95,6 +97,7 @@ export default function GenerateResumePage() {
 			setPreviewHTML(html);
 		} catch (error) {
 			console.error("Error generating preview:", error);
+			toast.error(error instanceof Error ? error.message : "Error generating preview. Please try again.");
 		}
 	};
 
