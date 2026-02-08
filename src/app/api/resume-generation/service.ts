@@ -222,6 +222,14 @@ export class ResumeGenerationService {
 
         // Filter resume data based on AI selection
         filteredResumeData = this.applyIntelligentSelection(resumeData, aiSelection);
+        console.log('[Resume Gen] Filtered data counts:', {
+          workExperiences: filteredResumeData.workExperiences.length,
+          education: filteredResumeData.education.length,
+          skills: filteredResumeData.skills.length,
+          projects: filteredResumeData.projects.length,
+          certifications: filteredResumeData.certifications.length,
+          achievements: filteredResumeData.achievements.length,
+        });
       } catch (error) {
         console.error('Error with AI content selection, falling back to manual/default selection:', error);
         // Fall through to manual selection

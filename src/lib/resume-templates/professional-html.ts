@@ -102,7 +102,7 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
       max-width: 8.27in;
       min-height: 11.69in;
       margin: 0 auto;
-      padding: 0;
+      padding: 0.5in;
       font-family: 'Georgia', serif;
       font-size: 11px;
       line-height: 1.4;

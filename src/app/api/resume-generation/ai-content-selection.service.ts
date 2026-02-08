@@ -128,7 +128,20 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         temperature: 0.2,
       });
 
-      return this.validateAndFormatSelection(output, profileData);
+      const validated = this.validateAndFormatSelection(output, profileData);
+
+      // If AI returned bad IDs and filtering produced empty results, use fallback
+      const hasContent = validated.selectedWorkExperiences.length > 0
+        || validated.selectedEducation.length > 0
+        || validated.selectedSkills.length > 0
+        || validated.selectedProjects.length > 0;
+
+      if (!hasContent) {
+        console.warn('[AI Selection] All IDs filtered out — AI likely returned invalid IDs. Using fallback.');
+        return this.getFallbackSelection(profileData, maxWorkExperiences, maxProjects, maxSkills);
+      }
+
+      return validated;
     } catch (error) {
       console.error("Error selecting optimal content:", error);
       // Return fallback selection
@@ -216,9 +229,11 @@ SELECTION LIMITS:
 
 Analyze the profile content and select the most relevant items for this job application. For each selected item, provide a relevance score (0-100), reasoning, and matched keywords.
 
+CRITICAL: Each ID array must contain INDIVIDUAL numeric IDs as separate elements. For example, to select items with ID 2 and ID 3, return [2, 3] — NOT [23]. Each number in the array is one item's ID.
+
 Prioritize:
 1. Direct skill matches
-2. Relevant work experience 
+2. Relevant work experience
 3. Industry/domain experience
 4. Seniority-appropriate content
 5. Recent and significant achievements
@@ -238,6 +253,23 @@ Be selective - quality over quantity. Choose items that directly support the app
     const validProjectIds = profileData.projects.map(project => project.id);
     const validCertIds = profileData.certifications.map(cert => cert.id);
     const validAchievementIds = profileData.achievements.map(ach => ach.id);
+
+    console.log('[AI Selection] Raw AI IDs:', {
+      workExperiences: selection.selectedWorkExperiences,
+      education: selection.selectedEducation,
+      skills: selection.selectedSkills,
+      projects: selection.selectedProjects,
+      certifications: selection.selectedCertifications,
+      achievements: selection.selectedAchievements,
+    });
+    console.log('[AI Selection] Valid profile IDs:', {
+      workExperiences: validWorkIds,
+      education: validEducationIds,
+      skills: validSkillIds,
+      projects: validProjectIds,
+      certifications: validCertIds,
+      achievements: validAchievementIds,
+    });
 
     return {
       selectedWorkExperiences: selection.selectedWorkExperiences
