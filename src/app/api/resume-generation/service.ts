@@ -106,7 +106,7 @@ export class ResumeGenerationService {
       // Generate PDF with specific settings for resume
       // Use zero margins - let the HTML/CSS control the layout to match preview
       const pdfBuffer = await page.pdf({
-        format: 'letter',
+        format: 'A4',
         margin: {
           top: '0',
           bottom: '0',

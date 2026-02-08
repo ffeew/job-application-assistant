@@ -211,7 +211,7 @@ export default function GenerateResumePage() {
 								</CardDescription>
 							</CardHeader>
 							<CardContent className="space-y-4">
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="title">Resume Title</Label>
 									<Input
 										id="title"
@@ -219,13 +219,13 @@ export default function GenerateResumePage() {
 										placeholder="e.g., Software Engineer Resume"
 									/>
 									{errors.title && (
-										<p className="text-red-500 text-sm mt-1">
+										<p className="text-red-500 text-sm">
 											{errors.title.message}
 										</p>
 									)}
 								</div>
 
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label>Template</Label>
 									<select
 										{...register("template")}
