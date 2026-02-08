@@ -121,7 +121,7 @@ export default function DashboardLayout({
 						<ThemeToggle />
 					</div>
 
-					<nav className="flex-1 px-3 py-6 space-y-1">
+					<nav className="flex-1 flex flex-col px-3 py-6 gap-1">
 						{navigation.map((item) => {
 							const isActive = pathname === item.href;
 							return (

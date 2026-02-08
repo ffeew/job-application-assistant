@@ -78,46 +78,52 @@ function CoverLetterPreview() {
 	);
 }
 
+interface KanbanCardProps {
+	titleWidth: string;
+	detailWidth: string;
+}
+
+function KanbanCard({ titleWidth, detailWidth }: KanbanCardProps) {
+	return (
+		<div className="rounded-md border border-border/60 bg-card p-2">
+			<div className={`h-2 ${titleWidth} rounded bg-foreground/60`} />
+			<div className={`mt-1 h-1.5 ${detailWidth} rounded bg-muted-foreground/30`} />
+		</div>
+	);
+}
+
+interface KanbanColumnProps {
+	title: string;
+	titleColor: string;
+	children: React.ReactNode;
+}
+
+function KanbanColumn({ title, titleColor, children }: KanbanColumnProps) {
+	return (
+		<div className="flex flex-1 flex-col gap-2">
+			<div className={`rounded-md px-2 py-1 text-[10px] font-medium ${titleColor}`}>
+				{title}
+			</div>
+			<div className="flex flex-col gap-1.5">
+				{children}
+			</div>
+		</div>
+	);
+}
+
 function ApplicationTrackerPreview() {
 	return (
 		<div className="flex gap-2">
-			<div className="flex flex-1 flex-col gap-2">
-				<div className="rounded-md bg-muted/50 px-2 py-1 text-center text-[10px] font-medium text-muted-foreground">
-					Applied
-				</div>
-				<div className="flex flex-col gap-1.5">
-					<div className="rounded-md border border-border/60 bg-card p-2">
-						<div className="h-2 w-12 rounded bg-foreground/60" />
-						<div className="mt-1 h-1.5 w-8 rounded bg-muted-foreground/30" />
-					</div>
-					<div className="rounded-md border border-border/60 bg-card p-2">
-						<div className="h-2 w-10 rounded bg-foreground/60" />
-						<div className="mt-1 h-1.5 w-9 rounded bg-muted-foreground/30" />
-					</div>
-				</div>
-			</div>
-			<div className="flex flex-1 flex-col gap-2">
-				<div className="rounded-md bg-amber-500/15 px-2 py-1 text-center text-[10px] font-medium text-amber-600 dark:text-amber-400">
-					Interview
-				</div>
-				<div className="flex flex-col gap-1.5">
-					<div className="rounded-md border border-amber-500/30 bg-card p-2">
-						<div className="h-2 w-11 rounded bg-foreground/60" />
-						<div className="mt-1 h-1.5 w-7 rounded bg-muted-foreground/30" />
-					</div>
-				</div>
-			</div>
-			<div className="flex flex-1 flex-col gap-2">
-				<div className="rounded-md bg-emerald-500/15 px-2 py-1 text-center text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-					Offer
-				</div>
-				<div className="flex flex-col gap-1.5">
-					<div className="rounded-md border border-emerald-500/30 bg-card p-2">
-						<div className="h-2 w-9 rounded bg-foreground/60" />
-						<div className="mt-1 h-1.5 w-6 rounded bg-muted-foreground/30" />
-					</div>
-				</div>
-			</div>
+			<KanbanColumn title="Applied" titleColor="bg-muted/50 text-center text-muted-foreground">
+				<KanbanCard titleWidth="w-12" detailWidth="w-8" />
+				<KanbanCard titleWidth="w-10" detailWidth="w-9" />
+			</KanbanColumn>
+			<KanbanColumn title="Interview" titleColor="bg-amber-500/15 text-center text-amber-600 dark:text-amber-400">
+				<KanbanCard titleWidth="w-11" detailWidth="w-7" />
+			</KanbanColumn>
+			<KanbanColumn title="Offer" titleColor="bg-emerald-500/15 text-center text-emerald-600 dark:text-emerald-400">
+				<KanbanCard titleWidth="w-9" detailWidth="w-6" />
+			</KanbanColumn>
 		</div>
 	);
 }

@@ -13,6 +13,7 @@ import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-c
 import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-update-work-experience";
 import { createWorkExperienceSchema } from "@/app/api/profile/validators";
 import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface WorkExperienceFormProps {
   experience?: WorkExperienceResponse;
@@ -107,9 +108,7 @@ export function WorkExperienceForm({
                 {...register("jobTitle")}
                 placeholder="Software Engineer"
               />
-              {errors.jobTitle && (
-                <p className="text-red-500 text-sm mt-1">{errors.jobTitle.message}</p>
-              )}
+              <FormFieldError message={errors.jobTitle?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="company">Company *</Label>
@@ -118,9 +117,7 @@ export function WorkExperienceForm({
                 {...register("company")}
                 placeholder="Tech Corp"
               />
-              {errors.company && (
-                <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
-              )}
+              <FormFieldError message={errors.company?.message} />
             </div>
           </div>
 
@@ -131,9 +128,7 @@ export function WorkExperienceForm({
               {...register("location")}
               placeholder="San Francisco, CA"
             />
-            {errors.location && (
-              <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
-            )}
+            <FormFieldError message={errors.location?.message} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,9 +139,7 @@ export function WorkExperienceForm({
                 type="month"
                 {...register("startDate")}
               />
-              {errors.startDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
-              )}
+              <FormFieldError message={errors.startDate?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
@@ -156,9 +149,7 @@ export function WorkExperienceForm({
                 {...register("endDate")}
                 disabled={isCurrent}
               />
-              {errors.endDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.endDate.message}</p>
-              )}
+              <FormFieldError message={errors.endDate?.message} />
             </div>
           </div>
 
@@ -185,9 +176,7 @@ export function WorkExperienceForm({
               placeholder="Describe your responsibilities and achievements..."
               rows={4}
             />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-            )}
+            <FormFieldError message={errors.description?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -197,9 +186,7 @@ export function WorkExperienceForm({
               {...register("technologies")}
               placeholder="React, Node.js, Python, AWS"
             />
-            {errors.technologies && (
-              <p className="text-red-500 text-sm mt-1">{errors.technologies.message}</p>
-            )}
+            <FormFieldError message={errors.technologies?.message} />
           </div>
 
           <div className="flex justify-end gap-3">

@@ -13,6 +13,7 @@ import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
 import { createEducationSchema } from "@/app/api/profile/validators";
 import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface EducationFormProps {
   education?: EducationResponse;
@@ -107,9 +108,7 @@ export function EducationForm({
                 {...register("degree")}
                 placeholder="Bachelor of Science"
               />
-              {errors.degree && (
-                <p className="text-red-500 text-sm mt-1">{errors.degree.message}</p>
-              )}
+              <FormFieldError message={errors.degree?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="fieldOfStudy">Field of Study</Label>
@@ -118,9 +117,7 @@ export function EducationForm({
                 {...register("fieldOfStudy")}
                 placeholder="Computer Science"
               />
-              {errors.fieldOfStudy && (
-                <p className="text-red-500 text-sm mt-1">{errors.fieldOfStudy.message}</p>
-              )}
+              <FormFieldError message={errors.fieldOfStudy?.message} />
             </div>
           </div>
 
@@ -132,9 +129,7 @@ export function EducationForm({
                 {...register("institution")}
                 placeholder="University of California"
               />
-              {errors.institution && (
-                <p className="text-red-500 text-sm mt-1">{errors.institution.message}</p>
-              )}
+              <FormFieldError message={errors.institution?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="location">Location</Label>
@@ -143,9 +138,7 @@ export function EducationForm({
                 {...register("location")}
                 placeholder="Berkeley, CA"
               />
-              {errors.location && (
-                <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
-              )}
+              <FormFieldError message={errors.location?.message} />
             </div>
           </div>
 
@@ -157,9 +150,7 @@ export function EducationForm({
                 type="month"
                 {...register("startDate")}
               />
-              {errors.startDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
-              )}
+              <FormFieldError message={errors.startDate?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
@@ -168,9 +159,7 @@ export function EducationForm({
                 type="month"
                 {...register("endDate")}
               />
-              {errors.endDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.endDate.message}</p>
-              )}
+              <FormFieldError message={errors.endDate?.message} />
             </div>
           </div>
 
@@ -182,9 +171,7 @@ export function EducationForm({
                 {...register("gpa")}
                 placeholder="3.8/4.0"
               />
-              {errors.gpa && (
-                <p className="text-red-500 text-sm mt-1">{errors.gpa.message}</p>
-              )}
+              <FormFieldError message={errors.gpa?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="honors">Honors</Label>
@@ -193,9 +180,7 @@ export function EducationForm({
                 {...register("honors")}
                 placeholder="Magna Cum Laude"
               />
-              {errors.honors && (
-                <p className="text-red-500 text-sm mt-1">{errors.honors.message}</p>
-              )}
+              <FormFieldError message={errors.honors?.message} />
             </div>
           </div>
 
@@ -207,9 +192,7 @@ export function EducationForm({
               placeholder="Data Structures, Algorithms, Software Engineering..."
               rows={2}
             />
-            {errors.relevantCoursework && (
-              <p className="text-red-500 text-sm mt-1">{errors.relevantCoursework.message}</p>
-            )}
+            <FormFieldError message={errors.relevantCoursework?.message} />
           </div>
 
           <div className="flex justify-end gap-3">

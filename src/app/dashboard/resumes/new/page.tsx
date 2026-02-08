@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useCreateResume } from "@/app/dashboard/resumes/mutations/use-create-resume";
 import type { CreateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
@@ -134,9 +135,7 @@ export default function NewResumePage() {
                   placeholder="e.g., Software Engineer Resume"
                   {...register("title", { required: "Title is required" })}
                 />
-                {errors.title && (
-                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-                )}
+                <FormFieldError message={errors.title?.message} />
               </div>
               <div className="flex items-center gap-2">
                 <input

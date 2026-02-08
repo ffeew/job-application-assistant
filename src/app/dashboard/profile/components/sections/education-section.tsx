@@ -43,6 +43,7 @@ import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
 import { createEducationSchema } from "@/app/api/profile/validators";
 import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
@@ -299,7 +300,7 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="degree">Degree *</Label>
 					<Input id="degree" {...register("degree")} placeholder="Bachelor of Science" />
-					{errors.degree && <p className="text-red-500 text-sm">{errors.degree.message}</p>}
+					<FormFieldError message={errors.degree?.message} />
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="fieldOfStudy">Field of Study</Label>
@@ -310,7 +311,7 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="institution">Institution *</Label>
 					<Input id="institution" {...register("institution")} placeholder="University" />
-					{errors.institution && <p className="text-red-500 text-sm">{errors.institution.message}</p>}
+					<FormFieldError message={errors.institution?.message} />
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="location">Location</Label>

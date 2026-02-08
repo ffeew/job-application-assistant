@@ -39,6 +39,7 @@ import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-ski
 import { useDeleteSkill } from "@/app/dashboard/profile/mutations/use-delete-skill";
 import { createSkillSchema } from "@/app/api/profile/validators";
 import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
@@ -128,7 +129,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="flex flex-col gap-6">
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-2xl font-bold flex items-center gap-2">
@@ -200,7 +201,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 
 				{/* Skills grouped by category */}
 				{Object.keys(skillsByCategory).length > 0 && (
-					<div className="space-y-6">
+					<div className="flex flex-col gap-6">
 						{Object.entries(skillsByCategory).map(([category, categorySkills]) => {
 							const categoryLabel = skillCategories.find((c) => c.value === category)?.label || category;
 							return (
@@ -322,7 +323,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillResponse | nul
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="name">Skill Name *</Label>
 				<Input id="name" {...register("name")} placeholder="React" />
-				{errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+				<FormFieldError message={errors.name?.message} />
 			</div>
 
 			<div className="flex flex-col gap-2">

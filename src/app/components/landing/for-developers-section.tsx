@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
 	Layers,
 	Code,
@@ -67,34 +71,27 @@ const steps = [
 ];
 
 export function ForDevelopersSection() {
-	const [isOpen, setIsOpen] = useState(false);
-
 	return (
 		<section className="border-t border-border/60 bg-muted/10 py-16 sm:py-20">
 			<div className="container mx-auto px-4">
-				<button
-					onClick={() => setIsOpen(!isOpen)}
-					className="group mx-auto flex w-full max-w-3xl items-center justify-between rounded-2xl border border-border/60 bg-background px-6 py-5 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-md"
-				>
-					<div className="flex items-center gap-4">
-						<Badge
-							variant="secondary"
-							className="rounded-full px-3 py-1 text-xs uppercase tracking-wider"
-						>
-							Developers
-						</Badge>
-						<span className="font-bold text-xl tracking-tight md:text-2xl">
-							Built for developers
-						</span>
-					</div>
-					<ChevronDown
-						className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-					/>
-				</button>
-
-				<div
-					className={`mx-auto max-w-5xl overflow-hidden transition-all duration-500 ${isOpen ? "mt-10 max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}`}
-				>
+				<Collapsible>
+					<CollapsibleTrigger asChild>
+						<button className="group mx-auto flex w-full max-w-3xl items-center justify-between rounded-2xl border border-border/60 bg-background px-6 py-5 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-md">
+							<div className="flex items-center gap-4">
+								<Badge
+									variant="secondary"
+									className="rounded-full px-3 py-1 text-xs uppercase tracking-wider"
+								>
+									Developers
+								</Badge>
+								<span className="font-bold text-xl tracking-tight md:text-2xl">
+									Built for developers
+								</span>
+							</div>
+							<ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+						</button>
+					</CollapsibleTrigger>
+					<CollapsibleContent className="mx-auto mt-10 max-w-5xl">
 					{/* Tech stack grid */}
 					<div className="mb-10">
 						<h3 className="mb-6 text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -163,7 +160,8 @@ export function ForDevelopersSection() {
 							})}
 						</div>
 					</div>
-				</div>
+					</CollapsibleContent>
+				</Collapsible>
 			</div>
 		</section>
 	);

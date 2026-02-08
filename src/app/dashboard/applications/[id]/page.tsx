@@ -25,6 +25,7 @@ import {
 import { ArrowLeft, Save, FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useApplication } from "@/app/dashboard/applications/queries/use-applications";
 import { useUpdateApplication } from "@/app/dashboard/applications/mutations/use-update-application";
 import { updateApplicationSchema } from "@/app/api/applications/validators";
@@ -180,11 +181,7 @@ export default function EditApplicationPage({
 										placeholder="e.g., Google"
 										{...register("company")}
 									/>
-									{errors.company && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.company.message}
-										</p>
-									)}
+									<FormFieldError message={errors.company?.message} />
 								</div>
 								<div className="flex flex-col gap-2">
 									<Label htmlFor="position">Position *</Label>
@@ -193,11 +190,7 @@ export default function EditApplicationPage({
 										placeholder="e.g., Software Engineer"
 										{...register("position")}
 									/>
-									{errors.position && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.position.message}
-										</p>
-									)}
+									<FormFieldError message={errors.position?.message} />
 								</div>
 							</div>
 							<div className="grid grid-cols-2 gap-4">
@@ -226,11 +219,7 @@ export default function EditApplicationPage({
 											</Select>
 										)}
 									/>
-									{errors.status && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.status.message}
-										</p>
-									)}
+									<FormFieldError message={errors.status?.message} />
 								</div>
 								<div className="flex flex-col gap-2">
 									<Label htmlFor="appliedAt">Application Date</Label>
@@ -239,11 +228,7 @@ export default function EditApplicationPage({
 										type="date"
 										{...register("appliedAt")}
 									/>
-									{errors.appliedAt && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.appliedAt.message}
-										</p>
-									)}
+									<FormFieldError message={errors.appliedAt?.message} />
 								</div>
 							</div>
 						</CardContent>
@@ -261,11 +246,7 @@ export default function EditApplicationPage({
 									placeholder="e.g., San Francisco, CA"
 									{...register("location")}
 								/>
-								{errors.location && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.location.message}
-									</p>
-								)}
+								<FormFieldError message={errors.location?.message} />
 							</div>
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="notes">Notes</Label>
@@ -275,11 +256,7 @@ export default function EditApplicationPage({
 									{...register("notes")}
 									rows={4}
 								/>
-								{errors.notes && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.notes.message}
-									</p>
-								)}
+								<FormFieldError message={errors.notes?.message} />
 							</div>
 						</CardContent>
 					</Card>

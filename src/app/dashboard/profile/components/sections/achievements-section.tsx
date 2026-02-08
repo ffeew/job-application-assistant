@@ -16,6 +16,7 @@ import { useUpdateAchievement } from "@/app/dashboard/profile/mutations/use-upda
 import { useDeleteAchievement } from "@/app/dashboard/profile/mutations/use-delete-achievement";
 import { createAchievementSchema } from "@/app/api/profile/validators";
 import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
@@ -180,7 +181,7 @@ function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: A
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
-			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Best Innovation Award" />{errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}</div>
+			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Best Innovation Award" /><FormFieldError message={errors.title?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="organization">Organization</Label><Input id="organization" {...register("organization")} placeholder="Company or Institution" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="date">Date</Label><Input id="date" type="month" {...register("date")} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="description">Description</Label><Textarea id="description" {...register("description")} placeholder="Describe your achievement..." rows={3} /></div>

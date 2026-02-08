@@ -33,6 +33,7 @@ import {
 import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useResumeGenerationStore } from "@/app/dashboard/resumes/store/use-resume-generation-store";
 import { downloadPDF } from "@/lib/utils";
 
@@ -248,11 +249,7 @@ export default function GenerateResumePage() {
 										{...register("title")}
 										placeholder="e.g., Software Engineer Resume"
 									/>
-									{errors.title && (
-										<p className="text-red-500 text-sm">
-											{errors.title.message}
-										</p>
-									)}
+									<FormFieldError message={errors.title?.message} />
 								</div>
 
 								<div className="flex flex-col gap-2">

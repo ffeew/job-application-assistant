@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+          <CardHeader>
             <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
             <CardDescription>
               We&apos;ve sent a password reset link to your email address
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader>
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
           <CardDescription>
             Enter your email address and we&apos;ll send you a link to reset your password

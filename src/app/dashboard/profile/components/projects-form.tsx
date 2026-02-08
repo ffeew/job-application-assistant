@@ -13,6 +13,7 @@ import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-p
 import { useUpdateProject } from "@/app/dashboard/profile/mutations/use-update-project";
 import { createProjectSchema } from "@/app/api/profile/validators";
 import type { ProjectResponse, CreateProjectRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface ProjectsFormProps {
   project?: ProjectResponse;
@@ -105,9 +106,7 @@ export function ProjectsForm({
               {...register("title")}
               placeholder="E-commerce Web Application"
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-            )}
+            <FormFieldError message={errors.title?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -118,9 +117,7 @@ export function ProjectsForm({
               placeholder="Describe the project, its purpose, and your role..."
               rows={3}
             />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-            )}
+            <FormFieldError message={errors.description?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -130,18 +127,14 @@ export function ProjectsForm({
               {...register("technologies")}
               placeholder="React, Node.js, MongoDB, AWS"
             />
-            {errors.technologies && (
-              <p className="text-red-500 text-sm mt-1">{errors.technologies.message}</p>
-            )}
+            <FormFieldError message={errors.technologies?.message} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input id="startDate" type="month" {...register("startDate")} />
-              {errors.startDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
-              )}
+              <FormFieldError message={errors.startDate?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
@@ -151,9 +144,7 @@ export function ProjectsForm({
                 {...register("endDate")}
                 disabled={isOngoing}
               />
-              {errors.endDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.endDate.message}</p>
-              )}
+              <FormFieldError message={errors.endDate?.message} />
             </div>
           </div>
 
@@ -181,9 +172,7 @@ export function ProjectsForm({
                 {...register("projectUrl")}
                 placeholder="https://myproject.com"
               />
-              {errors.projectUrl && (
-                <p className="text-red-500 text-sm mt-1">{errors.projectUrl.message}</p>
-              )}
+              <FormFieldError message={errors.projectUrl?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="githubUrl">GitHub URL</Label>
@@ -193,9 +182,7 @@ export function ProjectsForm({
                 {...register("githubUrl")}
                 placeholder="https://github.com/username/project"
               />
-              {errors.githubUrl && (
-                <p className="text-red-500 text-sm mt-1">{errors.githubUrl.message}</p>
-              )}
+              <FormFieldError message={errors.githubUrl?.message} />
             </div>
           </div>
 

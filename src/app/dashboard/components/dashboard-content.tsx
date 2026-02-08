@@ -70,7 +70,7 @@ export function DashboardContent() {
 
   if (isError) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -88,7 +88,7 @@ export function DashboardContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -233,7 +233,7 @@ export function DashboardContent() {
               <p className="text-sm">Start by creating a resume or adding a job application!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {activity.map((activityItem) => {
                 const IconComponent = getActivityIcon(activityItem.type);
                 const iconColor = getActivityIconColor(activityItem.type, activityItem.action);

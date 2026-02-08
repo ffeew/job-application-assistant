@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useCreateApplication } from "@/app/dashboard/applications/mutations/use-create-application";
 import { createApplicationSchema } from "@/app/api/applications/validators";
 import type { CreateApplicationRequest } from "@/app/api/applications/validators";
@@ -91,9 +92,7 @@ export default function NewApplicationPage() {
                     placeholder="e.g., Google"
                     {...register("company")}
                   />
-                  {errors.company && (
-                    <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
-                  )}
+                  <FormFieldError message={errors.company?.message} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="position">Position *</Label>
@@ -102,9 +101,7 @@ export default function NewApplicationPage() {
                     placeholder="e.g., Software Engineer"
                     {...register("position")}
                   />
-                  {errors.position && (
-                    <p className="text-red-500 text-sm mt-1">{errors.position.message}</p>
-                  )}
+                  <FormFieldError message={errors.position?.message} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -115,9 +112,7 @@ export default function NewApplicationPage() {
                     placeholder="e.g., San Francisco, CA"
                     {...register("location")}
                   />
-                  {errors.location && (
-                    <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
-                  )}
+                  <FormFieldError message={errors.location?.message} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="salaryRange">Salary Range</Label>
@@ -126,9 +121,7 @@ export default function NewApplicationPage() {
                     placeholder="e.g., $100k - $130k"
                     {...register("salaryRange")}
                   />
-                  {errors.salaryRange && (
-                    <p className="text-red-500 text-sm mt-1">{errors.salaryRange.message}</p>
-                  )}
+                  <FormFieldError message={errors.salaryRange?.message} />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -139,9 +132,7 @@ export default function NewApplicationPage() {
                   placeholder="https://..."
                   {...register("jobUrl")}
                 />
-                {errors.jobUrl && (
-                  <p className="text-red-500 text-sm mt-1">{errors.jobUrl.message}</p>
-                )}
+                <FormFieldError message={errors.jobUrl?.message} />
               </div>
             </CardContent>
           </Card>
@@ -175,9 +166,7 @@ export default function NewApplicationPage() {
                       </Select>
                     )}
                   />
-                  {errors.status && (
-                    <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
-                  )}
+                  <FormFieldError message={errors.status?.message} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="appliedAt">Application Date</Label>
@@ -186,9 +175,7 @@ export default function NewApplicationPage() {
                     type="date"
                     {...register("appliedAt")}
                   />
-                  {errors.appliedAt && (
-                    <p className="text-red-500 text-sm mt-1">{errors.appliedAt.message}</p>
-                  )}
+                  <FormFieldError message={errors.appliedAt?.message} />
                 </div>
               </div>
             </CardContent>
@@ -207,9 +194,7 @@ export default function NewApplicationPage() {
                 {...register("jobDescription")}
                 rows={8}
               />
-              {errors.jobDescription && (
-                <p className="text-red-500 text-sm mt-1">{errors.jobDescription.message}</p>
-              )}
+              <FormFieldError message={errors.jobDescription?.message} />
             </CardContent>
           </Card>
 
@@ -229,9 +214,7 @@ export default function NewApplicationPage() {
                     placeholder="e.g., John Smith"
                     {...register("contactName")}
                   />
-                  {errors.contactName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contactName.message}</p>
-                  )}
+                  <FormFieldError message={errors.contactName?.message} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="contactEmail">Contact Email</Label>
@@ -241,9 +224,7 @@ export default function NewApplicationPage() {
                     placeholder="john@company.com"
                     {...register("contactEmail")}
                   />
-                  {errors.contactEmail && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>
-                  )}
+                  <FormFieldError message={errors.contactEmail?.message} />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -253,9 +234,7 @@ export default function NewApplicationPage() {
                   placeholder="e.g., LinkedIn profile or name"
                   {...register("recruiterId")}
                 />
-                {errors.recruiterId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.recruiterId.message}</p>
-                )}
+                <FormFieldError message={errors.recruiterId?.message} />
               </div>
             </CardContent>
           </Card>
@@ -273,9 +252,7 @@ export default function NewApplicationPage() {
                 {...register("notes")}
                 rows={4}
               />
-              {errors.notes && (
-                <p className="text-red-500 text-sm mt-1">{errors.notes.message}</p>
-              )}
+              <FormFieldError message={errors.notes?.message} />
             </CardContent>
           </Card>
 

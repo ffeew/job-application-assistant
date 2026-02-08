@@ -32,6 +32,7 @@ import type {
 	UserProfileResponse,
 } from "@/app/api/profile/validators";
 import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
@@ -281,7 +282,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	return (
 		<Card>
-			<CardHeader className="space-y-4">
+			<CardHeader className="flex flex-col gap-4">
 				<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 					<CardTitle className="flex items-center gap-2">
 						<User className="h-5 w-5" />
@@ -321,7 +322,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 		{profileDraft.warnings.length > 0 && (
 			<div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-500/60 dark:bg-yellow-950/70 dark:text-yellow-100">
 				<p className="font-semibold">Check the imported details:</p>
-				<ul className="mt-2 list-disc space-y-1 pl-4">
+				<ul className="mt-2 flex list-disc flex-col gap-1 pl-4">
 					{profileDraft.warnings.map((warning) => (
 						<li key={warning}>{warning}</li>
 					))}
@@ -334,13 +335,13 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 				<p className="mt-1 text-xs text-muted-foreground">
 					Nothing has been saved yet. Review the summary below, then switch to each tab to edit and store the entries you want to keep.
 				</p>
-				<div className="mt-3 space-y-3">
+				<div className="mt-3 flex flex-col gap-3">
 					{previewSections.map((section) => (
 						<div key={section.label}>
 							<p className="text-xs font-semibold uppercase tracking-wide text-foreground">
 								{section.label} ({section.items.length})
 							</p>
-							<ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+							<ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-xs text-muted-foreground">
 								{section.items.slice(0, 3).map((item, index) => (
 									<li key={`${section.label}-${index}`}>{item}</li>
 								))}
@@ -366,11 +367,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("firstName")}
 								placeholder="John"
 							/>
-							{errors.firstName && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.firstName.message}
-								</p>
-							)}
+							<FormFieldError message={errors.firstName?.message} />
 						</div>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="lastName">Last Name</Label>
@@ -379,11 +376,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("lastName")}
 								placeholder="Doe"
 							/>
-							{errors.lastName && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.lastName.message}
-								</p>
-							)}
+							<FormFieldError message={errors.lastName?.message} />
 						</div>
 					</div>
 
@@ -396,11 +389,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("email")}
 								placeholder="john.doe@example.com"
 							/>
-							{errors.email && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.email.message}
-								</p>
-							)}
+							<FormFieldError message={errors.email?.message} />
 						</div>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="phone">Phone</Label>
@@ -409,11 +398,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("phone")}
 								placeholder="+1 (555) 123-4567"
 							/>
-							{errors.phone && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.phone.message}
-								</p>
-							)}
+							<FormFieldError message={errors.phone?.message} />
 						</div>
 					</div>
 
@@ -424,31 +409,19 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 							{...register("address")}
 							placeholder="123 Main Street"
 						/>
-						{errors.address && (
-							<p className="text-red-500 text-sm mt-1">
-								{errors.address.message}
-							</p>
-						)}
+						<FormFieldError message={errors.address?.message} />
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="city">City</Label>
 							<Input id="city" {...register("city")} placeholder="New York" />
-							{errors.city && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.city.message}
-								</p>
-							)}
+							<FormFieldError message={errors.city?.message} />
 						</div>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="state">State/Province</Label>
 							<Input id="state" {...register("state")} placeholder="NY" />
-							{errors.state && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.state.message}
-								</p>
-							)}
+							<FormFieldError message={errors.state?.message} />
 						</div>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="zipCode">ZIP/Postal Code</Label>
@@ -457,11 +430,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("zipCode")}
 								placeholder="10001"
 							/>
-							{errors.zipCode && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.zipCode.message}
-								</p>
-							)}
+							<FormFieldError message={errors.zipCode?.message} />
 						</div>
 					</div>
 
@@ -472,11 +441,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 							{...register("country")}
 							placeholder="United States"
 						/>
-						{errors.country && (
-							<p className="text-red-500 text-sm mt-1">
-								{errors.country.message}
-							</p>
-						)}
+						<FormFieldError message={errors.country?.message} />
 					</div>
 
 					<div className="flex flex-col gap-4">
@@ -490,11 +455,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("linkedinUrl")}
 								placeholder="https://linkedin.com/in/johndoe"
 							/>
-							{errors.linkedinUrl && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.linkedinUrl.message}
-								</p>
-							)}
+							<FormFieldError message={errors.linkedinUrl?.message} />
 						</div>
 
 						<div className="flex flex-col gap-2">
@@ -505,11 +466,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("githubUrl")}
 								placeholder="https://github.com/johndoe"
 							/>
-							{errors.githubUrl && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.githubUrl.message}
-								</p>
-							)}
+							<FormFieldError message={errors.githubUrl?.message} />
 						</div>
 
 						<div className="flex flex-col gap-2">
@@ -520,11 +477,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 								{...register("portfolioUrl")}
 								placeholder="https://johndoe.com"
 							/>
-							{errors.portfolioUrl && (
-								<p className="text-red-500 text-sm mt-1">
-									{errors.portfolioUrl.message}
-								</p>
-							)}
+							<FormFieldError message={errors.portfolioUrl?.message} />
 						</div>
 					</div>
 
@@ -536,11 +489,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 							placeholder="Brief overview of your professional background, skills, and career objectives..."
 							rows={4}
 						/>
-						{errors.professionalSummary && (
-							<p className="text-red-500 text-sm mt-1">
-								{errors.professionalSummary.message}
-							</p>
-						)}
+						<FormFieldError message={errors.professionalSummary?.message} />
 					</div>
 
 					<div className="flex justify-end">

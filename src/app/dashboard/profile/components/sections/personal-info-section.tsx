@@ -35,6 +35,7 @@ import { useImportResume } from "@/app/dashboard/profile/mutations/use-import-re
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import type { CreateUserProfileRequest, UserProfileResponse } from "@/app/api/profile/validators";
 import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 
@@ -166,7 +167,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 	if (!profile) {
 		return (
 			<>
-				<div className="space-y-6">
+				<div className="flex flex-col gap-6">
 					<div>
 						<h1 className="text-2xl font-bold">Personal Information</h1>
 						<p className="text-muted-foreground">Your basic contact and professional information</p>
@@ -231,7 +232,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="flex flex-col gap-6">
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-2xl font-bold">Personal Information</h1>
@@ -249,7 +250,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 							<p className="font-semibold text-yellow-900 dark:text-yellow-100">
 								Check the imported details:
 							</p>
-							<ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-yellow-800 dark:text-yellow-200">
+							<ul className="mt-2 flex list-disc flex-col gap-1 pl-4 text-sm text-yellow-800 dark:text-yellow-200">
 								{profileDraft.warnings.map((warning) => (
 									<li key={warning}>{warning}</li>
 								))}
@@ -270,7 +271,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 							</CardDescription>
 						)}
 					</CardHeader>
-					<CardContent className="space-y-4">
+					<CardContent className="flex flex-col gap-4">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							{profile.email && (
 								<div className="flex items-center gap-2 text-sm">
@@ -381,7 +382,7 @@ function ProfileForm({
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Basic Information
 				</h3>
@@ -390,14 +391,14 @@ function ProfileForm({
 						<Label htmlFor="firstName">First Name</Label>
 						<Input id="firstName" {...register("firstName")} placeholder="John" />
 						{getErrorMessage("firstName") && (
-							<p className="text-red-500 text-sm">{getErrorMessage("firstName")}</p>
+							<FormFieldError message={getErrorMessage("firstName") ?? undefined} />
 						)}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="lastName">Last Name</Label>
 						<Input id="lastName" {...register("lastName")} placeholder="Doe" />
 						{getErrorMessage("lastName") && (
-							<p className="text-red-500 text-sm">{getErrorMessage("lastName")}</p>
+							<FormFieldError message={getErrorMessage("lastName") ?? undefined} />
 						)}
 					</div>
 				</div>
@@ -405,50 +406,50 @@ function ProfileForm({
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="email">Email</Label>
 						<Input id="email" type="email" {...register("email")} placeholder="john@example.com" />
-						{getErrorMessage("email") && <p className="text-red-500 text-sm">{getErrorMessage("email")}</p>}
+						{getErrorMessage("email") && <FormFieldError message={getErrorMessage("email") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="phone">Phone</Label>
 						<Input id="phone" {...register("phone")} placeholder="+1 (555) 123-4567" />
-						{getErrorMessage("phone") && <p className="text-red-500 text-sm">{getErrorMessage("phone")}</p>}
+						{getErrorMessage("phone") && <FormFieldError message={getErrorMessage("phone") ?? undefined} />}
 					</div>
 				</div>
 			</div>
 
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Location
 				</h3>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="address">Address</Label>
 					<Input id="address" {...register("address")} placeholder="123 Main Street" />
-					{getErrorMessage("address") && <p className="text-red-500 text-sm">{getErrorMessage("address")}</p>}
+					{getErrorMessage("address") && <FormFieldError message={getErrorMessage("address") ?? undefined} />}
 				</div>
 				<div className="grid grid-cols-3 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="city">City</Label>
 						<Input id="city" {...register("city")} placeholder="New York" />
-						{getErrorMessage("city") && <p className="text-red-500 text-sm">{getErrorMessage("city")}</p>}
+						{getErrorMessage("city") && <FormFieldError message={getErrorMessage("city") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="state">State</Label>
 						<Input id="state" {...register("state")} placeholder="NY" />
-						{getErrorMessage("state") && <p className="text-red-500 text-sm">{getErrorMessage("state")}</p>}
+						{getErrorMessage("state") && <FormFieldError message={getErrorMessage("state") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="zipCode">ZIP</Label>
 						<Input id="zipCode" {...register("zipCode")} placeholder="10001" />
-						{getErrorMessage("zipCode") && <p className="text-red-500 text-sm">{getErrorMessage("zipCode")}</p>}
+						{getErrorMessage("zipCode") && <FormFieldError message={getErrorMessage("zipCode") ?? undefined} />}
 					</div>
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="country">Country</Label>
 					<Input id="country" {...register("country")} placeholder="United States" />
-					{getErrorMessage("country") && <p className="text-red-500 text-sm">{getErrorMessage("country")}</p>}
+					{getErrorMessage("country") && <FormFieldError message={getErrorMessage("country") ?? undefined} />}
 				</div>
 			</div>
 
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Professional Links
 				</h3>
@@ -461,7 +462,7 @@ function ProfileForm({
 						placeholder="https://linkedin.com/in/johndoe"
 					/>
 					{getErrorMessage("linkedinUrl") && (
-						<p className="text-red-500 text-sm">{getErrorMessage("linkedinUrl")}</p>
+						<FormFieldError message={getErrorMessage("linkedinUrl") ?? undefined} />
 					)}
 				</div>
 				<div className="flex flex-col gap-2">
@@ -472,7 +473,7 @@ function ProfileForm({
 						{...register("githubUrl")}
 						placeholder="https://github.com/johndoe"
 					/>
-					{getErrorMessage("githubUrl") && <p className="text-red-500 text-sm">{getErrorMessage("githubUrl")}</p>}
+					{getErrorMessage("githubUrl") && <FormFieldError message={getErrorMessage("githubUrl") ?? undefined} />}
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="portfolioUrl">Portfolio URL</Label>
@@ -483,12 +484,12 @@ function ProfileForm({
 						placeholder="https://johndoe.com"
 					/>
 					{getErrorMessage("portfolioUrl") && (
-						<p className="text-red-500 text-sm">{getErrorMessage("portfolioUrl")}</p>
+						<FormFieldError message={getErrorMessage("portfolioUrl") ?? undefined} />
 					)}
 				</div>
 			</div>
 
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Professional Summary
 				</h3>
@@ -500,7 +501,7 @@ function ProfileForm({
 						rows={4}
 					/>
 					{getErrorMessage("professionalSummary") && (
-						<p className="text-red-500 text-sm">{getErrorMessage("professionalSummary")}</p>
+						<FormFieldError message={getErrorMessage("professionalSummary") ?? undefined} />
 					)}
 				</div>
 			</div>

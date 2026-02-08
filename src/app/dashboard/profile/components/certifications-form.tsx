@@ -12,6 +12,7 @@ import { useCreateCertification } from "@/app/dashboard/profile/mutations/use-cr
 import { useUpdateCertification } from "@/app/dashboard/profile/mutations/use-update-certification";
 import { createCertificationSchema } from "@/app/api/profile/validators";
 import type { CertificationResponse, CreateCertificationRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface CertificationsFormProps {
   certification?: CertificationResponse;
@@ -102,9 +103,7 @@ export function CertificationsForm({
                 {...register("name")}
                 placeholder="AWS Certified Solutions Architect"
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
+              <FormFieldError message={errors.name?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="issuingOrganization">Issuing Organization *</Label>
@@ -113,9 +112,7 @@ export function CertificationsForm({
                 {...register("issuingOrganization")}
                 placeholder="Amazon Web Services"
               />
-              {errors.issuingOrganization && (
-                <p className="text-red-500 text-sm mt-1">{errors.issuingOrganization.message}</p>
-              )}
+              <FormFieldError message={errors.issuingOrganization?.message} />
             </div>
           </div>
 
@@ -123,16 +120,12 @@ export function CertificationsForm({
             <div className="flex flex-col gap-2">
               <Label htmlFor="issueDate">Issue Date</Label>
               <Input id="issueDate" type="month" {...register("issueDate")} />
-              {errors.issueDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.issueDate.message}</p>
-              )}
+              <FormFieldError message={errors.issueDate?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="expirationDate">Expiration Date</Label>
               <Input id="expirationDate" type="month" {...register("expirationDate")} />
-              {errors.expirationDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.expirationDate.message}</p>
-              )}
+              <FormFieldError message={errors.expirationDate?.message} />
             </div>
           </div>
 
@@ -140,9 +133,7 @@ export function CertificationsForm({
             <div className="flex flex-col gap-2">
               <Label htmlFor="credentialId">Credential ID</Label>
               <Input id="credentialId" {...register("credentialId")} placeholder="ABC-12345" />
-              {errors.credentialId && (
-                <p className="text-red-500 text-sm mt-1">{errors.credentialId.message}</p>
-              )}
+              <FormFieldError message={errors.credentialId?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="credentialUrl">Credential URL</Label>
@@ -152,9 +143,7 @@ export function CertificationsForm({
                 {...register("credentialUrl")}
                 placeholder="https://example.com/credential"
               />
-              {errors.credentialUrl && (
-                <p className="text-red-500 text-sm mt-1">{errors.credentialUrl.message}</p>
-              )}
+              <FormFieldError message={errors.credentialUrl?.message} />
             </div>
           </div>
 

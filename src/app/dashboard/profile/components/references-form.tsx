@@ -12,6 +12,7 @@ import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
 import { createReferenceSchema } from "@/app/api/profile/validators";
 import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface ReferencesFormProps {
   reference?: ReferenceResponse;
@@ -98,16 +99,12 @@ export function ReferencesForm({
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Name *</Label>
               <Input id="name" {...register("name")} placeholder="Jane Smith" />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
+              <FormFieldError message={errors.name?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="title">Title</Label>
               <Input id="title" {...register("title")} placeholder="Engineering Manager" />
-              {errors.title && (
-                <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-              )}
+              <FormFieldError message={errors.title?.message} />
             </div>
           </div>
 
@@ -115,16 +112,12 @@ export function ReferencesForm({
             <div className="flex flex-col gap-2">
               <Label htmlFor="company">Company</Label>
               <Input id="company" {...register("company")} placeholder="Acme Corp" />
-              {errors.company && (
-                <p className="text-red-500 text-sm mt-1">{errors.company.message}</p>
-              )}
+              <FormFieldError message={errors.company?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="relationship">Relationship</Label>
               <Input id="relationship" {...register("relationship")} placeholder="Manager" />
-              {errors.relationship && (
-                <p className="text-red-500 text-sm mt-1">{errors.relationship.message}</p>
-              )}
+              <FormFieldError message={errors.relationship?.message} />
             </div>
           </div>
 
@@ -132,16 +125,12 @@ export function ReferencesForm({
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} placeholder="jane@example.com" />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-              )}
+              <FormFieldError message={errors.email?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" {...register("phone")} placeholder="+1 (555) 123-4567" />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-              )}
+              <FormFieldError message={errors.phone?.message} />
             </div>
           </div>
 

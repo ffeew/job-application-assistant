@@ -42,6 +42,7 @@ import type {
 	IntelligentContentSelection,
 } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { downloadPDF } from "@/lib/utils";
 
 export default function JobApplicationResumePage({
@@ -364,11 +365,7 @@ export default function JobApplicationResumePage({
 										{...register("title")}
 										placeholder="e.g., Software Engineer Resume - Google"
 									/>
-									{errors.title && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.title.message}
-										</p>
-									)}
+									<FormFieldError message={errors.title?.message} />
 								</div>
 
 								<div className="space-y-2">

@@ -47,6 +47,7 @@ import type {
 	WorkExperienceResponse,
 	CreateWorkExperienceRequest,
 } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
@@ -433,34 +434,26 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="jobTitle">Job Title *</Label>
 						<Input id="jobTitle" {...register("jobTitle")} placeholder="Software Engineer" />
-						{errors.jobTitle && (
-							<p className="text-red-500 text-sm">{errors.jobTitle.message}</p>
-						)}
+						<FormFieldError message={errors.jobTitle?.message} />
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="company">Company *</Label>
 						<Input id="company" {...register("company")} placeholder="Tech Corp" />
-						{errors.company && (
-							<p className="text-red-500 text-sm">{errors.company.message}</p>
-						)}
+						<FormFieldError message={errors.company?.message} />
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="location">Location</Label>
 					<Input id="location" {...register("location")} placeholder="San Francisco, CA" />
-					{errors.location && (
-						<p className="text-red-500 text-sm">{errors.location.message}</p>
-					)}
+					<FormFieldError message={errors.location?.message} />
 				</div>
 
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="startDate">Start Date *</Label>
 						<Input id="startDate" type="month" {...register("startDate")} />
-						{errors.startDate && (
-							<p className="text-red-500 text-sm">{errors.startDate.message}</p>
-						)}
+						<FormFieldError message={errors.startDate?.message} />
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="endDate">End Date</Label>
@@ -470,9 +463,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 							{...register("endDate")}
 							disabled={isCurrent}
 						/>
-						{errors.endDate && (
-							<p className="text-red-500 text-sm">{errors.endDate.message}</p>
-						)}
+						<FormFieldError message={errors.endDate?.message} />
 					</div>
 				</div>
 
@@ -500,9 +491,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 						placeholder="Describe your responsibilities and achievements..."
 						rows={4}
 					/>
-					{errors.description && (
-						<p className="text-red-500 text-sm">{errors.description.message}</p>
-					)}
+					<FormFieldError message={errors.description?.message} />
 				</div>
 
 				<div className="flex flex-col gap-2">
@@ -513,9 +502,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 						placeholder="React, Node.js, Python, AWS"
 					/>
 					<p className="text-xs text-muted-foreground">Separate with commas</p>
-					{errors.technologies && (
-						<p className="text-red-500 text-sm">{errors.technologies.message}</p>
-					)}
+					<FormFieldError message={errors.technologies?.message} />
 				</div>
 			</div>
 
@@ -561,16 +548,12 @@ function PendingEditForm({ initialValues, onSave, onCancel }: PendingEditFormPro
 				<div className="flex flex-col gap-1">
 					<Label htmlFor="pendingJobTitle" className="text-xs">Job Title</Label>
 					<Input id="pendingJobTitle" {...register("jobTitle")} className="h-8" />
-					{errors.jobTitle && (
-						<p className="text-red-500 text-xs">{errors.jobTitle.message}</p>
-					)}
+					<FormFieldError message={errors.jobTitle?.message} />
 				</div>
 				<div className="flex flex-col gap-1">
 					<Label htmlFor="pendingCompany" className="text-xs">Company</Label>
 					<Input id="pendingCompany" {...register("company")} className="h-8" />
-					{errors.company && (
-						<p className="text-red-500 text-xs">{errors.company.message}</p>
-					)}
+					<FormFieldError message={errors.company?.message} />
 				</div>
 			</div>
 			<div className="flex justify-end gap-2">

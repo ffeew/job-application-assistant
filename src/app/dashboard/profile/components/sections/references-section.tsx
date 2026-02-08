@@ -15,6 +15,7 @@ import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update
 import { useDeleteReference } from "@/app/dashboard/profile/mutations/use-delete-reference";
 import { createReferenceSchema } from "@/app/api/profile/validators";
 import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
@@ -178,7 +179,7 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
-			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} placeholder="John Smith" />{errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}</div>
+			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} placeholder="John Smith" /><FormFieldError message={errors.name?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title</Label><Input id="title" {...register("title")} placeholder="Senior Manager" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="company">Company</Label><Input id="company" {...register("company")} placeholder="Tech Corp" /></div>
 			<div className="grid grid-cols-2 gap-4">

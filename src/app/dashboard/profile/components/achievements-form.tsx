@@ -13,6 +13,7 @@ import { useCreateAchievement } from "@/app/dashboard/profile/mutations/use-crea
 import { useUpdateAchievement } from "@/app/dashboard/profile/mutations/use-update-achievement";
 import { createAchievementSchema } from "@/app/api/profile/validators";
 import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface AchievementsFormProps {
   achievement?: AchievementResponse;
@@ -101,9 +102,7 @@ export function AchievementsForm({
               {...register("title")}
               placeholder="Employee of the Quarter"
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-            )}
+            <FormFieldError message={errors.title?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -113,17 +112,13 @@ export function AchievementsForm({
               {...register("organization")}
               placeholder="Acme Corp"
             />
-            {errors.organization && (
-              <p className="text-red-500 text-sm mt-1">{errors.organization.message}</p>
-            )}
+            <FormFieldError message={errors.organization?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="date">Date</Label>
             <Input id="date" type="month" {...register("date")} />
-            {errors.date && (
-              <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
-            )}
+            <FormFieldError message={errors.date?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -134,9 +129,7 @@ export function AchievementsForm({
               placeholder="Highlight what this achievement represents..."
               rows={3}
             />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-            )}
+            <FormFieldError message={errors.description?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -147,9 +140,7 @@ export function AchievementsForm({
               {...register("url")}
               placeholder="https://example.com/achievement"
             />
-            {errors.url && (
-              <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
-            )}
+            <FormFieldError message={errors.url?.message} />
           </div>
 
           <div className="flex justify-end gap-3">

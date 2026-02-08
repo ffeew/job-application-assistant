@@ -6,6 +6,67 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, FileText, BarChart3, PenTool } from "lucide-react";
 import { useScrollAnimation } from "@/app/hooks/use-scroll-animation";
 
+function ResumePreviewCard() {
+	return (
+		<div className="relative">
+			<div className="absolute inset-0 -z-10 rounded-[32px] bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
+			<div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 p-8 shadow-2xl shadow-primary/10 backdrop-blur-sm">
+				{/* Decorative resume preview */}
+				<div className="flex flex-col gap-5 w-[300px]">
+					<div className="flex items-center justify-between text-xs font-medium uppercase tracking-widest text-muted-foreground">
+						<span>Resume preview</span>
+						<span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+							92% match
+						</span>
+					</div>
+					<div className="flex flex-col gap-4">
+						{[
+							{
+								icon: FileText,
+								label: "Experience",
+								detail: "5 items selected",
+							},
+							{
+								icon: PenTool,
+								label: "Skills",
+								detail: "12 matched",
+							},
+							{
+								icon: BarChart3,
+								label: "AI Score",
+								detail: "Excellent",
+							},
+						].map((item) => (
+							<div
+								key={item.label}
+								className="flex items-center gap-3 rounded-xl border border-border/50 bg-background/50 p-3"
+							>
+								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+									<item.icon className="h-4 w-4 text-primary" />
+								</div>
+								<div className="flex-1">
+									<p className="text-sm font-medium">{item.label}</p>
+									<p className="text-xs text-muted-foreground">
+										{item.detail}
+									</p>
+								</div>
+							</div>
+						))}
+					</div>
+					<div className="flex gap-2">
+						<div className="h-2 flex-1 rounded-full bg-muted">
+							<div className="h-full w-[92%] rounded-full bg-primary" />
+						</div>
+					</div>
+					<p className="text-center text-xs text-muted-foreground">
+						Tailored for Senior Product Designer at Figma
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 export function HeroSection() {
 	const { ref, isVisible } = useScrollAnimation({ threshold: 0.05 });
 
@@ -87,62 +148,7 @@ export function HeroSection() {
 					<div
 						className={`relative hidden lg:flex lg:items-center lg:justify-center ${isVisible ? "animate-fade-in stagger-3" : "before-animate"}`}
 					>
-						<div className="relative">
-							<div className="absolute inset-0 -z-10 rounded-[32px] bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
-							<div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 p-8 shadow-2xl shadow-primary/10 backdrop-blur-sm">
-								{/* Decorative resume preview */}
-								<div className="flex flex-col gap-5 w-[300px]">
-									<div className="flex items-center justify-between text-xs font-medium uppercase tracking-widest text-muted-foreground">
-										<span>Resume preview</span>
-										<span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-											92% match
-										</span>
-									</div>
-									<div className="flex flex-col gap-4">
-										{[
-											{
-												icon: FileText,
-												label: "Experience",
-												detail: "5 items selected",
-											},
-											{
-												icon: PenTool,
-												label: "Skills",
-												detail: "12 matched",
-											},
-											{
-												icon: BarChart3,
-												label: "AI Score",
-												detail: "Excellent",
-											},
-										].map((item) => (
-											<div
-												key={item.label}
-												className="flex items-center gap-3 rounded-xl border border-border/50 bg-background/50 p-3"
-											>
-												<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-													<item.icon className="h-4 w-4 text-primary" />
-												</div>
-												<div className="flex-1">
-													<p className="text-sm font-medium">{item.label}</p>
-													<p className="text-xs text-muted-foreground">
-														{item.detail}
-													</p>
-												</div>
-											</div>
-										))}
-									</div>
-									<div className="flex gap-2">
-										<div className="h-2 flex-1 rounded-full bg-muted">
-											<div className="h-full w-[92%] rounded-full bg-primary" />
-										</div>
-									</div>
-									<p className="text-center text-xs text-muted-foreground">
-										Tailored for Senior Product Designer at Figma
-									</p>
-								</div>
-							</div>
-						</div>
+						<ResumePreviewCard />
 					</div>
 				</div>
 			</div>
