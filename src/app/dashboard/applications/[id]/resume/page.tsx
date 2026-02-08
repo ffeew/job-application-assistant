@@ -626,8 +626,7 @@ export default function JobApplicationResumePage({
 						<CardContent>
 							{previewHTML ? (
 								<div
-									className="border rounded-lg overflow-hidden bg-white"
-									style={{ height: "600px" }}
+									className="border rounded-lg overflow-hidden bg-white h-[600px]"
 								>
 									<iframe
 										srcDoc={previewHTML}

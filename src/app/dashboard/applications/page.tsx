@@ -10,12 +10,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-	ExpandableList,
-	ExpandableListItem,
-	ExpandableListItemHeader,
-	ExpandableListItemContent,
-} from "@/components/ui/expandable-list";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import {
 	Plus,
 	Briefcase,
@@ -66,7 +61,7 @@ export default function ApplicationsPage() {
 
 	if (error) {
 		return (
-			<div className="flex flex-col items-center justify-center py-8 space-y-4">
+			<div className="flex flex-col items-center justify-center py-8 gap-4">
 				<div className="text-lg text-red-600">Error loading applications</div>
 				<Button onClick={() => refetch()}>Try Again</Button>
 			</div>
@@ -74,7 +69,7 @@ export default function ApplicationsPage() {
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-3xl font-bold">Job Applications</h1>
@@ -131,146 +126,146 @@ export default function ApplicationsPage() {
 					</CardContent>
 				</Card>
 			) : (
-				<>
-					{/* Mobile: Expandable List */}
-					<div className="md:hidden">
-						<Card className="py-0 overflow-hidden">
-							<ExpandableList>
-								{applications.map((application) => (
-									<ExpandableListItem key={application.id} id={application.id}>
-										<ExpandableListItemHeader>
-											<div className="flex flex-1 items-center gap-3 min-w-0">
-												<div className="flex-1 min-w-0">
-													<p className="font-medium truncate">{application.company}</p>
-													<p className="text-sm text-muted-foreground truncate">{application.position}</p>
-												</div>
-												<Badge className={`${getStatusColor(application.status)} flex-shrink-0`}>
-													{application.status}
-												</Badge>
-												<ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-											</div>
-										</ExpandableListItemHeader>
-										<ExpandableListItemContent>
-											<div className="space-y-4">
-												{application.location && (
-													<p className="text-sm text-muted-foreground">{application.location}</p>
-												)}
-												<div className="flex items-center text-sm text-muted-foreground">
-													<Calendar className="mr-1 h-4 w-4" />
-													Applied{" "}
-													{application.appliedAt
-														? new Date(application.appliedAt).toLocaleDateString()
-														: new Date(application.createdAt).toLocaleDateString()}
-												</div>
-												<div className="flex flex-col gap-2">
-													<Button size="sm" asChild className="w-full">
-														<Link href={`/dashboard/applications/${application.id}/resume`}>
-															<FileText className="mr-2 h-4 w-4" />
-															Generate Tailored Resume
-														</Link>
-													</Button>
-													<div className="flex items-center gap-2">
-														<Button variant="outline" size="sm" asChild className="flex-1">
-															<Link href={`/dashboard/applications/${application.id}`}>
-																<Edit className="mr-2 h-4 w-4" />
-																Edit
-															</Link>
-														</Button>
-														{application.jobUrl && (
-															<Button variant="outline" size="sm" asChild>
-																<Link href={application.jobUrl} target="_blank">
-																	<ExternalLink className="h-4 w-4" />
-																</Link>
-															</Button>
-														)}
-														<Button
-															variant="outline"
-															size="sm"
-															onClick={() => handleDeleteApplication(application.id)}
-															disabled={deleteApplicationMutation.isPending}
-														>
-															<Trash2 className="h-4 w-4" />
-														</Button>
-													</div>
-												</div>
-											</div>
-										</ExpandableListItemContent>
-									</ExpandableListItem>
-								))}
-							</ExpandableList>
-						</Card>
-					</div>
-
-					{/* Desktop: Card Grid */}
-					<div className="hidden md:grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-						{applications.map((application) => (
-							<Card key={application.id}>
-								<CardHeader>
-									<div className="flex items-start justify-between">
-										<div className="flex-1">
-											<CardTitle className="text-lg">
-												{application.position}
-											</CardTitle>
-											<CardDescription className="font-medium">
-												{application.company}
-											</CardDescription>
-											{application.location && (
-												<p className="text-sm text-muted-foreground mt-1">
-													{application.location}
-												</p>
-											)}
-										</div>
-										<Badge className={getStatusColor(application.status)}>
-											{application.status}
-										</Badge>
-									</div>
-								</CardHeader>
-								<CardContent className="pt-0">
-									<div className="flex items-center text-sm text-muted-foreground mb-4">
-										<Calendar className="mr-1 h-4 w-4" />
-										Applied{" "}
-										{application.appliedAt
-											? new Date(application.appliedAt).toLocaleDateString()
-											: new Date(application.createdAt).toLocaleDateString()}
-									</div>
-									<div className="flex flex-col space-y-2">
-										<Button size="sm" asChild className="w-full">
-											<Link
-												href={`/dashboard/applications/${application.id}/resume`}
-											>
-												<FileText className="mr-2 h-4 w-4" />
-												Generate Tailored Resume
+				<ResponsiveList
+					items={applications}
+					getItemId={(app) => app.id}
+					renderMobileHeader={(application) => (
+						<div className="flex flex-1 items-center gap-3 min-w-0">
+							<div className="flex-1 min-w-0">
+								<p className="font-medium truncate">{application.company}</p>
+								<p className="text-sm text-muted-foreground truncate">
+									{application.position}
+								</p>
+							</div>
+							<Badge
+								className={`${getStatusColor(application.status)} flex-shrink-0`}
+							>
+								{application.status}
+							</Badge>
+							<ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+						</div>
+					)}
+					renderMobileContent={(application) => (
+						<div className="flex flex-col gap-4">
+							{application.location && (
+								<p className="text-sm text-muted-foreground">
+									{application.location}
+								</p>
+							)}
+							<div className="flex items-center text-sm text-muted-foreground">
+								<Calendar className="mr-1 h-4 w-4" />
+								Applied{" "}
+								{application.appliedAt
+									? new Date(application.appliedAt).toLocaleDateString()
+									: new Date(application.createdAt).toLocaleDateString()}
+							</div>
+							<div className="flex flex-col gap-2">
+								<Button size="sm" asChild className="w-full">
+									<Link
+										href={`/dashboard/applications/${application.id}/resume`}
+									>
+										<FileText className="mr-2 h-4 w-4" />
+										Generate Tailored Resume
+									</Link>
+								</Button>
+								<div className="flex items-center gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										asChild
+										className="flex-1"
+									>
+										<Link href={`/dashboard/applications/${application.id}`}>
+											<Edit className="mr-2 h-4 w-4" />
+											Edit
+										</Link>
+									</Button>
+									{application.jobUrl && (
+										<Button variant="outline" size="sm" asChild>
+											<Link href={application.jobUrl} target="_blank">
+												<ExternalLink className="h-4 w-4" />
 											</Link>
 										</Button>
-										<div className="flex items-center space-x-2">
+									)}
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => handleDeleteApplication(application.id)}
+										disabled={deleteApplicationMutation.isPending}
+									>
+										<Trash2 className="h-4 w-4" />
+									</Button>
+								</div>
+							</div>
+						</div>
+					)}
+					renderDesktopCard={(application) => (
+						<Card>
+							<CardHeader>
+								<div className="flex items-start justify-between">
+									<div className="flex-1">
+										<CardTitle className="text-lg">
+											{application.position}
+										</CardTitle>
+										<CardDescription className="font-medium">
+											{application.company}
+										</CardDescription>
+										{application.location && (
+											<p className="text-sm text-muted-foreground mt-1">
+												{application.location}
+											</p>
+										)}
+									</div>
+									<Badge className={getStatusColor(application.status)}>
+										{application.status}
+									</Badge>
+								</div>
+							</CardHeader>
+							<CardContent className="pt-0">
+								<div className="flex items-center text-sm text-muted-foreground mb-4">
+									<Calendar className="mr-1 h-4 w-4" />
+									Applied{" "}
+									{application.appliedAt
+										? new Date(application.appliedAt).toLocaleDateString()
+										: new Date(application.createdAt).toLocaleDateString()}
+								</div>
+								<div className="flex flex-col gap-2">
+									<Button size="sm" asChild className="w-full">
+										<Link
+											href={`/dashboard/applications/${application.id}/resume`}
+										>
+											<FileText className="mr-2 h-4 w-4" />
+											Generate Tailored Resume
+										</Link>
+									</Button>
+									<div className="flex items-center gap-2">
+										<Button variant="outline" size="sm" asChild>
+											<Link href={`/dashboard/applications/${application.id}`}>
+												<Edit className="mr-2 h-4 w-4" />
+												Edit
+											</Link>
+										</Button>
+										{application.jobUrl && (
 											<Button variant="outline" size="sm" asChild>
-												<Link href={`/dashboard/applications/${application.id}`}>
-													<Edit className="mr-2 h-4 w-4" />
-													Edit
+												<Link href={application.jobUrl} target="_blank">
+													<ExternalLink className="h-4 w-4" />
 												</Link>
 											</Button>
-											{application.jobUrl && (
-												<Button variant="outline" size="sm" asChild>
-													<Link href={application.jobUrl} target="_blank">
-														<ExternalLink className="h-4 w-4" />
-													</Link>
-												</Button>
-											)}
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => handleDeleteApplication(application.id)}
-												disabled={deleteApplicationMutation.isPending}
-											>
-												<Trash2 className="h-4 w-4" />
-											</Button>
-										</div>
+										)}
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => handleDeleteApplication(application.id)}
+											disabled={deleteApplicationMutation.isPending}
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
 									</div>
-								</CardContent>
-							</Card>
-						))}
-					</div>
-				</>
+								</div>
+							</CardContent>
+						</Card>
+					)}
+				/>
 			)}
 		</div>
 	);

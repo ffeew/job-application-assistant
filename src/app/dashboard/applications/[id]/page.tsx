@@ -134,9 +134,9 @@ export default function EditApplicationPage({
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
-				<div className="flex items-center space-x-4">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -284,7 +284,7 @@ export default function EditApplicationPage({
 						</CardContent>
 					</Card>
 
-					<div className="flex justify-end space-x-4">
+					<div className="flex justify-end gap-4">
 						<Button variant="outline" asChild>
 							<Link href="/dashboard/applications">Cancel</Link>
 						</Button>

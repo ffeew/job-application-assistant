@@ -4,12 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ExpandableList,
-  ExpandableListItem,
-  ExpandableListItemHeader,
-  ExpandableListItemContent,
-} from "@/components/ui/expandable-list";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { Plus, PenTool, Eye, Trash2, Sparkles, ChevronRight } from "lucide-react";
 import { useCoverLetters } from "@/app/dashboard/cover-letters/queries/use-cover-letters";
 import { useDeleteCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-delete-cover-letter";
@@ -38,7 +33,7 @@ export default function CoverLettersPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 space-y-4">
+      <div className="flex flex-col items-center justify-center py-8 gap-4">
         <div className="text-lg text-red-600">Error loading cover letters</div>
         <Button onClick={() => refetch()}>Try Again</Button>
       </div>
@@ -46,7 +41,7 @@ export default function CoverLettersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Cover Letters</h1>
@@ -79,110 +74,97 @@ export default function CoverLettersPage() {
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Mobile: Expandable List */}
-          <div className="md:hidden">
-            <Card className="py-0 overflow-hidden">
-              <ExpandableList>
-                {coverLetters.map((letter) => (
-                  <ExpandableListItem key={letter.id} id={letter.id}>
-                    <ExpandableListItemHeader>
-                      <div className="flex flex-1 items-center gap-3 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate flex items-center gap-2">
-                            {letter.title}
-                            {letter.isAiGenerated && (
-                              <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-                            )}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Created {new Date(letter.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </ExpandableListItemHeader>
-                    <ExpandableListItemContent>
-                      <div className="space-y-4">
-                        {letter.isAiGenerated && (
-                          <Badge variant="secondary">AI Generated</Badge>
-                        )}
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {letter.content.substring(0, 150)}...
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild className="flex-1">
-                            <Link href={`/dashboard/cover-letters/${letter.id}`}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteCoverLetter(letter.id)}
-                            disabled={deleteCoverLetterMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </ExpandableListItemContent>
-                  </ExpandableListItem>
-                ))}
-              </ExpandableList>
+        <ResponsiveList
+          items={coverLetters}
+          getItemId={(letter) => letter.id}
+          renderMobileHeader={(letter) => (
+            <div className="flex flex-1 items-center gap-3 min-w-0">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate flex items-center gap-2">
+                  {letter.title}
+                  {letter.isAiGenerated && (
+                    <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Created {new Date(letter.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </div>
+          )}
+          renderMobileContent={(letter) => (
+            <div className="flex flex-col gap-4">
+              {letter.isAiGenerated && (
+                <Badge variant="secondary">AI Generated</Badge>
+              )}
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {letter.content.substring(0, 150)}...
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <Link href={`/dashboard/cover-letters/${letter.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    View
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteCoverLetter(letter.id)}
+                  disabled={deleteCoverLetterMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+          renderDesktopCard={(letter) => (
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center">
+                      {letter.title}
+                      {letter.isAiGenerated && (
+                        <Sparkles className="ml-2 h-4 w-4 text-primary" />
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {letter.isAiGenerated && (
+                        <Badge variant="secondary" className="mr-2 mt-1">
+                          AI Generated
+                        </Badge>
+                      )}
+                      Created {new Date(letter.createdAt).toLocaleDateString()}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                  {letter.content.substring(0, 150)}...
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/cover-letters/${letter.id}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteCoverLetter(letter.id)}
+                    disabled={deleteCoverLetterMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
-          </div>
-
-          {/* Desktop: Card Grid */}
-          <div className="hidden md:grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {coverLetters.map((letter) => (
-              <Card key={letter.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center">
-                        {letter.title}
-                        {letter.isAiGenerated && (
-                          <Sparkles className="ml-2 h-4 w-4 text-primary" />
-                        )}
-                      </CardTitle>
-                      <CardDescription>
-                        {letter.isAiGenerated && (
-                          <Badge variant="secondary" className="mr-2 mt-1">
-                            AI Generated
-                          </Badge>
-                        )}
-                        Created {new Date(letter.createdAt).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                    {letter.content.substring(0, 150)}...
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/cover-letters/${letter.id}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteCoverLetter(letter.id)}
-                      disabled={deleteCoverLetterMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+          )}
+        />
       )}
     </div>
   );
