@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ResumeResponse as Resume } from '@/lib/validators';
+import type { ResumeResponse as Resume } from '@/app/api/resumes/validators';
 
 // Direct API call functions
 const resumesApi = {

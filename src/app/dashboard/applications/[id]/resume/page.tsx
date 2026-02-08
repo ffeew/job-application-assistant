@@ -25,6 +25,8 @@ import {
 	Sparkles,
 	Brain,
 	Target,
+	Save,
+	CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -32,6 +34,7 @@ import { useApplicationResumeInfo } from "@/app/dashboard/applications/queries/u
 import {
 	useGenerateJobApplicationPreview,
 	useGenerateJobApplicationPDF,
+	useSaveTailoredResume,
 } from "@/app/dashboard/applications/mutations/use-generate-job-application-resume";
 import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import type {
@@ -52,6 +55,7 @@ export default function JobApplicationResumePage({
 	const [previewHTML, setPreviewHTML] = useState<string | null>(null);
 	const [aiSelection, setAiSelection] =
 		useState<IntelligentContentSelection | null>(null);
+	const [resumeContent, setResumeContent] = useState<string | null>(null);
 
 	const {
 		data: applicationInfo,
@@ -62,10 +66,12 @@ export default function JobApplicationResumePage({
 	// Simple mutation hooks
 	const previewMutation = useGenerateJobApplicationPreview();
 	const pdfMutation = useGenerateJobApplicationPDF();
+	const saveMutation = useSaveTailoredResume();
 
 	// Derived state
 	const isGeneratingPreview = previewMutation.isPending;
 	const isGeneratingPDF = pdfMutation.isPending;
+	const isSaving = saveMutation.isPending;
 	const previewError = previewMutation.error;
 	const pdfError = pdfMutation.error;
 
@@ -120,12 +126,39 @@ export default function JobApplicationResumePage({
 			"applicationId"
 		>;
 		try {
+			// First generate the preview to get content for saving
+			const previewResult = await previewMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: validatedData,
+			});
+			setPreviewHTML(previewResult.html);
+			setAiSelection(previewResult.aiSelection || null);
+
+			// Build content to save
+			const contentToSave = JSON.stringify({
+				html: previewResult.html,
+				aiSelection: previewResult.aiSelection || null,
+				config: validatedData,
+				generatedAt: new Date().toISOString(),
+			});
+			setResumeContent(contentToSave);
+
+			// Auto-save the tailored resume
+			await saveMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: {
+					title: validatedData.title,
+					content: contentToSave,
+				},
+			});
+
+			// Generate and download PDF
 			const blob = await pdfMutation.mutateAsync({
 				applicationId: resolvedParams.id,
 				data: validatedData,
 			});
 			downloadPDF(blob, validatedData.title);
-			toast.success("Resume generated successfully!");
+			toast.success("Resume saved and PDF generated!");
 		} catch (error) {
 			console.error("Error generating resume:", error);
 			toast.error("Error generating resume. Please try again.");
@@ -147,12 +180,45 @@ export default function JobApplicationResumePage({
 			setPreviewHTML(result.html);
 			setAiSelection(result.aiSelection || null);
 
+			// Store the resume content for saving
+			const contentToSave = JSON.stringify({
+				html: result.html,
+				aiSelection: result.aiSelection || null,
+				config: formData,
+				generatedAt: new Date().toISOString(),
+			});
+			setResumeContent(contentToSave);
+
 			if (result.aiSelection) {
 				toast.success("AI has optimized your resume content for this job!");
 			}
 		} catch (error) {
 			console.error("Error generating preview:", error);
 			toast.error("Error generating preview. Please try again.");
+		}
+	};
+
+	const handleSaveResume = async () => {
+		if (!resolvedParams?.id || !resumeContent) return;
+
+		const formData = form.getValues();
+		try {
+			const result = await saveMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: {
+					title: formData.title,
+					content: resumeContent,
+				},
+			});
+
+			if (result.isNew) {
+				toast.success("Tailored resume saved successfully!");
+			} else {
+				toast.success("Tailored resume updated successfully!");
+			}
+		} catch (error) {
+			console.error("Error saving resume:", error);
+			toast.error("Error saving resume. Please try again.");
 		}
 	};
 
@@ -244,7 +310,7 @@ export default function JobApplicationResumePage({
 								{applicationInfo.position} at {applicationInfo.company}
 								{applicationInfo.location && ` • ${applicationInfo.location}`}
 							</p>
-							<div className="flex items-center space-x-2 mt-2">
+							<div className="flex items-center flex-wrap gap-2 mt-2">
 								<Badge
 									variant={
 										applicationInfo.hasJobDescription ? "default" : "secondary"
@@ -264,6 +330,15 @@ export default function JobApplicationResumePage({
 											AI Optimization Enabled
 										</Badge>
 									)}
+								{applicationInfo.tailoredResume && (
+									<Badge
+										variant="outline"
+										className="text-green-600 border-green-600"
+									>
+										<CheckCircle className="h-3 w-3 mr-1" />
+										Tailored Resume Saved
+									</Badge>
+								)}
 							</div>
 						</div>
 					</div>
@@ -417,7 +492,7 @@ export default function JobApplicationResumePage({
 									</Card>
 								)}
 
-								<div className="flex space-x-2 pt-4">
+								<div className="flex flex-wrap gap-2 pt-4">
 									<Button
 										type="button"
 										variant="outline"
@@ -431,13 +506,28 @@ export default function JobApplicationResumePage({
 										)}
 										Preview
 									</Button>
+									{resumeContent && (
+										<Button
+											type="button"
+											variant="secondary"
+											onClick={handleSaveResume}
+											disabled={isSaving}
+										>
+											{isSaving ? (
+												<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+											) : (
+												<Save className="mr-2 h-4 w-4" />
+											)}
+											Save Resume
+										</Button>
+									)}
 									<Button type="submit" disabled={isGeneratingPDF}>
 										{isGeneratingPDF ? (
 											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 										) : (
 											<Download className="mr-2 h-4 w-4" />
 										)}
-										Generate PDF
+										Generate & Save PDF
 									</Button>
 								</div>
 

@@ -17,6 +17,12 @@ export class ResumesService {
     if (query?.isDefault !== undefined) {
       whereConditions.push(eq(resumes.isDefault, query.isDefault));
     }
+    if (query?.isTailored !== undefined) {
+      whereConditions.push(eq(resumes.isTailored, query.isTailored));
+    }
+    if (query?.jobApplicationId !== undefined) {
+      whereConditions.push(eq(resumes.jobApplicationId, query.jobApplicationId));
+    }
 
     const resumesList = await db
       .select()
@@ -28,7 +34,8 @@ export class ResumesService {
 
     return resumesList.map(resume => ({
       ...resume,
-      isDefault: Boolean(resume.isDefault)
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
     }));
   }
 
@@ -43,7 +50,11 @@ export class ResumesService {
       .limit(1);
 
     const resume = resumesList[0];
-    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
+    return resume ? {
+      ...resume,
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
+    } : null;
   }
 
   async createResume(userId: string, data: CreateResumeRequest): Promise<ResumeResponse> {
@@ -63,6 +74,8 @@ export class ResumesService {
         title: data.title,
         content: data.content,
         isDefault: data.isDefault || false,
+        jobApplicationId: data.jobApplicationId || null,
+        isTailored: data.isTailored || false,
         createdAt: now,
         updatedAt: now,
       })
@@ -72,12 +85,16 @@ export class ResumesService {
       throw new Error("Failed to create resume");
     }
 
-    return { ...resume, isDefault: Boolean(resume.isDefault) };
+    return {
+      ...resume,
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
+    };
   }
 
   async updateResume(
-    userId: string, 
-    id: string, 
+    userId: string,
+    id: string,
     data: UpdateResumeRequest
   ): Promise<ResumeResponse | null> {
     const now = new Date();
@@ -99,7 +116,11 @@ export class ResumesService {
       ))
       .returning();
 
-    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
+    return resume ? {
+      ...resume,
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
+    } : null;
   }
 
   async deleteResume(userId: string, id: string): Promise<boolean> {
@@ -133,7 +154,31 @@ export class ResumesService {
       .limit(1);
 
     const resume = resumesList[0];
-    return resume ? { ...resume, isDefault: Boolean(resume.isDefault) } : null;
+    return resume ? {
+      ...resume,
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
+    } : null;
+  }
+
+  async getTailoredResumeByApplication(userId: string, jobApplicationId: string): Promise<ResumeResponse | null> {
+    const resumesList = await db
+      .select()
+      .from(resumes)
+      .where(and(
+        eq(resumes.userId, userId),
+        eq(resumes.jobApplicationId, jobApplicationId),
+        eq(resumes.isTailored, true)
+      ))
+      .orderBy(desc(resumes.updatedAt))
+      .limit(1);
+
+    const resume = resumesList[0];
+    return resume ? {
+      ...resume,
+      isDefault: Boolean(resume.isDefault),
+      isTailored: Boolean(resume.isTailored),
+    } : null;
   }
 
   private async unsetAllDefaults(userId: string): Promise<void> {

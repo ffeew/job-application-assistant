@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
+interface TailoredResumeInfo {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+
 interface ApplicationResumeInfo {
   id: string;
   company: string;
@@ -8,6 +14,7 @@ interface ApplicationResumeInfo {
   hasJobDescription: boolean;
   location?: string;
   status: string;
+  tailoredResume: TailoredResumeInfo | null;
 }
 
 // Direct API call function

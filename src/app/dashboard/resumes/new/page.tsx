@@ -85,6 +85,7 @@ export default function NewResumePage() {
       title: data.title,
       content: JSON.stringify(resumeContent),
       isDefault: data.isDefault,
+      isTailored: false,
     };
 
     createResumeMutation.mutate(resumeData, {

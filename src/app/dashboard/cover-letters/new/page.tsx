@@ -52,11 +52,19 @@ export default function NewCoverLetterPage() {
   }, [resumes, selectedResume, setSelectedResume]);
 
   const handleApplicationChange = (applicationId: string) => {
+    if (applicationId === "none") {
+      setSelectedApplication("");
+      return;
+    }
     setSelectedApplication(applicationId);
-    if (applicationId) {
-      const app = applications.find(a => a.id === applicationId);
-      if (app) {
-        setManualFields(app.company, app.position, app.jobDescription || "");
+    const app = applications.find(a => a.id === applicationId);
+    if (app) {
+      setManualFields(app.company, app.position, app.jobDescription || "");
+
+      // Auto-select tailored resume for this application if one exists
+      const tailoredResume = resumes.find(r => r.jobApplicationId === applicationId && r.isTailored);
+      if (tailoredResume) {
+        setSelectedResume(tailoredResume.id);
       }
     }
   };
@@ -155,7 +163,7 @@ export default function NewCoverLetterPage() {
                       <SelectValue placeholder="Choose an existing application..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None - Enter manually</SelectItem>
+                      <SelectItem value="none">None - Enter manually</SelectItem>
                       {applications.map(app => (
                         <SelectItem key={app.id} value={app.id}>
                           {app.position} at {app.company}

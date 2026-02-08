@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   JobApplicationResumeRequest,
   IntelligentContentSelection,
@@ -12,6 +12,23 @@ export interface JobApplicationResumeResponse {
     company: string;
     position: string;
   };
+}
+
+export interface SaveTailoredResumeRequest {
+  title: string;
+  content: string;
+}
+
+export interface SaveTailoredResumeResponse {
+  success: boolean;
+  resume: {
+    id: string;
+    title: string;
+    isTailored: boolean;
+    jobApplicationId: string;
+    updatedAt: Date;
+  };
+  isNew: boolean;
 }
 
 // API calls for job application resume generation
@@ -82,5 +99,44 @@ export function useGenerateJobApplicationPreview() {
       applicationId: string;
       data: Omit<JobApplicationResumeRequest, "applicationId">;
     }) => jobApplicationResumeApi.generatePreview(applicationId, data),
+  });
+}
+
+// API call to save tailored resume
+const saveTailoredResume = async (
+  applicationId: string,
+  data: SaveTailoredResumeRequest
+): Promise<SaveTailoredResumeResponse> => {
+  const response = await fetch(`/api/applications/${applicationId}/resume`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to save tailored resume");
+  }
+
+  return response.json();
+};
+
+// Hook to save tailored resume for a job application
+export function useSaveTailoredResume() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      applicationId,
+      data,
+    }: {
+      applicationId: string;
+      data: SaveTailoredResumeRequest;
+    }) => saveTailoredResume(applicationId, data),
+    onSuccess: (_, { applicationId }) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["job-application-resume", "info", applicationId] });
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+    },
   });
 }
