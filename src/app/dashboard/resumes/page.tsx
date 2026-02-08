@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileText, Edit, Trash2, Star, Wand2 } from "lucide-react";
+import { Plus, FileText, Edit, Trash2, Star, Wand2, Target } from "lucide-react";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
@@ -77,6 +77,29 @@ export default function ResumesPage() {
           </Button>
         </div>
       </div>
+
+      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+        <CardContent className="py-4">
+          <div className="flex items-start gap-3">
+            <Target className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-blue-800 dark:text-blue-200">
+                Looking to create a tailored resume for a job application?
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                Visit the{" "}
+                <Link
+                  href="/dashboard/applications"
+                  className="underline font-medium hover:text-blue-900 dark:hover:text-blue-100"
+                >
+                  Applications
+                </Link>{" "}
+                page to generate an AI-optimized resume based on a specific job description.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {resumes.length === 0 ? (
         <Card>
