@@ -66,11 +66,11 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 		return `${months[parseInt(month) - 1]} ${year}`;
 	};
 
-	if (isLoading) return <div className="space-y-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
+	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="flex flex-col gap-6">
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-2xl font-bold flex items-center gap-2"><Award className="h-6 w-6" />Certifications</h1>
@@ -81,7 +81,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 space-y-3">
+						<CardContent className="pt-6 flex flex-col gap-3">
 							<p className="text-sm font-semibold text-primary">{pendingItems.length} pending certification{pendingItems.length !== 1 ? "s" : ""}</p>
 							{pendingItems.map((item) => (
 								<div key={item.id} className="flex items-center justify-between rounded-md border border-primary/20 bg-background p-3">
@@ -109,12 +109,12 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 					</Card>
 				)}
 
-				<div className="space-y-3">
+				<div className="flex flex-col gap-3">
 					{certifications.map((cert) => (
 						<Card key={cert.id} className="group hover:shadow-md transition-shadow">
 							<CardContent className="p-4">
 								<div className="flex items-start justify-between">
-									<div className="flex-1 space-y-2">
+									<div className="flex-1 flex flex-col gap-2">
 										<h3 className="font-semibold text-lg">{cert.name}</h3>
 										<p className="text-muted-foreground">{cert.issuingOrganization}</p>
 										<div className="flex items-center gap-4 text-sm text-muted-foreground">

@@ -150,7 +150,7 @@ export function ProfileSidebar({ counts, onImportPreview }: ProfileSidebarProps)
 				</nav>
 			</ScrollArea>
 
-			<div className="border-t p-3 space-y-2">
+			<div className="border-t p-3 flex flex-col gap-2">
 				<input
 					ref={fileInputRef}
 					type="file"

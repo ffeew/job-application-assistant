@@ -234,8 +234,8 @@ export default function JobApplicationResumePage({
 
 	if (!resolvedParams || isLoading) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -247,7 +247,7 @@ export default function JobApplicationResumePage({
 						<p className="text-muted-foreground">Loading application data...</p>
 					</div>
 				</div>
-				<div className="space-y-4">
+				<div className="flex flex-col gap-4">
 					<CardSkeleton />
 					<CardSkeleton />
 				</div>
@@ -257,8 +257,8 @@ export default function JobApplicationResumePage({
 
 	if (error || !applicationInfo) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -272,7 +272,7 @@ export default function JobApplicationResumePage({
 				</div>
 				<Card>
 					<CardContent className="pt-6">
-						<div className="flex items-center space-x-2 text-red-600">
+						<div className="flex items-center gap-2 text-red-600">
 							<AlertCircle className="h-5 w-5" />
 							<p>Failed to load application data. Please try again.</p>
 						</div>
@@ -283,8 +283,8 @@ export default function JobApplicationResumePage({
 	}
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center space-x-4">
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center gap-4">
 				<Button variant="outline" size="sm" asChild>
 					<Link href={`/dashboard/applications/${resolvedParams.id}`}>
 						<ArrowLeft className="mr-2 h-4 w-4" />
@@ -303,7 +303,7 @@ export default function JobApplicationResumePage({
 			{/* Application Context Card */}
 			<Card className="border-blue-200 bg-blue-50">
 				<CardContent>
-					<div className="flex items-center space-x-2 text-blue-800">
+					<div className="flex items-center gap-2 text-blue-800">
 						<Target className="h-5 w-5" />
 						<div>
 							<p className="font-medium">Target Position</p>
@@ -348,7 +348,7 @@ export default function JobApplicationResumePage({
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
-				<div className="space-y-6">
+				<div className="flex flex-col gap-6">
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<Card>
 							<CardHeader>
@@ -357,8 +357,8 @@ export default function JobApplicationResumePage({
 									Customize your resume for this specific application
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="space-y-2">
+							<CardContent className="flex flex-col gap-6">
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="title">Resume Title</Label>
 									<Input
 										id="title"
@@ -368,7 +368,7 @@ export default function JobApplicationResumePage({
 									<FormFieldError message={errors.title?.message} />
 								</div>
 
-								<div className="space-y-2">
+								<div className="flex flex-col gap-2">
 									<Label>Template</Label>
 									<select
 										{...register("template")}
@@ -385,8 +385,8 @@ export default function JobApplicationResumePage({
 
 								{/* AI Configuration */}
 								{applicationInfo.hasJobDescription && (
-									<div className="space-y-4">
-										<div className="flex items-center space-x-3">
+									<div className="flex flex-col gap-4">
+										<div className="flex items-center gap-3">
 											<Checkbox
 												id="useAISelection"
 												checked={watchedValues.useAISelection}
@@ -394,10 +394,10 @@ export default function JobApplicationResumePage({
 													setValue("useAISelection", !!checked)
 												}
 											/>
-											<div className="space-y-0.5">
+											<div className="flex flex-col gap-0.5">
 												<Label
 													htmlFor="useAISelection"
-													className="text-base flex items-center space-x-2 cursor-pointer"
+													className="text-base flex items-center gap-2 cursor-pointer"
 												>
 													<Brain className="h-4 w-4 text-purple-600" />
 													<span>AI Content Optimization</span>
@@ -409,8 +409,8 @@ export default function JobApplicationResumePage({
 										</div>
 
 										{watchedValues.useAISelection && (
-											<div className="space-y-4 pl-6 border-l-2 border-purple-200">
-												<div className="space-y-2">
+											<div className="flex flex-col gap-4 pl-6 border-l-2 border-purple-200">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxWorkExperiences">
 														Max Work Experiences:{" "}
 														{watchedValues.maxWorkExperiences}
@@ -432,7 +432,7 @@ export default function JobApplicationResumePage({
 													/>
 												</div>
 
-												<div className="space-y-2">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxProjects">
 														Max Projects: {watchedValues.maxProjects}
 													</Label>
@@ -450,7 +450,7 @@ export default function JobApplicationResumePage({
 													/>
 												</div>
 
-												<div className="space-y-2">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxSkills">
 														Max Skills: {watchedValues.maxSkills}
 													</Label>
@@ -475,7 +475,7 @@ export default function JobApplicationResumePage({
 								{!applicationInfo.hasJobDescription && (
 									<Card className="border-yellow-200 bg-yellow-50">
 										<CardContent className="pt-4">
-											<div className="flex items-center space-x-2 text-yellow-800">
+											<div className="flex items-center gap-2 text-yellow-800">
 												<AlertCircle className="h-5 w-5" />
 												<div>
 													<p className="font-medium">No Job Description</p>
@@ -543,7 +543,7 @@ export default function JobApplicationResumePage({
 					{aiSelection && (
 						<Card className="border-purple-200 bg-purple-50">
 							<CardHeader>
-								<CardTitle className="flex items-center space-x-2">
+								<CardTitle className="flex items-center gap-2">
 									<Sparkles className="h-5 w-5 text-purple-600" />
 									<span className="text-purple-600">
 										AI Optimization Results
@@ -553,7 +553,7 @@ export default function JobApplicationResumePage({
 									AI has analyzed the job description and optimized your content
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="flex flex-col gap-4">
 								<div>
 									<h4 className="font-medium text-sm text-purple-900">
 										Strategy

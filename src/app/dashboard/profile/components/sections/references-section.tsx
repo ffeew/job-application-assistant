@@ -59,11 +59,11 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 		finally { setSavingItemId(null); }
 	};
 
-	if (isLoading) return <div className="space-y-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
+	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="flex flex-col gap-6">
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" />References</h1>
@@ -74,7 +74,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 space-y-3">
+						<CardContent className="pt-6 flex flex-col gap-3">
 							<p className="text-sm font-semibold text-primary">{pendingItems.length} pending reference{pendingItems.length !== 1 ? "s" : ""}</p>
 							{pendingItems.map((item) => (
 								<div key={item.id} className="flex items-center justify-between rounded-md border border-primary/20 bg-background p-3">
@@ -107,10 +107,10 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 						<Card key={reference.id} className="group hover:shadow-md transition-shadow">
 							<CardContent className="p-4">
 								<div className="flex items-start justify-between">
-									<div className="flex-1 space-y-2">
+									<div className="flex-1 flex flex-col gap-2">
 										<h3 className="font-semibold">{reference.name}</h3>
 										{reference.title && <p className="text-sm text-muted-foreground">{reference.title}</p>}
-										<div className="space-y-1 text-sm text-muted-foreground">
+										<div className="flex flex-col gap-1 text-sm text-muted-foreground">
 											{reference.company && <div className="flex items-center gap-1"><Building className="h-3 w-3" />{reference.company}</div>}
 											{reference.email && <div className="flex items-center gap-1"><Mail className="h-3 w-3" />{reference.email}</div>}
 											{reference.phone && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{reference.phone}</div>}

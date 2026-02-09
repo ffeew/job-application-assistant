@@ -134,8 +134,8 @@ export default function GenerateResumePage() {
 
 	if (dataLoading) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/resumes">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -149,7 +149,7 @@ export default function GenerateResumePage() {
 						</p>
 					</div>
 				</div>
-				<div className="space-y-4">
+				<div className="flex flex-col gap-4">
 					<CardSkeleton />
 					<CardSkeleton />
 				</div>
@@ -159,8 +159,8 @@ export default function GenerateResumePage() {
 
 	if (dataError) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/resumes">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -174,7 +174,7 @@ export default function GenerateResumePage() {
 				</div>
 				<Card>
 					<CardContent className="pt-6">
-						<div className="flex items-center space-x-2 text-red-600">
+						<div className="flex items-center gap-2 text-red-600">
 							<AlertCircle className="h-5 w-5" />
 							<p>
 								Failed to load profile data. Please try again or check your
@@ -194,8 +194,8 @@ export default function GenerateResumePage() {
 			resumeData.skills.length > 0);
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center space-x-4">
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center gap-4">
 				<Button variant="outline" size="sm" asChild>
 					<Link href="/dashboard/resumes">
 						<ArrowLeft className="mr-2 h-4 w-4" />
@@ -213,7 +213,7 @@ export default function GenerateResumePage() {
 			{!hasMinimalData && (
 				<Card className="border-yellow-200 bg-yellow-50">
 					<CardContent>
-						<div className="flex items-center space-x-2 text-yellow-800">
+						<div className="flex items-center gap-2 text-yellow-800">
 							<AlertCircle className="h-5 w-5" />
 							<div>
 								<p className="font-medium">Incomplete Profile</p>
@@ -231,7 +231,7 @@ export default function GenerateResumePage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
-				<div className="space-y-6">
+				<div className="flex flex-col gap-6">
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<Card>
 							<CardHeader>
@@ -265,11 +265,11 @@ export default function GenerateResumePage() {
 									</select>
 								</div>
 
-								<div className="space-y-3">
+								<div className="flex flex-col gap-3">
 									<Label>Content Sections</Label>
 
-									<div className="space-y-2">
-										<div className="flex items-center space-x-2">
+									<div className="flex flex-col gap-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includePersonalInfo"
 												checked={contentSelection.includePersonalInfo}
@@ -288,7 +288,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeSummary"
 												checked={contentSelection.includeSummary}
@@ -304,7 +304,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeWorkExperience"
 												checked={contentSelection.includeWorkExperience}
@@ -326,7 +326,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeEducation"
 												checked={contentSelection.includeEducation}
@@ -346,7 +346,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeSkills"
 												checked={contentSelection.includeSkills}
@@ -362,7 +362,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeProjects"
 												checked={contentSelection.includeProjects}
@@ -382,7 +382,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeCertifications"
 												checked={contentSelection.includeCertifications}
@@ -404,7 +404,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeAchievements"
 												checked={contentSelection.includeAchievements}
@@ -426,7 +426,7 @@ export default function GenerateResumePage() {
 									</div>
 								</div>
 
-								<div className="flex space-x-2 pt-4">
+								<div className="flex gap-2 pt-4">
 									<Button
 										type="button"
 										variant="outline"
@@ -477,8 +477,7 @@ export default function GenerateResumePage() {
 						<CardContent>
 							{previewHTML ? (
 								<div
-									className="border rounded-lg overflow-hidden bg-white"
-									style={{ height: "600px" }}
+									className="border rounded-lg overflow-hidden bg-white h-[600px]"
 								>
 									<iframe
 										srcDoc={previewHTML}

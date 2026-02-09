@@ -126,7 +126,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 
 	if (isLoading) {
 		return (
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				{Array.from({ length: 3 }).map((_, i) => (
 					<ProfileItemSkeleton key={i} />
 				))}
@@ -136,7 +136,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="flex flex-col gap-6">
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-2xl font-bold flex items-center gap-2">
@@ -154,7 +154,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				{/* Pending imports */}
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 space-y-4">
+						<CardContent className="pt-6 flex flex-col gap-4">
 							<div>
 								<p className="text-sm font-semibold text-primary">
 									{pendingItems.length} pending work experience{pendingItems.length !== 1 ? "s" : ""} from import
@@ -163,7 +163,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 									Review, edit, or save these entries individually.
 								</p>
 							</div>
-							<div className="space-y-3">
+							<div className="flex flex-col gap-3">
 								{pendingItems.map((item) => (
 									<div
 										key={item.id}
@@ -181,7 +181,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 											/>
 										) : (
 											<div className="flex items-start justify-between">
-												<div className="space-y-1">
+												<div className="flex flex-col gap-1">
 													<p className="font-medium">
 														{item.request.jobTitle} at {item.request.company}
 													</p>
@@ -191,7 +191,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 														</p>
 													)}
 													{item.warnings.length > 0 && (
-														<ul className="list-disc space-y-1 pl-4 text-xs text-amber-600">
+														<ul className="list-disc flex flex-col gap-1 pl-4 text-xs text-amber-600">
 															{item.warnings.map((warning, idx) => (
 																<li key={idx}>{warning}</li>
 															))}
@@ -255,12 +255,12 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				)}
 
 				{/* Experience cards */}
-				<div className="space-y-3">
+				<div className="flex flex-col gap-3">
 					{experiences.map((experience) => (
 						<Card key={experience.id} className="group hover:shadow-md transition-shadow">
 							<CardContent className="p-4">
 								<div className="flex items-start justify-between">
-									<div className="flex-1 space-y-2">
+									<div className="flex-1 flex flex-col gap-2">
 										<div>
 											<h3 className="font-semibold text-lg">{experience.jobTitle}</h3>
 											<p className="text-muted-foreground">{experience.company}</p>
@@ -429,7 +429,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
-			<div className="space-y-4">
+			<div className="flex flex-col gap-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="jobTitle">Job Title *</Label>
@@ -467,7 +467,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 					</div>
 				</div>
 
-				<div className="flex items-center space-x-2">
+				<div className="flex items-center gap-2">
 					<Checkbox
 						id="isCurrent"
 						checked={isCurrent}
@@ -543,7 +543,7 @@ function PendingEditForm({ initialValues, onSave, onCancel }: PendingEditFormPro
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 			<div className="grid grid-cols-2 gap-3">
 				<div className="flex flex-col gap-1">
 					<Label htmlFor="pendingJobTitle" className="text-xs">Job Title</Label>
