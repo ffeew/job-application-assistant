@@ -104,13 +104,14 @@ export class ResumeGenerationService {
       });
 
       // Generate PDF with specific settings for resume
+      // Use zero margins - let the HTML/CSS control the layout to match preview
       const pdfBuffer = await page.pdf({
-        format: 'letter',
+        format: 'A4',
         margin: {
-          top: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in',
-          right: '0.5in'
+          top: '0',
+          bottom: '0',
+          left: '0',
+          right: '0'
         },
         printBackground: true,
         preferCSSPageSize: true,
@@ -221,6 +222,14 @@ export class ResumeGenerationService {
 
         // Filter resume data based on AI selection
         filteredResumeData = this.applyIntelligentSelection(resumeData, aiSelection);
+        console.log('[Resume Gen] Filtered data counts:', {
+          workExperiences: filteredResumeData.workExperiences.length,
+          education: filteredResumeData.education.length,
+          skills: filteredResumeData.skills.length,
+          projects: filteredResumeData.projects.length,
+          certifications: filteredResumeData.certifications.length,
+          achievements: filteredResumeData.achievements.length,
+        });
       } catch (error) {
         console.error('Error with AI content selection, falling back to manual/default selection:', error);
         // Fall through to manual selection
@@ -279,13 +288,14 @@ export class ResumeGenerationService {
       // Add additional wait to ensure content is fully rendered
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Use zero margins - let the HTML/CSS control the layout to match preview
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: {
-          top: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in',
-          right: '0.5in'
+          top: '0',
+          bottom: '0',
+          left: '0',
+          right: '0'
         },
         printBackground: true,
         preferCSSPageSize: true,

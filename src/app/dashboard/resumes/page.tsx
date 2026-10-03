@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileText, Edit, Trash2, Star, Wand2 } from "lucide-react";
+import { ResponsiveList } from "@/components/ui/responsive-list";
+import { Plus, FileText, Edit, Trash2, Star, Wand2, Target, ChevronRight } from "lucide-react";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
@@ -54,7 +55,7 @@ export default function ResumesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Resumes</h1>
@@ -62,7 +63,7 @@ export default function ResumesPage() {
             Manage your resumes and create tailored versions for different applications.
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/dashboard/resumes/generate">
               <Wand2 className="mr-2 h-4 w-4" />
@@ -78,6 +79,29 @@ export default function ResumesPage() {
         </div>
       </div>
 
+      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+        <CardContent className="py-4">
+          <div className="flex items-start gap-3">
+            <Target className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-blue-800 dark:text-blue-200">
+                Looking to create a tailored resume for a job application?
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                Visit the{" "}
+                <Link
+                  href="/dashboard/applications"
+                  className="underline font-medium hover:text-blue-900 dark:hover:text-blue-100"
+                >
+                  Applications
+                </Link>{" "}
+                page to generate an AI-optimized resume based on a specific job description.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {resumes.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -86,7 +110,7 @@ export default function ResumesPage() {
             <p className="text-muted-foreground mb-6 text-center max-w-sm">
               Create your first resume to get started with your job applications.
             </p>
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               <Button variant="outline" asChild>
                 <Link href="/dashboard/resumes/generate">
                   <Wand2 className="mr-2 h-4 w-4" />
@@ -103,9 +127,54 @@ export default function ResumesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {resumes.map((resume) => (
-            <Card key={resume.id} className="relative">
+        <ResponsiveList
+          items={resumes}
+          getItemId={(resume) => resume.id}
+          renderMobileHeader={(resume) => (
+            <div className="flex flex-1 items-center gap-3 min-w-0">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate flex items-center gap-2">
+                  {resume.title}
+                  {resume.isDefault && (
+                    <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Updated {new Date(resume.updatedAt).toLocaleDateString()}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </div>
+          )}
+          renderMobileContent={(resume) => (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild className="flex-1">
+                <Link href={`/dashboard/resumes/${resume.id}`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+              <Button
+                variant={resume.isDefault ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleDefault(resume.id)}
+                disabled={updateResumeMutation.isPending}
+              >
+                <Star className="mr-2 h-4 w-4" />
+                {resume.isDefault ? "Default" : "Set Default"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeleteResume(resume.id)}
+                disabled={deleteResumeMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          renderDesktopCard={(resume) => (
+            <Card className="relative">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -122,7 +191,7 @@ export default function ResumesPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/resumes/${resume.id}`}>
                       <Edit className="mr-2 h-4 w-4" />
@@ -149,8 +218,8 @@ export default function ResumesPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          )}
+        />
       )}
     </div>
   );

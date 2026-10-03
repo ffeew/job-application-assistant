@@ -128,7 +128,20 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         temperature: 0.2,
       });
 
-      return this.validateAndFormatSelection(output, profileData);
+      const validated = this.validateAndFormatSelection(output, profileData);
+
+      // If AI returned bad IDs and filtering produced empty results, use fallback
+      const hasContent = validated.selectedWorkExperiences.length > 0
+        || validated.selectedEducation.length > 0
+        || validated.selectedSkills.length > 0
+        || validated.selectedProjects.length > 0;
+
+      if (!hasContent) {
+        console.warn('[AI Selection] All IDs filtered out — AI likely returned invalid IDs. Using fallback.');
+        return this.getFallbackSelection(profileData, maxWorkExperiences, maxProjects, maxSkills);
+      }
+
+      return validated;
     } catch (error) {
       console.error("Error selecting optimal content:", error);
       // Return fallback selection
@@ -218,7 +231,7 @@ Analyze the profile content and select the most relevant items for this job appl
 
 Prioritize:
 1. Direct skill matches
-2. Relevant work experience 
+2. Relevant work experience
 3. Industry/domain experience
 4. Seniority-appropriate content
 5. Recent and significant achievements
@@ -227,31 +240,59 @@ Prioritize:
 Be selective - quality over quantity. Choose items that directly support the application.`;
   }
 
+  /**
+   * Extract selected IDs from relevanceScores instead of the broken selectedXxx arrays.
+   * Groq's json_schema structured output concatenates number arrays (e.g., [2,3] → [23]),
+   * but relevanceScores entries have correct individual IDs.
+   */
   private validateAndFormatSelection(
     selection: z.infer<typeof intelligentContentSelectionSchema>,
     profileData: ProfileData
   ): IntelligentContentSelection {
-    // Ensure all required fields exist and contain valid IDs
-    const validWorkIds = profileData.workExperiences.map(exp => exp.id);
-    const validEducationIds = profileData.education.map(edu => edu.id);
-    const validSkillIds = profileData.skills.map(skill => skill.id);
-    const validProjectIds = profileData.projects.map(project => project.id);
-    const validCertIds = profileData.certifications.map(cert => cert.id);
-    const validAchievementIds = profileData.achievements.map(ach => ach.id);
+    const validIds = {
+      work: new Set(profileData.workExperiences.map(exp => exp.id)),
+      education: new Set(profileData.education.map(edu => edu.id)),
+      skill: new Set(profileData.skills.map(skill => skill.id)),
+      project: new Set(profileData.projects.map(project => project.id)),
+      certification: new Set(profileData.certifications.map(cert => cert.id)),
+      achievement: new Set(profileData.achievements.map(ach => ach.id)),
+    };
+
+    // Extract IDs from relevanceScores, validated against actual profile data
+    const idsFromScores = {
+      selectedWorkExperiences: [] as number[],
+      selectedEducation: [] as number[],
+      selectedSkills: [] as number[],
+      selectedProjects: [] as number[],
+      selectedCertifications: [] as number[],
+      selectedAchievements: [] as number[],
+    };
+
+    for (const score of selection.relevanceScores) {
+      switch (score.type) {
+        case 'work':
+          if (validIds.work.has(score.id)) idsFromScores.selectedWorkExperiences.push(score.id);
+          break;
+        case 'education':
+          if (validIds.education.has(score.id)) idsFromScores.selectedEducation.push(score.id);
+          break;
+        case 'skill':
+          if (validIds.skill.has(score.id)) idsFromScores.selectedSkills.push(score.id);
+          break;
+        case 'project':
+          if (validIds.project.has(score.id)) idsFromScores.selectedProjects.push(score.id);
+          break;
+        case 'certification':
+          if (validIds.certification.has(score.id)) idsFromScores.selectedCertifications.push(score.id);
+          break;
+        case 'achievement':
+          if (validIds.achievement.has(score.id)) idsFromScores.selectedAchievements.push(score.id);
+          break;
+      }
+    }
 
     return {
-      selectedWorkExperiences: selection.selectedWorkExperiences
-        .filter(id => validWorkIds.includes(id)),
-      selectedEducation: selection.selectedEducation
-        .filter(id => validEducationIds.includes(id)),
-      selectedSkills: selection.selectedSkills
-        .filter(id => validSkillIds.includes(id)),
-      selectedProjects: selection.selectedProjects
-        .filter(id => validProjectIds.includes(id)),
-      selectedCertifications: selection.selectedCertifications
-        .filter(id => validCertIds.includes(id)),
-      selectedAchievements: selection.selectedAchievements
-        .filter(id => validAchievementIds.includes(id)),
+      ...idsFromScores,
       relevanceScores: selection.relevanceScores,
       overallStrategy: selection.overallStrategy,
       keyMatchingPoints: selection.keyMatchingPoints,

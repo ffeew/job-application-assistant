@@ -53,7 +53,7 @@ export default function SignInPage() {
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-1">
+				<CardHeader>
 					<CardTitle className="text-2xl font-bold">Sign In</CardTitle>
 					<CardDescription>
 						Enter your email and password to access your account

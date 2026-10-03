@@ -92,8 +92,8 @@ export default function ConversationStartersPage() {
 	};
 
 	return (
-		<div className="space-y-6">
-			<div className="space-y-1">
+		<div className="flex flex-col gap-6">
+			<div className="flex flex-col gap-1">
 				<h1 className="text-3xl font-bold">Conversation Starters</h1>
 				<p className="text-muted-foreground">
 					Provide a few details about your contact and goal to generate a
@@ -133,8 +133,8 @@ export default function ConversationStartersPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<form className="space-y-5" onSubmit={handleSubmit}>
-							<div className="space-y-2">
+						<form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="prospectDetails">
 									Who are you reaching out to? *
 								</Label>
@@ -147,7 +147,7 @@ export default function ConversationStartersPage() {
 								/>
 							</div>
 
-							<div className="space-y-2">
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="additionalContext">
 									Anything else the AI should know? (Optional)
 								</Label>

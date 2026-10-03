@@ -6,6 +6,7 @@
 - **Data**: Drizzle ORM targeting Turso (libSQL); migrations generated via Drizzle Kit.
 - **Auth**: BetterAuth with proxy-backed dashboard session-cookie checks and API session validation (see `src/lib/auth.ts`, `src/proxy.ts`).
 - **UI**: Tailwind CSS v4 + shadcn/ui primitives; Lucide icons; Sonner for notifications.
+- **State**: Zustand for shared and workflow state; TanStack Query for server state.
 - **Forms & Validation**: React Hook Form + Zod resolvers; shared schemas live with API validators.
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
 - **AI**: Vercel AI SDK with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Default model is `openai/gpt-oss-120b`; fallback is `moonshotai/kimi-k2-instruct`.
@@ -14,7 +15,7 @@
 ## Module Organization
 
 - `src/app`
-  - Feature folders (e.g., `dashboard/resumes`) colocate page entries with supporting UI components plus TanStack Query `queries/` & `mutations/`.
+  - Feature folders (e.g., `dashboard/resumes`) colocate page entries with supporting UI components, TanStack Query `queries/` & `mutations/`, and Zustand `store/` directories when needed.
   - API routes live under `src/app/api/<feature>/` and follow a consistent pattern: `route.ts` for HTTP wiring, `service.ts` for business logic, `validators.ts` (or `validators.ts` in `profile/`) exporting Zod schemas used on client and server.
   - Authentication pages reside in `(auth)/`; dashboard routes are protected via `src/proxy.ts`.
 - `src/components`: Shared presentation-only primitives (buttons, inputs, skeletons) built on shadcn/ui.
@@ -47,6 +48,8 @@
 - Forms should use React Hook Form with `zodResolver` (see existing dashboard profile forms for patterns). After validation, cast `unknown` to schema-inferred types with a comment (`// Data validated by Zod`).
 - Components in PascalCase, hooks in camelCase, server actions suffixed with `Action`.
 - Follow Prettier defaults (2-space indent, semicolons, double quotes). Respect Tailwind naming; prefer `@/` alias imports.
+- Keep data fetching in feature Query and mutation hooks rather than calling `fetch` directly in components; invalidate related caches on mutation success.
+- Use flexbox with `gap` utilities instead of `space-*`, and skeleton components for loading states.
 
 ## Testing Guidance
 

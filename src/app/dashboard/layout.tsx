@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { authClient } from "@/app/utils/authClient";
+import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 import {
 	LayoutDashboard,
 	FileText,
@@ -36,9 +37,17 @@ export default function DashboardLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [sidebarOpen, setSidebarOpen] = useState(false);
+	// Zustand store selectors
+	const user = useDashboardStore((state) => state.user);
+	const isLoading = useDashboardStore((state) => state.isLoading);
+	const sidebarOpen = useDashboardStore((state) => state.sidebarOpen);
+
+	// Zustand store actions
+	const setUser = useDashboardStore((state) => state.setUser);
+	const setLoading = useDashboardStore((state) => state.setLoading);
+	const toggleSidebar = useDashboardStore((state) => state.toggleSidebar);
+	const setSidebarOpen = useDashboardStore((state) => state.setSidebarOpen);
+
 	const pathname = usePathname();
 	const router = useRouter();
 
@@ -59,7 +68,7 @@ export default function DashboardLayout({
 		};
 
 		checkAuth();
-	}, [router]);
+	}, [router, setUser, setLoading]);
 
 	const handleSignOut = async () => {
 		try {
@@ -72,7 +81,7 @@ export default function DashboardLayout({
 		}
 	};
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-lg">Loading...</div>
@@ -86,13 +95,14 @@ export default function DashboardLayout({
 			<div className="md:hidden fixed top-4 left-4 z-50">
 				<Button
 					variant="outline"
-					size="sm"
-					onClick={() => setSidebarOpen(!sidebarOpen)}
+					size="icon"
+					className="h-12 w-12"
+					onClick={toggleSidebar}
 				>
 					{sidebarOpen ? (
-						<X className="h-4 w-4" />
+						<X className="h-5 w-5" />
 					) : (
-						<Menu className="h-4 w-4" />
+						<Menu className="h-5 w-5" />
 					)}
 				</Button>
 			</div>
@@ -104,26 +114,28 @@ export default function DashboardLayout({
 				} transition-transform duration-200 ease-in-out md:translate-x-0`}
 			>
 				<div className="flex flex-col h-full">
-					<div className="flex items-center justify-between px-6 py-4 border-b">
-						<h1 className="text-xl font-bold">Job Assistant</h1>
+					<div className="flex items-center justify-between px-6 py-5 border-b border-border/60">
+						<h1 className="text-xl font-bold tracking-tight">
+							Job <span className="text-primary">Assistant</span>
+						</h1>
 						<ThemeToggle />
 					</div>
 
-					<nav className="flex-1 px-4 py-6 space-y-2">
+					<nav className="flex-1 flex flex-col px-3 py-6 gap-1">
 						{navigation.map((item) => {
 							const isActive = pathname === item.href;
 							return (
 								<Link
 									key={item.name}
 									href={item.href}
-									className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+									className={`flex items-center min-h-12 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
 										isActive
-											? "bg-primary text-primary-foreground"
+											? "bg-primary/10 text-primary border-l-2 border-primary"
 											: "text-muted-foreground hover:text-foreground hover:bg-muted"
 									}`}
 									onClick={() => setSidebarOpen(false)}
 								>
-									<item.icon className="mr-3 h-4 w-4" />
+									<item.icon className={`mr-3 h-4 w-4 ${isActive ? "text-primary" : ""}`} />
 									{item.name}
 								</Link>
 							);

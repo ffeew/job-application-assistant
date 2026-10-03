@@ -25,6 +25,7 @@ import {
 import { ArrowLeft, Save, FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { FormFieldError } from "@/components/ui/form-field-error";
 import { useApplication } from "@/app/dashboard/applications/queries/use-applications";
 import { useUpdateApplication } from "@/app/dashboard/applications/mutations/use-update-application";
 import { updateApplicationSchema } from "@/app/api/applications/validators";
@@ -135,9 +136,9 @@ export default function EditApplicationPage({
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
-				<div className="flex items-center space-x-4">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -172,37 +173,29 @@ export default function EditApplicationPage({
 								Basic information about the job opportunity
 							</CardDescription>
 						</CardHeader>
-						<CardContent className="space-y-4">
+						<CardContent className="flex flex-col gap-4">
 							<div className="grid grid-cols-2 gap-4">
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="company">Company *</Label>
 									<Input
 										id="company"
 										placeholder="e.g., Google"
 										{...register("company")}
 									/>
-									{errors.company && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.company.message}
-										</p>
-									)}
+									<FormFieldError message={errors.company?.message} />
 								</div>
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="position">Position *</Label>
 									<Input
 										id="position"
 										placeholder="e.g., Software Engineer"
 										{...register("position")}
 									/>
-									{errors.position && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.position.message}
-										</p>
-									)}
+									<FormFieldError message={errors.position?.message} />
 								</div>
 							</div>
 							<div className="grid grid-cols-2 gap-4">
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="status">Status</Label>
 									<Controller
 										name="status"
@@ -227,24 +220,16 @@ export default function EditApplicationPage({
 											</Select>
 										)}
 									/>
-									{errors.status && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.status.message}
-										</p>
-									)}
+									<FormFieldError message={errors.status?.message} />
 								</div>
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="appliedAt">Application Date</Label>
 									<Input
 										id="appliedAt"
 										type="date"
 										{...register("appliedAt")}
 									/>
-									{errors.appliedAt && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.appliedAt.message}
-										</p>
-									)}
+									<FormFieldError message={errors.appliedAt?.message} />
 								</div>
 							</div>
 						</CardContent>
@@ -254,21 +239,17 @@ export default function EditApplicationPage({
 						<CardHeader>
 							<CardTitle>Additional Details</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-4">
-							<div>
+						<CardContent className="flex flex-col gap-4">
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="location">Location</Label>
 								<Input
 									id="location"
 									placeholder="e.g., San Francisco, CA"
 									{...register("location")}
 								/>
-								{errors.location && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.location.message}
-									</p>
-								)}
+								<FormFieldError message={errors.location?.message} />
 							</div>
-							<div>
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="notes">Notes</Label>
 								<Textarea
 									id="notes"
@@ -276,16 +257,12 @@ export default function EditApplicationPage({
 									{...register("notes")}
 									rows={4}
 								/>
-								{errors.notes && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.notes.message}
-									</p>
-								)}
+								<FormFieldError message={errors.notes?.message} />
 							</div>
 						</CardContent>
 					</Card>
 
-					<div className="flex justify-end space-x-4">
+					<div className="flex justify-end gap-4">
 						<Button variant="outline" asChild>
 							<Link href="/dashboard/applications">Cancel</Link>
 						</Button>

@@ -12,6 +12,7 @@ import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-ski
 import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-skill";
 import { createSkillSchema } from "@/app/api/profile/validators";
 import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/validators";
+import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface SkillFormProps {
   skill?: SkillResponse;
@@ -116,9 +117,7 @@ export function SkillForm({
                 {...register("name")}
                 placeholder="React"
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
+              <FormFieldError message={errors.name?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="category">Category *</Label>
@@ -131,9 +130,7 @@ export function SkillForm({
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
-              {errors.category && (
-                <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
-              )}
+              <FormFieldError message={errors.category?.message} />
             </div>
           </div>
 
@@ -150,9 +147,7 @@ export function SkillForm({
                   <option key={level.value} value={level.value}>{level.label}</option>
                 ))}
               </select>
-              {errors.proficiencyLevel && (
-                <p className="text-red-500 text-sm mt-1">{errors.proficiencyLevel.message}</p>
-              )}
+              <FormFieldError message={errors.proficiencyLevel?.message} />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="yearsOfExperience">Years of Experience</Label>
@@ -163,9 +158,7 @@ export function SkillForm({
                 {...register("yearsOfExperience", { valueAsNumber: true })}
                 placeholder="3"
               />
-              {errors.yearsOfExperience && (
-                <p className="text-red-500 text-sm mt-1">{errors.yearsOfExperience.message}</p>
-              )}
+              <FormFieldError message={errors.yearsOfExperience?.message} />
             </div>
           </div>
 

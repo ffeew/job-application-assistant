@@ -9,6 +9,8 @@ export const resumes = sqliteTable("resumes", {
   title: text("title").notNull(),
   content: text("content").notNull(), // JSON string containing resume data
   isDefault: integer("is_default", { mode: "boolean" }).default(false),
+  jobApplicationId: text("job_application_id"), // Linked job application for tailored resumes (FK added after jobApplications defined)
+  isTailored: integer("is_tailored", { mode: "boolean" }).default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
     .notNull(),

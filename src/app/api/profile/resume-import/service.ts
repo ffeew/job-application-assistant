@@ -50,6 +50,9 @@ const mistralClient = new Mistral({
 });
 
 
+// Groq's structured output requires ALL properties to be in the JSON Schema's
+// `required` array. Using .nullable() makes fields required but allows null values.
+// Using .default([]) or .optional() creates optional fields which Groq rejects.
 const aiProfileGenerationSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
@@ -64,105 +67,88 @@ const aiProfileGenerationSchema = z.object({
   githubUrl: z.string().nullable(),
   portfolioUrl: z.string().nullable(),
   professionalSummary: z.string().nullable(),
-  workExperiences: z
-    .array(
-      z.object({
-        jobTitle: z.string().nullable(),
-        company: z.string().nullable(),
-        location: z.string().nullable(),
-        startDate: z.string().nullable(),
-        endDate: z.string().nullable(),
-        isCurrent: z.boolean().nullable(),
-        description: z.string().nullable(),
-        technologies: z.array(z.string()).optional(),
-      }),
-    )
-    .default([]),
-  education: z
-    .array(
-      z.object({
-        degree: z.string().nullable(),
-        fieldOfStudy: z.string().nullable(),
-        institution: z.string().nullable(),
-        location: z.string().nullable(),
-        startDate: z.string().nullable(),
-        endDate: z.string().nullable(),
-        gpa: z.string().nullable(),
-        honors: z.string().nullable(),
-        relevantCoursework: z.array(z.string()).optional(),
-      }),
-    )
-    .default([]),
-  skills: z
-    .array(
-      z.object({
-        name: z.string().nullable(),
-        category: z.string().nullable(),
-        proficiencyLevel: z.string().nullable(),
-        yearsOfExperience: z.number().nullable(),
-      }),
-    )
-    .default([]),
-  projects: z
-    .array(
-      z.object({
-        title: z.string().nullable(),
-        description: z.string().nullable(),
-        technologies: z.array(z.string()).optional(),
-        projectUrl: z.string().nullable(),
-        githubUrl: z.string().nullable(),
-        startDate: z.string().nullable(),
-        endDate: z.string().nullable(),
-        isOngoing: z.boolean().nullable(),
-      }),
-    )
-    .default([]),
-  certifications: z
-    .array(
-      z.object({
-        name: z.string().nullable(),
-        issuingOrganization: z.string().nullable(),
-        issueDate: z.string().nullable(),
-        expirationDate: z.string().nullable(),
-        credentialId: z.string().nullable(),
-        credentialUrl: z.string().nullable(),
-      }),
-    )
-    .default([]),
-  achievements: z
-    .array(
-      z.object({
-        title: z.string().nullable(),
-        description: z.string().nullable(),
-        organization: z.string().nullable(),
-        date: z.string().nullable(),
-        url: z.string().nullable(),
-      }),
-    )
-    .default([]),
-  references: z
-    .array(
-      z.object({
-        name: z.string().nullable(),
-        title: z.string().nullable(),
-        company: z.string().nullable(),
-        email: z.string().nullable(),
-        phone: z.string().nullable(),
-        relationship: z.string().nullable(),
-      }),
-    )
-    .default([]),
-});
-
-const aiProfileSchema = aiProfileGenerationSchema.extend({
-  warnings: z.array(z.string()).optional(),
+  workExperiences: z.array(
+    z.object({
+      jobTitle: z.string().nullable(),
+      company: z.string().nullable(),
+      location: z.string().nullable(),
+      startDate: z.string().nullable(),
+      endDate: z.string().nullable(),
+      isCurrent: z.boolean().nullable(),
+      description: z.string().nullable(),
+      technologies: z.array(z.string()),
+    }),
+  ),
+  education: z.array(
+    z.object({
+      degree: z.string().nullable(),
+      fieldOfStudy: z.string().nullable(),
+      institution: z.string().nullable(),
+      location: z.string().nullable(),
+      startDate: z.string().nullable(),
+      endDate: z.string().nullable(),
+      gpa: z.string().nullable(),
+      honors: z.string().nullable(),
+      relevantCoursework: z.array(z.string()),
+    }),
+  ),
+  skills: z.array(
+    z.object({
+      name: z.string().nullable(),
+      category: z.string().nullable(),
+      proficiencyLevel: z.string().nullable(),
+      yearsOfExperience: z.number().nullable(),
+    }),
+  ),
+  projects: z.array(
+    z.object({
+      title: z.string().nullable(),
+      description: z.string().nullable(),
+      technologies: z.array(z.string()),
+      projectUrl: z.string().nullable(),
+      githubUrl: z.string().nullable(),
+      startDate: z.string().nullable(),
+      endDate: z.string().nullable(),
+      isOngoing: z.boolean().nullable(),
+    }),
+  ),
+  certifications: z.array(
+    z.object({
+      name: z.string().nullable(),
+      issuingOrganization: z.string().nullable(),
+      issueDate: z.string().nullable(),
+      expirationDate: z.string().nullable(),
+      credentialId: z.string().nullable(),
+      credentialUrl: z.string().nullable(),
+    }),
+  ),
+  achievements: z.array(
+    z.object({
+      title: z.string().nullable(),
+      description: z.string().nullable(),
+      organization: z.string().nullable(),
+      date: z.string().nullable(),
+      url: z.string().nullable(),
+    }),
+  ),
+  references: z.array(
+    z.object({
+      name: z.string().nullable(),
+      title: z.string().nullable(),
+      company: z.string().nullable(),
+      email: z.string().nullable(),
+      phone: z.string().nullable(),
+      relationship: z.string().nullable(),
+    }),
+  ),
+  warnings: z.array(z.string()),
 });
 
 const SKILL_CATEGORIES = new Set(["technical", "soft", "language", "tool", "framework", "other"]);
 const SKILL_PROFICIENCY_LEVELS = new Set(["beginner", "intermediate", "advanced", "expert"]);
 const REFERENCE_RELATIONSHIPS = new Set(["manager", "colleague", "client", "professor", "mentor", "other"]);
 
-type AiProfile = z.infer<typeof aiProfileSchema>;
+type AiProfile = z.infer<typeof aiProfileGenerationSchema>;
 
 type SectionNormalizationResult<T> = {
   items: T[];
@@ -290,13 +276,13 @@ Populate the provided schema using only facts that appear in the resume. Use nul
 
     const result = await generateText({
       model: groq(env.GROQ_MODEL),
-      output: Output.object({ schema: aiProfileSchema }),
+      output: Output.object({ schema: aiProfileGenerationSchema }),
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
       maxOutputTokens: 20000,
     });
 
-    const aiData = aiProfileSchema.parse(result.output);
+    const aiData = aiProfileGenerationSchema.parse(result.output);
 
     const profile = this.normalizeProfile(aiData);
     const workExperiences = this.normalizeWorkExperiences(aiData.workExperiences);

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -24,30 +23,44 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useResumeData } from "@/app/dashboard/resumes/queries/use-resume-data";
-import { useResumeGeneration } from "@/app/dashboard/resumes/mutations/use-generate-resume";
+import {
+	useValidateResume,
+	useGenerateResumePDF,
+	useGenerateResumePreview,
+} from "@/app/dashboard/resumes/mutations/use-generate-resume";
 import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { FormFieldError } from "@/components/ui/form-field-error";
+import { useResumeGenerationStore } from "@/app/dashboard/resumes/store/use-resume-generation-store";
+import { downloadPDF } from "@/lib/utils";
 
 export default function GenerateResumePage() {
-	const [previewHTML, setPreviewHTML] = useState<string | null>(null);
+	// Zustand store selectors
+	const previewHTML = useResumeGenerationStore((state) => state.previewHTML);
+	const setPreviewHTML = useResumeGenerationStore((state) => state.setPreviewHTML);
+	const generationStatus = useResumeGenerationStore((state) => state.generationStatus);
+	const setGenerationStatus = useResumeGenerationStore((state) => state.setGenerationStatus);
+	const generationError = useResumeGenerationStore((state) => state.generationError);
+	const setGenerationError = useResumeGenerationStore((state) => state.setGenerationError);
 
 	const {
 		data: resumeData,
 		isLoading: dataLoading,
 		error: dataError,
 	} = useResumeData();
-	const {
-		generateResume,
-		generatePreview,
-		isValidating,
-		isGenerating,
-		isGeneratingPreview,
-		validationError,
-		generationError,
-		previewError,
-	} = useResumeGeneration();
+
+	// Simple mutation hooks
+	const validateMutation = useValidateResume();
+	const pdfMutation = useGenerateResumePDF();
+	const previewMutation = useGenerateResumePreview();
+
+	// Derived state
+	const isValidating = generationStatus === "validating";
+	const isGenerating = generationStatus === "generating";
+	const isGeneratingPreview = previewMutation.isPending;
 
 	const form = useForm({
 		resolver: zodResolver(generateResumeSchema),
@@ -83,27 +96,48 @@ export default function GenerateResumePage() {
 		// Data is validated by Zod resolver, safe to cast
 		const validatedData = data as GenerateResumeRequest;
 		try {
-			await generateResume(validatedData, "pdf");
-			// PDF download is handled automatically in the hook
+			// Validation step
+			setGenerationStatus("validating");
+			setGenerationError(null);
+			const validation = await validateMutation.mutateAsync(validatedData);
+
+			if (!validation.valid) {
+				setGenerationStatus("error");
+				setGenerationError(`Validation failed: ${validation.errors.join(", ")}`);
+				return;
+			}
+
+			// Generation step
+			setGenerationStatus("generating");
+			const blob = await pdfMutation.mutateAsync(validatedData);
+
+			// Download using utility
+			downloadPDF(blob, validatedData.title);
+			setGenerationStatus("complete");
+			toast.success("Resume generated successfully!");
 		} catch (error) {
 			console.error("Error generating resume:", error);
+			setGenerationStatus("error");
+			setGenerationError(error instanceof Error ? error.message : "Error generating resume");
+			toast.error(error instanceof Error ? error.message : "Error generating resume. Please try again.");
 		}
 	};
 
 	const handlePreview = async () => {
 		const formData = form.getValues() as GenerateResumeRequest;
 		try {
-			const html = await generatePreview(formData);
+			const html = await previewMutation.mutateAsync(formData);
 			setPreviewHTML(html);
 		} catch (error) {
 			console.error("Error generating preview:", error);
+			toast.error(error instanceof Error ? error.message : "Error generating preview. Please try again.");
 		}
 	};
 
 	if (dataLoading) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/resumes">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -117,7 +151,7 @@ export default function GenerateResumePage() {
 						</p>
 					</div>
 				</div>
-				<div className="space-y-4">
+				<div className="flex flex-col gap-4">
 					<CardSkeleton />
 					<CardSkeleton />
 				</div>
@@ -127,8 +161,8 @@ export default function GenerateResumePage() {
 
 	if (dataError) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/resumes">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -142,7 +176,7 @@ export default function GenerateResumePage() {
 				</div>
 				<Card>
 					<CardContent className="pt-6">
-						<div className="flex items-center space-x-2 text-red-600">
+						<div className="flex items-center gap-2 text-red-600">
 							<AlertCircle className="h-5 w-5" />
 							<p>
 								Failed to load profile data. Please try again or check your
@@ -162,8 +196,8 @@ export default function GenerateResumePage() {
 			resumeData.skills.length > 0);
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center space-x-4">
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center gap-4">
 				<Button variant="outline" size="sm" asChild>
 					<Link href="/dashboard/resumes">
 						<ArrowLeft className="mr-2 h-4 w-4" />
@@ -181,7 +215,7 @@ export default function GenerateResumePage() {
 			{!hasMinimalData && (
 				<Card className="border-yellow-200 bg-yellow-50">
 					<CardContent>
-						<div className="flex items-center space-x-2 text-yellow-800">
+						<div className="flex items-center gap-2 text-yellow-800">
 							<AlertCircle className="h-5 w-5" />
 							<div>
 								<p className="font-medium">Incomplete Profile</p>
@@ -199,7 +233,7 @@ export default function GenerateResumePage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
-				<div className="space-y-6">
+				<div className="flex flex-col gap-6">
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<Card>
 							<CardHeader>
@@ -209,22 +243,18 @@ export default function GenerateResumePage() {
 									include
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-4">
-								<div>
+							<CardContent className="flex flex-col gap-4">
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="title">Resume Title</Label>
 									<Input
 										id="title"
 										{...register("title")}
 										placeholder="e.g., Software Engineer Resume"
 									/>
-									{errors.title && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.title.message}
-										</p>
-									)}
+									<FormFieldError message={errors.title?.message} />
 								</div>
 
-								<div>
+								<div className="flex flex-col gap-2">
 									<Label>Template</Label>
 									<select
 										{...register("template")}
@@ -237,11 +267,11 @@ export default function GenerateResumePage() {
 									</select>
 								</div>
 
-								<div className="space-y-3">
+								<div className="flex flex-col gap-3">
 									<Label>Content Sections</Label>
 
-									<div className="space-y-2">
-										<div className="flex items-center space-x-2">
+									<div className="flex flex-col gap-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includePersonalInfo"
 												checked={contentSelection.includePersonalInfo}
@@ -260,7 +290,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeSummary"
 												checked={contentSelection.includeSummary}
@@ -276,7 +306,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeWorkExperience"
 												checked={contentSelection.includeWorkExperience}
@@ -298,7 +328,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeEducation"
 												checked={contentSelection.includeEducation}
@@ -318,7 +348,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeSkills"
 												checked={contentSelection.includeSkills}
@@ -334,7 +364,7 @@ export default function GenerateResumePage() {
 											)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeProjects"
 												checked={contentSelection.includeProjects}
@@ -354,7 +384,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeCertifications"
 												checked={contentSelection.includeCertifications}
@@ -376,7 +406,7 @@ export default function GenerateResumePage() {
 												)}
 										</div>
 
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center gap-2">
 											<Checkbox
 												id="includeAchievements"
 												checked={contentSelection.includeAchievements}
@@ -398,7 +428,7 @@ export default function GenerateResumePage() {
 									</div>
 								</div>
 
-								<div className="flex space-x-2 pt-4">
+								<div className="flex gap-2 pt-4">
 									<Button
 										type="button"
 										variant="outline"
@@ -425,10 +455,10 @@ export default function GenerateResumePage() {
 									</Button>
 								</div>
 
-								{(validationError || generationError) && (
+								{generationError && (
 									<div className="p-3 bg-red-50 border border-red-200 rounded-md">
 										<p className="text-red-800 text-sm">
-											{validationError?.message || generationError?.message}
+											{generationError}
 										</p>
 									</div>
 								)}
@@ -449,8 +479,7 @@ export default function GenerateResumePage() {
 						<CardContent>
 							{previewHTML ? (
 								<div
-									className="border rounded-lg overflow-hidden bg-white"
-									style={{ height: "600px" }}
+									className="border rounded-lg overflow-hidden bg-white h-[600px]"
 								>
 									<iframe
 										srcDoc={previewHTML}
@@ -469,10 +498,10 @@ export default function GenerateResumePage() {
 								</div>
 							)}
 
-							{previewError && (
+							{previewMutation.error && (
 								<div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
 									<p className="text-red-800 text-sm">
-										Failed to generate preview: {previewError.message}
+										Failed to generate preview: {previewMutation.error.message}
 									</p>
 								</div>
 							)}

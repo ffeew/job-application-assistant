@@ -70,7 +70,7 @@ export function DashboardContent() {
 
   if (isError) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -88,7 +88,7 @@ export function DashboardContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -101,7 +101,7 @@ export function DashboardContent() {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Resumes</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -111,7 +111,7 @@ export function DashboardContent() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
             <CardTitle className="text-sm font-medium">Applications</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -124,7 +124,7 @@ export function DashboardContent() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
             <CardTitle className="text-sm font-medium">Cover Letters</CardTitle>
             <PenTool className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -134,7 +134,7 @@ export function DashboardContent() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -233,14 +233,14 @@ export function DashboardContent() {
               <p className="text-sm">Start by creating a resume or adding a job application!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {activity.map((activityItem) => {
                 const IconComponent = getActivityIcon(activityItem.type);
                 const iconColor = getActivityIconColor(activityItem.type, activityItem.action);
                 const backgroundColor = getActivityBackgroundColor(activityItem.type);
 
                 return (
-                  <div key={activityItem.id} className="flex items-center space-x-4">
+                  <div key={activityItem.id} className="flex items-center gap-4">
                     <div className={`${backgroundColor} p-2 rounded-full`}>
                       <IconComponent className={`h-4 w-4 ${iconColor}`} />
                     </div>

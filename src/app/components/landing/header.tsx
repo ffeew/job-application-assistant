@@ -17,7 +17,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 						<Briefcase className="h-5 w-5" />
 					</span>
 					<div className="hidden sm:block">
-						<h1 className="font-display text-lg leading-tight md:text-xl">
+						<h1 className="font-bold text-lg leading-tight tracking-tight md:text-xl">
 							Job Application Assistant
 						</h1>
 						<p className="text-xs text-muted-foreground md:text-sm">

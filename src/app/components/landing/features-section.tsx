@@ -9,8 +9,124 @@ import {
 	Zap,
 	CheckCircle,
 	Shield,
+	Sparkles,
 } from "lucide-react";
 import { useScrollAnimation } from "@/app/hooks/use-scroll-animation";
+
+function ResumeBuilderPreview() {
+	return (
+		<div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+			<div className="flex items-start justify-between">
+				<div className="flex flex-col gap-1">
+					<div className="h-3 w-24 rounded bg-foreground/80" />
+					<div className="h-2 w-16 rounded bg-muted-foreground/40" />
+				</div>
+				<div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-1">
+					<Sparkles className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+					<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+						92%
+					</span>
+				</div>
+			</div>
+			<div className="flex flex-col gap-2">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-4/5 rounded bg-muted-foreground/20" />
+				<div className="h-2 w-3/5 rounded bg-muted-foreground/20" />
+			</div>
+			<div className="flex flex-wrap gap-1.5">
+				<span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+					React
+				</span>
+				<span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+					TypeScript
+				</span>
+				<span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+					Node.js
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function CoverLetterPreview() {
+	return (
+		<div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-20 rounded bg-muted-foreground/30" />
+				<div className="h-2 w-28 rounded bg-muted-foreground/30" />
+			</div>
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="h-2 w-11/12 rounded bg-muted-foreground/20" />
+				<div className="h-2 w-4/5 rounded bg-muted-foreground/20" />
+			</div>
+			<div className="flex flex-col gap-1.5">
+				<div className="h-2 w-full rounded bg-muted-foreground/20" />
+				<div className="flex items-center gap-1">
+					<div className="h-2 w-3/5 rounded bg-muted-foreground/20" />
+					<div className="h-3 w-0.5 animate-pulse rounded bg-primary" />
+				</div>
+			</div>
+			<div className="mt-1 flex items-center gap-1.5">
+				<div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+				<span className="text-[10px] text-muted-foreground">
+					Generating...
+				</span>
+			</div>
+		</div>
+	);
+}
+
+interface KanbanCardProps {
+	titleWidth: string;
+	detailWidth: string;
+}
+
+function KanbanCard({ titleWidth, detailWidth }: KanbanCardProps) {
+	return (
+		<div className="rounded-md border border-border/60 bg-card p-2">
+			<div className={`h-2 ${titleWidth} rounded bg-foreground/60`} />
+			<div className={`mt-1 h-1.5 ${detailWidth} rounded bg-muted-foreground/30`} />
+		</div>
+	);
+}
+
+interface KanbanColumnProps {
+	title: string;
+	titleColor: string;
+	children: React.ReactNode;
+}
+
+function KanbanColumn({ title, titleColor, children }: KanbanColumnProps) {
+	return (
+		<div className="flex flex-1 flex-col gap-2">
+			<div className={`rounded-md px-2 py-1 text-[10px] font-medium ${titleColor}`}>
+				{title}
+			</div>
+			<div className="flex flex-col gap-1.5">
+				{children}
+			</div>
+		</div>
+	);
+}
+
+function ApplicationTrackerPreview() {
+	return (
+		<div className="flex gap-2">
+			<KanbanColumn title="Applied" titleColor="bg-muted/50 text-center text-muted-foreground">
+				<KanbanCard titleWidth="w-12" detailWidth="w-8" />
+				<KanbanCard titleWidth="w-10" detailWidth="w-9" />
+			</KanbanColumn>
+			<KanbanColumn title="Interview" titleColor="bg-amber-500/15 text-center text-amber-600 dark:text-amber-400">
+				<KanbanCard titleWidth="w-11" detailWidth="w-7" />
+			</KanbanColumn>
+			<KanbanColumn title="Offer" titleColor="bg-emerald-500/15 text-center text-emerald-600 dark:text-emerald-400">
+				<KanbanCard titleWidth="w-9" detailWidth="w-6" />
+			</KanbanColumn>
+		</div>
+	);
+}
 
 const heroFeatures = [
 	{
@@ -24,6 +140,7 @@ const heroFeatures = [
 			"One-click PDF and HTML export",
 		],
 		imagePosition: "right" as const,
+		Preview: ResumeBuilderPreview,
 	},
 	{
 		icon: PenTool,
@@ -36,6 +153,7 @@ const heroFeatures = [
 			"Multiple tone and style options",
 		],
 		imagePosition: "left" as const,
+		Preview: CoverLetterPreview,
 	},
 	{
 		icon: BarChart3,
@@ -48,6 +166,7 @@ const heroFeatures = [
 			"Success rate analytics",
 		],
 		imagePosition: "right" as const,
+		Preview: ApplicationTrackerPreview,
 	},
 ];
 
@@ -74,13 +193,13 @@ const secondaryFeatures = [
 
 function HeroFeatureItem({
 	feature,
-	index,
 }: {
 	feature: (typeof heroFeatures)[number];
 	index: number;
 }) {
 	const { ref, isVisible } = useScrollAnimation();
 	const Icon = feature.icon;
+	const { Preview } = feature;
 	const isImageRight = feature.imagePosition === "right";
 
 	return (
@@ -92,10 +211,10 @@ function HeroFeatureItem({
 		>
 			{/* Content */}
 			<div className="flex flex-col justify-center">
-				<div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-					<Icon className="h-7 w-7 text-primary" />
+				<div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-2 ring-primary/20">
+					<Icon className="h-8 w-8 text-primary" />
 				</div>
-				<h3 className="font-display text-3xl leading-tight md:text-4xl">
+				<h3 className="font-bold text-3xl leading-tight tracking-tight md:text-4xl">
 					{feature.title}
 				</h3>
 				<p className="mt-4 text-lg leading-relaxed text-muted-foreground">
@@ -114,19 +233,12 @@ function HeroFeatureItem({
 				</ul>
 			</div>
 
-			{/* Visual placeholder */}
+			{/* Feature preview */}
 			<div className="flex items-center justify-center">
 				<div className="relative w-full max-w-md">
 					<div className="absolute inset-0 -z-10 rounded-[24px] bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-2xl" />
-					<div className="flex aspect-[4/3] items-center justify-center rounded-[24px] border border-border/40 bg-card/50 backdrop-blur-sm">
-						<div className="flex flex-col items-center gap-3 p-8">
-							<div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-								<Icon className="h-8 w-8 text-primary/60" />
-							</div>
-							<p className="text-sm text-muted-foreground">
-								Feature {index + 1} preview
-							</p>
-						</div>
+					<div className="flex aspect-[4/3] items-center justify-center rounded-[24px] border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
+						<Preview />
 					</div>
 				</div>
 			</div>
@@ -144,12 +256,12 @@ function SecondaryFeaturesGrid() {
 				return (
 					<div
 						key={feature.title}
-						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
+						className={`flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/50 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 ${isVisible ? `animate-fade-in-up stagger-${index + 1}` : "before-animate"}`}
 					>
-						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-							<Icon className="h-6 w-6 text-primary" />
+						<div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 ring-2 ring-primary/20">
+							<Icon className="h-7 w-7 text-primary" />
 						</div>
-						<h4 className="font-display text-xl">{feature.title}</h4>
+						<h4 className="font-bold text-xl tracking-tight">{feature.title}</h4>
 						<p className="text-sm leading-relaxed text-muted-foreground">
 							{feature.description}
 						</p>
@@ -166,7 +278,7 @@ export function FeaturesSection() {
 	return (
 		<section
 			id="features"
-			className="relative bg-background py-20 sm:py-28 lg:py-36"
+			className="relative bg-background py-24 sm:py-32 lg:py-40"
 		>
 			<div className="container mx-auto px-4">
 				{/* Section header */}
@@ -180,7 +292,7 @@ export function FeaturesSection() {
 					>
 						Features
 					</Badge>
-					<h2 className="font-display text-balance text-4xl leading-tight md:text-5xl">
+					<h2 className="font-bold text-balance text-4xl leading-tight tracking-tight md:text-5xl">
 						Everything you need to stand out
 					</h2>
 					<p className="mt-6 text-lg leading-relaxed text-muted-foreground">

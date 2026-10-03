@@ -63,7 +63,7 @@ function ResetPasswordForm() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+          <CardHeader>
             <CardTitle className="text-2xl font-bold">Password Reset Successful</CardTitle>
             <CardDescription>
               Your password has been successfully updated
@@ -89,7 +89,7 @@ function ResetPasswordForm() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+          <CardHeader>
             <CardTitle className="text-2xl font-bold">Invalid Reset Link</CardTitle>
             <CardDescription>
               This password reset link is invalid or has expired
@@ -114,7 +114,7 @@ function ResetPasswordForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader>
           <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
           <CardDescription>
             Enter your new password below

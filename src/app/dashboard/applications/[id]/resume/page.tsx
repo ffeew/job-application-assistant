@@ -25,6 +25,8 @@ import {
 	Sparkles,
 	Brain,
 	Target,
+	Save,
+	CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -32,6 +34,7 @@ import { useApplicationResumeInfo } from "@/app/dashboard/applications/queries/u
 import {
 	useGenerateJobApplicationPreview,
 	useGenerateJobApplicationPDF,
+	useSaveTailoredResume,
 } from "@/app/dashboard/applications/mutations/use-generate-job-application-resume";
 import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import type {
@@ -39,6 +42,8 @@ import type {
 	IntelligentContentSelection,
 } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { FormFieldError } from "@/components/ui/form-field-error";
+import { downloadPDF } from "@/lib/utils";
 
 export default function JobApplicationResumePage({
 	params,
@@ -51,22 +56,25 @@ export default function JobApplicationResumePage({
 	const [previewHTML, setPreviewHTML] = useState<string | null>(null);
 	const [aiSelection, setAiSelection] =
 		useState<IntelligentContentSelection | null>(null);
+	const [resumeContent, setResumeContent] = useState<string | null>(null);
 
 	const {
 		data: applicationInfo,
 		isLoading,
 		error,
 	} = useApplicationResumeInfo(resolvedParams?.id || "");
-	const {
-		generatePreview,
-		isGenerating: isGeneratingPreview,
-		error: previewError,
-	} = useGenerateJobApplicationPreview();
-	const {
-		generatePDF,
-		isGenerating: isGeneratingPDF,
-		error: pdfError,
-	} = useGenerateJobApplicationPDF();
+
+	// Simple mutation hooks
+	const previewMutation = useGenerateJobApplicationPreview();
+	const pdfMutation = useGenerateJobApplicationPDF();
+	const saveMutation = useSaveTailoredResume();
+
+	// Derived state
+	const isGeneratingPreview = previewMutation.isPending;
+	const isGeneratingPDF = pdfMutation.isPending;
+	const isSaving = saveMutation.isPending;
+	const previewError = previewMutation.error;
+	const pdfError = pdfMutation.error;
 
 	const form = useForm({
 		resolver: zodResolver(
@@ -118,8 +126,39 @@ export default function JobApplicationResumePage({
 			"applicationId"
 		>;
 		try {
-			generatePDF(resolvedParams.id, validatedData);
-			toast.success("Resume generated successfully!");
+			// First generate the preview to get content for saving
+			const previewResult = await previewMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: validatedData,
+			});
+			setPreviewHTML(previewResult.html);
+			setAiSelection(previewResult.aiSelection || null);
+
+			// Build content to save
+			const contentToSave = JSON.stringify({
+				html: previewResult.html,
+				aiSelection: previewResult.aiSelection || null,
+				config: validatedData,
+				generatedAt: new Date().toISOString(),
+			});
+			setResumeContent(contentToSave);
+
+			// Auto-save the tailored resume
+			await saveMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: {
+					title: validatedData.title,
+					content: contentToSave,
+				},
+			});
+
+			// Generate and download PDF
+			const blob = await pdfMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: validatedData,
+			});
+			downloadPDF(blob, validatedData.title);
+			toast.success("Resume saved and PDF generated!");
 		} catch (error) {
 			console.error("Error generating resume:", error);
 			toast.error("Error generating resume. Please try again.");
@@ -134,9 +173,21 @@ export default function JobApplicationResumePage({
 			"applicationId"
 		>;
 		try {
-			const result = await generatePreview(resolvedParams.id, formData);
+			const result = await previewMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: formData,
+			});
 			setPreviewHTML(result.html);
 			setAiSelection(result.aiSelection || null);
+
+			// Store the resume content for saving
+			const contentToSave = JSON.stringify({
+				html: result.html,
+				aiSelection: result.aiSelection || null,
+				config: formData,
+				generatedAt: new Date().toISOString(),
+			});
+			setResumeContent(contentToSave);
 
 			if (result.aiSelection) {
 				toast.success("AI has optimized your resume content for this job!");
@@ -144,6 +195,30 @@ export default function JobApplicationResumePage({
 		} catch (error) {
 			console.error("Error generating preview:", error);
 			toast.error("Error generating preview. Please try again.");
+		}
+	};
+
+	const handleSaveResume = async () => {
+		if (!resolvedParams?.id || !resumeContent) return;
+
+		const formData = form.getValues();
+		try {
+			const result = await saveMutation.mutateAsync({
+				applicationId: resolvedParams.id,
+				data: {
+					title: formData.title,
+					content: resumeContent,
+				},
+			});
+
+			if (result.isNew) {
+				toast.success("Tailored resume saved successfully!");
+			} else {
+				toast.success("Tailored resume updated successfully!");
+			}
+		} catch (error) {
+			console.error("Error saving resume:", error);
+			toast.error("Error saving resume. Please try again.");
 		}
 	};
 
@@ -158,8 +233,8 @@ export default function JobApplicationResumePage({
 
 	if (!resolvedParams || isLoading) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -171,7 +246,7 @@ export default function JobApplicationResumePage({
 						<p className="text-muted-foreground">Loading application data...</p>
 					</div>
 				</div>
-				<div className="space-y-4">
+				<div className="flex flex-col gap-4">
 					<CardSkeleton />
 					<CardSkeleton />
 				</div>
@@ -181,8 +256,8 @@ export default function JobApplicationResumePage({
 
 	if (error || !applicationInfo) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center gap-4">
 					<Button variant="outline" size="sm" asChild>
 						<Link href="/dashboard/applications">
 							<ArrowLeft className="mr-2 h-4 w-4" />
@@ -196,7 +271,7 @@ export default function JobApplicationResumePage({
 				</div>
 				<Card>
 					<CardContent className="pt-6">
-						<div className="flex items-center space-x-2 text-red-600">
+						<div className="flex items-center gap-2 text-red-600">
 							<AlertCircle className="h-5 w-5" />
 							<p>Failed to load application data. Please try again.</p>
 						</div>
@@ -207,8 +282,8 @@ export default function JobApplicationResumePage({
 	}
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center space-x-4">
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center gap-4">
 				<Button variant="outline" size="sm" asChild>
 					<Link href={`/dashboard/applications/${resolvedParams.id}`}>
 						<ArrowLeft className="mr-2 h-4 w-4" />
@@ -227,7 +302,7 @@ export default function JobApplicationResumePage({
 			{/* Application Context Card */}
 			<Card className="border-blue-200 bg-blue-50">
 				<CardContent>
-					<div className="flex items-center space-x-2 text-blue-800">
+					<div className="flex items-center gap-2 text-blue-800">
 						<Target className="h-5 w-5" />
 						<div>
 							<p className="font-medium">Target Position</p>
@@ -235,7 +310,7 @@ export default function JobApplicationResumePage({
 								{applicationInfo.position} at {applicationInfo.company}
 								{applicationInfo.location && ` • ${applicationInfo.location}`}
 							</p>
-							<div className="flex items-center space-x-2 mt-2">
+							<div className="flex items-center flex-wrap gap-2 mt-2">
 								<Badge
 									variant={
 										applicationInfo.hasJobDescription ? "default" : "secondary"
@@ -255,6 +330,15 @@ export default function JobApplicationResumePage({
 											AI Optimization Enabled
 										</Badge>
 									)}
+								{applicationInfo.tailoredResume && (
+									<Badge
+										variant="outline"
+										className="text-green-600 border-green-600"
+									>
+										<CheckCircle className="h-3 w-3 mr-1" />
+										Tailored Resume Saved
+									</Badge>
+								)}
 							</div>
 						</div>
 					</div>
@@ -263,7 +347,7 @@ export default function JobApplicationResumePage({
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
-				<div className="space-y-6">
+				<div className="flex flex-col gap-6">
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<Card>
 							<CardHeader>
@@ -272,22 +356,18 @@ export default function JobApplicationResumePage({
 									Customize your resume for this specific application
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="space-y-2">
+							<CardContent className="flex flex-col gap-6">
+								<div className="flex flex-col gap-2">
 									<Label htmlFor="title">Resume Title</Label>
 									<Input
 										id="title"
 										{...register("title")}
 										placeholder="e.g., Software Engineer Resume - Google"
 									/>
-									{errors.title && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.title.message}
-										</p>
-									)}
+									<FormFieldError message={errors.title?.message} />
 								</div>
 
-								<div className="space-y-2">
+								<div className="flex flex-col gap-2">
 									<Label>Template</Label>
 									<select
 										{...register("template")}
@@ -304,8 +384,8 @@ export default function JobApplicationResumePage({
 
 								{/* AI Configuration */}
 								{applicationInfo.hasJobDescription && (
-									<div className="space-y-4">
-										<div className="flex items-center space-x-3">
+									<div className="flex flex-col gap-4">
+										<div className="flex items-center gap-3">
 											<Checkbox
 												id="useAISelection"
 												checked={watchedValues.useAISelection}
@@ -313,10 +393,10 @@ export default function JobApplicationResumePage({
 													setValue("useAISelection", !!checked)
 												}
 											/>
-											<div className="space-y-0.5">
+											<div className="flex flex-col gap-0.5">
 												<Label
 													htmlFor="useAISelection"
-													className="text-base flex items-center space-x-2 cursor-pointer"
+													className="text-base flex items-center gap-2 cursor-pointer"
 												>
 													<Brain className="h-4 w-4 text-purple-600" />
 													<span>AI Content Optimization</span>
@@ -328,8 +408,8 @@ export default function JobApplicationResumePage({
 										</div>
 
 										{watchedValues.useAISelection && (
-											<div className="space-y-4 pl-6 border-l-2 border-purple-200">
-												<div className="space-y-2">
+											<div className="flex flex-col gap-4 pl-6 border-l-2 border-purple-200">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxWorkExperiences">
 														Max Work Experiences:{" "}
 														{watchedValues.maxWorkExperiences}
@@ -351,7 +431,7 @@ export default function JobApplicationResumePage({
 													/>
 												</div>
 
-												<div className="space-y-2">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxProjects">
 														Max Projects: {watchedValues.maxProjects}
 													</Label>
@@ -369,7 +449,7 @@ export default function JobApplicationResumePage({
 													/>
 												</div>
 
-												<div className="space-y-2">
+												<div className="flex flex-col gap-2">
 													<Label htmlFor="maxSkills">
 														Max Skills: {watchedValues.maxSkills}
 													</Label>
@@ -394,7 +474,7 @@ export default function JobApplicationResumePage({
 								{!applicationInfo.hasJobDescription && (
 									<Card className="border-yellow-200 bg-yellow-50">
 										<CardContent className="pt-4">
-											<div className="flex items-center space-x-2 text-yellow-800">
+											<div className="flex items-center gap-2 text-yellow-800">
 												<AlertCircle className="h-5 w-5" />
 												<div>
 													<p className="font-medium">No Job Description</p>
@@ -408,7 +488,7 @@ export default function JobApplicationResumePage({
 									</Card>
 								)}
 
-								<div className="flex space-x-2 pt-4">
+								<div className="flex flex-wrap gap-2 pt-4">
 									<Button
 										type="button"
 										variant="outline"
@@ -422,13 +502,28 @@ export default function JobApplicationResumePage({
 										)}
 										Preview
 									</Button>
+									{resumeContent && (
+										<Button
+											type="button"
+											variant="secondary"
+											onClick={handleSaveResume}
+											disabled={isSaving}
+										>
+											{isSaving ? (
+												<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+											) : (
+												<Save className="mr-2 h-4 w-4" />
+											)}
+											Save Resume
+										</Button>
+									)}
 									<Button type="submit" disabled={isGeneratingPDF}>
 										{isGeneratingPDF ? (
 											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 										) : (
 											<Download className="mr-2 h-4 w-4" />
 										)}
-										Generate PDF
+										Generate & Save PDF
 									</Button>
 								</div>
 
@@ -447,7 +542,7 @@ export default function JobApplicationResumePage({
 					{aiSelection && (
 						<Card className="border-purple-200 bg-purple-50">
 							<CardHeader>
-								<CardTitle className="flex items-center space-x-2">
+								<CardTitle className="flex items-center gap-2">
 									<Sparkles className="h-5 w-5 text-purple-600" />
 									<span className="text-purple-600">
 										AI Optimization Results
@@ -457,7 +552,7 @@ export default function JobApplicationResumePage({
 									AI has analyzed the job description and optimized your content
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="flex flex-col gap-4">
 								<div>
 									<h4 className="font-medium text-sm text-purple-900">
 										Strategy
@@ -527,8 +622,7 @@ export default function JobApplicationResumePage({
 						<CardContent>
 							{previewHTML ? (
 								<div
-									className="border rounded-lg overflow-hidden bg-white"
-									style={{ height: "600px" }}
+									className="border rounded-lg overflow-hidden bg-white h-[600px]"
 								>
 									<iframe
 										srcDoc={previewHTML}
