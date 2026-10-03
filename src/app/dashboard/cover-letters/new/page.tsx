@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { useGenerateCoverLetter } from "@/app/dashboard/cover-letters/mutations/
 import { toast } from "sonner";
 
 export default function NewCoverLetterPage() {
-  const [selectedResume, setSelectedResume] = useState("");
+  const [selectedResumeId, setSelectedResumeId] = useState("");
   const [selectedApplication, setSelectedApplication] = useState("");
   const [manualCompany, setManualCompany] = useState("");
   const [manualPosition, setManualPosition] = useState("");
@@ -32,13 +32,8 @@ export default function NewCoverLetterPage() {
   const generateCoverLetterMutation = useGenerateCoverLetter();
   const createCoverLetterMutation = useCreateCoverLetter();
 
-  // Set default resume when resumes are loaded
-  useEffect(() => {
-    if (resumes.length > 0 && !selectedResume) {
-      const defaultResume = resumes.find((r: { isDefault: boolean }) => r.isDefault) || resumes[0];
-      setSelectedResume(defaultResume.id);
-    }
-  }, [resumes, selectedResume]);
+  const selectedResume =
+    selectedResumeId || resumes.find((resume) => resume.isDefault)?.id || resumes[0]?.id || "";
 
   const handleApplicationChange = (applicationId: string) => {
     setSelectedApplication(applicationId);
@@ -209,7 +204,7 @@ export default function NewCoverLetterPage() {
             </CardHeader>
             <CardContent>
               {resumes.length > 0 ? (
-                <Select value={selectedResume} onValueChange={setSelectedResume}>
+                <Select value={selectedResume} onValueChange={setSelectedResumeId}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

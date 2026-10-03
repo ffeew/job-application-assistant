@@ -208,6 +208,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	useEffect(() => {
 		if (profile) {
+			// Compiler memoization can reuse register() props; retain refs to update mounted inputs.
 			reset({
 				firstName: profile.firstName,
 				lastName: profile.lastName,
@@ -222,7 +223,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 				githubUrl: profile.githubUrl,
 				portfolioUrl: profile.portfolioUrl,
 				professionalSummary: profile.professionalSummary,
-			});
+			}, { keepFieldsRef: true });
 		}
 	}, [profile, reset]);
 
@@ -265,7 +266,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 		importResumeMutation.mutate(file, {
 			onSuccess: (payload) => {
-				reset(payload.profile);
+				reset(payload.profile, { keepFieldsRef: true });
 				onImportPreview(payload);
 				toast.success("Resume imported. Review the pending details below before saving.");
 			},

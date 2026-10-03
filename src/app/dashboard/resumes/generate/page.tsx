@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,11 +71,13 @@ export default function GenerateResumePage() {
 	const {
 		register,
 		handleSubmit,
-		watch,
 		setValue,
 		formState: { errors },
 	} = form;
-	const contentSelection = watch("contentSelection");
+	const contentSelection = useWatch({
+		control: form.control,
+		name: "contentSelection",
+	});
 
 	const onSubmit = async (data: unknown) => {
 		// Data is validated by Zod resolver, safe to cast

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,11 +86,10 @@ export default function JobApplicationResumePage({
 	const {
 		register,
 		handleSubmit,
-		watch,
 		setValue,
 		formState: { errors },
 	} = form;
-	const watchedValues = watch();
+	const watchedValues = useWatch({ control: form.control });
 
 	// Resolve params Promise
 	useEffect(() => {

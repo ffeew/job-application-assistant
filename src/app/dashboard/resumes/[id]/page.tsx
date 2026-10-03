@@ -46,7 +46,6 @@ interface ResumeFormData {
 }
 
 export default function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
-  const [loading, setLoading] = useState(true);
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
   
   const router = useRouter();
@@ -97,6 +96,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
           skills: "",
         };
       }
+      // Compiler memoization can reuse register() props; retain refs to update mounted inputs.
       reset({
         title: resume.title,
         isDefault: resume.isDefault,
@@ -105,8 +105,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
         experience: content.experience || "",
         education: content.education || "",
         skills: content.skills || "",
-      });
-      setLoading(false);
+      }, { keepFieldsRef: true });
     }
   }, [resume, reset]);
 
@@ -155,7 +154,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
     });
   };
 
-  if (!resolvedParams || resumeLoading || loading) {
+  if (!resolvedParams || resumeLoading || !resume) {
     return <ResumeDetailSkeleton />;
   }
 

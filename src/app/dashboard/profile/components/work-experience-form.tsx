@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,8 +49,8 @@ export function WorkExperienceForm({
     },
   });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = form;
-  const isCurrent = watch("isCurrent");
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = form;
+  const isCurrent = useWatch({ control: form.control, name: "isCurrent" });
 
   const onSubmit = async (data: unknown) => {
     // Data is validated by Zod resolver, safe to cast

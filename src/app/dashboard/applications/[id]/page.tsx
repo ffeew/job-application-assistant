@@ -85,6 +85,7 @@ export default function EditApplicationPage({
 	// Reset form with application data when loaded
 	useEffect(() => {
 		if (application) {
+			// Compiler memoization can reuse register() props; retain refs to update mounted inputs.
 			reset({
 				company: application.company || "",
 				position: application.position || "",
@@ -100,7 +101,7 @@ export default function EditApplicationPage({
 				contactEmail: application.contactEmail || "",
 				contactName: application.contactName || "",
 				recruiterId: application.recruiterId || "",
-			});
+			}, { keepFieldsRef: true });
 		}
 	}, [application, reset]);
 

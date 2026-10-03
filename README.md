@@ -13,7 +13,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.4 (App Router), React 19, TypeScript 5
+- **Framework**: Next.js 16.3 (App Router), React 19.3 with React Compiler, TypeScript 5
 - **Data & Auth**: Drizzle ORM + Turso (libSQL), BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
 - **AI & Documents**: Vercel AI SDK with `@ai-sdk/groq` for text generation, Puppeteer for PDF export, AI content selection service for resume tailoring
@@ -23,7 +23,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 20.9.0+ (Node.js 24 is used in CI)
 - [Bun](https://bun.sh/) 1.1+ (recommended) or npm
 - Turso database credentials
 - Groq API key for AI functionality
@@ -44,10 +44,10 @@ bun run dev             # visit http://localhost:3000
 ### Useful scripts
 
 - `bun run dev` – start the Turbopack dev server
-- `bun run build` – production build (includes lint and type checks)
+- `bun run build` – run ESLint, then build for production with Turbopack and type checks
 - `bun run start` – serve the production build
 - `bun run lint` – ESLint
-- `bun run typecheck` – TypeScript only
+- `bun run typecheck` – generate Next.js route types, then run TypeScript checks
 - `bun run db:push` / `bun run db:generate` / `bun run db:studio` – Drizzle Kit helpers
 - `bunx drizzle-kit push` – push schema changes directly to Turso if preferred
 
@@ -77,7 +77,7 @@ bun run dev             # visit http://localhost:3000
   - API routes live under `src/app/api/<feature>/`; for instance, `src/app/api/resume-generation/route.ts` handles HTTP, delegates to `service.ts`, and trusts Zod schemas from `validators.ts` to validate requests and share types with the front end.
 - `src/components` — Shared UI primitives (shadcn/ui wrappers, buttons, inputs, skeletons) that stay presentation-only.
 - `src/lib` — Back-end glue: `env.ts` for Zod-based env validation, `db/` for Drizzle + Turso schema/client, `auth.ts` for BetterAuth, resume templates, utility helpers, and the validator re-exports.
-- `middleware.ts` — BetterAuth session checks for protected routes.
+- `src/proxy.ts` — BetterAuth session-cookie checks for protected dashboard routes.
 - `migrations/` — Drizzle-generated SQL kept in lockstep with schema changes.
 - `components.json`, `public/`, `drizzle.config.ts`, `tsconfig.json`, etc. — framework configuration and static assets.
 
@@ -85,8 +85,8 @@ bun run dev             # visit http://localhost:3000
 
 ### Authentication & access control
 
-- BetterAuth email/password flows with sign-in, sign-up, password reset, and middleware-protected dashboard routes.
-- `src/lib/auth.ts` and `middleware.ts` enforce session checks on server requests.
+- BetterAuth email/password flows with sign-in, sign-up, password reset, and proxy-protected dashboard routes.
+- `src/proxy.ts` redirects dashboard requests without a session cookie to sign-in. API routes validate sessions through `src/lib/auth.ts`.
 
 ### Profile management
 
@@ -132,7 +132,8 @@ bun run dev             # visit http://localhost:3000
 
 ## Quality checks & testing
 
-- Run `bun run lint` and `bun run typecheck` before opening a pull request. Both commands are required and run automatically during `bun run build`.
+- Run `bun run lint` and `bun run typecheck` before opening a pull request. The build script runs ESLint explicitly before Next.js compiles and checks types; Next.js 16 does not run linting itself.
+- CI uses Node.js 24 and `bun install --frozen-lockfile` before running lint and type checks.
 - There are currently no automated tests; add `*.test.ts(x)` files next to the code when introducing critical logic.
 
 ## Contributing
