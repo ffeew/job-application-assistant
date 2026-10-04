@@ -6,7 +6,15 @@ import { db } from "./db/db";
 import { env } from "./env";
 
 // Email sending function with Resend integration
-async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
+async function sendEmail({
+  to,
+  subject,
+  text,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+}) {
   // If Resend API key is not configured, log to console (development mode)
   if (!env.RESEND_API_KEY) {
     console.log(`
@@ -35,8 +43,11 @@ Content: ${text}
 }
 
 export const auth = betterAuth({
+  baseURL: env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
+  trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
   database: drizzleAdapter(db, {
-    provider: "sqlite",
+    provider: "pg",
   }),
   emailAndPassword: {
     enabled: true,

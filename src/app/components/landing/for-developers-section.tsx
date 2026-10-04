@@ -29,8 +29,8 @@ const technologies = [
   },
   {
     icon: Database,
-    title: "Turso + Drizzle",
-    description: "Edge SQLite with type-safe queries",
+    title: "PostgreSQL + Drizzle",
+    description: "Self-hosted PostgreSQL with type-safe queries",
   },
   {
     icon: Zap,
@@ -54,13 +54,13 @@ const steps = [
     icon: GithubIcon,
     title: "Clone & deploy",
     description:
-      "Fork the repository, install dependencies with Bun, and deploy to Vercel or your preferred host.",
+      "Fork the repository, install dependencies with Bun, and self-host with Docker Compose.",
   },
   {
     icon: Settings,
     title: "Configure & connect",
     description:
-      "Provision a Turso database, add Groq credentials, and run Drizzle migrations.",
+      "Provision a PostgreSQL database, add Groq credentials, and run Drizzle migrations.",
   },
   {
     icon: Code,

@@ -15,7 +15,10 @@ import type {
 } from "./validators";
 
 export class CoverLettersService {
-  async getCoverLetters(userId: string, query?: CoverLettersQuery): Promise<CoverLetterResponse[]> {
+  async getCoverLetters(
+    userId: string,
+    query?: CoverLettersQuery,
+  ): Promise<CoverLetterResponse[]> {
     const whereConditions = [eq(coverLetters.userId, userId)];
 
     // Add query filters
@@ -23,7 +26,9 @@ export class CoverLettersService {
       whereConditions.push(eq(coverLetters.isAiGenerated, query.isAiGenerated));
     }
     if (query?.jobApplicationId) {
-      whereConditions.push(eq(coverLetters.jobApplicationId, query.jobApplicationId));
+      whereConditions.push(
+        eq(coverLetters.jobApplicationId, query.jobApplicationId),
+      );
     }
     if (query?.resumeId) {
       whereConditions.push(eq(coverLetters.resumeId, query.resumeId));
@@ -38,7 +43,7 @@ export class CoverLettersService {
       .offset(query?.offset || 0);
 
     // Convert null to undefined and ensure proper typing
-    return coverLettersList.map(letter => ({
+    return coverLettersList.map((letter) => ({
       ...letter,
       jobApplicationId: letter.jobApplicationId ?? undefined,
       resumeId: letter.resumeId ?? undefined,
@@ -46,14 +51,14 @@ export class CoverLettersService {
     }));
   }
 
-  async getCoverLetterById(userId: string, id: string): Promise<CoverLetterResponse | null> {
+  async getCoverLetterById(
+    userId: string,
+    id: string,
+  ): Promise<CoverLetterResponse | null> {
     const coverLettersList = await db
       .select()
       .from(coverLetters)
-      .where(and(
-        eq(coverLetters.id, id),
-        eq(coverLetters.userId, userId)
-      ))
+      .where(and(eq(coverLetters.id, id), eq(coverLetters.userId, userId)))
       .limit(1);
 
     if (!coverLettersList[0]) return null;
@@ -67,7 +72,10 @@ export class CoverLettersService {
     };
   }
 
-  async createCoverLetter(userId: string, data: CreateCoverLetterRequest): Promise<CoverLetterResponse> {
+  async createCoverLetter(
+    userId: string,
+    data: CreateCoverLetterRequest,
+  ): Promise<CoverLetterResponse> {
     const id = randomUUID();
     const now = new Date();
 
@@ -101,7 +109,7 @@ export class CoverLettersService {
   async updateCoverLetter(
     userId: string,
     id: string,
-    data: UpdateCoverLetterRequest
+    data: UpdateCoverLetterRequest,
   ): Promise<CoverLetterResponse | null> {
     const now = new Date();
 
@@ -111,10 +119,7 @@ export class CoverLettersService {
         ...data,
         updatedAt: now,
       })
-      .where(and(
-        eq(coverLetters.id, id),
-        eq(coverLetters.userId, userId)
-      ))
+      .where(and(eq(coverLetters.id, id), eq(coverLetters.userId, userId)))
       .returning();
 
     if (!coverLetter) return null;
@@ -130,12 +135,10 @@ export class CoverLettersService {
   async deleteCoverLetter(userId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(coverLetters)
-      .where(and(
-        eq(coverLetters.id, id),
-        eq(coverLetters.userId, userId)
-      ));
+      .where(and(eq(coverLetters.id, id), eq(coverLetters.userId, userId)))
+      .returning({ id: coverLetters.id });
 
-    return result.rowsAffected > 0;
+    return result.length > 0;
   }
 
   async getCoverLettersCount(userId: string): Promise<number> {
@@ -147,7 +150,9 @@ export class CoverLettersService {
     return result.length;
   }
 
-  async generateCoverLetter(data: GenerateCoverLetterRequest): Promise<GenerateCoverLetterResponse> {
+  async generateCoverLetter(
+    data: GenerateCoverLetterRequest,
+  ): Promise<GenerateCoverLetterResponse> {
     const prompt = `You are an expert cover letter writer. Create a professional, personalized cover letter based on the following information:
 
 Company: ${data.company}
@@ -157,8 +162,12 @@ Applicant Name: ${data.applicantName || ""}
 Job Description:
 ${data.jobDescription ?? "Not provided"}
 
-${data.resumeContent ? `Resume/Background Information:
-${typeof data.resumeContent === 'string' ? data.resumeContent : JSON.stringify(data.resumeContent, null, 2)}` : ''}
+${
+  data.resumeContent
+    ? `Resume/Background Information:
+${typeof data.resumeContent === "string" ? data.resumeContent : JSON.stringify(data.resumeContent, null, 2)}`
+    : ""
+}
 
 Please write a compelling cover letter that:
 1. Addresses the specific role and company

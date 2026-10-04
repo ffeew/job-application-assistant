@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,28 +35,11 @@ import { generateResumeSchema } from "@/app/api/profile/validators";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
 import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 import { FormFieldError } from "@/components/ui/form-field-error";
-import { useResumeGenerationStore } from "@/app/dashboard/resumes/store/use-resume-generation-store";
 import { downloadPDF } from "@/lib/utils";
 import { ResumePDFPreview } from "@/components/resume-pdf-preview";
 import { pdfBase64ToBlob, resumeRequestKey } from "@/lib/resume-preview";
 
 export default function GenerateResumePage() {
-  // Zustand store selectors
-  const preview = useResumeGenerationStore((state) => state.preview);
-  const setPreview = useResumeGenerationStore((state) => state.setPreview);
-  const generationStatus = useResumeGenerationStore(
-    (state) => state.generationStatus,
-  );
-  const setGenerationStatus = useResumeGenerationStore(
-    (state) => state.setGenerationStatus,
-  );
-  const generationError = useResumeGenerationStore(
-    (state) => state.generationError,
-  );
-  const setGenerationError = useResumeGenerationStore(
-    (state) => state.setGenerationError,
-  );
-
   const {
     data: resumeData,
     isLoading: dataLoading,
@@ -67,8 +51,10 @@ export default function GenerateResumePage() {
   const previewMutation = useGenerateResumePreview();
 
   // Derived state
-  const isValidating = generationStatus === "validating";
-  const isGenerating = generationStatus === "generating";
+  const preview = previewMutation.preview;
+  const isValidating = validateMutation.isPending;
+  const isGenerating = previewMutation.isPending;
+  const generationError = previewMutation.error?.message;
   const isGeneratingPreview = previewMutation.isPending;
 
   const form = useForm({
@@ -103,6 +89,20 @@ export default function GenerateResumePage() {
   });
 
   const watchedValues = useWatch({ control: form.control });
+  const restoredJob = useRef<string | null>(null);
+  useEffect(() => {
+    const job = previewMutation.job;
+    if (
+      !job ||
+      job.payload.kind !== "profile" ||
+      restoredJob.current === job.id
+    )
+      return;
+    restoredJob.current = job.id;
+    if (!form.formState.isDirty)
+      form.reset(job.payload.request, { keepFieldsRef: true });
+  }, [previewMutation.job, form]);
+
   const stale = preview
     ? resumeRequestKey(preview.config) !== resumeRequestKey(watchedValues)
     : false;
@@ -112,38 +112,23 @@ export default function GenerateResumePage() {
     const validatedData = data as GenerateResumeRequest;
     try {
       // Validation step
-      setGenerationStatus("validating");
-      setGenerationError(null);
       const validation = await validateMutation.mutateAsync(validatedData);
 
       if (!validation.valid) {
-        setGenerationStatus("error");
-        setGenerationError(
-          `Validation failed: ${validation.errors.join(", ")}`,
-        );
+        toast.error(`Validation failed: ${validation.errors.join(", ")}`);
         return;
       }
 
-      // Generation step
-      setGenerationStatus("generating");
-      const result =
+      if (
         preview &&
         resumeRequestKey(preview.config) === resumeRequestKey(validatedData)
-          ? preview
-          : await previewMutation.mutateAsync(validatedData);
-      setPreview(result);
-      const blob = pdfBase64ToBlob(result.pdfBase64);
-
-      // Download using utility
-      downloadPDF(blob, validatedData.title);
-      setGenerationStatus("complete");
-      toast.success("Resume generated successfully!");
+      ) {
+        downloadPDF(pdfBase64ToBlob(preview.pdfBase64), validatedData.title);
+      } else {
+        await previewMutation.mutateAsync(validatedData, "download");
+      }
     } catch (error) {
       console.error("Error generating resume:", error);
-      setGenerationStatus("error");
-      setGenerationError(
-        error instanceof Error ? error.message : "Error generating resume",
-      );
       toast.error(
         error instanceof Error
           ? error.message
@@ -156,8 +141,7 @@ export default function GenerateResumePage() {
     try {
       if (!(await form.trigger())) return;
       const formData = generateResumeSchema.parse(form.getValues());
-      const result = await previewMutation.mutateAsync(formData);
-      setPreview(result);
+      await previewMutation.mutateAsync(formData);
     } catch (error) {
       console.error("Error generating preview:", error);
       toast.error(
@@ -231,6 +215,14 @@ export default function GenerateResumePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {isGenerating && (
+        <p role="status">
+          {previewMutation.status === "queued"
+            ? "Your resume is queued."
+            : "Generating and checking layout…"}{" "}
+          You can leave this page and return later.
+        </p>
+      )}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/resumes">

@@ -29,3 +29,38 @@ jobs:
         run: bun run typecheck
       - name: Run tests
         run: bun run test
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-bookworm
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: job_assistant_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d job_assistant_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NODE_ENV: test
+      RUN_DB_INTEGRATION: "1"
+      DATABASE_URL: postgresql://test:test@localhost:5432/job_assistant_test
+      BETTER_AUTH_SECRET: test-only-secret-at-least-thirty-two-characters
+      BETTER_AUTH_URL: http://localhost:3000
+      GROQ_API_KEY: test-only
+      MISTRAL_API_KEY: test-only
+      RESEND_API_KEY: ""
+      RESEND_FROM_EMAIL: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run test:integration

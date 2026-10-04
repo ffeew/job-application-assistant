@@ -1,6 +1,6 @@
 # Resume compiler
 
-The Next.js application stays on Vercel. This service runs on a Docker-capable host and compiles application-generated LaTeX with pdfLaTeX. It uses a pinned Debian Bookworm TeX Live distribution and the `newtxtext` font family from the reference resume. Local TeX versions can have small typography differences; the Docker image is the deployment reference.
+The application and generation worker can run beside this service in the root Docker Compose stack. This service runs on a Docker-capable host and compiles application-generated LaTeX with pdfLaTeX. It uses a pinned Debian Bookworm TeX Live distribution and the `newtxtext` font family from the reference resume. Local TeX versions can have small typography differences; the Docker image is the deployment reference.
 
 From the repository root:
 
@@ -17,7 +17,7 @@ docker run --rm --name job-resume-latex --stop-timeout 20 -p 127.0.0.1:8080:8080
 
 Set `LATEX_COMPILER_URL=http://localhost:8080` and the matching `LATEX_COMPILER_TOKEN` in the application's `.env`. Other application features can run without these settings; generation reports a configuration error until they are provided. For development with system TeX Live and Poppler already installed, `bun run services/latex-compiler/index.ts` runs the same service.
 
-For production, deploy this image on a container host and expose it through HTTPS. Configure the public service URL and shared token as server-side Vercel environment variables. The compiler needs no Groq key or database credentials. Keep the same image digest across replicas; updates to the template or fonts require a new template version so existing saved snapshots can retain their layout. Provisioning the container host and publishing the Vercel deployment are separate deployment steps.
+For the self-hosted production stack, run `docker compose up -d --build` from the repository root. The app and worker use the private `http://latex-compiler:8080` address; the compiler needs no public tunnel route. For a separately hosted app, expose the compiler through authenticated HTTPS and configure its URL and shared token on that app. The compiler needs no Groq key or database credentials. Keep the same image digest across replicas; updates to the template or fonts require a new template version so existing saved snapshots can retain their layout. See [the deployment guide](../../docs/deployment.md) for the full stack.
 
 `GET /health` returns `{ "status": "ok" }`. `POST /compile` requires `Authorization: Bearer <token>` and JSON `{ "tex": "..." }`. It returns `{ "pdfBase64", "pageCount", "overflowPt", "warnings" }`. Invalid requests return 400, unauthorized requests 401, oversized bodies 413, unsupported media 415, compilation failures 422, and a busy service 503.
 

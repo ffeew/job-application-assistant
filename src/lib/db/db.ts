@@ -1,11 +1,16 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import * as schema from './schema';
-import { env } from '../env';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./schema";
+import { readDatabaseUrl } from "./config";
 
-export const db = drizzle({
-  connection: {
-    url: env.TURSO_CONNECTION_URL,
-    authToken: env.TURSO_AUTH_TOKEN,
-  },
-  schema,
-});
+const processState = globalThis as typeof globalThis & { postgresPool?: Pool };
+export const pool =
+  processState.postgresPool ??
+  new Pool({
+    connectionString: readDatabaseUrl(),
+    connectionTimeoutMillis: 5000,
+  });
+pool.on("error", () => console.error("An idle PostgreSQL connection failed."));
+if (process.env.NODE_ENV !== "production") processState.postgresPool = pool;
+
+export const db = drizzle({ client: pool, schema });

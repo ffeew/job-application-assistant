@@ -124,7 +124,7 @@ export function Footer() {
 						License.
 					</p>
 					<p className="text-xs">
-						Built with Next.js, Tailwind, Turso &amp; Groq
+						Built with Next.js, Tailwind, PostgreSQL &amp; Groq
 					</p>
 				</div>
 			</div>

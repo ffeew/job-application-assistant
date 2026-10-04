@@ -4,10 +4,7 @@ import { resumeValidationResponseSchema } from "@/app/api/resume-generation/vali
 import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation } from "@tanstack/react-query";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
-import {
-  generatedResumeResultSchema,
-  type GeneratedResumeResult,
-} from "@/lib/resume-document";
+import { useGenerationJob } from "../queries/use-generation-job";
 import type { ResumeValidationResponse } from "@/app/api/resume-generation/validators";
 
 // Resume Generation API calls
@@ -26,21 +23,6 @@ const resumeGenerationApi = {
       "Failed to validate resume",
     );
   },
-
-  generatePreview: async (
-    request: GenerateResumeRequest,
-  ): Promise<GeneratedResumeResult> => {
-    const response = await fetch("/api/resume-generation/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    });
-    return parseJsonResponse(
-      response,
-      generatedResumeResultSchema,
-      "Failed to generate resume preview",
-    );
-  },
 };
 
 // Hook to validate resume - returns validation result
@@ -52,7 +34,12 @@ export function useValidateResume() {
 
 // Hook to generate resume preview
 export function useGenerateResumePreview() {
-  return useMutation({
-    mutationFn: resumeGenerationApi.generatePreview,
-  });
+  const job = useGenerationJob(null);
+  return {
+    ...job,
+    mutateAsync: (
+      request: GenerateResumeRequest,
+      intent: "preview" | "download" = "preview",
+    ) => job.mutateAsync({ kind: "profile", intent, request }),
+  };
 }

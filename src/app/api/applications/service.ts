@@ -10,7 +10,10 @@ import type {
 } from "./validators";
 
 export class ApplicationsService {
-  async getApplications(userId: string, query?: ApplicationsQuery): Promise<ApplicationResponse[]> {
+  async getApplications(
+    userId: string,
+    query?: ApplicationsQuery,
+  ): Promise<ApplicationResponse[]> {
     const whereConditions = [eq(jobApplications.userId, userId)];
 
     // Add query filters
@@ -30,7 +33,7 @@ export class ApplicationsService {
       .offset(query?.offset || 0);
 
     // Convert null to undefined and ensure proper typing
-    return applications.map(app => ({
+    return applications.map((app) => ({
       ...app,
       jobDescription: app.jobDescription ?? undefined,
       location: app.location ?? undefined,
@@ -41,18 +44,25 @@ export class ApplicationsService {
       contactEmail: app.contactEmail ?? undefined,
       contactName: app.contactName ?? undefined,
       recruiterId: app.recruiterId ?? undefined,
-      status: app.status as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
+      status: app.status as
+        | "applied"
+        | "interviewing"
+        | "offer"
+        | "rejected"
+        | "withdrawn",
     }));
   }
 
-  async getApplicationById(userId: string, id: string): Promise<ApplicationResponse | null> {
+  async getApplicationById(
+    userId: string,
+    id: string,
+  ): Promise<ApplicationResponse | null> {
     const applications = await db
       .select()
       .from(jobApplications)
-      .where(and(
-        eq(jobApplications.id, id),
-        eq(jobApplications.userId, userId)
-      ))
+      .where(
+        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
+      )
       .limit(1);
 
     if (!applications[0]) return null;
@@ -69,11 +79,19 @@ export class ApplicationsService {
       contactEmail: app.contactEmail ?? undefined,
       contactName: app.contactName ?? undefined,
       recruiterId: app.recruiterId ?? undefined,
-      status: app.status as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
+      status: app.status as
+        | "applied"
+        | "interviewing"
+        | "offer"
+        | "rejected"
+        | "withdrawn",
     };
   }
 
-  async createApplication(userId: string, data: CreateApplicationRequest): Promise<ApplicationResponse> {
+  async createApplication(
+    userId: string,
+    data: CreateApplicationRequest,
+  ): Promise<ApplicationResponse> {
     const id = randomUUID();
     const now = new Date();
 
@@ -114,14 +132,19 @@ export class ApplicationsService {
       contactEmail: application.contactEmail ?? undefined,
       contactName: application.contactName ?? undefined,
       recruiterId: application.recruiterId ?? undefined,
-      status: application.status as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
+      status: application.status as
+        | "applied"
+        | "interviewing"
+        | "offer"
+        | "rejected"
+        | "withdrawn",
     };
   }
 
   async updateApplication(
     userId: string,
     id: string,
-    data: UpdateApplicationRequest
+    data: UpdateApplicationRequest,
   ): Promise<ApplicationResponse | null> {
     const now = new Date();
 
@@ -132,10 +155,9 @@ export class ApplicationsService {
         appliedAt: data.appliedAt ? new Date(data.appliedAt) : undefined,
         updatedAt: now,
       })
-      .where(and(
-        eq(jobApplications.id, id),
-        eq(jobApplications.userId, userId)
-      ))
+      .where(
+        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
+      )
       .returning();
 
     if (!application) return null;
@@ -151,19 +173,24 @@ export class ApplicationsService {
       contactEmail: application.contactEmail ?? undefined,
       contactName: application.contactName ?? undefined,
       recruiterId: application.recruiterId ?? undefined,
-      status: application.status as "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
+      status: application.status as
+        | "applied"
+        | "interviewing"
+        | "offer"
+        | "rejected"
+        | "withdrawn",
     };
   }
 
   async deleteApplication(userId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(jobApplications)
-      .where(and(
-        eq(jobApplications.id, id),
-        eq(jobApplications.userId, userId)
-      ));
+      .where(
+        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
+      )
+      .returning({ id: jobApplications.id });
 
-    return result.rowsAffected > 0;
+    return result.length > 0;
   }
 
   async getApplicationsCount(userId: string): Promise<number> {
@@ -175,7 +202,9 @@ export class ApplicationsService {
     return result.length;
   }
 
-  async getApplicationsCountByStatus(userId: string): Promise<Record<string, number>> {
+  async getApplicationsCountByStatus(
+    userId: string,
+  ): Promise<Record<string, number>> {
     const applications = await db
       .select()
       .from(jobApplications)
@@ -189,7 +218,7 @@ export class ApplicationsService {
       withdrawn: 0,
     };
 
-    applications.forEach(app => {
+    applications.forEach((app) => {
       if (app.status in counts) {
         counts[app.status as keyof typeof counts]++;
       }

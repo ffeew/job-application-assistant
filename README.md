@@ -14,7 +14,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 ## Tech Stack
 
 - **Framework**: Next.js 16.3 (App Router), React 19.3 with React Compiler, TypeScript 5
-- **Data & Auth**: Drizzle ORM + Turso (libSQL), BetterAuth sessions, Zod validators
+- **Data & Auth**: Drizzle ORM + PostgreSQL, BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
 - **AI & Documents**: Vercel AI SDK with `@ai-sdk/groq` for text generation, a Docker-hosted pdfLaTeX compiler for PDF export, AI content selection and page fitting for resumes
 - **Tooling**: Bun (runtime and script runner), ESLint 9, TypeScript compiler checks, Drizzle Kit migrations
@@ -25,7 +25,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 
 - Node.js 20.9.0+ (Node.js 24 is used in CI)
 - [Bun](https://bun.sh/) 1.1+ (recommended) or npm
-- Turso database credentials
+- Docker Engine with Compose v2 for PostgreSQL and the PDF compiler
 - Groq API key for AI functionality
 - Mistral API key for resume OCR imports
 
@@ -37,8 +37,10 @@ cd job-application-assistant
 
 bun install             # or npm install
 cp .env.example .env    # then fill in the values
-bun run db:push         # apply the latest Drizzle migrations
-bun run dev             # visit http://localhost:3000
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db latex-compiler
+bun run db:migrate      # apply committed PostgreSQL migrations
+bun run worker          # run in a separate terminal for resume generation
+bun run dev             # run in another terminal; visit http://localhost:3000
 ```
 
 ### Useful scripts
@@ -51,7 +53,15 @@ bun run dev             # visit http://localhost:3000
 - `bun run typecheck` – generate Next.js route types, then run TypeScript checks
 - `bun run test` – run the focused Bun tests
 - `bun run db:push` / `bun run db:generate` / `bun run db:studio` – Drizzle Kit helpers
-- `bunx drizzle-kit push` – push schema changes directly to Turso if preferred
+- `bun run db:migrate` – apply committed PostgreSQL migrations
+- `bun run worker` – process queued resume generation jobs
+- `bun run test:integration` – PostgreSQL/API/worker integration tests (see the deployment guide)
+
+## Self-hosted deployment
+
+Run the app, PostgreSQL, migrations, generation worker, and PDF compiler with Docker Compose. Your existing host-installed Cloudflare tunnel forwards to `http://127.0.0.1:3000`. See [the deployment guide](docs/deployment.md) for configuration, updates, backups, local development, and validation.
+
+Resume generation returns a job ID immediately and polls for completion. Work continues after leaving the page; the latest job is restored on return. Completed and failed job results expire after seven days. Preview remains a draft; Generate & Save PDF saves tailored resumes even if the browser closes.
 
 ## Environment variables
 
@@ -59,9 +69,9 @@ bun run dev             # visit http://localhost:3000
 | ----------------------------- | -------- | -------------------------------------------------------------------------------- |
 | `BETTER_AUTH_SECRET`          | Yes      | 32+ character secret used by BetterAuth                                          |
 | `BETTER_AUTH_URL`             | Yes      | Server-side auth URL (e.g. `http://localhost:3000`)                              |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes      | Client-side auth URL                                                             |
-| `TURSO_CONNECTION_URL`        | Yes      | libSQL connection string from Turso                                              |
-| `TURSO_AUTH_TOKEN`            | Yes      | Turso auth token                                                                 |
+| `DATABASE_URL`               | Yes      | PostgreSQL URL for host development and database tooling                          |
+| `POSTGRES_PASSWORD`          | Compose  | PostgreSQL password; Compose encodes credentials for its internal connection URL  |
+| `POSTGRES_USER` / `POSTGRES_DB` | No      | Compose user/database names, defaulting to `job_assistant`                         |
 | `GROQ_API_KEY`                | Yes\*    | Groq API key used for resume tailoring, cover letters, and conversation starters |
 | `GROQ_MODEL`                  | No       | Optional Groq model override; defaults to `openai/gpt-oss-120b`                  |
 | `GROQ_FALLBACK_MODEL`         | No       | Fitting fallback; defaults to `moonshotai/kimi-k2-instruct`                      |
@@ -81,7 +91,7 @@ bun run dev             # visit http://localhost:3000
   - `src/app/dashboard/profile` keeps `page.tsx` alongside profile-specific components (forms, lists) and data hooks for CRUD.
   - API routes live under `src/app/api/<feature>/`; for instance, `src/app/api/resume-generation/route.ts` handles HTTP, delegates to `service.ts`, and trusts Zod schemas from `validators.ts` to validate requests and share types with the front end.
 - `src/components` — Shared UI primitives (shadcn/ui wrappers, buttons, inputs, skeletons) that stay presentation-only.
-- `src/lib` — Back-end glue: `env.ts` for Zod-based env validation, `db/` for Drizzle + Turso schema/client, `auth.ts` for BetterAuth, resume templates, utility helpers, and the validator re-exports.
+- `src/lib` — Back-end glue: `env.ts` for Zod-based env validation, `db/` for Drizzle + PostgreSQL schema/client, `auth.ts` for BetterAuth, resume templates, utility helpers, and the validator re-exports.
 - `src/proxy.ts` — BetterAuth session-cookie checks for protected dashboard routes.
 - `migrations/` — Drizzle-generated SQL kept in lockstep with schema changes.
 - `components.json`, `public/`, `drizzle.config.ts`, `tsconfig.json`, etc. — framework configuration and static assets.
@@ -107,7 +117,7 @@ bun run dev             # visit http://localhost:3000
 
 ### LaTeX compiler setup
 
-Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LATEX_COMPILER_TOKEN` in the app and compiler service. Follow [the compiler deployment guide](services/latex-compiler/README.md) to build and run the Docker image locally or on a container host. Keep the Next.js app on Vercel and expose the compiler through HTTPS in production. These settings are optional for other application features.
+Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LATEX_COMPILER_TOKEN` in the app and compiler service. Follow [the compiler deployment guide](services/latex-compiler/README.md) to build and run the Docker image locally or on a container host. The Compose stack runs the compiler privately beside the app and worker. These settings are optional for other application features when running outside Compose.
 
 ### Job-specific resume tailoring
 
@@ -128,7 +138,7 @@ Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LA
 ## Architecture notes
 
 - Each API feature lives in `src/app/api/<feature>/` with `route.ts`, `service.ts`, and Zod validators to keep handlers thin.
-- Drizzle ORM interacts with Turso via `src/lib/db/db.ts`; migrations are tracked in `/migrations` and configured in `drizzle.config.ts`.
+- Drizzle ORM interacts with PostgreSQL via `src/lib/db/db.ts`; migrations are tracked in `/migrations` and configured in `drizzle.config.ts`.
 - Front-end data access is handled through co-located `queries` and `mutations` that wrap REST endpoints with TanStack Query.
 - `@/lib/validators` re-exports schema types so client code can stay type-safe.
 - Resume PDFs are compiled by a separate authenticated LaTeX service. Preview, download, and save reuse one generated result. Saved generated resumes store a versioned document snapshot and recompile it without rerunning AI; legacy manual and HTML records remain readable. No database migration is needed.
@@ -136,10 +146,14 @@ Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LA
 ## Database & migrations
 
 - Update the schema in `src/lib/db/schema/`, then run `bun run db:generate` to create SQL migrations.
-- Apply changes locally with `bun run db:push`; use `bunx drizzle-kit push` to push to Turso once ready.
+- Apply committed migrations with `bun run db:migrate`; use `bun run db:push` only for disposable local schema experiments.
+- The squashed PostgreSQL baseline initializes a fresh database; historical Turso data is not imported.
 - Keep the generated SQL in `migrations/` under version control.
 
 ## Quality checks & testing
+
+PostgreSQL integration tests are opt-in with `RUN_DB_INTEGRATION=1` and a dedicated `DATABASE_URL` whose database name ends in `_test`. CI runs them against PostgreSQL 18 with fake service credentials; ordinary unit tests require no database. See the deployment guide for the full command.
+
 
 - Run `bun run lint`, `bun run typecheck`, and `bun run test` before opening a pull request. Production builds invoke the same lint gate before Next.js compiles and checks types; Next.js 16 does not run linting itself.
 - CI uses Node.js 24 and `bun install --frozen-lockfile` before running all three checks. Tests use sanitized fixtures and need no database or AI credentials.

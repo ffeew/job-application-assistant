@@ -102,8 +102,12 @@ export class ResumeGenerationService {
   async generateResume(
     userId: string,
     request: GenerateResumeRequest,
+    externalSignal?: AbortSignal,
   ): Promise<GeneratedResumeResult> {
-    const signal = AbortSignal.timeout(180000);
+    const deadline = AbortSignal.timeout(180000);
+    const signal = externalSignal
+      ? AbortSignal.any([externalSignal, deadline])
+      : deadline;
     return this.generate(
       await this.generateResumeData(userId),
       request.contentSelection,
@@ -124,8 +128,12 @@ export class ResumeGenerationService {
     userId: string,
     application: ApplicationResponse,
     request: JobApplicationResumeRequest,
+    externalSignal?: AbortSignal,
   ): Promise<GeneratedResumeResult> {
-    const signal = AbortSignal.timeout(180000);
+    const deadline = AbortSignal.timeout(180000);
+    const signal = externalSignal
+      ? AbortSignal.any([externalSignal, deadline])
+      : deadline;
     const data = await this.generateResumeData(userId);
     let aiSelection: IntelligentContentSelection | null = null;
     if (request.useAISelection && application.jobDescription) {

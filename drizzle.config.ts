@@ -1,12 +1,10 @@
+import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
-import { env } from "./src/lib/env";
+import { readDatabaseUrl } from "./src/lib/db/config";
 
 export default defineConfig({
-  out: './migrations',
-  dialect: "turso",
+  out: "./migrations",
+  dialect: "postgresql",
   schema: "./src/lib/db/schema",
-  dbCredentials: {
-    url: env.TURSO_CONNECTION_URL,
-    authToken: env.TURSO_AUTH_TOKEN,
-  }
+  dbCredentials: { url: readDatabaseUrl() },
 });

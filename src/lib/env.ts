@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { databaseUrlSchema } from "./db/config";
 
 // Define the schema for environment variables
 const envSchema = z.object({
@@ -12,16 +13,8 @@ const envSchema = z.object({
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
   BETTER_AUTH_URL: z.url(),
-  NEXT_PUBLIC_BETTER_AUTH_URL: z.url(),
 
-  // Database configuration (Turso)
-  TURSO_CONNECTION_URL: z
-    .string()
-    .startsWith(
-      "libsql://",
-      "TURSO_CONNECTION_URL must be a valid Turso connection string",
-    ),
-  TURSO_AUTH_TOKEN: z.string().min(1, "TURSO_AUTH_TOKEN is required"),
+  DATABASE_URL: databaseUrlSchema,
 
   // AI Configuration (Groq)
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features"),
@@ -36,8 +29,14 @@ const envSchema = z.object({
     .min(1, "MISTRAL_API_KEY is required for resume imports"),
 
   // Email configuration (Resend)
-  RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.email().optional(),
+  RESEND_API_KEY: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().optional(),
+  ),
+  RESEND_FROM_EMAIL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.email().optional(),
+  ),
 
   // Next.js configuration
   NEXT_PUBLIC_APP_URL: z.url().optional(),

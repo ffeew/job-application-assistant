@@ -3,7 +3,7 @@
 ## Stack & Architecture Snapshot
 
 - **Framework**: Next.js 16 App Router with React 19.3, React Compiler, and TypeScript 5.
-- **Data**: Drizzle ORM targeting Turso (libSQL); migrations generated via Drizzle Kit.
+- **Data**: Drizzle ORM targeting PostgreSQL with node-postgres; migrations generated via Drizzle Kit.
 - **Auth**: BetterAuth with proxy-backed dashboard session-cookie checks and API session validation (see `src/lib/auth.ts`, `src/proxy.ts`).
 - **UI**: Tailwind CSS v4 + shadcn/ui primitives; Lucide icons; Sonner for notifications.
 - **State**: Zustand for shared and workflow state; TanStack Query for server state.
@@ -33,7 +33,7 @@
 - Lint fixes: `bun run lint:fix`; focused tests: `bun run test`. CI runs all three quality gates.
 - Type checking generates Next.js route types before running `tsc`; `next-env.d.ts` is generated and ignored.
 - Runtime: Node.js 20.9.0+; CI uses Node.js 24 and frozen Bun lockfile installation.
-- Database utilities: `bun run db:push`, `bun run db:generate`, `bun run db:studio`; use `bunx drizzle-kit push` to deploy schema updates to Turso.
+- Database utilities: `bun run db:push`, `bun run db:generate`, `bun run db:studio`; use `bun run db:migrate` to apply committed PostgreSQL migrations.
 
 ## Quality Requirements
 
@@ -74,9 +74,16 @@
 - PR descriptions should call out context, solution, rollout/rollback considerations, manual QA, and screenshots/video for UI changes.
 - Before review, confirm `bun run lint`, `bun run typecheck`, and any new tests all succeed.
 
+## Self-hosted Deployment
+
+- Compose runs PostgreSQL 18, a one-shot migrator, the standalone Next.js app, a generation worker, and the private LaTeX compiler. Only the app is exposed on host loopback for an existing Cloudflare tunnel.
+- Resume generation uses PostgreSQL jobs, leased claims, two-second browser polling, and seven-day result retention. Run `bun run worker` alongside local development.
+- Migration tooling validates only `DATABASE_URL`; app/worker validate their full runtime configuration. Never bake real secrets into container images.
+- Integration tests require `RUN_DB_INTEGRATION=1` and a dedicated database ending in `_test`.
+
 ## Environment & Secrets
 
-- Copy `.env.example` ➜ `.env` and populate all required BetterAuth, Turso, and Groq keys (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_BETTER_AUTH_URL`, `TURSO_CONNECTION_URL`, `TURSO_AUTH_TOKEN`, `GROQ_API_KEY`).
+- Copy `.env.example` ➜ `.env` and populate all required BetterAuth, PostgreSQL, and AI keys (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `GROQ_API_KEY`, `MISTRAL_API_KEY`, `LATEX_COMPILER_TOKEN`).
 - Never commit secrets. Mention new env vars in PRs.
 - `src/lib/env.ts` performs strict validation; missing/invalid values will fail fast on boot—verify locally before pushing.
 

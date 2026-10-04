@@ -10,7 +10,10 @@ import type {
 } from "./validators";
 
 export class ResumesService {
-  async getResumes(userId: string, query?: ResumesQuery): Promise<ResumeResponse[]> {
+  async getResumes(
+    userId: string,
+    query?: ResumesQuery,
+  ): Promise<ResumeResponse[]> {
     const whereConditions = [eq(resumes.userId, userId)];
 
     // Add query filters
@@ -21,7 +24,9 @@ export class ResumesService {
       whereConditions.push(eq(resumes.isTailored, query.isTailored));
     }
     if (query?.jobApplicationId !== undefined) {
-      whereConditions.push(eq(resumes.jobApplicationId, query.jobApplicationId));
+      whereConditions.push(
+        eq(resumes.jobApplicationId, query.jobApplicationId),
+      );
     }
 
     const resumesList = await db
@@ -32,32 +37,37 @@ export class ResumesService {
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
-    return resumesList.map(resume => ({
+    return resumesList.map((resume) => ({
       ...resume,
       isDefault: Boolean(resume.isDefault),
       isTailored: Boolean(resume.isTailored),
     }));
   }
 
-  async getResumeById(userId: string, id: string): Promise<ResumeResponse | null> {
+  async getResumeById(
+    userId: string,
+    id: string,
+  ): Promise<ResumeResponse | null> {
     const resumesList = await db
       .select()
       .from(resumes)
-      .where(and(
-        eq(resumes.id, id),
-        eq(resumes.userId, userId)
-      ))
+      .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
       .limit(1);
 
     const resume = resumesList[0];
-    return resume ? {
-      ...resume,
-      isDefault: Boolean(resume.isDefault),
-      isTailored: Boolean(resume.isTailored),
-    } : null;
+    return resume
+      ? {
+          ...resume,
+          isDefault: Boolean(resume.isDefault),
+          isTailored: Boolean(resume.isTailored),
+        }
+      : null;
   }
 
-  async createResume(userId: string, data: CreateResumeRequest): Promise<ResumeResponse> {
+  async createResume(
+    userId: string,
+    data: CreateResumeRequest,
+  ): Promise<ResumeResponse> {
     const id = randomUUID();
     const now = new Date();
 
@@ -95,7 +105,7 @@ export class ResumesService {
   async updateResume(
     userId: string,
     id: string,
-    data: UpdateResumeRequest
+    data: UpdateResumeRequest,
   ): Promise<ResumeResponse | null> {
     const now = new Date();
 
@@ -110,28 +120,25 @@ export class ResumesService {
         ...data,
         updatedAt: now,
       })
-      .where(and(
-        eq(resumes.id, id),
-        eq(resumes.userId, userId)
-      ))
+      .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
       .returning();
 
-    return resume ? {
-      ...resume,
-      isDefault: Boolean(resume.isDefault),
-      isTailored: Boolean(resume.isTailored),
-    } : null;
+    return resume
+      ? {
+          ...resume,
+          isDefault: Boolean(resume.isDefault),
+          isTailored: Boolean(resume.isTailored),
+        }
+      : null;
   }
 
   async deleteResume(userId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(resumes)
-      .where(and(
-        eq(resumes.id, id),
-        eq(resumes.userId, userId)
-      ));
+      .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+      .returning({ id: resumes.id });
 
-    return result.rowsAffected > 0;
+    return result.length > 0;
   }
 
   async getResumesCount(userId: string): Promise<number> {
@@ -147,38 +154,44 @@ export class ResumesService {
     const resumesList = await db
       .select()
       .from(resumes)
-      .where(and(
-        eq(resumes.userId, userId),
-        eq(resumes.isDefault, true)
-      ))
+      .where(and(eq(resumes.userId, userId), eq(resumes.isDefault, true)))
       .limit(1);
 
     const resume = resumesList[0];
-    return resume ? {
-      ...resume,
-      isDefault: Boolean(resume.isDefault),
-      isTailored: Boolean(resume.isTailored),
-    } : null;
+    return resume
+      ? {
+          ...resume,
+          isDefault: Boolean(resume.isDefault),
+          isTailored: Boolean(resume.isTailored),
+        }
+      : null;
   }
 
-  async getTailoredResumeByApplication(userId: string, jobApplicationId: string): Promise<ResumeResponse | null> {
+  async getTailoredResumeByApplication(
+    userId: string,
+    jobApplicationId: string,
+  ): Promise<ResumeResponse | null> {
     const resumesList = await db
       .select()
       .from(resumes)
-      .where(and(
-        eq(resumes.userId, userId),
-        eq(resumes.jobApplicationId, jobApplicationId),
-        eq(resumes.isTailored, true)
-      ))
+      .where(
+        and(
+          eq(resumes.userId, userId),
+          eq(resumes.jobApplicationId, jobApplicationId),
+          eq(resumes.isTailored, true),
+        ),
+      )
       .orderBy(desc(resumes.updatedAt))
       .limit(1);
 
     const resume = resumesList[0];
-    return resume ? {
-      ...resume,
-      isDefault: Boolean(resume.isDefault),
-      isTailored: Boolean(resume.isTailored),
-    } : null;
+    return resume
+      ? {
+          ...resume,
+          isDefault: Boolean(resume.isDefault),
+          isTailored: Boolean(resume.isTailored),
+        }
+      : null;
   }
 
   private async unsetAllDefaults(userId: string): Promise<void> {

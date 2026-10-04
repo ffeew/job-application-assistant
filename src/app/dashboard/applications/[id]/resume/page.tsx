@@ -1,7 +1,7 @@
 "use client";
 
 import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -42,10 +42,7 @@ import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { downloadPDF } from "@/lib/utils";
 import { ResumePDFPreview } from "@/components/resume-pdf-preview";
-import {
-  serializeGeneratedResume,
-  type GeneratedResumeResult,
-} from "@/lib/resume-document";
+import { serializeGeneratedResume } from "@/lib/resume-document";
 import { pdfBase64ToBlob, resumeRequestKey } from "@/lib/resume-preview";
 
 export default function JobApplicationResumePage({
@@ -56,9 +53,6 @@ export default function JobApplicationResumePage({
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
     null,
   );
-  const [preview, setPreview] = useState<GeneratedResumeResult | null>(null);
-  const aiSelection = preview?.aiSelection ?? null;
-  const resumeContent = preview ? serializeGeneratedResume(preview) : null;
 
   const {
     data: applicationInfo,
@@ -67,7 +61,10 @@ export default function JobApplicationResumePage({
   } = useApplicationResumeInfo(resolvedParams?.id || "");
 
   // Simple mutation hooks
-  const previewMutation = useGenerateJobApplicationPreview();
+  const previewMutation = useGenerateJobApplicationPreview(resolvedParams?.id);
+  const preview = previewMutation.preview;
+  const aiSelection = preview?.aiSelection ?? null;
+  const resumeContent = preview ? serializeGeneratedResume(preview) : null;
   const saveMutation = useSaveTailoredResume();
 
   // Derived state
@@ -99,6 +96,19 @@ export default function JobApplicationResumePage({
     formState: { errors },
   } = form;
   const watchedValues = useWatch({ control: form.control });
+  const restoredJob = useRef<string | null>(null);
+  useEffect(() => {
+    const job = previewMutation.job;
+    if (
+      !job ||
+      job.payload.kind !== "application" ||
+      restoredJob.current === job.id
+    )
+      return;
+    restoredJob.current = job.id;
+    if (!form.formState.isDirty)
+      form.reset(job.payload.request, { keepFieldsRef: true });
+  }, [previewMutation.job, form]);
 
   const stale = preview
     ? resumeRequestKey(preview.config) !== resumeRequestKey(watchedValues)
@@ -133,28 +143,26 @@ export default function JobApplicationResumePage({
       "applicationId"
     >;
     try {
-      const result =
+      if (
         preview &&
         resumeRequestKey(preview.config) === resumeRequestKey(validatedData)
-          ? preview
-          : await previewMutation.mutateAsync({
-              applicationId: resolvedParams.id,
-              data: validatedData,
-            });
-      setPreview(result);
-      await saveMutation.mutateAsync({
-        applicationId: resolvedParams.id,
-        data: {
-          title: validatedData.title,
-          content: serializeGeneratedResume(result),
-        },
-      });
-      downloadPDF(pdfBase64ToBlob(result.pdfBase64), validatedData.title);
-      toast.success(
-        result.fit.fitsTarget
-          ? "Resume saved and PDF generated!"
-          : "Draft saved. Review the page-target warning.",
-      );
+      ) {
+        await saveMutation.mutateAsync({
+          applicationId: resolvedParams.id,
+          data: {
+            title: validatedData.title,
+            content: serializeGeneratedResume(preview),
+          },
+        });
+        downloadPDF(pdfBase64ToBlob(preview.pdfBase64), validatedData.title);
+        toast.success("Resume saved and PDF generated!");
+      } else {
+        await previewMutation.mutateAsync({
+          applicationId: resolvedParams.id,
+          data: validatedData,
+          intent: "save-and-download",
+        });
+      }
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -171,11 +179,10 @@ export default function JobApplicationResumePage({
       const data = jobApplicationResumeRequestSchema
         .omit({ applicationId: true })
         .parse(form.getValues());
-      const result = await previewMutation.mutateAsync({
+      await previewMutation.mutateAsync({
         applicationId: resolvedParams.id,
         data,
       });
-      setPreview(result);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -270,6 +277,14 @@ export default function JobApplicationResumePage({
 
   return (
     <div className="flex flex-col gap-6">
+      {isGeneratingPreview && (
+        <p role="status">
+          {previewMutation.status === "queued"
+            ? "Your resume is queued."
+            : "Generating and checking layout…"}{" "}
+          You can leave this page and return later.
+        </p>
+      )}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" asChild>
           <Link href={`/dashboard/applications/${resolvedParams.id}`}>

@@ -1,0 +1,94 @@
+name: job-application-assistant
+
+x-database-environment: &database-environment
+  PGHOST: db
+  PGUSER: ${POSTGRES_USER:-job_assistant}
+  PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  PGDATABASE: ${POSTGRES_DB:-job_assistant}
+
+x-runtime-environment: &runtime-environment
+  <<: *database-environment
+  NODE_ENV: production
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to your public HTTPS origin}
+  GROQ_API_KEY: ${GROQ_API_KEY:?Set GROQ_API_KEY in .env}
+  GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+  GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-moonshotai/kimi-k2-instruct}
+  MISTRAL_API_KEY: ${MISTRAL_API_KEY:?Set MISTRAL_API_KEY in .env}
+  LATEX_COMPILER_URL: http://latex-compiler:8080
+  LATEX_COMPILER_TOKEN: ${LATEX_COMPILER_TOKEN:?Set LATEX_COMPILER_TOKEN in .env}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+
+services:
+  db:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-job_assistant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-job_assistant}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment: *database-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  latex-compiler:
+    build:
+      context: .
+      dockerfile: services/latex-compiler/Dockerfile
+    restart: unless-stopped
+    environment:
+      LATEX_COMPILER_TOKEN: ${LATEX_COMPILER_TOKEN:?Set LATEX_COMPILER_TOKEN in .env}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 2
+    stop_grace_period: 20s
+
+  app:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    environment: *runtime-environment
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      latex-compiler:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      target: worker
+    restart: unless-stopped
+    environment: *runtime-environment
+    stop_grace_period: 200s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      latex-compiler:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
