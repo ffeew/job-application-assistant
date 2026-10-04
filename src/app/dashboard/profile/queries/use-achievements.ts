@@ -1,9 +1,11 @@
+import { achievementJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { AchievementResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { AchievementJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const achievementsApi = {
-  getAll: async (query?: ProfileQuery): Promise<AchievementResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<AchievementJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const achievementsApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/achievements?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch achievements');
-    }
-    return response.json();
+    return parseJsonResponse(response, achievementJsonResponseSchema.array(), "Failed to fetch achievements");
   },
 
-  getById: async (id: number): Promise<AchievementResponse> => {
+  getById: async (id: number): Promise<AchievementJsonResponse> => {
     const response = await fetch(`/api/profile/achievements/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch achievement');
-    }
-    return response.json();
+    return parseJsonResponse(response, achievementJsonResponseSchema, "Failed to fetch achievement");
   },
 };
 

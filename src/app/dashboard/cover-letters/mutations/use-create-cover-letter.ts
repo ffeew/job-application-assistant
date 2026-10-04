@@ -1,6 +1,8 @@
+import { coverLetterJsonResponseSchema } from "@/app/api/cover-letters/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  CoverLetterResponse as CoverLetter,
+  CoverLetterJsonResponse as CoverLetter,
   CreateCoverLetterRequest as CreateCoverLetterData
 } from '@/lib/validators';
 import { coverLettersKeys } from '../queries/use-cover-letters';
@@ -17,10 +19,7 @@ const createCoverLetterApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create cover letter');
-    }
-    return response.json();
+    return parseJsonResponse(response, coverLetterJsonResponseSchema, "Failed to create cover letter");
   },
 };
 
@@ -32,11 +31,11 @@ export function useCreateCoverLetter() {
     mutationFn: (data: CreateCoverLetterData) => createCoverLetterApi.create(data),
     onSuccess: () => {
       // Invalidate cover letters list to refetch
-      queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
       // Invalidate dashboard stats as cover letter count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

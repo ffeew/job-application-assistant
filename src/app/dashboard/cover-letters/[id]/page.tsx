@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -41,7 +42,7 @@ export default function ViewCoverLetterPage({
 			const resolved = await params;
 			setResolvedParams(resolved);
 		};
-		resolveParams();
+		runAsyncAction(resolveParams());
 	}, [params]);
 
 	// Handle error case
@@ -150,7 +151,7 @@ export default function ViewCoverLetterPage({
 
 			{/* Action Buttons */}
 			<div className="flex justify-end gap-4">
-				<Button variant="outline" onClick={handleCopyContent}>
+				<Button variant="outline" onClick={withAsyncHandler(handleCopyContent)}>
 					<Copy className="mr-2 h-4 w-4" />
 					Copy
 				</Button>

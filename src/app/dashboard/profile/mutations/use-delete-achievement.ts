@@ -23,9 +23,9 @@ export function useDeleteAchievement() {
     mutationFn: (id: number) => deleteAchievementApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: achievementsKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

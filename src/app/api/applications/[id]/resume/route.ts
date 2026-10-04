@@ -5,16 +5,11 @@ import { ResumeGenerationService } from "@/app/api/resume-generation/service";
 import { ResumesService } from "@/app/api/resumes/service";
 import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import { z } from "zod";
+import { saveTailoredResumeRequestSchema } from "./validators";
 
 const applicationsService = new ApplicationsService();
 const resumeGenerationService = new ResumeGenerationService();
 const resumesService = new ResumesService();
-
-// Schema for saving tailored resume
-const saveTailoredResumeSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
-});
 
 export async function POST(
   request: NextRequest,
@@ -27,9 +22,11 @@ export async function POST(
     }
 
     const { id: applicationId } = await params;
-    const body = await request.json();
+    const body: unknown = await request.json();
+    // Add the path-owned ID only after validating that the JSON is an object.
+    const requestFields = z.record(z.string(), z.unknown()).parse(body);
     const validatedRequest = jobApplicationResumeRequestSchema.parse({
-      ...body,
+      ...requestFields,
       applicationId,
     });
 
@@ -173,8 +170,8 @@ export async function PUT(
     }
 
     const { id: applicationId } = await params;
-    const body = await request.json();
-    const validatedData = saveTailoredResumeSchema.parse(body);
+    const body: unknown = await request.json();
+    const validatedData = saveTailoredResumeRequestSchema.parse(body);
 
     // Verify the application exists and belongs to the user
     const application = await applicationsService.getApplicationById(
@@ -214,14 +211,18 @@ export async function PUT(
       });
     }
 
+    if (!resume) {
+      throw new Error("Failed to save tailored resume");
+    }
+
     return NextResponse.json({
       success: true,
       resume: {
-        id: resume?.id,
-        title: resume?.title,
-        isTailored: resume?.isTailored,
-        jobApplicationId: resume?.jobApplicationId,
-        updatedAt: resume?.updatedAt,
+        id: resume.id,
+        title: resume.title,
+        isTailored: resume.isTailored,
+        jobApplicationId: resume.jobApplicationId,
+        updatedAt: resume.updatedAt,
       },
       isNew: !existingResume,
     });

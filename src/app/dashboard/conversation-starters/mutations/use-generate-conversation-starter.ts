@@ -1,3 +1,5 @@
+import { generateConversationStarterResponseSchema } from "@/app/api/conversation-starters/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation } from "@tanstack/react-query";
 import type {
   GenerateConversationStarterRequest,
@@ -16,14 +18,7 @@ const conversationStarterApi = {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || "Failed to generate conversation starter",
-      );
-    }
-
-    return response.json();
+    return parseJsonResponse(response, generateConversationStarterResponseSchema, "Failed to generate conversation starter");
   },
 };
 

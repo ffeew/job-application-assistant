@@ -7,13 +7,15 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "eslint . && next build",
+    "build": "bun run lint && next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "next typegen && tsc --noEmit",
     "db:push": "bunx drizzle-kit push",
     "db:generate": "bunx drizzle-kit generate",
-    "db:studio": "bunx drizzle-kit studio"
+    "db:studio": "bunx drizzle-kit studio",
+    "lint:fix": "eslint . --fix --max-warnings 0",
+    "test": "bun test"
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.0",
@@ -53,7 +55,10 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
+    "@eslint/js": "9.33.0",
     "@tailwindcss/postcss": "^4",
+    "@tanstack/eslint-plugin-query": "5.104.1",
+    "@types/bun": "1.2.15",
     "@types/node": "^20",
     "@types/puppeteer": "^7.0.4",
     "@types/react": "^19.3.0",
@@ -62,8 +67,10 @@
     "drizzle-kit": "^0.31.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "eslint-plugin-jsx-a11y": "6.10.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "8.71.0"
   }
 }

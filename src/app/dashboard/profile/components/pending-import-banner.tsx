@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -226,7 +227,7 @@ export function PendingImportBanner() {
 					>
 						Discard All
 					</Button>
-					<Button size="sm" onClick={handleSaveAll} disabled={isSaving}>
+					<Button size="sm" onClick={withAsyncHandler(handleSaveAll)} disabled={isSaving}>
 						{isSaving ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />

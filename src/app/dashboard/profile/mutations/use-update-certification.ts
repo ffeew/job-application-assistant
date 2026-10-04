@@ -1,11 +1,13 @@
+import { certificationJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateCertificationRequest, CertificationResponse } from '@/app/api/profile/validators';
+import type { UpdateCertificationRequest, CertificationJsonResponse } from '@/app/api/profile/validators';
 import { certificationsKeys } from '../queries/use-certifications';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateCertificationApi = {
-  update: async (id: number, data: UpdateCertificationRequest): Promise<CertificationResponse> => {
+  update: async (id: number, data: UpdateCertificationRequest): Promise<CertificationJsonResponse> => {
     const response = await fetch(`/api/profile/certifications/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateCertificationApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update certification');
-    }
-    return response.json();
+    return parseJsonResponse(response, certificationJsonResponseSchema, "Failed to update certification");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateCertification() {
       updateCertificationApi.update(id, data),
     onSuccess: (updatedCertification) => {
       queryClient.setQueryData(certificationsKeys.detail(updatedCertification.id), updatedCertification);
-      queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

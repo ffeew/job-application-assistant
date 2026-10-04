@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export default function NewResumePage() {
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-  const onSubmit = async (data: ResumeFormData) => {
+  const onSubmit = (data: ResumeFormData) => {
     // Validate required fields manually since we can't use Zod for the nested structure
     if (!data.title.trim()) {
       toast.error("Please enter a title for your resume");
@@ -118,7 +119,7 @@ export default function NewResumePage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>

@@ -1,11 +1,13 @@
+import { achievementJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateAchievementRequest, AchievementResponse } from '@/app/api/profile/validators';
+import type { UpdateAchievementRequest, AchievementJsonResponse } from '@/app/api/profile/validators';
 import { achievementsKeys } from '../queries/use-achievements';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateAchievementApi = {
-  update: async (id: number, data: UpdateAchievementRequest): Promise<AchievementResponse> => {
+  update: async (id: number, data: UpdateAchievementRequest): Promise<AchievementJsonResponse> => {
     const response = await fetch(`/api/profile/achievements/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateAchievementApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update achievement');
-    }
-    return response.json();
+    return parseJsonResponse(response, achievementJsonResponseSchema, "Failed to update achievement");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateAchievement() {
       updateAchievementApi.update(id, data),
     onSuccess: (updatedAchievement) => {
       queryClient.setQueryData(achievementsKeys.detail(updatedAchievement.id), updatedAchievement);
-      queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

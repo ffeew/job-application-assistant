@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -14,14 +15,14 @@ import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
 import { useDeleteReference } from "@/app/dashboard/profile/mutations/use-delete-reference";
 import { createReferenceSchema } from "@/app/api/profile/validators";
-import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
+import type { ReferenceJsonResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface ReferencesSectionProps {
-	references: ReferenceResponse[];
+	references: ReferenceJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -42,7 +43,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 	const deleteMutation = useDeleteReference();
 
 	const isEditingReference = isSheetOpen && editingState?.section === "references";
-	const editingReference = isEditingReference && editingState?.itemId ? references.find((r) => r.id === editingState.itemId) : null;
+	const editingReference = isEditingReference && editingState.itemId ? references.find((r) => r.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
 		if (!deleteConfirmation || deleteConfirmation.section !== "references") return;
@@ -81,7 +82,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 									<div><p className="font-medium">{item.request.name}</p><p className="text-sm text-muted-foreground">{item.request.company}</p></div>
 									<div className="flex gap-2">
 										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}><X className="h-4 w-4" /></Button>
-										<Button size="sm" onClick={() => handleSavePending(item.id, item.request)} disabled={savingItemId === item.id}>
+										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
 											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Save
 										</Button>
 									</div>
@@ -145,7 +146,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 	);
 }
 
-function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: ReferenceResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: ReferenceJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateReference();
 	const updateMutation = useUpdateReference();
 	const form = useForm({
@@ -162,7 +163,7 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 	});
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateReferenceRequest;
 		if (reference) {
 			updateMutation.mutate({ id: reference.id, data: validatedData }, {
@@ -178,7 +179,7 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} placeholder="John Smith" /><FormFieldError message={errors.name?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title</Label><Input id="title" {...register("title")} placeholder="Senior Manager" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="company">Company</Label><Input id="company" {...register("company")} placeholder="Tech Corp" /></div>

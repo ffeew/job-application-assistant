@@ -1,5 +1,8 @@
 "use client";
 
+import { formatMonthYear } from "@/lib/format-month-year";
+
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -44,7 +47,7 @@ import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-u
 import { useDeleteWorkExperience } from "@/app/dashboard/profile/mutations/use-delete-work-experience";
 import { createWorkExperienceSchema } from "@/app/api/profile/validators";
 import type {
-	WorkExperienceResponse,
+	WorkExperienceJsonResponse,
 	CreateWorkExperienceRequest,
 } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
@@ -53,7 +56,7 @@ import { useImportReviewStore } from "@/app/dashboard/profile/store/import-revie
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface ExperienceSectionProps {
-	experiences: WorkExperienceResponse[];
+	experiences: WorkExperienceJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -82,7 +85,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 	const isEditingExperience =
 		isSheetOpen && editingState?.section === "experience";
 
-	const editingExperience = isEditingExperience && editingState?.itemId
+	const editingExperience = isEditingExperience && editingState.itemId
 		? experiences.find((e) => e.id === editingState.itemId)
 		: null;
 
@@ -114,15 +117,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 		}
 	};
 
-	const formatDate = (dateString: string) => {
-		if (!dateString) return "";
-		const [year, month] = dateString.split("-");
-		const months = [
-			"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-		];
-		return `${months[parseInt(month) - 1]} ${year}`;
-	};
+	const formatDate = formatMonthYear;
 
 	if (isLoading) {
 		return (
@@ -217,7 +212,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 													</Button>
 													<Button
 														size="sm"
-														onClick={() => handleSavePending(item.id, item.request)}
+														onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 														disabled={savingItemId === item.id}
 													>
 														{savingItemId === item.id ? (
@@ -362,7 +357,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 
 // Form component for the Sheet
 interface ExperienceFormProps {
-	experience?: WorkExperienceResponse | null;
+	experience?: WorkExperienceJsonResponse | null;
 	onSuccess: () => void;
 	onCancel: () => void;
 }
@@ -395,7 +390,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 
 	const isCurrent = useWatch({ control: form.control, name: "isCurrent" });
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateWorkExperienceRequest;
 
 		if (experience) {
@@ -427,7 +422,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
@@ -542,7 +537,7 @@ function PendingEditForm({ initialValues, onSave, onCancel }: PendingEditFormPro
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
 			<div className="grid grid-cols-2 gap-3">
 				<div className="flex flex-col gap-1">
 					<Label htmlFor="pendingJobTitle" className="text-xs">Job Title</Label>

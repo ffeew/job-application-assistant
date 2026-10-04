@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ export default function CoverLettersPage() {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-4">
         <div className="text-lg text-red-600">Error loading cover letters</div>
-        <Button onClick={() => refetch()}>Try Again</Button>
+        <Button onClick={withAsyncHandler(() => refetch())}>Try Again</Button>
       </div>
     );
   }

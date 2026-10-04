@@ -184,7 +184,9 @@ export function ProfileLayout() {
 
 			{/* Overlay for mobile */}
 			{isSidebarOpen && (
-				<div
+				<button
+					type="button"
+					aria-label="Close profile navigation"
 					className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm lg:hidden"
 					onClick={() => setIsSidebarOpen(false)}
 				/>

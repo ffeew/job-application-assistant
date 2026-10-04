@@ -1,12 +1,14 @@
+import { achievementJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateAchievementRequest, AchievementResponse } from '@/app/api/profile/validators';
+import type { CreateAchievementRequest, AchievementJsonResponse } from '@/app/api/profile/validators';
 import { achievementsKeys } from '../queries/use-achievements';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const createAchievementApi = {
-  create: async (data: CreateAchievementRequest): Promise<AchievementResponse> => {
+  create: async (data: CreateAchievementRequest): Promise<AchievementJsonResponse> => {
     const response = await fetch('/api/profile/achievements', {
       method: 'POST',
       headers: {
@@ -14,10 +16,7 @@ const createAchievementApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create achievement');
-    }
-    return response.json();
+    return parseJsonResponse(response, achievementJsonResponseSchema, "Failed to create achievement");
   },
 };
 
@@ -28,9 +27,9 @@ export function useCreateAchievement() {
   return useMutation({
     mutationFn: (data: CreateAchievementRequest) => createAchievementApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

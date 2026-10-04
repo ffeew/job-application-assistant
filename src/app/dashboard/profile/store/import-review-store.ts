@@ -122,7 +122,7 @@ export const useImportReviewStore = create<ImportReviewState>((set) => ({
     const references = buildReferenceItems(payload.references, context.references);
 
     const aggregatedWarnings = [
-      ...(payload.warnings ?? []),
+      ...payload.warnings,
       ...workExperiences.warnings,
       ...education.warnings,
       ...skills.warnings,
@@ -135,7 +135,7 @@ export const useImportReviewStore = create<ImportReviewState>((set) => ({
     set({
       profile: {
         data: payload.profile,
-        warnings: payload.warnings ?? [],
+        warnings: payload.warnings,
       },
       workExperiences: workExperiences.items,
       education: education.items,

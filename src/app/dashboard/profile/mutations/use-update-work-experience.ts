@@ -1,11 +1,13 @@
+import { workExperienceJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateWorkExperienceRequest, WorkExperienceResponse } from '@/app/api/profile/validators';
+import type { UpdateWorkExperienceRequest, WorkExperienceJsonResponse } from '@/app/api/profile/validators';
 import { workExperiencesKeys } from '../queries/use-work-experiences';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateWorkExperienceApi = {
-  update: async (id: number, data: UpdateWorkExperienceRequest): Promise<WorkExperienceResponse> => {
+  update: async (id: number, data: UpdateWorkExperienceRequest): Promise<WorkExperienceJsonResponse> => {
     const response = await fetch(`/api/profile/work-experiences/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateWorkExperienceApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update work experience');
-    }
-    return response.json();
+    return parseJsonResponse(response, workExperienceJsonResponseSchema, "Failed to update work experience");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateWorkExperience() {
       updateWorkExperienceApi.update(id, data),
     onSuccess: (updatedExperience) => {
       queryClient.setQueryData(workExperiencesKeys.detail(updatedExperience.id), updatedExperience);
-      queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

@@ -23,9 +23,9 @@ export function useDeleteCertification() {
     mutationFn: (id: number) => deleteCertificationApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: certificationsKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

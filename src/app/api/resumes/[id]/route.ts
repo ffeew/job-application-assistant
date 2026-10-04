@@ -45,7 +45,7 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body: unknown = await request.json();
     const validatedData = updateResumeSchema.safeParse(body);
 
     if (!validatedData.success) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { serializedTimestamps } from "@/lib/validators/transport";
 
 // Base cover letter schema
 export const coverLetterSchema = z.object({
@@ -42,6 +43,19 @@ export const generateCoverLetterResponseSchema = z.object({
 export type CreateCoverLetterRequest = z.infer<typeof createCoverLetterSchema>;
 export type UpdateCoverLetterRequest = z.infer<typeof updateCoverLetterSchema>;
 export type CoverLetterResponse = z.infer<typeof coverLetterResponseSchema>;
+
+export const coverLetterJsonResponseSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  content: z.string(),
+  isAiGenerated: z.boolean(),
+  jobApplicationId: z.string().optional(),
+  resumeId: z.string().optional(),
+  ...serializedTimestamps,
+});
+
+export type CoverLetterJsonResponse = z.infer<typeof coverLetterJsonResponseSchema>;
 export type GenerateCoverLetterRequest = z.infer<typeof generateCoverLetterSchema>;
 export type GenerateCoverLetterResponse = z.infer<typeof generateCoverLetterResponseSchema>;
 

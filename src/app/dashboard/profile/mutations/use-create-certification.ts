@@ -1,12 +1,14 @@
+import { certificationJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateCertificationRequest, CertificationResponse } from '@/app/api/profile/validators';
+import type { CreateCertificationRequest, CertificationJsonResponse } from '@/app/api/profile/validators';
 import { certificationsKeys } from '../queries/use-certifications';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const createCertificationApi = {
-  create: async (data: CreateCertificationRequest): Promise<CertificationResponse> => {
+  create: async (data: CreateCertificationRequest): Promise<CertificationJsonResponse> => {
     const response = await fetch('/api/profile/certifications', {
       method: 'POST',
       headers: {
@@ -14,10 +16,7 @@ const createCertificationApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create certification');
-    }
-    return response.json();
+    return parseJsonResponse(response, certificationJsonResponseSchema, "Failed to create certification");
   },
 };
 
@@ -28,9 +27,9 @@ export function useCreateCertification() {
   return useMutation({
     mutationFn: (data: CreateCertificationRequest) => createCertificationApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

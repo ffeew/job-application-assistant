@@ -1,12 +1,14 @@
+import { skillJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateSkillRequest, SkillResponse } from '@/app/api/profile/validators';
+import type { CreateSkillRequest, SkillJsonResponse } from '@/app/api/profile/validators';
 import { skillsKeys } from '../queries/use-skills';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const createSkillApi = {
-  create: async (data: CreateSkillRequest): Promise<SkillResponse> => {
+  create: async (data: CreateSkillRequest): Promise<SkillJsonResponse> => {
     const response = await fetch('/api/profile/skills', {
       method: 'POST',
       headers: {
@@ -14,10 +16,7 @@ const createSkillApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create skill');
-    }
-    return response.json();
+    return parseJsonResponse(response, skillJsonResponseSchema, "Failed to create skill");
   },
 };
 
@@ -28,9 +27,9 @@ export function useCreateSkill() {
   return useMutation({
     mutationFn: (data: CreateSkillRequest) => createSkillApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: skillsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: skillsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

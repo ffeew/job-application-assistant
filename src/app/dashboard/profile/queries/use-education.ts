@@ -1,9 +1,11 @@
+import { educationJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { EducationResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { EducationJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const educationApi = {
-  getAll: async (query?: ProfileQuery): Promise<EducationResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<EducationJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const educationApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/education?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch education');
-    }
-    return response.json();
+    return parseJsonResponse(response, educationJsonResponseSchema.array(), "Failed to fetch education");
   },
 
-  getById: async (id: number): Promise<EducationResponse> => {
+  getById: async (id: number): Promise<EducationJsonResponse> => {
     const response = await fetch(`/api/profile/education/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch education');
-    }
-    return response.json();
+    return parseJsonResponse(response, educationJsonResponseSchema, "Failed to fetch education");
   },
 };
 

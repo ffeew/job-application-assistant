@@ -1,11 +1,13 @@
+import { referenceJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateReferenceRequest, ReferenceResponse } from '@/app/api/profile/validators';
+import type { UpdateReferenceRequest, ReferenceJsonResponse } from '@/app/api/profile/validators';
 import { referencesKeys } from '../queries/use-references';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateReferenceApi = {
-  update: async (id: number, data: UpdateReferenceRequest): Promise<ReferenceResponse> => {
+  update: async (id: number, data: UpdateReferenceRequest): Promise<ReferenceJsonResponse> => {
     const response = await fetch(`/api/profile/references/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateReferenceApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update reference');
-    }
-    return response.json();
+    return parseJsonResponse(response, referenceJsonResponseSchema, "Failed to update reference");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateReference() {
       updateReferenceApi.update(id, data),
     onSuccess: (updatedReference) => {
       queryClient.setQueryData(referencesKeys.detail(updatedReference.id), updatedReference);
-      queryClient.invalidateQueries({ queryKey: referencesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: referencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

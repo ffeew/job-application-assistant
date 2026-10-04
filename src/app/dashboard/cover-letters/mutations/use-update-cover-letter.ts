@@ -1,6 +1,8 @@
+import { coverLetterJsonResponseSchema } from "@/app/api/cover-letters/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  CoverLetterResponse as CoverLetter,
+  CoverLetterJsonResponse as CoverLetter,
   UpdateCoverLetterRequest as UpdateCoverLetterData
 } from '@/lib/validators';
 import { coverLettersKeys } from '../queries/use-cover-letters';
@@ -16,10 +18,7 @@ const updateCoverLetterApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update cover letter');
-    }
-    return response.json();
+    return parseJsonResponse(response, coverLetterJsonResponseSchema, "Failed to update cover letter");
   },
 };
 
@@ -34,9 +33,9 @@ export function useUpdateCoverLetter() {
       // Update the specific cover letter in cache
       queryClient.setQueryData(coverLettersKeys.detail(updatedCoverLetter.id), updatedCoverLetter);
       // Invalidate cover letters list to refetch
-      queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

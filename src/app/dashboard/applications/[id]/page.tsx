@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
@@ -80,7 +81,7 @@ export default function EditApplicationPage({
 			const resolved = await params;
 			setResolvedParams(resolved);
 		};
-		resolveParams();
+		runAsyncAction(resolveParams());
 	}, [params]);
 
 	// Reset form with application data when loaded
@@ -94,7 +95,7 @@ export default function EditApplicationPage({
 				location: application.location || "",
 				jobUrl: application.jobUrl || "",
 				salaryRange: application.salaryRange || "",
-				status: application.status || "applied",
+				status: application.status,
 				appliedAt: application.appliedAt
 					? new Date(application.appliedAt).toISOString().split("T")[0]
 					: "",
@@ -112,7 +113,7 @@ export default function EditApplicationPage({
 		}
 	}, [error, router]);
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		// Data is validated by Zod resolver, safe to cast
 		const validatedData = data as UpdateApplicationRequest;
 
@@ -155,7 +156,7 @@ export default function EditApplicationPage({
 
 				{application && (
 					<Button asChild className="shrink-0">
-						<Link href={`/dashboard/applications/${resolvedParams?.id}/resume`}>
+						<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
 							<FileText className="mr-2 h-4 w-4" />
 							<span className="hidden sm:inline">Generate Tailored Resume</span>
 							<span className="sm:hidden">Resume</span>
@@ -164,7 +165,7 @@ export default function EditApplicationPage({
 				)}
 			</div>
 
-			<form onSubmit={handleSubmit(onSubmit)}>
+			<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
 				<div className="grid gap-6">
 					<Card>
 						<CardHeader>

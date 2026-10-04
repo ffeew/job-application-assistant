@@ -1,11 +1,13 @@
+import { userProfileJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateUserProfileRequest, UserProfileResponse } from '@/app/api/profile/validators';
+import type { UpdateUserProfileRequest, UserProfileJsonResponse } from '@/app/api/profile/validators';
 import { userProfileKeys } from '../queries/use-user-profile';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateUserProfileApi = {
-  update: async (data: UpdateUserProfileRequest): Promise<UserProfileResponse> => {
+  update: async (data: UpdateUserProfileRequest): Promise<UserProfileJsonResponse> => {
     const response = await fetch('/api/profile', {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateUserProfileApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update user profile');
-    }
-    return response.json();
+    return parseJsonResponse(response, userProfileJsonResponseSchema, "Failed to update user profile");
   },
 };
 
@@ -28,7 +27,7 @@ export function useUpdateUserProfile() {
     mutationFn: (data: UpdateUserProfileRequest) => updateUserProfileApi.update(data),
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(userProfileKeys.profile(), updatedProfile);
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

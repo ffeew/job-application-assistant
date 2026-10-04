@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,11 @@ import { toast } from "sonner";
 import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create-reference";
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
 import { createReferenceSchema } from "@/app/api/profile/validators";
-import type { ReferenceResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
+import type { ReferenceJsonResponse, CreateReferenceRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface ReferencesFormProps {
-  reference?: ReferenceResponse;
+  reference?: ReferenceJsonResponse;
   initialValues?: Partial<CreateReferenceRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -94,7 +95,7 @@ export function ReferencesForm({
         <CardTitle>{reference ? "Edit Reference" : "Add Reference"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Name *</Label>

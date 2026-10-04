@@ -1,30 +1,13 @@
+import { applicationResumeInfoResponseSchema } from "@/app/api/applications/[id]/resume/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-
-interface TailoredResumeInfo {
-  id: string;
-  title: string;
-  updatedAt: string;
-}
-
-interface ApplicationResumeInfo {
-  id: string;
-  company: string;
-  position: string;
-  jobDescription?: string;
-  hasJobDescription: boolean;
-  location?: string;
-  status: string;
-  tailoredResume: TailoredResumeInfo | null;
-}
+import type { ApplicationResumeInfoResponse } from "@/app/api/applications/[id]/resume/validators";
 
 // Direct API call function
 const applicationResumeInfoApi = {
-  get: async (applicationId: string): Promise<ApplicationResumeInfo> => {
+  get: async (applicationId: string): Promise<ApplicationResumeInfoResponse> => {
     const response = await fetch(`/api/applications/${applicationId}/resume`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch application info');
-    }
-    return response.json();
+    return parseJsonResponse(response, applicationResumeInfoResponseSchema, "Failed to fetch application info");
   },
 };
 

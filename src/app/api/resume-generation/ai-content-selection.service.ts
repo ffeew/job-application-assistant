@@ -194,7 +194,7 @@ ${profileData.projects.map(project => `ID: ${project.id}
 Title: ${project.title}
 Description: ${project.description || 'No description'}
 Technologies: ${project.technologies || 'Not specified'}
-Duration: ${project.startDate} - ${project.endDate || 'Ongoing'}
+Duration: ${project.startDate ?? 'Not specified'} - ${project.endDate || 'Ongoing'}
 ---`).join('\n')}
 
 EDUCATION:

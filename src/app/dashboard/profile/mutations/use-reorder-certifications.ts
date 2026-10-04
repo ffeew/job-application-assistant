@@ -25,7 +25,7 @@ export function useReorderCertifications() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderCertificationsApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: certificationsKeys.all });
     },
   });
 }

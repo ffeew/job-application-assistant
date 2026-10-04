@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,11 @@ import { toast } from "sonner";
 import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-project";
 import { useUpdateProject } from "@/app/dashboard/profile/mutations/use-update-project";
 import { createProjectSchema } from "@/app/api/profile/validators";
-import type { ProjectResponse, CreateProjectRequest } from "@/app/api/profile/validators";
+import type { ProjectJsonResponse, CreateProjectRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface ProjectsFormProps {
-  project?: ProjectResponse;
+  project?: ProjectJsonResponse;
   initialValues?: Partial<CreateProjectRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -98,7 +99,7 @@ export function ProjectsForm({
         <CardTitle>{project ? "Edit Project" : "Add Project"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="title">Project Title *</Label>
             <Input

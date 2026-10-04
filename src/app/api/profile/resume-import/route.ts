@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const file = fileEntry as File;
+  const file = fileEntry;
   const mimeType = file.type || "application/octet-stream";
 
   if (!ALLOWED_MIME_TYPES.has(mimeType) && mimeType !== "application/octet-stream") {

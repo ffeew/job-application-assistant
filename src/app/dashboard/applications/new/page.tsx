@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,7 @@ export default function NewApplicationPage() {
 
   const { register, handleSubmit, control, formState: { errors, isSubmitting } } = form;
 
-  const onSubmit = async (data: unknown) => {
+  const onSubmit = (data: unknown) => {
     // Data is validated by Zod resolver, safe to cast
     const validatedData = data as CreateApplicationRequest;
     
@@ -74,7 +75,7 @@ export default function NewApplicationPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>

@@ -1,6 +1,8 @@
+import { applicationJsonResponseSchema } from "@/app/api/applications/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  ApplicationResponse as JobApplication,
+  ApplicationJsonResponse as JobApplication,
   CreateApplicationRequest as CreateJobApplicationData
 } from '@/lib/validators';
 import { applicationsKeys } from '../queries/use-applications';
@@ -17,10 +19,7 @@ const createApplicationApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create application');
-    }
-    return response.json();
+    return parseJsonResponse(response, applicationJsonResponseSchema, "Failed to create application");
   },
 };
 
@@ -32,11 +31,11 @@ export function useCreateApplication() {
     mutationFn: (data: CreateJobApplicationData) => createApplicationApi.create(data),
     onSuccess: () => {
       // Invalidate applications list to refetch
-      queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
       // Invalidate dashboard stats as application count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

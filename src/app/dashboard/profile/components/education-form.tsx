@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,11 @@ import { toast } from "sonner";
 import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
 import { createEducationSchema } from "@/app/api/profile/validators";
-import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
+import type { EducationJsonResponse, CreateEducationRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface EducationFormProps {
-  education?: EducationResponse;
+  education?: EducationJsonResponse;
   initialValues?: Partial<CreateEducationRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -99,7 +100,7 @@ export function EducationForm({
         <CardTitle>{education ? "Edit Education" : "Add Education"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="degree">Degree *</Label>

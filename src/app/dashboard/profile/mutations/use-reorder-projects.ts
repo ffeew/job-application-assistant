@@ -25,7 +25,7 @@ export function useReorderProjects() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderProjectsApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: projectsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: projectsKeys.all });
     },
   });
 }

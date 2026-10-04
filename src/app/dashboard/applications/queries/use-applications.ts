@@ -1,22 +1,18 @@
+import { applicationJsonResponseSchema } from "@/app/api/applications/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { ApplicationResponse as JobApplication } from '@/lib/validators';
+import type { ApplicationJsonResponse as JobApplication } from '@/lib/validators';
 
 // Direct API call functions
 const applicationsApi = {
   getAll: async (): Promise<JobApplication[]> => {
     const response = await fetch('/api/applications');
-    if (!response.ok) {
-      throw new Error('Failed to fetch applications');
-    }
-    return response.json();
+    return parseJsonResponse(response, applicationJsonResponseSchema.array(), "Failed to fetch applications");
   },
 
   getById: async (id: string): Promise<JobApplication> => {
     const response = await fetch(`/api/applications/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch application');
-    }
-    return response.json();
+    return parseJsonResponse(response, applicationJsonResponseSchema, "Failed to fetch application");
   },
 };
 

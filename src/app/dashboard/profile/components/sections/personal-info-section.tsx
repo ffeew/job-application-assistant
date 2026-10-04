@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { type ChangeEvent, useEffect, useRef } from "react";
 import { useForm, type UseFormRegister, type UseFormHandleSubmit, type FieldValues, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,8 +25,8 @@ import {
 	Phone,
 	MapPin,
 	Globe,
-	Github,
-	Linkedin,
+	Code,
+	Briefcase,
 	Edit,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,7 +34,7 @@ import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-crea
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
 import { useImportResume } from "@/app/dashboard/profile/mutations/use-import-resume";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
-import type { CreateUserProfileRequest, UserProfileResponse } from "@/app/api/profile/validators";
+import type { CreateUserProfileRequest, UserProfileJsonResponse } from "@/app/api/profile/validators";
 import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
@@ -42,7 +43,7 @@ import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-stor
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
 interface PersonalInfoSectionProps {
-	profile: UserProfileResponse | null;
+	profile: UserProfileJsonResponse | null;
 	onImportPreview: (data: ResumeImportResponse) => void;
 }
 
@@ -110,7 +111,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 		}
 	}, [profile, reset]);
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const mutation = profile ? updateMutation : createMutation;
 		const validatedData = data as CreateUserProfileRequest;
 
@@ -215,7 +216,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 						</SheetHeader>
 						<ProfileForm
 							register={register as unknown as UseFormRegister<FieldValues>}
-							errors={errors as FieldErrors<FieldValues>}
+							errors={errors}
 							isSubmitting={isSubmitting}
 							handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
 							onSubmit={onSubmit}
@@ -304,7 +305,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 										rel="noopener noreferrer"
 										className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
 									>
-										<Linkedin className="h-4 w-4" />
+								<Briefcase className="h-4 w-4" />
 										<span>LinkedIn</span>
 									</a>
 								)}
@@ -315,7 +316,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 										rel="noopener noreferrer"
 										className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
 									>
-										<Github className="h-4 w-4" />
+								<Code className="h-4 w-4" />
 										<span>GitHub</span>
 									</a>
 								)}
@@ -344,7 +345,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 					</SheetHeader>
 					<ProfileForm
 						register={register as unknown as UseFormRegister<FieldValues>}
-						errors={errors as FieldErrors<FieldValues>}
+						errors={errors}
 						isSubmitting={isSubmitting}
 						handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
 						onSubmit={onSubmit}
@@ -360,10 +361,10 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 // Extracted form component to avoid repetition
 interface ProfileFormProps {
 	register: UseFormRegister<FieldValues>;
-	errors: FieldErrors<FieldValues>;
+	errors: FieldErrors;
 	isSubmitting: boolean;
 	handleSubmit: UseFormHandleSubmit<FieldValues>;
-	onSubmit: (data: unknown) => Promise<void>;
+	onSubmit: (data: unknown) => void | Promise<void>;
 	onCancel: () => void;
 	submitLabel: string;
 }
@@ -379,11 +380,11 @@ function ProfileForm({
 }: ProfileFormProps) {
 	const getErrorMessage = (field: string) => {
 		const error = errors[field];
-		return error?.message ? String(error.message) : null;
+		return typeof error?.message === "string" ? error.message : null;
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-4">
 				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
 					Basic Information

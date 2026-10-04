@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CoverLetterResponse as CoverLetter } from '@/lib/validators';
+import type { CoverLetterJsonResponse as CoverLetter } from '@/lib/validators';
 import { coverLettersKeys } from '../queries/use-cover-letters';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
@@ -30,9 +30,9 @@ export function useDeleteCoverLetter() {
       // Remove specific cover letter from cache
       queryClient.removeQueries({ queryKey: coverLettersKeys.detail(deletedId) });
       // Invalidate dashboard stats as cover letter count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,11 @@ import { toast } from "sonner";
 import { useCreateAchievement } from "@/app/dashboard/profile/mutations/use-create-achievement";
 import { useUpdateAchievement } from "@/app/dashboard/profile/mutations/use-update-achievement";
 import { createAchievementSchema } from "@/app/api/profile/validators";
-import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
+import type { AchievementJsonResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface AchievementsFormProps {
-  achievement?: AchievementResponse;
+  achievement?: AchievementJsonResponse;
   initialValues?: Partial<CreateAchievementRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -94,7 +95,7 @@ export function AchievementsForm({
         <CardTitle>{achievement ? "Edit Achievement" : "Add Achievement"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="title">Title *</Label>
             <Input

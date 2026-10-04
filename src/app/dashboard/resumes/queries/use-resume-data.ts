@@ -1,32 +1,15 @@
 "use client";
 
+import { resumeDataJsonResponseSchema } from "@/app/api/resume-generation/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from "@tanstack/react-query";
-import type {
-  UserProfileResponse,
-  WorkExperienceResponse,
-  EducationResponse,
-  SkillResponse,
-  ProjectResponse,
-  CertificationResponse,
-  AchievementResponse,
-} from "@/app/api/profile/validators";
-
-interface ResumeData {
-  profile: UserProfileResponse | null;
-  workExperiences: WorkExperienceResponse[];
-  education: EducationResponse[];
-  skills: SkillResponse[];
-  projects: ProjectResponse[];
-  certifications: CertificationResponse[];
-  achievements: AchievementResponse[];
-}
+import type { ResumeDataJsonResponse } from "@/app/api/resume-generation/validators";
 
 // Resume Data API call
 const resumeDataApi = {
-  get: async (): Promise<ResumeData> => {
+  get: async (): Promise<ResumeDataJsonResponse> => {
     const response = await fetch("/api/resume-generation");
-    if (!response.ok) throw new Error("Failed to fetch resume data");
-    return response.json();
+    return parseJsonResponse(response, resumeDataJsonResponseSchema, "Failed to fetch resume data");
   },
 };
 

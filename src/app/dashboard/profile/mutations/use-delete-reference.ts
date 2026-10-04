@@ -23,9 +23,9 @@ export function useDeleteReference() {
     mutationFn: (id: number) => deleteReferenceApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: referencesKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: referencesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: referencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

@@ -1,14 +1,13 @@
+import { userProfileJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { UserProfileResponse } from '@/app/api/profile/validators';
+import type { UserProfileJsonResponse } from '@/app/api/profile/validators';
 
 // Direct API call function
 const userProfileApi = {
-  get: async (): Promise<UserProfileResponse | null> => {
+  get: async (): Promise<UserProfileJsonResponse | null> => {
     const response = await fetch('/api/profile');
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
-    }
-    return response.json();
+    return parseJsonResponse(response, userProfileJsonResponseSchema.nullable(), "Failed to fetch user profile");
   },
 };
 

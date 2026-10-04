@@ -1,9 +1,11 @@
+import { projectJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { ProjectResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { ProjectJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const projectsApi = {
-  getAll: async (query?: ProfileQuery): Promise<ProjectResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<ProjectJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const projectsApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/projects?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch projects');
-    }
-    return response.json();
+    return parseJsonResponse(response, projectJsonResponseSchema.array(), "Failed to fetch projects");
   },
 
-  getById: async (id: number): Promise<ProjectResponse> => {
+  getById: async (id: number): Promise<ProjectJsonResponse> => {
     const response = await fetch(`/api/profile/projects/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch project');
-    }
-    return response.json();
+    return parseJsonResponse(response, projectJsonResponseSchema, "Failed to fetch project");
   },
 };
 

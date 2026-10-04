@@ -25,7 +25,7 @@ export function useReorderSkills() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderSkillsApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: skillsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: skillsKeys.all });
     },
   });
 }

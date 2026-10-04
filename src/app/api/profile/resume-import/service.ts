@@ -340,9 +340,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     if (nameCandidate) {
       const parts = nameCandidate.split(/\s+/).filter((part) => part.length > 0);
       if (parts.length === 1) {
-        firstName = parts[0];
+        firstName = parts[0] ?? null;
       } else if (parts.length >= 2) {
-        firstName = parts[0];
+        firstName = parts[0] ?? null;
         lastName = parts.slice(1).join(" ");
       }
     }
@@ -456,11 +456,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportWorkExperience[] = [];
 
-    data?.forEach((experience, index) => {
-      if (!experience) {
-        return;
-      }
-
+    data.forEach((experience, index) => {
       const jobTitle = this.stringOrNull(experience.jobTitle);
       const company = this.stringOrNull(experience.company);
       const location = this.stringOrNull(experience.location);
@@ -503,11 +499,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportEducation[] = [];
 
-    data?.forEach((education, index) => {
-      if (!education) {
-        return;
-      }
-
+    data.forEach((education, index) => {
       const degree = this.stringOrNull(education.degree);
       const institution = this.stringOrNull(education.institution);
       const fieldOfStudy = this.stringOrNull(education.fieldOfStudy);
@@ -544,11 +536,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const items: ResumeImportSkill[] = [];
     const seen = new Set<string>();
 
-    data?.forEach((skill, index) => {
-      if (!skill) {
-        return;
-      }
-
+    data.forEach((skill, index) => {
       const name = this.stringOrNull(skill.name);
       if (!name) {
         warnings.push(`Skipped a skill entry at position ${index + 1} due to missing name.`);
@@ -580,11 +568,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportProject[] = [];
 
-    data?.forEach((project, index) => {
-      if (!project) {
-        return;
-      }
-
+    data.forEach((project, index) => {
       const title = this.stringOrNull(project.title);
       if (!title) {
         warnings.push(`Skipped a project entry at position ${index + 1} due to missing title.`);
@@ -622,11 +606,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportCertification[] = [];
 
-    data?.forEach((certification, index) => {
-      if (!certification) {
-        return;
-      }
-
+    data.forEach((certification, index) => {
       const name = this.stringOrNull(certification.name);
       const issuingOrganization = this.stringOrNull(certification.issuingOrganization);
       if (!name || !issuingOrganization) {
@@ -651,11 +631,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportAchievement[] = [];
 
-    data?.forEach((achievement, index) => {
-      if (!achievement) {
-        return;
-      }
-
+    data.forEach((achievement, index) => {
       const title = this.stringOrNull(achievement.title);
       if (!title) {
         warnings.push(`Skipped an achievement entry at position ${index + 1} due to missing title.`);
@@ -678,11 +654,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const warnings: string[] = [];
     const items: ResumeImportReference[] = [];
 
-    data?.forEach((reference, index) => {
-      if (!reference) {
-        return;
-      }
-
+    data.forEach((reference, index) => {
       const name = this.stringOrNull(reference.name);
       if (!name) {
         warnings.push(`Skipped a reference entry at position ${index + 1} due to missing name.`);
@@ -834,16 +806,16 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     }
 
     const pages = Array.isArray((response as { pages?: unknown; }).pages)
-      ? ((response as { pages: unknown[]; }).pages as Array<{ markdown?: unknown; text?: unknown; }>)
+      ? (response as { pages: unknown[]; }).pages
       : [];
 
     const sections = pages
       .map((page) => {
         if (page && typeof page === "object") {
-          if (typeof page.markdown === "string" && page.markdown.trim().length > 0) {
+          if ("markdown" in page && typeof page.markdown === "string" && page.markdown.trim().length > 0) {
             return page.markdown.trim();
           }
-          if (typeof page.text === "string" && page.text.trim().length > 0) {
+          if ("text" in page && typeof page.text === "string" && page.text.trim().length > 0) {
             return page.text.trim();
           }
         }

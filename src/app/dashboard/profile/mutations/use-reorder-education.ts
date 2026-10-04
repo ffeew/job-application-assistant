@@ -25,7 +25,7 @@ export function useReorderEducation() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderEducationApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: educationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: educationKeys.all });
     },
   });
 }

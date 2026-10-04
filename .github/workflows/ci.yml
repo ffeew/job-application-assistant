@@ -27,3 +27,5 @@ jobs:
         run: bun run lint
       - name: Run typecheck
         run: bun run typecheck
+      - name: Run tests
+        run: bun run test

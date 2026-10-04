@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -234,7 +235,7 @@ export default function GenerateResumePage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
 				<div className="flex flex-col gap-6">
-					<form onSubmit={handleSubmit(onSubmit)}>
+					<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
 						<Card>
 							<CardHeader>
 								<CardTitle>Resume Configuration</CardTitle>
@@ -255,8 +256,9 @@ export default function GenerateResumePage() {
 								</div>
 
 								<div className="flex flex-col gap-2">
-									<Label>Template</Label>
+									<Label htmlFor="template">Template</Label>
 									<select
+										id="template"
 										{...register("template")}
 										className="w-full px-3 py-2 border border-gray-300 rounded-md"
 									>
@@ -268,7 +270,7 @@ export default function GenerateResumePage() {
 								</div>
 
 								<div className="flex flex-col gap-3">
-									<Label>Content Sections</Label>
+									<p className="text-sm font-medium">Content Sections</p>
 
 									<div className="flex flex-col gap-2">
 										<div className="flex items-center gap-2">
@@ -432,7 +434,7 @@ export default function GenerateResumePage() {
 									<Button
 										type="button"
 										variant="outline"
-										onClick={handlePreview}
+										onClick={withAsyncHandler(handlePreview)}
 										disabled={!hasMinimalData || isGeneratingPreview}
 									>
 										{isGeneratingPreview ? (

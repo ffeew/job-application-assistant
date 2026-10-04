@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ResumeResponse as Resume } from '@/lib/validators';
+import type { ResumeJsonResponse as Resume } from '@/lib/validators';
 import { resumesKeys } from '../queries/use-resumes';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
@@ -30,9 +30,9 @@ export function useDeleteResume() {
       // Remove specific resume from cache
       queryClient.removeQueries({ queryKey: resumesKeys.detail(deletedId) });
       // Invalidate dashboard stats as resume count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

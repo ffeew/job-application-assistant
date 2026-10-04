@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { profileRecordFields } from "@/lib/validators/transport";
 
 // User Profile Schema
 export const userProfileSchema = z.object({
@@ -177,6 +178,115 @@ export const referenceResponseSchema = referenceSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+
+// Transport schemas validate stored response shapes, without reapplying form
+// constraints such as URL validation or date-input regular expressions.
+export const userProfileJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+  state: z.string().nullable(),
+  zipCode: z.string().nullable(),
+  country: z.string().nullable(),
+  linkedinUrl: z.string().nullable(),
+  githubUrl: z.string().nullable(),
+  portfolioUrl: z.string().nullable(),
+  professionalSummary: z.string().nullable(),
+});
+
+export const workExperienceJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  jobTitle: z.string(),
+  company: z.string(),
+  location: z.string().nullable(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  isCurrent: z.boolean(),
+  description: z.string().nullable(),
+  technologies: z.string().nullable(),
+  displayOrder: z.number(),
+});
+
+export const educationJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  degree: z.string(),
+  fieldOfStudy: z.string().nullable(),
+  institution: z.string(),
+  location: z.string().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  gpa: z.string().nullable(),
+  honors: z.string().nullable(),
+  relevantCoursework: z.string().nullable(),
+  displayOrder: z.number(),
+});
+
+export const skillJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  name: z.string(),
+  category: skillSchema.shape.category,
+  proficiencyLevel: skillSchema.shape.proficiencyLevel,
+  yearsOfExperience: z.number().nullable(),
+  displayOrder: z.number(),
+});
+
+export const projectJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  title: z.string(),
+  description: z.string().nullable(),
+  technologies: z.string().nullable(),
+  projectUrl: z.string().nullable(),
+  githubUrl: z.string().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  isOngoing: z.boolean(),
+  displayOrder: z.number(),
+});
+
+export const certificationJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  name: z.string(),
+  issuingOrganization: z.string(),
+  issueDate: z.string().nullable(),
+  expirationDate: z.string().nullable(),
+  credentialId: z.string().nullable(),
+  credentialUrl: z.string().nullable(),
+  displayOrder: z.number(),
+});
+
+export const achievementJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  title: z.string(),
+  description: z.string().nullable(),
+  organization: z.string().nullable(),
+  date: z.string().nullable(),
+  url: z.string().nullable(),
+  displayOrder: z.number(),
+});
+
+export const referenceJsonResponseSchema = z.object({
+  ...profileRecordFields,
+  name: z.string(),
+  title: z.string().nullable(),
+  company: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  relationship: referenceSchema.shape.relationship,
+  displayOrder: z.number(),
+});
+
+export type UserProfileJsonResponse = z.infer<typeof userProfileJsonResponseSchema>;
+export type WorkExperienceJsonResponse = z.infer<typeof workExperienceJsonResponseSchema>;
+export type EducationJsonResponse = z.infer<typeof educationJsonResponseSchema>;
+export type SkillJsonResponse = z.infer<typeof skillJsonResponseSchema>;
+export type ProjectJsonResponse = z.infer<typeof projectJsonResponseSchema>;
+export type CertificationJsonResponse = z.infer<typeof certificationJsonResponseSchema>;
+export type AchievementJsonResponse = z.infer<typeof achievementJsonResponseSchema>;
+export type ReferenceJsonResponse = z.infer<typeof referenceJsonResponseSchema>;
 
 // Query Schemas
 export const profileQuerySchema = z.object({

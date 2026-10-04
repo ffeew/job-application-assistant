@@ -60,8 +60,8 @@ export function DashboardContent() {
   const error = statsErrorObj || activityErrorObj;
 
   const refetch = () => {
-    refetchStats();
-    refetchActivity();
+    void refetchStats();
+    void refetchActivity();
   };
 
   if (isLoading) {

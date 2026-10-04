@@ -1,9 +1,11 @@
+import { skillJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { SkillResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { SkillJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const skillsApi = {
-  getAll: async (query?: ProfileQuery): Promise<SkillResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<SkillJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -12,18 +14,12 @@ const skillsApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/skills?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch skills');
-    }
-    return response.json();
+    return parseJsonResponse(response, skillJsonResponseSchema.array(), "Failed to fetch skills");
   },
 
-  getById: async (id: number): Promise<SkillResponse> => {
+  getById: async (id: number): Promise<SkillJsonResponse> => {
     const response = await fetch(`/api/profile/skills/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch skill');
-    }
-    return response.json();
+    return parseJsonResponse(response, skillJsonResponseSchema, "Failed to fetch skill");
   },
 };
 

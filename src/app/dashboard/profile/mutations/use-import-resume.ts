@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { resumeImportResponseSchema, type ResumeImportResponse } from '@/app/api/profile/resume-import/validators';
+import { parseJsonResponse } from "@/lib/api-response";
 
 // Direct API call function for resume import
 const resumeImportApi = {
@@ -12,22 +13,11 @@ const resumeImportApi = {
       body: formData,
     });
 
-    const raw = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      const errorMessage =
-        raw &&
-        typeof raw === 'object' &&
-        raw !== null &&
-        'error' in raw &&
-        typeof (raw as { error?: unknown }).error === 'string'
-          ? (raw as { error: string }).error
-          : 'Failed to import resume. Please try again.';
-      throw new Error(errorMessage);
-    }
-
-    // Validate response with Zod schema
-    return resumeImportResponseSchema.parse(raw);
+    return parseJsonResponse(
+      response,
+      resumeImportResponseSchema,
+      "Failed to import resume. Please try again.",
+    );
   },
 };
 

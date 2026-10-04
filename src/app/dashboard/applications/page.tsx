@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +64,7 @@ export default function ApplicationsPage() {
 		return (
 			<div className="flex flex-col items-center justify-center py-8 gap-4">
 				<div className="text-lg text-red-600">Error loading applications</div>
-				<Button onClick={() => refetch()}>Try Again</Button>
+				<Button onClick={withAsyncHandler(() => refetch())}>Try Again</Button>
 			</div>
 		);
 	}

@@ -1,3 +1,5 @@
+import { dashboardStatsSchema } from "@/app/api/dashboard/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { DashboardStats } from '@/lib/validators';
 
@@ -5,10 +7,7 @@ import type { DashboardStats } from '@/lib/validators';
 const dashboardStatsApi = {
   get: async (): Promise<DashboardStats> => {
     const response = await fetch('/api/dashboard/stats');
-    if (!response.ok) {
-      throw new Error('Failed to fetch dashboard stats');
-    }
-    return response.json();
+    return parseJsonResponse(response, dashboardStatsSchema, "Failed to fetch dashboard stats");
   },
 };
 

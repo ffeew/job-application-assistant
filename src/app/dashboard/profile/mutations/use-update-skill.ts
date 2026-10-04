@@ -1,11 +1,13 @@
+import { skillJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateSkillRequest, SkillResponse } from '@/app/api/profile/validators';
+import type { UpdateSkillRequest, SkillJsonResponse } from '@/app/api/profile/validators';
 import { skillsKeys } from '../queries/use-skills';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateSkillApi = {
-  update: async (id: number, data: UpdateSkillRequest): Promise<SkillResponse> => {
+  update: async (id: number, data: UpdateSkillRequest): Promise<SkillJsonResponse> => {
     const response = await fetch(`/api/profile/skills/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateSkillApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update skill');
-    }
-    return response.json();
+    return parseJsonResponse(response, skillJsonResponseSchema, "Failed to update skill");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateSkill() {
       updateSkillApi.update(id, data),
     onSuccess: (updatedSkill) => {
       queryClient.setQueryData(skillsKeys.detail(updatedSkill.id), updatedSkill);
-      queryClient.invalidateQueries({ queryKey: skillsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: skillsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

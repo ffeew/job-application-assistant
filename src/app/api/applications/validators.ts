@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { serializedTimestamps } from "@/lib/validators/transport";
 
 // Base application schema
 export const applicationSchema = z.object({
@@ -6,12 +7,12 @@ export const applicationSchema = z.object({
   position: z.string().min(1, "Position is required"),
   jobDescription: z.string().optional(),
   location: z.string().optional(),
-  jobUrl: z.string().url("Invalid job URL").optional().or(z.literal("")),
+  jobUrl: z.url("Invalid job URL").optional().or(z.literal("")),
   salaryRange: z.string().optional(),
   status: z.enum(["applied", "interviewing", "offer", "rejected", "withdrawn"]).default("applied"),
   appliedAt: z.string().optional(),
   notes: z.string().optional(),
-  contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  contactEmail: z.email("Invalid email").optional().or(z.literal("")),
   contactName: z.string().optional(),
   recruiterId: z.string().optional(),
 });
@@ -35,6 +36,27 @@ export const applicationResponseSchema = applicationSchema.extend({
 export type CreateApplicationRequest = z.infer<typeof createApplicationSchema>;
 export type UpdateApplicationRequest = z.infer<typeof updateApplicationSchema>;
 export type ApplicationResponse = z.infer<typeof applicationResponseSchema>;
+
+// Validate wire types independently of stricter form/business validation.
+export const applicationJsonResponseSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  company: z.string(),
+  position: z.string(),
+  jobDescription: z.string().optional(),
+  location: z.string().optional(),
+  jobUrl: z.string().optional(),
+  salaryRange: z.string().optional(),
+  status: applicationSchema.shape.status.unwrap(),
+  appliedAt: z.iso.datetime().optional(),
+  notes: z.string().optional(),
+  contactEmail: z.string().optional(),
+  contactName: z.string().optional(),
+  recruiterId: z.string().optional(),
+  ...serializedTimestamps,
+});
+
+export type ApplicationJsonResponse = z.infer<typeof applicationJsonResponseSchema>;
 
 // Query parameters for filtering/pagination
 export const applicationsQuerySchema = z.object({

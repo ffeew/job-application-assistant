@@ -1,22 +1,18 @@
+import { resumeJsonResponseSchema } from "@/app/api/resumes/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { ResumeResponse as Resume } from '@/app/api/resumes/validators';
+import type { ResumeJsonResponse as Resume } from '@/app/api/resumes/validators';
 
 // Direct API call functions
 const resumesApi = {
   getAll: async (): Promise<Resume[]> => {
     const response = await fetch('/api/resumes');
-    if (!response.ok) {
-      throw new Error('Failed to fetch resumes');
-    }
-    return response.json();
+    return parseJsonResponse(response, resumeJsonResponseSchema.array(), "Failed to fetch resumes");
   },
 
   getById: async (id: string): Promise<Resume> => {
     const response = await fetch(`/api/resumes/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch resume');
-    }
-    return response.json();
+    return parseJsonResponse(response, resumeJsonResponseSchema, "Failed to fetch resume");
   },
 };
 

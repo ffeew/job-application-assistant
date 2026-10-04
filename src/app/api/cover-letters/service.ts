@@ -155,7 +155,7 @@ Position: ${data.position}
 Applicant Name: ${data.applicantName || ""}
 
 Job Description:
-${data.jobDescription}
+${data.jobDescription ?? "Not provided"}
 
 ${data.resumeContent ? `Resume/Background Information:
 ${typeof data.resumeContent === 'string' ? data.resumeContent : JSON.stringify(data.resumeContent, null, 2)}` : ''}

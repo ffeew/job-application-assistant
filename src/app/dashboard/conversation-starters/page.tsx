@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { withAsyncHandler } from "@/lib/async-action";
+import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -45,7 +46,7 @@ export default function ConversationStartersPage() {
 		setCopied(false);
 	};
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setCopied(false);
 
@@ -202,7 +203,7 @@ export default function ConversationStartersPage() {
 							<Button
 								type="button"
 								variant="outline"
-								onClick={handleCopy}
+								onClick={withAsyncHandler(handleCopy)}
 								disabled={!generatedMessage}
 							>
 								{copied ? (

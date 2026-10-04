@@ -1,5 +1,8 @@
 "use client";
 
+import { formatMonthYear } from "@/lib/format-month-year";
+
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -42,14 +45,14 @@ import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
 import { useDeleteEducation } from "@/app/dashboard/profile/mutations/use-delete-education";
 import { createEducationSchema } from "@/app/api/profile/validators";
-import type { EducationResponse, CreateEducationRequest } from "@/app/api/profile/validators";
+import type { EducationJsonResponse, CreateEducationRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface EducationSectionProps {
-	education: EducationResponse[];
+	education: EducationJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -72,7 +75,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 	const deleteMutation = useDeleteEducation();
 
 	const isEditingEducation = isSheetOpen && editingState?.section === "education";
-	const editingEducation = isEditingEducation && editingState?.itemId
+	const editingEducation = isEditingEducation && editingState.itemId
 		? education.find((e) => e.id === editingState.itemId)
 		: null;
 
@@ -104,12 +107,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 		}
 	};
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "";
-		const [year, month] = dateString.split("-");
-		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		return `${months[parseInt(month) - 1]} ${year}`;
-	};
+	const formatDate = formatMonthYear;
 
 	if (isLoading) {
 		return (
@@ -155,7 +153,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}>
 											<X className="h-4 w-4" />
 										</Button>
-										<Button size="sm" onClick={() => handleSavePending(item.id, item.request)} disabled={savingItemId === item.id}>
+										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
 											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
 											Save
 										</Button>
@@ -257,7 +255,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 	);
 }
 
-function EducationForm({ education, onSuccess, onCancel }: { education?: EducationResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function EducationForm({ education, onSuccess, onCancel }: { education?: EducationJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateEducation();
 	const updateMutation = useUpdateEducation();
 
@@ -279,7 +277,7 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateEducationRequest;
 		if (education) {
 			updateMutation.mutate({ id: education.id, data: validatedData }, {
@@ -295,7 +293,7 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="grid grid-cols-2 gap-4">
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="degree">Degree *</Label>

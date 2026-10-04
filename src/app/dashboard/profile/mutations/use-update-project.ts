@@ -1,11 +1,13 @@
+import { projectJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UpdateProjectRequest, ProjectResponse } from '@/app/api/profile/validators';
+import type { UpdateProjectRequest, ProjectJsonResponse } from '@/app/api/profile/validators';
 import { projectsKeys } from '../queries/use-projects';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
 // Direct API call function
 const updateProjectApi = {
-  update: async (id: number, data: UpdateProjectRequest): Promise<ProjectResponse> => {
+  update: async (id: number, data: UpdateProjectRequest): Promise<ProjectJsonResponse> => {
     const response = await fetch(`/api/profile/projects/${id}`, {
       method: 'PUT',
       headers: {
@@ -13,10 +15,7 @@ const updateProjectApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update project');
-    }
-    return response.json();
+    return parseJsonResponse(response, projectJsonResponseSchema, "Failed to update project");
   },
 };
 
@@ -29,8 +28,8 @@ export function useUpdateProject() {
       updateProjectApi.update(id, data),
     onSuccess: (updatedProject) => {
       queryClient.setQueryData(projectsKeys.detail(updatedProject.id), updatedProject);
-      queryClient.invalidateQueries({ queryKey: projectsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: projectsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

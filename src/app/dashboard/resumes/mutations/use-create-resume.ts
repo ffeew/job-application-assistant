@@ -1,6 +1,8 @@
+import { resumeJsonResponseSchema } from "@/app/api/resumes/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  ResumeResponse as Resume,
+  ResumeJsonResponse as Resume,
   CreateResumeRequest as CreateResumeData
 } from '@/lib/validators';
 import { resumesKeys } from '../queries/use-resumes';
@@ -17,10 +19,7 @@ const createResumeApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to create resume');
-    }
-    return response.json();
+    return parseJsonResponse(response, resumeJsonResponseSchema, "Failed to create resume");
   },
 };
 
@@ -32,11 +31,11 @@ export function useCreateResume() {
     mutationFn: (data: CreateResumeData) => createResumeApi.create(data),
     onSuccess: () => {
       // Invalidate resume list to refetch
-      queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
       // Invalidate dashboard stats as resume count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

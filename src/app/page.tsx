@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction } from "@/lib/async-action";
 import { useEffect, useState } from "react";
 import { authClient } from "@/app/utils/authClient";
 import { Header } from "@/app/components/landing/header";
@@ -24,7 +25,7 @@ export default function Home() {
 			}
 		};
 
-		checkAuth();
+		runAsyncAction(checkAuth());
 	}, []);
 
 	return (

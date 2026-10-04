@@ -52,7 +52,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body: unknown = await request.json();
     const validatedData = updateSkillSchema.parse(body);
 
     const skill = await profileService.updateSkill(

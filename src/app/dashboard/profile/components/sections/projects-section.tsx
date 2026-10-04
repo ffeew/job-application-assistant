@@ -1,5 +1,8 @@
 "use client";
 
+import { formatMonthYear } from "@/lib/format-month-year";
+
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -16,14 +19,14 @@ import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-p
 import { useUpdateProject } from "@/app/dashboard/profile/mutations/use-update-project";
 import { useDeleteProject } from "@/app/dashboard/profile/mutations/use-delete-project";
 import { createProjectSchema } from "@/app/api/profile/validators";
-import type { ProjectResponse, CreateProjectRequest } from "@/app/api/profile/validators";
+import type { ProjectJsonResponse, CreateProjectRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface ProjectsSectionProps {
-	projects: ProjectResponse[];
+	projects: ProjectJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -44,7 +47,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 	const deleteMutation = useDeleteProject();
 
 	const isEditingProject = isSheetOpen && editingState?.section === "projects";
-	const editingProject = isEditingProject && editingState?.itemId ? projects.find((p) => p.id === editingState.itemId) : null;
+	const editingProject = isEditingProject && editingState.itemId ? projects.find((p) => p.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
 		if (!deleteConfirmation || deleteConfirmation.section !== "projects") return;
@@ -64,12 +67,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "";
-		const [year, month] = dateString.split("-");
-		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		return `${months[parseInt(month) - 1]} ${year}`;
-	};
+	const formatDate = formatMonthYear;
 
 	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
 
@@ -93,7 +91,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 									<div><p className="font-medium">{item.request.title}</p></div>
 									<div className="flex gap-2">
 										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}><X className="h-4 w-4" /></Button>
-										<Button size="sm" onClick={() => handleSavePending(item.id, item.request)} disabled={savingItemId === item.id}>
+										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
 											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Save
 										</Button>
 									</div>
@@ -164,7 +162,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 	);
 }
 
-function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateProject();
 	const updateMutation = useUpdateProject();
 	const form = useForm({
@@ -182,7 +180,7 @@ function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectRespon
 	});
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateProjectRequest;
 		if (project) {
 			updateMutation.mutate({ id: project.id, data: validatedData }, {
@@ -198,7 +196,7 @@ function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectRespon
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Project Name" /><FormFieldError message={errors.title?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="description">Description</Label><Textarea id="description" {...register("description")} placeholder="What does this project do?" rows={3} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="technologies">Technologies</Label><Input id="technologies" {...register("technologies")} placeholder="React, Node.js, PostgreSQL" /><p className="text-xs text-muted-foreground">Separate with commas</p></div>

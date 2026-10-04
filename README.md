@@ -46,8 +46,10 @@ bun run dev             # visit http://localhost:3000
 - `bun run dev` – start the Turbopack dev server
 - `bun run build` – run ESLint, then build for production with Turbopack and type checks
 - `bun run start` – serve the production build
-- `bun run lint` – ESLint
+- `bun run lint` – strict ESLint checks; errors and warnings fail the command
+- `bun run lint:fix` – apply ESLint's safe automatic fixes, then report remaining findings
 - `bun run typecheck` – generate Next.js route types, then run TypeScript checks
+- `bun run test` – run the focused Bun tests
 - `bun run db:push` / `bun run db:generate` / `bun run db:studio` – Drizzle Kit helpers
 - `bunx drizzle-kit push` – push schema changes directly to Turso if preferred
 
@@ -132,9 +134,14 @@ bun run dev             # visit http://localhost:3000
 
 ## Quality checks & testing
 
-- Run `bun run lint` and `bun run typecheck` before opening a pull request. The build script runs ESLint explicitly before Next.js compiles and checks types; Next.js 16 does not run linting itself.
-- CI uses Node.js 24 and `bun install --frozen-lockfile` before running lint and type checks.
-- There are currently no automated tests; add `*.test.ts(x)` files next to the code when introducing critical logic.
+- Run `bun run lint`, `bun run typecheck`, and `bun run test` before opening a pull request. Production builds invoke the same lint gate before Next.js compiles and checks types; Next.js 16 does not run linting itself.
+- CI uses Node.js 24 and `bun install --frozen-lockfile` before running all three checks. Tests use sanitized fixtures and need no database or AI credentials.
+- ESLint combines core recommended rules, Next.js Core Web Vitals and React Compiler checks, TypeScript ESLint's `strictTypeChecked` preset, TanStack Query's recommended rules, and JSX accessibility checks for HTML and shared form controls. Type-aware rules use the existing TypeScript project; JavaScript configuration files stay untyped. Generated Next.js files and build output are ignored.
+- TypeScript also enables `noUncheckedIndexedAccess`: array and dictionary lookups must account for missing values. Keep defensive guards and correct their types rather than suppressing lint errors.
+- The two intentional strict-preset adjustments allow concise callbacks returning `void`, explicit `void` expressions, and numeric template interpolation. Other template restrictions remain strict. Unused lint directives and inline configurations fail linting. TypeScript ESLint is pinned because its strict preset can change in minor releases; review preset changes when upgrading it.
+- Await dependent asynchronous work. Use `withAsyncHandler` for promise-returning React event handlers and `runAsyncAction` for background work that may reject; both observe unexpected failures. Use explicit `void` for TanStack Query invalidations and refetches with the default error handling to preserve background refresh timing. Handle rejections explicitly when opting into `throwOnError`.
+- Keep JSON input typed as `unknown` until validated. Client query and mutation hooks use `parseJsonResponse` with feature-specific Zod transport schemas before caching data; HTTP timestamp fields stay strings, while server/domain types retain `Date` objects. Use `readApiError` for text and PDF HTTP errors. Response schemas validate actual wire types without imposing new form constraints on stored data.
+- Add focused `*.test.ts(x)` files next to new regression-prone logic. Existing tests cover response validation and fallbacks, stored resume content, async event adapters, and defensive month formatting. Formatting enforcement is separate from this lint configuration.
 
 ## Contributing
 

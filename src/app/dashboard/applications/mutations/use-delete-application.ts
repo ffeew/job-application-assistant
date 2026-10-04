@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ApplicationResponse as JobApplication } from '@/lib/validators';
+import type { ApplicationJsonResponse as JobApplication } from '@/lib/validators';
 import { applicationsKeys } from '../queries/use-applications';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
@@ -30,9 +30,9 @@ export function useDeleteApplication() {
       // Remove specific application from cache
       queryClient.removeQueries({ queryKey: applicationsKeys.detail(deletedId) });
       // Invalidate dashboard stats as application count changed
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

@@ -12,7 +12,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body: unknown = await request.json();
     const validatedData = bulkUpdateOrderSchema.parse(body);
 
     await profileService.bulkUpdateProjectsOrder(userId, validatedData);

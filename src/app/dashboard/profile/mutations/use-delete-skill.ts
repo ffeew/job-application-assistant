@@ -23,9 +23,9 @@ export function useDeleteSkill() {
     mutationFn: (id: number) => deleteSkillApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: skillsKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: skillsKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: skillsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

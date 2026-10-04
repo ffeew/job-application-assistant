@@ -1,9 +1,11 @@
+import { certificationJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { CertificationResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { CertificationJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const certificationsApi = {
-  getAll: async (query?: ProfileQuery): Promise<CertificationResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<CertificationJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const certificationsApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/certifications?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch certifications');
-    }
-    return response.json();
+    return parseJsonResponse(response, certificationJsonResponseSchema.array(), "Failed to fetch certifications");
   },
 
-  getById: async (id: number): Promise<CertificationResponse> => {
+  getById: async (id: number): Promise<CertificationJsonResponse> => {
     const response = await fetch(`/api/profile/certifications/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch certification');
-    }
-    return response.json();
+    return parseJsonResponse(response, certificationJsonResponseSchema, "Failed to fetch certification");
   },
 };
 

@@ -30,6 +30,7 @@
 - Production build: `bun run build` (runs ESLint, then a Turbopack build with type checks).
 - Serve production build: `bun run start`.
 - Quality gates: `bun run lint`, `bun run typecheck` (must be clean before PR or task completion).
+- Lint fixes: `bun run lint:fix`; focused tests: `bun run test`. CI runs all three quality gates.
 - Type checking generates Next.js route types before running `tsc`; `next-env.d.ts` is generated and ignored.
 - Runtime: Node.js 20.9.0+; CI uses Node.js 24 and frozen Bun lockfile installation.
 - Database utilities: `bun run db:push`, `bun run db:generate`, `bun run db:studio`; use `bunx drizzle-kit push` to deploy schema updates to Turso.
@@ -41,6 +42,9 @@
 3. Prefer explicit types; **never** reach for `any`. Use `unknown`, generics, or schema-derived types.
 4. Keep code paths defensive—handle API errors, loading states, and empty data gracefully.
 5. When touching AI features, ensure clear fallbacks if model calls fail.
+6. Lint uses TypeScript ESLint's strict type-aware preset, Next.js/React Compiler checks, TanStack Query, and JSX accessibility rules. Warnings fail the gate. TypeScript enables `noUncheckedIndexedAccess`; preserve defensive checks for missing array/dictionary entries.
+7. Use `withAsyncHandler` for promise-returning React events and `runAsyncAction` for rejectable background work. Explicit `void` is appropriate for default TanStack Query invalidations/refetches, whose errors are handled by the library. Do not ignore promises that can reject without an error handler.
+8. Treat JSON as `unknown` until Zod validation. Client hooks use `parseJsonResponse` and feature transport schemas with string timestamps; server/domain schemas keep `Date`. Use `readApiError` for text/PDF error responses.
 
 ## TypeScript & Coding Standards
 
@@ -53,7 +57,7 @@
 
 ## Testing Guidance
 
-- Current gates: `bun run lint`, `bun run typecheck`, plus manual QA documented in PR descriptions.
+- Current gates: `bun run lint`, `bun run typecheck`, `bun run test`, plus manual QA documented in PR descriptions.
 - Add focused `*.test.ts(x)` files when introducing regressions-prone logic (e.g., data transforms in `src/lib`, resume tailoring flows, PDF generation helpers). Run with `bun test` if you add tests.
 - Sanitize or mock any real candidate data in fixtures.
 

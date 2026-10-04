@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +39,7 @@ import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-ski
 import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-skill";
 import { useDeleteSkill } from "@/app/dashboard/profile/mutations/use-delete-skill";
 import { createSkillSchema } from "@/app/api/profile/validators";
-import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/validators";
+import type { SkillJsonResponse, CreateSkillRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
@@ -61,7 +62,7 @@ const proficiencyLevels = [
 ];
 
 interface SkillsSectionProps {
-	skills: SkillResponse[];
+	skills: SkillJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -84,15 +85,15 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 	const deleteMutation = useDeleteSkill();
 
 	const isEditingSkill = isSheetOpen && editingState?.section === "skills";
-	const editingSkill = isEditingSkill && editingState?.itemId
+	const editingSkill = isEditingSkill && editingState.itemId
 		? skills.find((s) => s.id === editingState.itemId)
 		: null;
 
 	// Group skills by category
 	const skillsByCategory = useMemo(() => {
-		const grouped: Record<string, SkillResponse[]> = {};
+		const grouped: Record<string, SkillJsonResponse[]> = {};
 		skills.forEach((skill) => {
-			const category = skill.category || "other";
+			const category = skill.category;
 			if (!grouped[category]) grouped[category] = [];
 			grouped[category].push(skill);
 		});
@@ -168,7 +169,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 											variant="ghost"
 											size="icon"
 											className="h-5 w-5"
-											onClick={() => handleSavePending(item.id, item.request)}
+											onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 											disabled={savingItemId === item.id}
 										>
 											{savingItemId === item.id ? (
@@ -284,7 +285,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 	);
 }
 
-function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateSkill();
 	const updateMutation = useUpdateSkill();
 
@@ -305,7 +306,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillResponse | nul
 		name: ["category", "proficiencyLevel"],
 	});
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateSkillRequest;
 		if (skill) {
 			updateMutation.mutate({ id: skill.id, data: validatedData }, {
@@ -321,7 +322,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillResponse | nul
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="name">Skill Name *</Label>
 				<Input id="name" {...register("name")} placeholder="React" />

@@ -23,9 +23,9 @@ export function useDeleteEducation() {
     mutationFn: (id: number) => deleteEducationApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: educationKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: educationKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: educationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

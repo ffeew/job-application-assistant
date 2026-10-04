@@ -1,5 +1,8 @@
 "use client";
 
+import { formatMonthYear } from "@/lib/format-month-year";
+
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -14,14 +17,14 @@ import { useCreateCertification } from "@/app/dashboard/profile/mutations/use-cr
 import { useUpdateCertification } from "@/app/dashboard/profile/mutations/use-update-certification";
 import { useDeleteCertification } from "@/app/dashboard/profile/mutations/use-delete-certification";
 import { createCertificationSchema } from "@/app/api/profile/validators";
-import type { CertificationResponse, CreateCertificationRequest } from "@/app/api/profile/validators";
+import type { CertificationJsonResponse, CreateCertificationRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface CertificationsSectionProps {
-	certifications: CertificationResponse[];
+	certifications: CertificationJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -42,7 +45,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 	const deleteMutation = useDeleteCertification();
 
 	const isEditingCert = isSheetOpen && editingState?.section === "certifications";
-	const editingCert = isEditingCert && editingState?.itemId ? certifications.find((c) => c.id === editingState.itemId) : null;
+	const editingCert = isEditingCert && editingState.itemId ? certifications.find((c) => c.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
 		if (!deleteConfirmation || deleteConfirmation.section !== "certifications") return;
@@ -59,12 +62,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "";
-		const [year, month] = dateString.split("-");
-		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		return `${months[parseInt(month) - 1]} ${year}`;
-	};
+	const formatDate = formatMonthYear;
 
 	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
 
@@ -88,7 +86,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 									<div><p className="font-medium">{item.request.name}</p><p className="text-sm text-muted-foreground">{item.request.issuingOrganization}</p></div>
 									<div className="flex gap-2">
 										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}><X className="h-4 w-4" /></Button>
-										<Button size="sm" onClick={() => handleSavePending(item.id, item.request)} disabled={savingItemId === item.id}>
+										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
 											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Save
 										</Button>
 									</div>
@@ -151,7 +149,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 	);
 }
 
-function CertificationForm({ certification, onSuccess, onCancel }: { certification?: CertificationResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function CertificationForm({ certification, onSuccess, onCancel }: { certification?: CertificationJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateCertification();
 	const updateMutation = useUpdateCertification();
 	const form = useForm({
@@ -168,7 +166,7 @@ function CertificationForm({ certification, onSuccess, onCancel }: { certificati
 	});
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateCertificationRequest;
 		if (certification) {
 			updateMutation.mutate({ id: certification.id, data: validatedData }, {
@@ -184,7 +182,7 @@ function CertificationForm({ certification, onSuccess, onCancel }: { certificati
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="name">Certification Name *</Label><Input id="name" {...register("name")} placeholder="AWS Solutions Architect" /><FormFieldError message={errors.name?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="issuingOrganization">Issuing Organization *</Label><Input id="issuingOrganization" {...register("issuingOrganization")} placeholder="Amazon Web Services" /><FormFieldError message={errors.issuingOrganization?.message} /></div>
 			<div className="grid grid-cols-2 gap-4">

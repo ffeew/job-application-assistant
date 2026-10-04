@@ -1,9 +1,11 @@
+import { referenceJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { ReferenceResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { ReferenceJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const referencesApi = {
-  getAll: async (query?: ProfileQuery): Promise<ReferenceResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<ReferenceJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const referencesApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/references?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch references');
-    }
-    return response.json();
+    return parseJsonResponse(response, referenceJsonResponseSchema.array(), "Failed to fetch references");
   },
 
-  getById: async (id: number): Promise<ReferenceResponse> => {
+  getById: async (id: number): Promise<ReferenceJsonResponse> => {
     const response = await fetch(`/api/profile/references/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch reference');
-    }
-    return response.json();
+    return parseJsonResponse(response, referenceJsonResponseSchema, "Failed to fetch reference");
   },
 };
 

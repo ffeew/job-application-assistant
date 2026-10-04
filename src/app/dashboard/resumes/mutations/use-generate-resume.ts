@@ -1,23 +1,20 @@
 "use client";
 
+import { resumeValidationResponseSchema } from "@/app/api/resume-generation/validators";
+import { parseJsonResponse, readApiError } from "@/lib/api-response";
 import { useMutation } from "@tanstack/react-query";
 import type { GenerateResumeRequest } from "@/app/api/profile/validators";
-
-interface ResumeValidationResult {
-  valid: boolean;
-  errors: string[];
-}
+import type { ResumeValidationResponse } from "@/app/api/resume-generation/validators";
 
 // Resume Generation API calls
 const resumeGenerationApi = {
-  validate: async (request: GenerateResumeRequest): Promise<ResumeValidationResult> => {
+  validate: async (request: GenerateResumeRequest): Promise<ResumeValidationResponse> => {
     const response = await fetch("/api/resume-generation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });
-    if (!response.ok) throw new Error("Failed to validate resume");
-    return response.json();
+    return parseJsonResponse(response, resumeValidationResponseSchema, "Failed to validate resume");
   },
 
   generatePDF: async (request: GenerateResumeRequest): Promise<Blob> => {
@@ -27,8 +24,7 @@ const resumeGenerationApi = {
       body: JSON.stringify(request),
     });
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to generate PDF");
+      throw await readApiError(response, "Failed to generate PDF");
     }
     return response.blob();
   },

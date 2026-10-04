@@ -1,5 +1,8 @@
 "use client";
 
+import { formatMonthYear } from "@/lib/format-month-year";
+
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -15,14 +18,14 @@ import { useCreateAchievement } from "@/app/dashboard/profile/mutations/use-crea
 import { useUpdateAchievement } from "@/app/dashboard/profile/mutations/use-update-achievement";
 import { useDeleteAchievement } from "@/app/dashboard/profile/mutations/use-delete-achievement";
 import { createAchievementSchema } from "@/app/api/profile/validators";
-import type { AchievementResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
+import type { AchievementJsonResponse, CreateAchievementRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
 
 interface AchievementsSectionProps {
-	achievements: AchievementResponse[];
+	achievements: AchievementJsonResponse[];
 	isLoading: boolean;
 }
 
@@ -43,7 +46,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 	const deleteMutation = useDeleteAchievement();
 
 	const isEditingAchievement = isSheetOpen && editingState?.section === "achievements";
-	const editingAchievement = isEditingAchievement && editingState?.itemId ? achievements.find((a) => a.id === editingState.itemId) : null;
+	const editingAchievement = isEditingAchievement && editingState.itemId ? achievements.find((a) => a.id === editingState.itemId) : null;
 
 	const handleDelete = () => {
 		if (!deleteConfirmation || deleteConfirmation.section !== "achievements") return;
@@ -60,12 +63,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "";
-		const [year, month] = dateString.split("-");
-		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		return `${months[parseInt(month) - 1]} ${year}`;
-	};
+	const formatDate = formatMonthYear;
 
 	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
 
@@ -89,7 +87,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 									<div><p className="font-medium">{item.request.title}</p></div>
 									<div className="flex gap-2">
 										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}><X className="h-4 w-4" /></Button>
-										<Button size="sm" onClick={() => handleSavePending(item.id, item.request)} disabled={savingItemId === item.id}>
+										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
 											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Save
 										</Button>
 									</div>
@@ -149,7 +147,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 	);
 }
 
-function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: AchievementResponse | null; onSuccess: () => void; onCancel: () => void }) {
+function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: AchievementJsonResponse | null; onSuccess: () => void; onCancel: () => void }) {
 	const createMutation = useCreateAchievement();
 	const updateMutation = useUpdateAchievement();
 	const form = useForm({
@@ -164,7 +162,7 @@ function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: A
 	});
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const validatedData = data as CreateAchievementRequest;
 		if (achievement) {
 			updateMutation.mutate({ id: achievement.id, data: validatedData }, {
@@ -180,7 +178,7 @@ function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: A
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4 pt-2">
+		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2"><Label htmlFor="title">Title *</Label><Input id="title" {...register("title")} placeholder="Best Innovation Award" /><FormFieldError message={errors.title?.message} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="organization">Organization</Label><Input id="organization" {...register("organization")} placeholder="Company or Institution" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="date">Date</Label><Input id="date" type="month" {...register("date")} /></div>

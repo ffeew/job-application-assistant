@@ -88,7 +88,7 @@ export class ApplicationsService {
         location: data.location,
         jobUrl: data.jobUrl,
         salaryRange: data.salaryRange,
-        status: data.status || "applied",
+        status: data.status,
         appliedAt: data.appliedAt ? new Date(data.appliedAt) : null,
         notes: data.notes,
         contactEmail: data.contactEmail,

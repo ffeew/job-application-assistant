@@ -25,7 +25,7 @@ export function useReorderWorkExperiences() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderWorkExperiencesApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
     },
   });
 }

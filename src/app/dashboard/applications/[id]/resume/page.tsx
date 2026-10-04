@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -105,7 +106,7 @@ export default function JobApplicationResumePage({
 			const resolved = await params;
 			setResolvedParams(resolved);
 		};
-		resolveParams();
+		runAsyncAction(resolveParams());
 	}, [params]);
 
 	// Set default resume title when application loads
@@ -228,7 +229,7 @@ export default function JobApplicationResumePage({
 			const resolved = await params;
 			setResolvedParams(resolved);
 		};
-		resolveParams();
+		runAsyncAction(resolveParams());
 	}, [params]);
 
 	if (!resolvedParams || isLoading) {
@@ -348,7 +349,7 @@ export default function JobApplicationResumePage({
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Configuration Panel */}
 				<div className="flex flex-col gap-6">
-					<form onSubmit={handleSubmit(onSubmit)}>
+					<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
 						<Card>
 							<CardHeader>
 								<CardTitle>Resume Configuration</CardTitle>
@@ -368,8 +369,9 @@ export default function JobApplicationResumePage({
 								</div>
 
 								<div className="flex flex-col gap-2">
-									<Label>Template</Label>
+									<Label htmlFor="template">Template</Label>
 									<select
+										id="template"
 										{...register("template")}
 										className="w-full px-3 py-2 border border-gray-300 rounded-md"
 									>
@@ -492,7 +494,7 @@ export default function JobApplicationResumePage({
 									<Button
 										type="button"
 										variant="outline"
-										onClick={handlePreview}
+										onClick={withAsyncHandler(handlePreview)}
 										disabled={isGeneratingPreview}
 									>
 										{isGeneratingPreview ? (
@@ -506,7 +508,7 @@ export default function JobApplicationResumePage({
 										<Button
 											type="button"
 											variant="secondary"
-											onClick={handleSaveResume}
+											onClick={withAsyncHandler(handleSaveResume)}
 											disabled={isSaving}
 										>
 											{isSaving ? (

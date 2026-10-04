@@ -23,9 +23,9 @@ export function useDeleteWorkExperience() {
     mutationFn: (id: number) => deleteWorkExperienceApi.delete(id),
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: workExperiencesKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: workExperiencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,11 @@ import { toast } from "sonner";
 import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
 import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-update-work-experience";
 import { createWorkExperienceSchema } from "@/app/api/profile/validators";
-import type { WorkExperienceResponse, CreateWorkExperienceRequest } from "@/app/api/profile/validators";
+import type { WorkExperienceJsonResponse, CreateWorkExperienceRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface WorkExperienceFormProps {
-  experience?: WorkExperienceResponse;
+  experience?: WorkExperienceJsonResponse;
   initialValues?: Partial<CreateWorkExperienceRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -99,7 +100,7 @@ export function WorkExperienceForm({
         <CardTitle>{experience ? "Edit Work Experience" : "Add Work Experience"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="jobTitle">Job Title *</Label>

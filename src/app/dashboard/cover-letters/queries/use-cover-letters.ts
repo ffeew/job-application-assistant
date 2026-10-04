@@ -1,22 +1,18 @@
+import { coverLetterJsonResponseSchema } from "@/app/api/cover-letters/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { CoverLetterResponse as CoverLetter } from '@/lib/validators';
+import type { CoverLetterJsonResponse as CoverLetter } from '@/lib/validators';
 
 // Direct API call functions
 const coverLettersApi = {
   getAll: async (): Promise<CoverLetter[]> => {
     const response = await fetch('/api/cover-letters');
-    if (!response.ok) {
-      throw new Error('Failed to fetch cover letters');
-    }
-    return response.json();
+    return parseJsonResponse(response, coverLetterJsonResponseSchema.array(), "Failed to fetch cover letters");
   },
 
   getById: async (id: string): Promise<CoverLetter> => {
     const response = await fetch(`/api/cover-letters/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch cover letter');
-    }
-    return response.json();
+    return parseJsonResponse(response, coverLetterJsonResponseSchema, "Failed to fetch cover letter");
   },
 };
 

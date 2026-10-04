@@ -23,7 +23,7 @@ const envSchema = z.object({
 
   // Email configuration (Resend)
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
+  RESEND_FROM_EMAIL: z.email().optional(),
 
   // Next.js configuration
   NEXT_PUBLIC_APP_URL: z.url().optional(),
@@ -46,7 +46,7 @@ function validateEnv(): Env {
       const missingVars: string[] = [];
       const invalidVars: string[] = [];
 
-      error.issues.forEach((err: z.ZodIssue) => {
+      error.issues.forEach((err) => {
         const path = err.path.join('.');
         if (err.code === 'invalid_type' && 'received' in err && err.received === 'undefined') {
           missingVars.push(path);

@@ -1,3 +1,4 @@
+import { formatMonthYear } from "@/lib/format-month-year";
 import type {
   UserProfileResponse,
   WorkExperienceResponse,
@@ -23,12 +24,7 @@ interface ResumeData {
 export function generateProfessionalResumeHTML(data: ResumeData, title: string): string {
   const { profile, workExperiences, education, skills, projects, certifications, achievements, contentSelection } = data;
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "";
-    const [year, month] = dateString.split("-");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${months[parseInt(month) - 1]} ${year}`;
-  };
+  const formatDate = formatMonthYear;
 
   const formatDateRange = (startDate: string | null, endDate: string | null, isCurrent: boolean = false) => {
     const start = startDate ? formatDate(startDate) : "";
@@ -91,11 +87,11 @@ export function generateProfessionalResumeHTML(data: ResumeData, title: string):
     : [];
 
   // Group skills by category
-  const skillsByCategory = filteredSkills.reduce((acc, skill) => {
-    if (!acc[skill.category]) acc[skill.category] = [];
-    acc[skill.category].push(skill);
+  const skillsByCategory = filteredSkills.reduce<Record<string, SkillResponse[]>>((acc, skill) => {
+    const categorySkills = acc[skill.category] ??= [];
+    categorySkills.push(skill);
     return acc;
-  }, {} as Record<string, SkillResponse[]>);
+  }, {});
 
   const css = `
     .resume-container {

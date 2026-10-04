@@ -1,9 +1,11 @@
+import { workExperienceJsonResponseSchema } from "@/app/api/profile/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
-import type { WorkExperienceResponse, ProfileQuery } from '@/app/api/profile/validators';
+import type { WorkExperienceJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
 // Direct API call functions
 const workExperiencesApi = {
-  getAll: async (query?: ProfileQuery): Promise<WorkExperienceResponse[]> => {
+  getAll: async (query?: ProfileQuery): Promise<WorkExperienceJsonResponse[]> => {
     const searchParams = new URLSearchParams();
     if (query?.limit) searchParams.set('limit', query.limit.toString());
     if (query?.offset) searchParams.set('offset', query.offset.toString());
@@ -11,18 +13,12 @@ const workExperiencesApi = {
     if (query?.order) searchParams.set('order', query.order);
 
     const response = await fetch(`/api/profile/work-experiences?${searchParams}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch work experiences');
-    }
-    return response.json();
+    return parseJsonResponse(response, workExperienceJsonResponseSchema.array(), "Failed to fetch work experiences");
   },
 
-  getById: async (id: number): Promise<WorkExperienceResponse> => {
+  getById: async (id: number): Promise<WorkExperienceJsonResponse> => {
     const response = await fetch(`/api/profile/work-experiences/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch work experience');
-    }
-    return response.json();
+    return parseJsonResponse(response, workExperienceJsonResponseSchema, "Failed to fetch work experience");
   },
 };
 

@@ -25,7 +25,7 @@ export function useReorderReferences() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderReferencesApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: referencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: referencesKeys.all });
     },
   });
 }

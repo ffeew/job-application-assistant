@@ -70,7 +70,7 @@ export default function NewCoverLetterPage() {
     }
 
     const selectedResumeData = resumes.find(r => r.id === selectedResume);
-    let resumeContent = null;
+    let resumeContent: unknown = null;
     if (selectedResumeData) {
       try {
         resumeContent = JSON.parse(selectedResumeData.content);
@@ -151,9 +151,9 @@ export default function NewCoverLetterPage() {
             <CardContent className="flex flex-col gap-4">
               {applications.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <Label>Select Application (Optional)</Label>
+                  <Label htmlFor="application">Select Application (Optional)</Label>
                   <Select value={selectedApplication} onValueChange={handleApplicationChange}>
-                    <SelectTrigger>
+                    <SelectTrigger id="application">
                       <SelectValue placeholder="Choose an existing application..." />
                     </SelectTrigger>
                     <SelectContent>

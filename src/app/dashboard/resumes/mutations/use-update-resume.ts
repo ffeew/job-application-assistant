@@ -1,6 +1,8 @@
+import { resumeJsonResponseSchema } from "@/app/api/resumes/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  ResumeResponse as Resume,
+  ResumeJsonResponse as Resume,
   UpdateResumeRequest as UpdateResumeData
 } from '@/lib/validators';
 import { resumesKeys } from '../queries/use-resumes';
@@ -16,10 +18,7 @@ const updateResumeApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update resume');
-    }
-    return response.json();
+    return parseJsonResponse(response, resumeJsonResponseSchema, "Failed to update resume");
   },
 };
 
@@ -34,9 +33,9 @@ export function useUpdateResume() {
       // Update the specific resume in cache
       queryClient.setQueryData(resumesKeys.detail(updatedResume.id), updatedResume);
       // Invalidate resume list to refetch (for default status changes)
-      queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
       // Invalidate dashboard activity for recent activity
-      queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });
 }

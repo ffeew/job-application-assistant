@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { serializedTimestamps } from "@/lib/validators/transport";
 
 // Base resume schema
 export const resumeSchema = z.object({
@@ -29,6 +30,19 @@ export const resumeResponseSchema = resumeSchema.extend({
 export type CreateResumeRequest = z.infer<typeof createResumeSchema>;
 export type UpdateResumeRequest = z.infer<typeof updateResumeSchema>;
 export type ResumeResponse = z.infer<typeof resumeResponseSchema>;
+
+export const resumeJsonResponseSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  content: z.string(),
+  isDefault: z.boolean(),
+  jobApplicationId: z.string().nullable().optional(),
+  isTailored: z.boolean(),
+  ...serializedTimestamps,
+});
+
+export type ResumeJsonResponse = z.infer<typeof resumeJsonResponseSchema>;
 
 // Query parameters for filtering
 export const resumesQuerySchema = z.object({

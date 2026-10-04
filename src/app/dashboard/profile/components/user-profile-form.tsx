@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { type ChangeEvent, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +30,7 @@ import type {
 	CreateSkillRequest,
 	CreateUserProfileRequest,
 	CreateWorkExperienceRequest,
-	UserProfileResponse,
+	UserProfileJsonResponse,
 } from "@/app/api/profile/validators";
 import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
@@ -150,7 +151,7 @@ const buildPreviewSections = (data: PreviewInput) => {
 };
 
 interface UserProfileFormProps {
-	profile: UserProfileResponse | null;
+	profile: UserProfileJsonResponse | null;
 	onImportPreview: (data: ResumeImportResponse) => void;
 }
 
@@ -228,7 +229,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 		}
 	}, [profile, reset]);
 
-	const onSubmit = async (data: unknown) => {
+	const onSubmit = (data: unknown) => {
 		const mutation = profile ? updateMutation : createMutation;
 		// Data is validated by Zod resolver, safe to cast
 		const validatedData = data as CreateUserProfileRequest;
@@ -359,7 +360,7 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 		)}
 	</CardHeader>
 			<CardContent>
-				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+				<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="firstName">First Name</Label>

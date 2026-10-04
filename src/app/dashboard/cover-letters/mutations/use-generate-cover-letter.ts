@@ -1,3 +1,5 @@
+import { generateCoverLetterResponseSchema } from "@/app/api/cover-letters/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useMutation } from '@tanstack/react-query';
 import type {
   GenerateCoverLetterRequest as GenerateCoverLetterData,
@@ -14,11 +16,7 @@ const generateCoverLetterApi = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to generate cover letter');
-    }
-    return response.json();
+    return parseJsonResponse(response, generateCoverLetterResponseSchema, "Failed to generate cover letter");
   },
 };
 

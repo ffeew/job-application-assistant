@@ -1,3 +1,5 @@
+import { dashboardActivitySchema } from "@/app/api/dashboard/validators";
+import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { DashboardActivity } from '@/lib/validators';
 
@@ -5,10 +7,7 @@ import type { DashboardActivity } from '@/lib/validators';
 const dashboardActivityApi = {
   get: async (): Promise<DashboardActivity> => {
     const response = await fetch('/api/dashboard/activity?limit=10');
-    if (!response.ok) {
-      throw new Error('Failed to fetch dashboard activity');
-    }
-    return response.json();
+    return parseJsonResponse(response, dashboardActivitySchema, "Failed to fetch dashboard activity");
   },
 };
 

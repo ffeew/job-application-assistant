@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -55,11 +56,11 @@ export default function DashboardLayout({
 		const checkAuth = async () => {
 			try {
 				const session = await authClient.getSession();
-				if (!session) {
+				if (!session.data?.user) {
 					router.push("/sign-in");
 					return;
 				}
-				setUser(session.data?.user ? { name: session.data.user.name, email: session.data.user.email } : null);
+				setUser({ name: session.data.user.name, email: session.data.user.email });
 			} catch {
 				router.push("/sign-in");
 			} finally {
@@ -67,7 +68,7 @@ export default function DashboardLayout({
 			}
 		};
 
-		checkAuth();
+		runAsyncAction(checkAuth());
 	}, [router, setUser, setLoading]);
 
 	const handleSignOut = async () => {
@@ -152,7 +153,7 @@ export default function DashboardLayout({
 						<Button
 							variant="outline"
 							size="sm"
-							onClick={handleSignOut}
+							onClick={withAsyncHandler(handleSignOut)}
 							className="w-full"
 						>
 							<LogOut className="mr-2 h-4 w-4" />
@@ -169,7 +170,9 @@ export default function DashboardLayout({
 
 			{/* Sidebar overlay */}
 			{sidebarOpen && (
-				<div
+				<button
+					type="button"
+					aria-label="Close navigation"
 					className="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden"
 					onClick={() => setSidebarOpen(false)}
 				/>

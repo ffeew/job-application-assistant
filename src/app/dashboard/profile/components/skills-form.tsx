@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,11 @@ import { toast } from "sonner";
 import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-skill";
 import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-skill";
 import { createSkillSchema } from "@/app/api/profile/validators";
-import type { SkillResponse, CreateSkillRequest } from "@/app/api/profile/validators";
+import type { SkillJsonResponse, CreateSkillRequest } from "@/app/api/profile/validators";
 import { FormFieldError } from "@/components/ui/form-field-error";
 
 interface SkillFormProps {
-  skill?: SkillResponse;
+  skill?: SkillJsonResponse;
   initialValues?: Partial<CreateSkillRequest>;
   onCancel: () => void;
   onSuccess: () => void;
@@ -108,7 +109,7 @@ export function SkillForm({
         <CardTitle>{skill ? "Edit Skill" : "Add Skill"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Skill Name *</Label>

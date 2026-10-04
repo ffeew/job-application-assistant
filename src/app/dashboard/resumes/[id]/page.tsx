@@ -1,5 +1,6 @@
 "use client";
 
+import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -16,19 +17,7 @@ import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-re
 import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
 import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
-
-interface ResumeContent {
-  personalInfo: {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  summary: string;
-  experience: string;
-  education: string;
-  skills: string;
-}
+import { resumeContentSchema, type ResumeContent } from "@/lib/validators/resume-content";
 
 // Form data structure
 interface ResumeFormData {
@@ -78,7 +67,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       const resolved = await params;
       setResolvedParams(resolved);
     };
-    resolveParams();
+    runAsyncAction(resolveParams());
   }, [params]);
 
   // Populate form when resume data is loaded
@@ -86,7 +75,8 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
     if (resume) {
       let content: ResumeContent;
       try {
-        content = JSON.parse(resume.content);
+        const raw: unknown = JSON.parse(resume.content);
+        content = resumeContentSchema.parse(raw);
       } catch {
         console.error("Failed to parse resume content");
         content = {
@@ -101,7 +91,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       reset({
         title: resume.title,
         isDefault: resume.isDefault,
-        personalInfo: content.personalInfo || { name: "", email: "", phone: "", address: "" },
+        personalInfo: content.personalInfo,
         summary: content.summary || "",
         experience: content.experience || "",
         education: content.education || "",
@@ -117,7 +107,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
     }
   }, [error, router]);
 
-  const onSubmit = async (data: ResumeFormData) => {
+  const onSubmit = (data: ResumeFormData) => {
     // Validate required fields
     if (!data.title.trim()) {
       toast.error("Please enter a title for your resume");
@@ -176,7 +166,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
         <div className="grid gap-6">
           <Card>
             <CardHeader>

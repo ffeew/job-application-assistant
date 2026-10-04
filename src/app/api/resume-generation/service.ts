@@ -245,7 +245,7 @@ export class ResumeGenerationService {
     const contentSelection = this.createContentSelectionFromData(filteredResumeData);
 
     // Generate HTML using the existing template system
-    const html = await this.generateResumeHTMLWithData(
+    const html = this.generateResumeHTMLWithData(
       filteredResumeData,
       contentSelection,
       request.template,
@@ -370,25 +370,27 @@ export class ResumeGenerationService {
   ): ResumeData {
     if (!overrides) return resumeData;
 
+    const { workExperienceIds, educationIds, skillIds, projectIds, certificationIds, achievementIds } = overrides;
+
     return {
       profile: resumeData.profile,
-      workExperiences: overrides.workExperienceIds
-        ? resumeData.workExperiences.filter(exp => overrides.workExperienceIds!.includes(exp.id))
+      workExperiences: workExperienceIds
+        ? resumeData.workExperiences.filter(exp => workExperienceIds.includes(exp.id))
         : resumeData.workExperiences,
-      education: overrides.educationIds
-        ? resumeData.education.filter(edu => overrides.educationIds!.includes(edu.id))
+      education: educationIds
+        ? resumeData.education.filter(edu => educationIds.includes(edu.id))
         : resumeData.education,
-      skills: overrides.skillIds
-        ? resumeData.skills.filter(skill => overrides.skillIds!.includes(skill.id))
+      skills: skillIds
+        ? resumeData.skills.filter(skill => skillIds.includes(skill.id))
         : resumeData.skills,
-      projects: overrides.projectIds
-        ? resumeData.projects.filter(project => overrides.projectIds!.includes(project.id))
+      projects: projectIds
+        ? resumeData.projects.filter(project => projectIds.includes(project.id))
         : resumeData.projects,
-      certifications: overrides.certificationIds
-        ? resumeData.certifications.filter(cert => overrides.certificationIds!.includes(cert.id))
+      certifications: certificationIds
+        ? resumeData.certifications.filter(cert => certificationIds.includes(cert.id))
         : resumeData.certifications,
-      achievements: overrides.achievementIds
-        ? resumeData.achievements.filter(achievement => overrides.achievementIds!.includes(achievement.id))
+      achievements: achievementIds
+        ? resumeData.achievements.filter(achievement => achievementIds.includes(achievement.id))
         : resumeData.achievements,
     };
   }
@@ -414,7 +416,7 @@ export class ResumeGenerationService {
     };
   }
 
-  private async generateResumeHTMLWithData(
+  private generateResumeHTMLWithData(
     resumeData: ResumeData,
     contentSelection: {
       includePersonalInfo: boolean;
@@ -436,7 +438,7 @@ export class ResumeGenerationService {
     },
     template: string,
     title: string
-  ): Promise<string> {
+  ): string {
     // Use existing template generation logic
     switch (template) {
       case 'professional':

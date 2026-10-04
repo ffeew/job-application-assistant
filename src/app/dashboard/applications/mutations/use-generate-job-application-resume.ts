@@ -1,35 +1,19 @@
+import { readApiError, parseJsonResponse } from "@/lib/api-response";
+import { jobApplicationResumeResponseSchema, saveTailoredResumeResponseSchema } from "@/app/api/applications/[id]/resume/validators";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   JobApplicationResumeRequest,
-  IntelligentContentSelection,
 } from "@/app/api/profile/validators";
-
-export interface JobApplicationResumeResponse {
-  html: string;
-  aiSelection?: IntelligentContentSelection;
-  application: {
-    id: string;
-    company: string;
-    position: string;
-  };
-}
-
-export interface SaveTailoredResumeRequest {
-  title: string;
-  content: string;
-}
-
-export interface SaveTailoredResumeResponse {
-  success: boolean;
-  resume: {
-    id: string;
-    title: string;
-    isTailored: boolean;
-    jobApplicationId: string;
-    updatedAt: Date;
-  };
-  isNew: boolean;
-}
+import type {
+  JobApplicationResumeResponse,
+  SaveTailoredResumeRequest,
+  SaveTailoredResumeResponse,
+} from "@/app/api/applications/[id]/resume/validators";
+export type {
+  JobApplicationResumeResponse,
+  SaveTailoredResumeRequest,
+  SaveTailoredResumeResponse,
+} from "@/app/api/applications/[id]/resume/validators";
 
 // API calls for job application resume generation
 const jobApplicationResumeApi = {
@@ -47,8 +31,7 @@ const jobApplicationResumeApi = {
     );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to generate PDF");
+      throw await readApiError(response, "Failed to generate PDF");
     }
 
     return response.blob();
@@ -67,12 +50,7 @@ const jobApplicationResumeApi = {
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to generate preview");
-    }
-
-    return response.json();
+    return parseJsonResponse(response, jobApplicationResumeResponseSchema, "Failed to generate preview");
   },
 };
 
@@ -113,12 +91,7 @@ const saveTailoredResume = async (
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to save tailored resume");
-  }
-
-  return response.json();
+  return parseJsonResponse(response, saveTailoredResumeResponseSchema, "Failed to save tailored resume");
 };
 
 // Hook to save tailored resume for a job application
@@ -135,8 +108,8 @@ export function useSaveTailoredResume() {
     }) => saveTailoredResume(applicationId, data),
     onSuccess: (_, { applicationId }) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ["job-application-resume", "info", applicationId] });
-      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      void queryClient.invalidateQueries({ queryKey: ["job-application-resume", "info", applicationId] });
+      void queryClient.invalidateQueries({ queryKey: ["resumes"] });
     },
   });
 }

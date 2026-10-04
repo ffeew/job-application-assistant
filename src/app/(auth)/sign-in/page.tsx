@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -22,7 +23,7 @@ export default function SignInPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.SubmitEvent) => {
 		e.preventDefault();
 		setIsLoading(true);
 		setError("");
@@ -38,7 +39,7 @@ export default function SignInPage() {
 
 			// Verify session is established before redirecting
 			const session = await authClient.getSession();
-			if (session?.data?.user) {
+			if (session.data?.user) {
 				router.push("/dashboard");
 			} else {
 				setError("Authentication failed. Please try again.");
@@ -60,7 +61,7 @@ export default function SignInPage() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+					<form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
 						{error && (
 							<div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
 								{error}

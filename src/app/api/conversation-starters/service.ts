@@ -1,25 +1,13 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
+import { resumeContentSchema, type ResumeContent } from "@/lib/validators/resume-content";
 import type { UserProfileResponse } from "@/app/api/profile/validators";
 import type { ResumeResponse } from "@/app/api/resumes/validators";
 import type {
   GenerateConversationStarterRequest,
   GenerateConversationStarterResponse,
 } from "./validators";
-
-type ResumeContent = {
-  personalInfo?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
-  summary?: string;
-  experience?: string;
-  education?: string;
-  skills?: string;
-};
 
 const truncate = (text: string, max = 600) => {
   if (text.length <= max) return text;
@@ -31,8 +19,9 @@ const safeParseResumeContent = (
 ): ResumeContent | null => {
   if (!resume?.content) return null;
   try {
-    const parsed = JSON.parse(resume.content);
-    return parsed && typeof parsed === "object" ? (parsed as ResumeContent) : null;
+    const raw: unknown = JSON.parse(resume.content);
+    const parsed = resumeContentSchema.safeParse(raw);
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
@@ -48,7 +37,7 @@ const buildProfileSummary = (
     [profile?.firstName, profile?.lastName]
       .filter((part): part is string => Boolean(part && part.trim().length > 0))
       .join(" ") ||
-    (resumeContent?.personalInfo?.name?.trim()
+    (resumeContent?.personalInfo.name.trim()
       ? resumeContent.personalInfo.name.trim()
       : undefined);
 
@@ -60,7 +49,7 @@ const buildProfileSummary = (
         ? `Professional summary: ${truncate(resumeContent.summary, 400)}`
         : null,
     profile?.city || profile?.country
-      ? `Location: ${[profile?.city, profile?.country]
+      ? `Location: ${[profile.city, profile.country]
         .filter((part): part is string =>
           Boolean(part && part.trim().length > 0),
         )

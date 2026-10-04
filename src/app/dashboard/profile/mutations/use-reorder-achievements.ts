@@ -25,7 +25,7 @@ export function useReorderAchievements() {
   return useMutation({
     mutationFn: (data: BulkUpdateOrderRequest) => reorderAchievementsApi.bulkUpdateOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
     },
   });
 }

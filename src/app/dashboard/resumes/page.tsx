@@ -1,5 +1,6 @@
 "use client";
 
+import { withAsyncHandler } from "@/lib/async-action";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,7 +158,7 @@ export default function ResumesPage() {
               <Button
                 variant={resume.isDefault ? "default" : "outline"}
                 size="sm"
-                onClick={() => toggleDefault(resume.id)}
+                onClick={withAsyncHandler(() => toggleDefault(resume.id))}
                 disabled={updateResumeMutation.isPending}
               >
                 <Star className="mr-2 h-4 w-4" />
@@ -166,7 +167,7 @@ export default function ResumesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleDeleteResume(resume.id)}
+                onClick={withAsyncHandler(() => handleDeleteResume(resume.id))}
                 disabled={deleteResumeMutation.isPending}
               >
                 <Trash2 className="h-4 w-4" />
@@ -201,7 +202,7 @@ export default function ResumesPage() {
                   <Button
                     variant={resume.isDefault ? "default" : "outline"}
                     size="sm"
-                    onClick={() => toggleDefault(resume.id)}
+                    onClick={withAsyncHandler(() => toggleDefault(resume.id))}
                     disabled={updateResumeMutation.isPending}
                   >
                     <Star className="mr-2 h-4 w-4" />
@@ -210,7 +211,7 @@ export default function ResumesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeleteResume(resume.id)}
+                    onClick={withAsyncHandler(() => handleDeleteResume(resume.id))}
                     disabled={deleteResumeMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
