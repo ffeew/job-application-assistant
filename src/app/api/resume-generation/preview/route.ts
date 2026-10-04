@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ResumeGenerationService } from "../service";
 import { generateResumeSchema } from "../../profile/validators";
+import { generationErrorResponse } from "../errors";
+
+export const maxDuration = 240;
 
 const resumeGenerationService = new ResumeGenerationService();
 
@@ -15,22 +18,15 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const validatedData = generateResumeSchema.parse(body);
 
-    const html = await resumeGenerationService.generatePreviewHTML(
+    const result = await resumeGenerationService.generateResume(
       session.user.id,
       validatedData,
     );
 
-    return new NextResponse(html, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/html",
-      },
+    return NextResponse.json(result, {
+      headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
-    console.error("Error generating resume preview:", error);
-    return NextResponse.json(
-      { error: "Failed to generate resume preview" },
-      { status: 500 },
-    );
+    return generationErrorResponse(error);
   }
 }

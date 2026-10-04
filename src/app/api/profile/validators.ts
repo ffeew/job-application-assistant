@@ -12,9 +12,18 @@ export const userProfileSchema = z.object({
   state: z.string().nullable(),
   zipCode: z.string().nullable(),
   country: z.string().nullable(),
-  linkedinUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
-  githubUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
-  portfolioUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
+  linkedinUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
+  githubUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
+  portfolioUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
   professionalSummary: z.string().nullable(),
 });
 
@@ -33,8 +42,13 @@ export const workExperienceSchema = z.object({
   jobTitle: z.string().min(1, "Job title is required"),
   company: z.string().min(1, "Company is required"),
   location: z.string().nullable(),
-  startDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format"),
-  endDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format"),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
   isCurrent: z.boolean().default(false),
   description: z.string().nullable(),
   technologies: z.string().nullable(),
@@ -57,8 +71,14 @@ export const educationSchema = z.object({
   fieldOfStudy: z.string().nullable(),
   institution: z.string().min(1, "Institution is required"),
   location: z.string().nullable(),
-  startDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
-  endDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
   gpa: z.string().nullable(),
   honors: z.string().nullable(),
   relevantCoursework: z.string().nullable(),
@@ -78,8 +98,17 @@ export const educationResponseSchema = educationSchema.extend({
 // Skills Schema
 export const skillSchema = z.object({
   name: z.string().min(1, "Skill name is required"),
-  category: z.enum(["technical", "soft", "language", "tool", "framework", "other"]),
-  proficiencyLevel: z.enum(["beginner", "intermediate", "advanced", "expert"]).nullable(),
+  category: z.enum([
+    "technical",
+    "soft",
+    "language",
+    "tool",
+    "framework",
+    "other",
+  ]),
+  proficiencyLevel: z
+    .enum(["beginner", "intermediate", "advanced", "expert"])
+    .nullable(),
   yearsOfExperience: z.number().int().min(0).nullable(),
   displayOrder: z.number().int().min(0).default(0),
 });
@@ -99,10 +128,22 @@ export const projectSchema = z.object({
   title: z.string().min(1, "Project title is required"),
   description: z.string().nullable(),
   technologies: z.string().nullable(),
-  projectUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
-  githubUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
-  startDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
-  endDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
+  projectUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
+  githubUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
   isOngoing: z.boolean().default(false),
   displayOrder: z.number().int().min(0).default(0),
 });
@@ -121,10 +162,19 @@ export const projectResponseSchema = projectSchema.extend({
 export const certificationSchema = z.object({
   name: z.string().min(1, "Certification name is required"),
   issuingOrganization: z.string().min(1, "Issuing organization is required"),
-  issueDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
-  expirationDate: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
+  issueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
+  expirationDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
   credentialId: z.string().nullable(),
-  credentialUrl: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
+  credentialUrl: z
+    .url({ message: "Invalid URL format" })
+    .nullable()
+    .or(z.literal("")),
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -143,7 +193,10 @@ export const achievementSchema = z.object({
   title: z.string().min(1, "Achievement title is required"),
   description: z.string().nullable(),
   organization: z.string().nullable(),
-  date: z.string().regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format").nullable(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
+    .nullable(),
   url: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
   displayOrder: z.number().int().min(0).default(0),
 });
@@ -165,7 +218,9 @@ export const referenceSchema = z.object({
   company: z.string().nullable(),
   email: z.email({ message: "Invalid email format" }).nullable(),
   phone: z.string().nullable(),
-  relationship: z.enum(["manager", "colleague", "client", "professor", "mentor", "other"]).nullable(),
+  relationship: z
+    .enum(["manager", "colleague", "client", "professor", "mentor", "other"])
+    .nullable(),
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -279,19 +334,35 @@ export const referenceJsonResponseSchema = z.object({
   displayOrder: z.number(),
 });
 
-export type UserProfileJsonResponse = z.infer<typeof userProfileJsonResponseSchema>;
-export type WorkExperienceJsonResponse = z.infer<typeof workExperienceJsonResponseSchema>;
+export type UserProfileJsonResponse = z.infer<
+  typeof userProfileJsonResponseSchema
+>;
+export type WorkExperienceJsonResponse = z.infer<
+  typeof workExperienceJsonResponseSchema
+>;
 export type EducationJsonResponse = z.infer<typeof educationJsonResponseSchema>;
 export type SkillJsonResponse = z.infer<typeof skillJsonResponseSchema>;
 export type ProjectJsonResponse = z.infer<typeof projectJsonResponseSchema>;
-export type CertificationJsonResponse = z.infer<typeof certificationJsonResponseSchema>;
-export type AchievementJsonResponse = z.infer<typeof achievementJsonResponseSchema>;
+export type CertificationJsonResponse = z.infer<
+  typeof certificationJsonResponseSchema
+>;
+export type AchievementJsonResponse = z.infer<
+  typeof achievementJsonResponseSchema
+>;
 export type ReferenceJsonResponse = z.infer<typeof referenceJsonResponseSchema>;
 
 // Query Schemas
 export const profileQuerySchema = z.object({
-  limit: z.string().transform(Number).pipe(z.number().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().nonnegative()).optional(),
+  limit: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().positive().max(100))
+    .optional(),
+  offset: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().nonnegative())
+    .optional(),
   category: z.string().optional(), // For skills filtering
   orderBy: z.enum(["displayOrder", "createdAt", "updatedAt"]).optional(),
   order: z.enum(["asc", "desc"]).default("asc"),
@@ -299,10 +370,14 @@ export const profileQuerySchema = z.object({
 
 // Bulk operations
 export const bulkUpdateOrderSchema = z.object({
-  items: z.array(z.object({
-    id: z.number(),
-    displayOrder: z.number().int().min(0),
-  })).min(1),
+  items: z
+    .array(
+      z.object({
+        id: z.number(),
+        displayOrder: z.number().int().min(0),
+      }),
+    )
+    .min(1),
 });
 
 // Resume generation schemas
@@ -327,14 +402,24 @@ export const resumeContentSelectionSchema = z.object({
 
 export const generateResumeSchema = z.object({
   title: z.string().min(1, "Resume title is required"),
-  template: z.enum(["professional", "modern", "minimal", "creative"]).default("professional"),
+  targetPages: z.union([z.literal(1), z.literal(2)]).default(1),
+  template: z
+    .enum(["professional", "modern", "minimal", "creative"])
+    .default("professional"),
   contentSelection: resumeContentSelectionSchema,
 });
 
 // AI-powered resume generation schemas
 export const contentRelevanceScoreSchema = z.object({
   id: z.number(),
-  type: z.enum(['work', 'education', 'skill', 'project', 'certification', 'achievement']),
+  type: z.enum([
+    "work",
+    "education",
+    "skill",
+    "project",
+    "certification",
+    "achievement",
+  ]),
   score: z.number().min(0).max(100),
   reasoning: z.string(),
   matchedKeywords: z.array(z.string()),
@@ -355,26 +440,31 @@ export const intelligentContentSelectionSchema = z.object({
 export const jobApplicationResumeRequestSchema = z.object({
   applicationId: z.string().min(1, "Application ID is required"),
   title: z.string().min(1, "Resume title is required"),
-  template: z.enum(["professional", "modern", "minimal", "creative"]).default("professional"),
+  targetPages: z.union([z.literal(1), z.literal(2)]).default(1),
+  template: z
+    .enum(["professional", "modern", "minimal", "creative"])
+    .default("professional"),
   useAISelection: z.boolean().default(true),
   maxWorkExperiences: z.number().int().min(1).max(10).default(4),
   maxProjects: z.number().int().min(0).max(8).default(3),
   maxSkills: z.number().int().min(5).max(20).default(12),
-  manualOverrides: z.object({
-    workExperienceIds: z.array(z.number()).optional(),
-    educationIds: z.array(z.number()).optional(),
-    skillIds: z.array(z.number()).optional(),
-    projectIds: z.array(z.number()).optional(),
-    certificationIds: z.array(z.number()).optional(),
-    achievementIds: z.array(z.number()).optional(),
-  }).optional(),
+  manualOverrides: z
+    .object({
+      workExperienceIds: z.array(z.number()).optional(),
+      educationIds: z.array(z.number()).optional(),
+      skillIds: z.array(z.number()).optional(),
+      projectIds: z.array(z.number()).optional(),
+      certificationIds: z.array(z.number()).optional(),
+      achievementIds: z.array(z.number()).optional(),
+    })
+    .optional(),
 });
 
 export const jobAnalysisResponseSchema = z.object({
   requirements: z.array(z.string()),
   skills: z.array(z.string()),
   keywords: z.array(z.string()),
-  seniority: z.enum(['entry', 'mid', 'senior', 'executive']),
+  seniority: z.enum(["entry", "mid", "senior", "executive"]),
   industry: z.string(),
   summary: z.string(),
 });
@@ -384,9 +474,15 @@ export type CreateUserProfileRequest = z.infer<typeof createUserProfileSchema>;
 export type UpdateUserProfileRequest = z.infer<typeof updateUserProfileSchema>;
 export type UserProfileResponse = z.infer<typeof userProfileResponseSchema>;
 
-export type CreateWorkExperienceRequest = z.infer<typeof createWorkExperienceSchema>;
-export type UpdateWorkExperienceRequest = z.infer<typeof updateWorkExperienceSchema>;
-export type WorkExperienceResponse = z.infer<typeof workExperienceResponseSchema>;
+export type CreateWorkExperienceRequest = z.infer<
+  typeof createWorkExperienceSchema
+>;
+export type UpdateWorkExperienceRequest = z.infer<
+  typeof updateWorkExperienceSchema
+>;
+export type WorkExperienceResponse = z.infer<
+  typeof workExperienceResponseSchema
+>;
 
 export type CreateEducationRequest = z.infer<typeof createEducationSchema>;
 export type UpdateEducationRequest = z.infer<typeof updateEducationSchema>;
@@ -400,8 +496,12 @@ export type CreateProjectRequest = z.infer<typeof createProjectSchema>;
 export type UpdateProjectRequest = z.infer<typeof updateProjectSchema>;
 export type ProjectResponse = z.infer<typeof projectResponseSchema>;
 
-export type CreateCertificationRequest = z.infer<typeof createCertificationSchema>;
-export type UpdateCertificationRequest = z.infer<typeof updateCertificationSchema>;
+export type CreateCertificationRequest = z.infer<
+  typeof createCertificationSchema
+>;
+export type UpdateCertificationRequest = z.infer<
+  typeof updateCertificationSchema
+>;
 export type CertificationResponse = z.infer<typeof certificationResponseSchema>;
 
 export type CreateAchievementRequest = z.infer<typeof createAchievementSchema>;
@@ -414,11 +514,17 @@ export type ReferenceResponse = z.infer<typeof referenceResponseSchema>;
 
 export type ProfileQuery = z.infer<typeof profileQuerySchema>;
 export type BulkUpdateOrderRequest = z.infer<typeof bulkUpdateOrderSchema>;
-export type ResumeContentSelection = z.infer<typeof resumeContentSelectionSchema>;
+export type ResumeContentSelection = z.infer<
+  typeof resumeContentSelectionSchema
+>;
 export type GenerateResumeRequest = z.infer<typeof generateResumeSchema>;
 
 // AI-powered resume generation types
 export type ContentRelevanceScore = z.infer<typeof contentRelevanceScoreSchema>;
-export type IntelligentContentSelection = z.infer<typeof intelligentContentSelectionSchema>;
-export type JobApplicationResumeRequest = z.infer<typeof jobApplicationResumeRequestSchema>;
+export type IntelligentContentSelection = z.infer<
+  typeof intelligentContentSelectionSchema
+>;
+export type JobApplicationResumeRequest = z.infer<
+  typeof jobApplicationResumeRequestSchema
+>;
 export type JobAnalysisResponse = z.infer<typeof jobAnalysisResponseSchema>;

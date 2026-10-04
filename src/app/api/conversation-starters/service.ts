@@ -1,7 +1,14 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
-import { resumeContentSchema, type ResumeContent } from "@/lib/validators/resume-content";
+import {
+  parseGeneratedResume,
+  documentToResumeContent,
+} from "@/lib/resume-document";
+import {
+  resumeContentSchema,
+  type ResumeContent,
+} from "@/lib/validators/resume-content";
 import type { UserProfileResponse } from "@/app/api/profile/validators";
 import type { ResumeResponse } from "@/app/api/resumes/validators";
 import type {
@@ -18,6 +25,8 @@ const safeParseResumeContent = (
   resume: ResumeResponse | null,
 ): ResumeContent | null => {
   if (!resume?.content) return null;
+  const generated = parseGeneratedResume(resume.content);
+  if (generated) return documentToResumeContent(generated.document);
   try {
     const raw: unknown = JSON.parse(resume.content);
     const parsed = resumeContentSchema.safeParse(raw);
@@ -50,10 +59,10 @@ const buildProfileSummary = (
         : null,
     profile?.city || profile?.country
       ? `Location: ${[profile.city, profile.country]
-        .filter((part): part is string =>
-          Boolean(part && part.trim().length > 0),
-        )
-        .join(", ")}`
+          .filter((part): part is string =>
+            Boolean(part && part.trim().length > 0),
+          )
+          .join(", ")}`
       : null,
     resumeContent?.experience
       ? `Recent experience highlights: ${truncate(resumeContent.experience, 500)}`
@@ -121,7 +130,9 @@ Return only the message text and avoid placeholders or brackets.`;
       };
     } catch (error) {
       console.error("AI conversation starter generation error:", error);
-      throw new Error("Failed to generate conversation starter. Please try again.");
+      throw new Error(
+        "Failed to generate conversation starter. Please try again.",
+      );
     }
   }
 }

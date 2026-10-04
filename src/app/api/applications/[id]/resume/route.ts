@@ -6,6 +6,9 @@ import { ResumesService } from "@/app/api/resumes/service";
 import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import { z } from "zod";
 import { saveTailoredResumeRequestSchema } from "./validators";
+import { generationErrorResponse } from "@/app/api/resume-generation/errors";
+
+export const maxDuration = 240;
 
 const applicationsService = new ApplicationsService();
 const resumeGenerationService = new ResumeGenerationService();
@@ -36,76 +39,55 @@ export async function POST(
     );
 
     if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 },
+      );
     }
 
     if (validatedRequest.useAISelection && !application.jobDescription) {
       return NextResponse.json(
-        { error: "Job description is required for AI-powered resume generation" },
+        {
+          error: "Job description is required for AI-powered resume generation",
+        },
         { status: 400 },
       );
     }
 
-    const format = new URL(request.url).searchParams.get("format") ?? "html";
-
+    const format = new URL(request.url).searchParams.get("format") ?? "preview";
+    if (!["pdf", "preview"].includes(format)) {
+      return NextResponse.json(
+        { error: "Use PDF or preview format." },
+        { status: 400 },
+      );
+    }
+    const result = await resumeGenerationService.generateJobApplicationResume(
+      session.user.id,
+      application,
+      validatedRequest,
+    );
     if (format === "pdf") {
-      const { pdf } =
-        await resumeGenerationService.generateJobApplicationResumePDF(
-          session.user.id,
-          application,
-          validatedRequest,
-        );
-
-      return new Response(Uint8Array.from(pdf), {
-        status: 200,
+      return new Response(Buffer.from(result.pdfBase64, "base64"), {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${validatedRequest.title.replace(/[^a-zA-Z0-9]/g, "_")}_${application.company.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`,
+          "Cache-Control": "no-store",
+          "Content-Disposition": `attachment; filename="${validatedRequest.title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`,
         },
       });
     }
-
-    if (format === "preview") {
-      const { html, aiSelection } =
-        await resumeGenerationService.generateJobApplicationPreviewHTML(
-          session.user.id,
-          application,
-          validatedRequest,
-        );
-
-      return NextResponse.json({
-        html,
-        aiSelection,
+    return NextResponse.json(
+      {
+        ...result,
         application: {
           id: application.id,
           company: application.company,
           position: application.position,
         },
-      });
-    }
-
-    const { html, aiSelection } =
-      await resumeGenerationService.generateJobApplicationResumeHTML(
-        session.user.id,
-        application,
-        validatedRequest,
-      );
-
-    return NextResponse.json({
-      html,
-      aiSelection,
-      application: {
-        id: application.id,
-        company: application.company,
-        position: application.position,
       },
-    });
-  } catch (error) {
-    console.error("Error generating job application resume:", error);
-    return NextResponse.json(
-      { error: "Failed to generate resume" },
-      { status: 500 },
+      { headers: { "Cache-Control": "no-store" } },
     );
+  } catch (error) {
+    return generationErrorResponse(error);
   }
 }
 
@@ -126,14 +108,18 @@ export async function GET(
     );
 
     if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 },
+      );
     }
 
     // Check if a tailored resume already exists for this application
-    const existingTailoredResume = await resumesService.getTailoredResumeByApplication(
-      session.user.id,
-      applicationId,
-    );
+    const existingTailoredResume =
+      await resumesService.getTailoredResumeByApplication(
+        session.user.id,
+        applicationId,
+      );
 
     return NextResponse.json({
       id: application.id,
@@ -143,11 +129,13 @@ export async function GET(
       hasJobDescription: !!application.jobDescription,
       location: application.location,
       status: application.status,
-      tailoredResume: existingTailoredResume ? {
-        id: existingTailoredResume.id,
-        title: existingTailoredResume.title,
-        updatedAt: existingTailoredResume.updatedAt,
-      } : null,
+      tailoredResume: existingTailoredResume
+        ? {
+            id: existingTailoredResume.id,
+            title: existingTailoredResume.title,
+            updatedAt: existingTailoredResume.updatedAt,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error fetching application for resume generation:", error);
@@ -180,7 +168,10 @@ export async function PUT(
     );
 
     if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 },
+      );
     }
 
     // Check if a tailored resume already exists for this application

@@ -10,7 +10,7 @@
 - **Forms & Validation**: React Hook Form + Zod resolvers; shared schemas live with API validators.
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
 - **AI**: Vercel AI SDK with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Default model is `openai/gpt-oss-120b`; fallback is `moonshotai/kimi-k2-instruct`.
-- **Documents**: Puppeteer renders resume PDFs using templates in `src/lib/resume-templates/`.
+- **Documents**: A separate authenticated pdfLaTeX service renders resume PDFs using templates in `src/lib/resume-templates/`. Generation checks the compiled PDF and may revise content up to three times to meet a one- or two-page target.
 
 ## Module Organization
 

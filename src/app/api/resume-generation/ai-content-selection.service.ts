@@ -21,14 +21,21 @@ const jobAnalysisSchema = z.object({
   requirements: z.array(z.string()),
   skills: z.array(z.string()),
   keywords: z.array(z.string()),
-  seniority: z.enum(['entry', 'mid', 'senior', 'executive']),
+  seniority: z.enum(["entry", "mid", "senior", "executive"]),
   industry: z.string(),
   summary: z.string(),
 });
 
 const contentRelevanceScoreSchema = z.object({
   id: z.number(),
-  type: z.enum(['work', 'education', 'skill', 'project', 'certification', 'achievement']),
+  type: z.enum([
+    "work",
+    "education",
+    "skill",
+    "project",
+    "certification",
+    "achievement",
+  ]),
   score: z.number().min(0).max(100),
   reasoning: z.string(),
   matchedKeywords: z.array(z.string()),
@@ -58,7 +65,13 @@ interface ProfileData {
 
 interface ContentRelevanceScore {
   id: number;
-  type: 'work' | 'education' | 'skill' | 'project' | 'certification' | 'achievement';
+  type:
+    | "work"
+    | "education"
+    | "skill"
+    | "project"
+    | "certification"
+    | "achievement";
   score: number; // 0-100
   reasoning: string;
   matchedKeywords: string[];
@@ -79,7 +92,10 @@ interface IntelligentContentSelection {
 export class AIContentSelectionService {
   private model = env.GROQ_MODEL;
 
-  async analyzeJobDescription(jobDescription: string): Promise<z.infer<typeof jobAnalysisSchema>> {
+  async analyzeJobDescription(
+    jobDescription: string,
+    signal?: AbortSignal,
+  ): Promise<z.infer<typeof jobAnalysisSchema>> {
     const prompt = `Analyze this job description and extract key information:
 
 JOB DESCRIPTION:
@@ -93,6 +109,10 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         output: Output.object({ schema: jobAnalysisSchema }),
         prompt,
         temperature: 0.3,
+        maxRetries: 0,
+        abortSignal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(25000)])
+          : AbortSignal.timeout(25000),
       });
 
       return output;
@@ -107,17 +127,21 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     profileData: ProfileData,
     maxWorkExperiences: number = 4,
     maxProjects: number = 3,
-    maxSkills: number = 12
+    maxSkills: number = 12,
+    signal?: AbortSignal,
   ): Promise<IntelligentContentSelection> {
     // First analyze the job description
-    const jobAnalysis = await this.analyzeJobDescription(jobDescription);
+    const jobAnalysis = await this.analyzeJobDescription(
+      jobDescription,
+      signal,
+    );
 
     // Create content scoring prompt
     const contentPrompt = this.buildContentScoringPrompt(
       jobDescription,
       jobAnalysis,
       profileData,
-      { maxWorkExperiences, maxProjects, maxSkills }
+      { maxWorkExperiences, maxProjects, maxSkills },
     );
 
     try {
@@ -126,26 +150,53 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         output: Output.object({ schema: intelligentContentSelectionSchema }),
         prompt: contentPrompt,
         temperature: 0.2,
+        maxRetries: 0,
+        abortSignal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(25000)])
+          : AbortSignal.timeout(25000),
       });
 
       const validated = this.validateAndFormatSelection(output, profileData);
+      validated.selectedWorkExperiences = [
+        ...new Set(validated.selectedWorkExperiences),
+      ].slice(0, maxWorkExperiences);
+      validated.selectedProjects = [
+        ...new Set(validated.selectedProjects),
+      ].slice(0, maxProjects);
+      validated.selectedSkills = [...new Set(validated.selectedSkills)].slice(
+        0,
+        maxSkills,
+      );
 
       // If AI returned bad IDs and filtering produced empty results, use fallback
-      const hasContent = validated.selectedWorkExperiences.length > 0
-        || validated.selectedEducation.length > 0
-        || validated.selectedSkills.length > 0
-        || validated.selectedProjects.length > 0;
+      const hasContent =
+        validated.selectedWorkExperiences.length > 0 ||
+        validated.selectedEducation.length > 0 ||
+        validated.selectedSkills.length > 0 ||
+        validated.selectedProjects.length > 0;
 
       if (!hasContent) {
-        console.warn('[AI Selection] All IDs filtered out — AI likely returned invalid IDs. Using fallback.');
-        return this.getFallbackSelection(profileData, maxWorkExperiences, maxProjects, maxSkills);
+        console.warn(
+          "[AI Selection] All IDs filtered out — AI likely returned invalid IDs. Using fallback.",
+        );
+        return this.getFallbackSelection(
+          profileData,
+          maxWorkExperiences,
+          maxProjects,
+          maxSkills,
+        );
       }
 
       return validated;
     } catch (error) {
       console.error("Error selecting optimal content:", error);
       // Return fallback selection
-      return this.getFallbackSelection(profileData, maxWorkExperiences, maxProjects, maxSkills);
+      return this.getFallbackSelection(
+        profileData,
+        maxWorkExperiences,
+        maxProjects,
+        maxSkills,
+      );
     }
   }
 
@@ -158,66 +209,94 @@ Focus on technical skills, qualifications, experience requirements, and key resp
       industry?: string;
     },
     profileData: ProfileData,
-    limits: { maxWorkExperiences: number; maxProjects: number; maxSkills: number; }
+    limits: {
+      maxWorkExperiences: number;
+      maxProjects: number;
+      maxSkills: number;
+    },
   ): string {
     return `You are an expert resume optimization AI. Analyze the job description and select the most relevant profile content to maximize interview success.
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-JOB REQUIREMENTS: ${jobAnalysis.requirements?.join(', ') || 'None specified'}
-REQUIRED SKILLS: ${jobAnalysis.skills?.join(', ') || 'None specified'}
-SENIORITY: ${jobAnalysis.seniority || 'Unknown'}
-INDUSTRY: ${jobAnalysis.industry || 'Unknown'}
+JOB REQUIREMENTS: ${jobAnalysis.requirements?.join(", ") || "None specified"}
+REQUIRED SKILLS: ${jobAnalysis.skills?.join(", ") || "None specified"}
+SENIORITY: ${jobAnalysis.seniority || "Unknown"}
+INDUSTRY: ${jobAnalysis.industry || "Unknown"}
 
 AVAILABLE PROFILE CONTENT:
 
 WORK EXPERIENCES:
-${profileData.workExperiences.map(exp => `ID: ${exp.id}
+${profileData.workExperiences
+  .map(
+    (exp) => `ID: ${exp.id}
 Title: ${exp.jobTitle}
 Company: ${exp.company}
-Duration: ${exp.startDate} - ${exp.endDate || 'Current'}
-Description: ${exp.description || 'No description'}
-Technologies: ${exp.technologies || 'Not specified'}
----`).join('\n')}
+Duration: ${exp.startDate} - ${exp.endDate || "Current"}
+Description: ${exp.description || "No description"}
+Technologies: ${exp.technologies || "Not specified"}
+---`,
+  )
+  .join("\n")}
 
 SKILLS:
-${profileData.skills.map(skill => `ID: ${skill.id}
+${profileData.skills
+  .map(
+    (skill) => `ID: ${skill.id}
 Name: ${skill.name}
 Category: ${skill.category}
-Level: ${skill.proficiencyLevel || 'Not specified'}
+Level: ${skill.proficiencyLevel || "Not specified"}
 Experience: ${skill.yearsOfExperience || 0} years
----`).join('\n')}
+---`,
+  )
+  .join("\n")}
 
 PROJECTS:
-${profileData.projects.map(project => `ID: ${project.id}
+${profileData.projects
+  .map(
+    (project) => `ID: ${project.id}
 Title: ${project.title}
-Description: ${project.description || 'No description'}
-Technologies: ${project.technologies || 'Not specified'}
-Duration: ${project.startDate ?? 'Not specified'} - ${project.endDate || 'Ongoing'}
----`).join('\n')}
+Description: ${project.description || "No description"}
+Technologies: ${project.technologies || "Not specified"}
+Duration: ${project.startDate ?? "Not specified"} - ${project.endDate || "Ongoing"}
+---`,
+  )
+  .join("\n")}
 
 EDUCATION:
-${profileData.education.map(edu => `ID: ${edu.id}
+${profileData.education
+  .map(
+    (edu) => `ID: ${edu.id}
 Degree: ${edu.degree}
-Field: ${edu.fieldOfStudy || 'Not specified'}
+Field: ${edu.fieldOfStudy || "Not specified"}
 Institution: ${edu.institution}
-Courses: ${edu.relevantCoursework || 'Not specified'}
----`).join('\n')}
+Courses: ${edu.relevantCoursework || "Not specified"}
+---`,
+  )
+  .join("\n")}
 
 CERTIFICATIONS:
-${profileData.certifications.map(cert => `ID: ${cert.id}
+${profileData.certifications
+  .map(
+    (cert) => `ID: ${cert.id}
 Name: ${cert.name}
 Issuer: ${cert.issuingOrganization}
-Date: ${cert.issueDate || 'Unknown'}
----`).join('\n')}
+Date: ${cert.issueDate || "Unknown"}
+---`,
+  )
+  .join("\n")}
 
 ACHIEVEMENTS:
-${profileData.achievements.map(ach => `ID: ${ach.id}
+${profileData.achievements
+  .map(
+    (ach) => `ID: ${ach.id}
 Title: ${ach.title}
-Description: ${ach.description || 'No description'}
-Organization: ${ach.organization || 'Not specified'}
----`).join('\n')}
+Description: ${ach.description || "No description"}
+Organization: ${ach.organization || "Not specified"}
+---`,
+  )
+  .join("\n")}
 
 SELECTION LIMITS:
 - Max Work Experiences: ${limits.maxWorkExperiences}
@@ -247,15 +326,15 @@ Be selective - quality over quantity. Choose items that directly support the app
    */
   private validateAndFormatSelection(
     selection: z.infer<typeof intelligentContentSelectionSchema>,
-    profileData: ProfileData
+    profileData: ProfileData,
   ): IntelligentContentSelection {
     const validIds = {
-      work: new Set(profileData.workExperiences.map(exp => exp.id)),
-      education: new Set(profileData.education.map(edu => edu.id)),
-      skill: new Set(profileData.skills.map(skill => skill.id)),
-      project: new Set(profileData.projects.map(project => project.id)),
-      certification: new Set(profileData.certifications.map(cert => cert.id)),
-      achievement: new Set(profileData.achievements.map(ach => ach.id)),
+      work: new Set(profileData.workExperiences.map((exp) => exp.id)),
+      education: new Set(profileData.education.map((edu) => edu.id)),
+      skill: new Set(profileData.skills.map((skill) => skill.id)),
+      project: new Set(profileData.projects.map((project) => project.id)),
+      certification: new Set(profileData.certifications.map((cert) => cert.id)),
+      achievement: new Set(profileData.achievements.map((ach) => ach.id)),
     };
 
     // Extract IDs from relevanceScores, validated against actual profile data
@@ -270,23 +349,29 @@ Be selective - quality over quantity. Choose items that directly support the app
 
     for (const score of selection.relevanceScores) {
       switch (score.type) {
-        case 'work':
-          if (validIds.work.has(score.id)) idsFromScores.selectedWorkExperiences.push(score.id);
+        case "work":
+          if (validIds.work.has(score.id))
+            idsFromScores.selectedWorkExperiences.push(score.id);
           break;
-        case 'education':
-          if (validIds.education.has(score.id)) idsFromScores.selectedEducation.push(score.id);
+        case "education":
+          if (validIds.education.has(score.id))
+            idsFromScores.selectedEducation.push(score.id);
           break;
-        case 'skill':
-          if (validIds.skill.has(score.id)) idsFromScores.selectedSkills.push(score.id);
+        case "skill":
+          if (validIds.skill.has(score.id))
+            idsFromScores.selectedSkills.push(score.id);
           break;
-        case 'project':
-          if (validIds.project.has(score.id)) idsFromScores.selectedProjects.push(score.id);
+        case "project":
+          if (validIds.project.has(score.id))
+            idsFromScores.selectedProjects.push(score.id);
           break;
-        case 'certification':
-          if (validIds.certification.has(score.id)) idsFromScores.selectedCertifications.push(score.id);
+        case "certification":
+          if (validIds.certification.has(score.id))
+            idsFromScores.selectedCertifications.push(score.id);
           break;
-        case 'achievement':
-          if (validIds.achievement.has(score.id)) idsFromScores.selectedAchievements.push(score.id);
+        case "achievement":
+          if (validIds.achievement.has(score.id))
+            idsFromScores.selectedAchievements.push(score.id);
           break;
       }
     }
@@ -303,25 +388,29 @@ Be selective - quality over quantity. Choose items that directly support the app
     profileData: ProfileData,
     maxWorkExperiences: number,
     maxProjects: number,
-    maxSkills: number
+    maxSkills: number,
   ): IntelligentContentSelection {
     // Fallback to most recent/relevant items if AI fails
     return {
       selectedWorkExperiences: profileData.workExperiences
         .slice(0, maxWorkExperiences)
-        .map(exp => exp.id),
-      selectedEducation: profileData.education.map(edu => edu.id),
+        .map((exp) => exp.id),
+      selectedEducation: profileData.education.map((edu) => edu.id),
       selectedSkills: profileData.skills
         .slice(0, maxSkills)
-        .map(skill => skill.id),
+        .map((skill) => skill.id),
       selectedProjects: profileData.projects
         .slice(0, maxProjects)
-        .map(project => project.id),
-      selectedCertifications: profileData.certifications.map(cert => cert.id),
-      selectedAchievements: profileData.achievements.map(ach => ach.id),
+        .map((project) => project.id),
+      selectedCertifications: profileData.certifications.map((cert) => cert.id),
+      selectedAchievements: profileData.achievements.map((ach) => ach.id),
       relevanceScores: [],
       overallStrategy: "Fallback selection - most recent content",
-      keyMatchingPoints: ["Recent work experience", "All educational background", "Core skills"],
+      keyMatchingPoints: [
+        "Recent work experience",
+        "All educational background",
+        "Core skills",
+      ],
     };
   }
 }

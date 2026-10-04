@@ -1,37 +1,28 @@
-import puppeteer from "puppeteer";
-import { generateProfessionalResumeHTML } from "@/lib/resume-templates/professional-html";
+import { ProfileService } from "../profile/service";
+import { AIContentSelectionService } from "./ai-content-selection.service";
+import { reviseResumeWithAI } from "./ai-resume-fitting.service";
+import { buildResumeDocument, type ResumeData } from "@/lib/resume-data";
+import { fitResume } from "@/lib/resume-fitting";
+import { compileResumeLatex } from "@/lib/latex-compiler";
+import { generateProfessionalResumeLatex } from "@/lib/resume-templates/professional-latex";
+import {
+  resumeDocumentSchema,
+  type GeneratedResumeResult,
+} from "@/lib/resume-document";
 import type {
-  AchievementResponse,
-  CertificationResponse,
-  EducationResponse,
   GenerateResumeRequest,
   IntelligentContentSelection,
   JobApplicationResumeRequest,
-  ProjectResponse,
-  SkillResponse,
-  UserProfileResponse,
-  WorkExperienceResponse,
+  ResumeContentSelection,
 } from "../profile/validators";
 import type { ApplicationResponse } from "../applications/validators";
-import { ProfileService } from "../profile/service";
-import { AIContentSelectionService } from "./ai-content-selection.service";
-
-interface ResumeData {
-  profile: UserProfileResponse | null;
-  workExperiences: WorkExperienceResponse[];
-  education: EducationResponse[];
-  skills: SkillResponse[];
-  projects: ProjectResponse[];
-  certifications: CertificationResponse[];
-  achievements: AchievementResponse[];
-}
 
 export class ResumeGenerationService {
   private profileService = new ProfileService();
   private aiContentService = new AIContentSelectionService();
 
   async generateResumeData(userId: string): Promise<ResumeData> {
-    // Fetch all profile data
+    const order = { orderBy: "displayOrder" as const, order: "asc" as const };
     const [
       profile,
       workExperiences,
@@ -40,16 +31,17 @@ export class ResumeGenerationService {
       projects,
       certifications,
       achievements,
+      references,
     ] = await Promise.all([
       this.profileService.getUserProfile(userId),
-      this.profileService.getWorkExperiences(userId, { orderBy: 'displayOrder', order: 'asc' }),
-      this.profileService.getEducation(userId, { orderBy: 'displayOrder', order: 'asc' }),
-      this.profileService.getSkills(userId, { orderBy: 'displayOrder', order: 'asc' }),
-      this.profileService.getProjects(userId, { orderBy: 'displayOrder', order: 'asc' }),
-      this.profileService.getCertifications(userId, { orderBy: 'displayOrder', order: 'asc' }),
-      this.profileService.getAchievements(userId, { orderBy: 'displayOrder', order: 'asc' }),
+      this.profileService.getWorkExperiences(userId, order),
+      this.profileService.getEducation(userId, order),
+      this.profileService.getSkills(userId, order),
+      this.profileService.getProjects(userId, order),
+      this.profileService.getCertifications(userId, order),
+      this.profileService.getAchievements(userId, order),
+      this.profileService.getReferences(userId, order),
     ]);
-
     return {
       profile,
       workExperiences,
@@ -58,73 +50,176 @@ export class ResumeGenerationService {
       projects,
       certifications,
       achievements,
+      references,
     };
   }
 
-  async generateResumeHTML(userId: string, request: GenerateResumeRequest): Promise<string> {
-    const resumeData = await this.generateResumeData(userId);
+  private async generate(
+    data: ResumeData,
+    selection: ResumeContentSelection,
+    request: GenerateResumeRequest | JobApplicationResumeRequest,
+    signal: AbortSignal,
+    aiSelection: IntelligentContentSelection | null = null,
+    jobDescription: string | null = null,
+  ): Promise<GeneratedResumeResult> {
+    const source = resumeDocumentSchema.parse(
+      buildResumeDocument(data, selection, request.title),
+    );
+    const result = await fitResume(
+      source,
+      request.targetPages,
+      {
+        compile: (document, abortSignal) =>
+          compileResumeLatex(
+            generateProfessionalResumeLatex(document),
+            abortSignal,
+          ),
+        revise: (original, current, feedback, abortSignal) =>
+          reviseResumeWithAI(
+            original,
+            current,
+            feedback,
+            request.targetPages,
+            jobDescription,
+            abortSignal,
+          ),
+      },
+      signal,
+    );
+    return {
+      schemaVersion: 2,
+      renderer: "latex",
+      templateVersion: 1,
+      document: result.document,
+      pdfBase64: result.compilation.pdfBase64,
+      aiSelection,
+      config: { ...request, template: "professional" },
+      generatedAt: new Date().toISOString(),
+      fit: result.fit,
+    };
+  }
 
-    // Select the appropriate template generator
-    switch (request.template) {
-      case 'professional':
-      default:
-        return generateProfessionalResumeHTML(
-          { ...resumeData, contentSelection: request.contentSelection },
-          request.title
+  async generateResume(
+    userId: string,
+    request: GenerateResumeRequest,
+  ): Promise<GeneratedResumeResult> {
+    const signal = AbortSignal.timeout(180000);
+    return this.generate(
+      await this.generateResumeData(userId),
+      request.contentSelection,
+      request,
+      signal,
+    );
+  }
+
+  async generateResumePDF(
+    userId: string,
+    request: GenerateResumeRequest,
+  ): Promise<Buffer> {
+    const result = await this.generateResume(userId, request);
+    return Buffer.from(result.pdfBase64, "base64");
+  }
+
+  async generateJobApplicationResume(
+    userId: string,
+    application: ApplicationResponse,
+    request: JobApplicationResumeRequest,
+  ): Promise<GeneratedResumeResult> {
+    const signal = AbortSignal.timeout(180000);
+    const data = await this.generateResumeData(userId);
+    let aiSelection: IntelligentContentSelection | null = null;
+    if (request.useAISelection && application.jobDescription) {
+      try {
+        aiSelection = await this.aiContentService.selectOptimalContent(
+          application.jobDescription,
+          data,
+          request.maxWorkExperiences,
+          request.maxProjects,
+          request.maxSkills,
+          signal,
         );
-      // Add more templates here as they are created
+      } catch {
+        // Original profile content remains usable when selection fails.
+      }
     }
+    const manual = request.manualOverrides;
+    const workIds =
+      manual?.workExperienceIds ??
+      aiSelection?.selectedWorkExperiences ??
+      data.workExperiences
+        .slice(0, request.maxWorkExperiences)
+        .map((item) => item.id);
+    const educationIds =
+      manual?.educationIds ??
+      aiSelection?.selectedEducation ??
+      data.education.map((item) => item.id);
+    const skillIds =
+      manual?.skillIds ??
+      aiSelection?.selectedSkills ??
+      data.skills.slice(0, request.maxSkills).map((item) => item.id);
+    const projectIds =
+      manual?.projectIds ??
+      aiSelection?.selectedProjects ??
+      data.projects.slice(0, request.maxProjects).map((item) => item.id);
+    const certificationIds =
+      manual?.certificationIds ??
+      aiSelection?.selectedCertifications ??
+      data.certifications.map((item) => item.id);
+    const achievementIds =
+      manual?.achievementIds ??
+      aiSelection?.selectedAchievements ??
+      data.achievements.map((item) => item.id);
+    if (aiSelection) {
+      aiSelection = {
+        ...aiSelection,
+        selectedWorkExperiences: workIds,
+        selectedEducation: educationIds,
+        selectedSkills: skillIds,
+        selectedProjects: projectIds,
+        selectedCertifications: certificationIds,
+        selectedAchievements: achievementIds,
+      };
+    }
+    // Overrides apply only to their supplied section; unspecified sections retain AI selection.
+    const filtered = {
+      ...data,
+      skills: data.skills.filter((item) => skillIds.includes(item.id)),
+    };
+    const selection: ResumeContentSelection = {
+      includePersonalInfo: true,
+      includeSummary: true,
+      includeWorkExperience: true,
+      workExperienceIds: workIds,
+      includeEducation: true,
+      educationIds,
+      includeSkills: true,
+      includeProjects: true,
+      projectIds,
+      includeCertifications: true,
+      certificationIds,
+      includeAchievements: true,
+      achievementIds,
+      includeReferences: false,
+    };
+    const result = await this.generate(
+      filtered,
+      selection,
+      request,
+      signal,
+      aiSelection,
+      application.jobDescription,
+    );
+    if (request.useAISelection && !aiSelection)
+      result.fit.warnings.push(
+        "AI content selection was unavailable. Recent profile entries were used.",
+      );
+    return result;
   }
 
-  async generateResumePDF(userId: string, request: GenerateResumeRequest): Promise<Buffer> {
-    const html = await this.generateResumeHTML(userId, request);
-
-    // Launch Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    });
-
-    try {
-      const page = await browser.newPage();
-
-      // Set content and wait for it to load
-      await page.setContent(html, {
-        waitUntil: 'networkidle0',
-        timeout: 30000
-      });
-
-      // Generate PDF with specific settings for resume
-      // Use zero margins - let the HTML/CSS control the layout to match preview
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '0',
-          bottom: '0',
-          left: '0',
-          right: '0'
-        },
-        printBackground: true,
-        preferCSSPageSize: true,
-        displayHeaderFooter: false,
-      });
-
-      return Buffer.from(pdfBuffer);
-    } finally {
-      await browser.close();
-    }
-  }
-
-  async validateResumeGeneration(userId: string, request: GenerateResumeRequest): Promise<{ valid: boolean; errors: string[]; }> {
+  async validateResumeGeneration(
+    userId: string,
+    request: GenerateResumeRequest,
+  ): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
 
     try {
@@ -132,322 +227,68 @@ export class ResumeGenerationService {
 
       // Check if user has a profile
       if (!resumeData.profile && request.contentSelection.includePersonalInfo) {
-        errors.push('User profile is required when personal information is included');
+        errors.push(
+          "User profile is required when personal information is included",
+        );
       }
 
       // Check if user has work experience when required
-      if (request.contentSelection.includeWorkExperience && resumeData.workExperiences.length === 0) {
-        errors.push('No work experience found. Add work experience or disable it in content selection');
+      if (
+        request.contentSelection.includeWorkExperience &&
+        resumeData.workExperiences.length === 0
+      ) {
+        errors.push(
+          "No work experience found. Add work experience or disable it in content selection",
+        );
       }
 
       // Check if user has education when required
-      if (request.contentSelection.includeEducation && resumeData.education.length === 0) {
-        errors.push('No education found. Add education or disable it in content selection');
+      if (
+        request.contentSelection.includeEducation &&
+        resumeData.education.length === 0
+      ) {
+        errors.push(
+          "No education found. Add education or disable it in content selection",
+        );
       }
 
       // Check if user has skills when required
-      if (request.contentSelection.includeSkills && resumeData.skills.length === 0) {
-        errors.push('No skills found. Add skills or disable them in content selection');
+      if (
+        request.contentSelection.includeSkills &&
+        resumeData.skills.length === 0
+      ) {
+        errors.push(
+          "No skills found. Add skills or disable them in content selection",
+        );
       }
 
       // Check specific ID selections
       if (request.contentSelection.workExperienceIds) {
-        const availableIds = resumeData.workExperiences.map(exp => exp.id);
-        const missingIds = request.contentSelection.workExperienceIds.filter(id => !availableIds.includes(id));
+        const availableIds = resumeData.workExperiences.map((exp) => exp.id);
+        const missingIds = request.contentSelection.workExperienceIds.filter(
+          (id) => !availableIds.includes(id),
+        );
         if (missingIds.length > 0) {
-          errors.push(`Work experience IDs not found: ${missingIds.join(', ')}`);
+          errors.push(
+            `Work experience IDs not found: ${missingIds.join(", ")}`,
+          );
         }
       }
 
       if (request.contentSelection.educationIds) {
-        const availableIds = resumeData.education.map(edu => edu.id);
-        const missingIds = request.contentSelection.educationIds.filter(id => !availableIds.includes(id));
+        const availableIds = resumeData.education.map((edu) => edu.id);
+        const missingIds = request.contentSelection.educationIds.filter(
+          (id) => !availableIds.includes(id),
+        );
         if (missingIds.length > 0) {
-          errors.push(`Education IDs not found: ${missingIds.join(', ')}`);
+          errors.push(`Education IDs not found: ${missingIds.join(", ")}`);
         }
       }
 
       return { valid: errors.length === 0, errors };
     } catch {
-      errors.push('Failed to validate resume data');
+      errors.push("Failed to validate resume data");
       return { valid: false, errors };
-    }
-  }
-
-  async generatePreviewHTML(userId: string, request: GenerateResumeRequest): Promise<string> {
-    // Same as generateResumeHTML but with additional CSS for web preview
-    const html = await this.generateResumeHTML(userId, request);
-
-    // Add preview-specific styles
-    const previewHTML = html.replace(
-      '</style>',
-      `
-        .resume-container {
-          box-shadow: 0 0 20px rgba(0,0,0,0.1) !important;
-          margin: 20px auto !important;
-          background: white !important;
-          border: 1px solid #ddd !important;
-        }
-        
-        body {
-          background: #f5f5f5 !important;
-          padding: 20px !important;
-        }
-      </style>`
-    );
-
-    return previewHTML;
-  }
-
-  // NEW: Job-application-linked resume generation methods
-  async generateJobApplicationResumeHTML(
-    userId: string,
-    application: ApplicationResponse,
-    request: JobApplicationResumeRequest
-  ): Promise<{ html: string; aiSelection?: IntelligentContentSelection; }> {
-    const resumeData = await this.generateResumeData(userId);
-    let aiSelection: IntelligentContentSelection | undefined;
-    let filteredResumeData = resumeData;
-
-    // Use AI content selection if enabled and job description is available
-    if (request.useAISelection && application.jobDescription) {
-      try {
-        aiSelection = await this.aiContentService.selectOptimalContent(
-          application.jobDescription,
-          resumeData,
-          request.maxWorkExperiences,
-          request.maxProjects,
-          request.maxSkills
-        );
-
-        // Filter resume data based on AI selection
-        filteredResumeData = this.applyIntelligentSelection(resumeData, aiSelection);
-        console.log('[Resume Gen] Filtered data counts:', {
-          workExperiences: filteredResumeData.workExperiences.length,
-          education: filteredResumeData.education.length,
-          skills: filteredResumeData.skills.length,
-          projects: filteredResumeData.projects.length,
-          certifications: filteredResumeData.certifications.length,
-          achievements: filteredResumeData.achievements.length,
-        });
-      } catch (error) {
-        console.error('Error with AI content selection, falling back to manual/default selection:', error);
-        // Fall through to manual selection
-      }
-    }
-
-    // Apply manual overrides if provided
-    if (request.manualOverrides) {
-      filteredResumeData = this.applyManualOverrides(resumeData, request.manualOverrides);
-    }
-
-    // Generate content selection for template
-    const contentSelection = this.createContentSelectionFromData(filteredResumeData);
-
-    // Generate HTML using the existing template system
-    const html = this.generateResumeHTMLWithData(
-      filteredResumeData,
-      contentSelection,
-      request.template,
-      request.title
-    );
-
-    return { html, aiSelection };
-  }
-
-  async generateJobApplicationResumePDF(
-    userId: string,
-    application: ApplicationResponse,
-    request: JobApplicationResumeRequest
-  ): Promise<{ pdf: Buffer; aiSelection?: IntelligentContentSelection; }> {
-    const { html, aiSelection } = await this.generateJobApplicationResumeHTML(userId, application, request);
-
-    // Use the same PDF generation logic as existing method
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    });
-
-    try {
-      const page = await browser.newPage();
-
-      await page.setContent(html, {
-        waitUntil: 'networkidle0',
-        timeout: 30000
-      });
-
-      // Add additional wait to ensure content is fully rendered
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Use zero margins - let the HTML/CSS control the layout to match preview
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '0',
-          bottom: '0',
-          left: '0',
-          right: '0'
-        },
-        printBackground: true,
-        preferCSSPageSize: true,
-        displayHeaderFooter: false,
-      });
-
-      return { pdf: Buffer.from(pdfBuffer), aiSelection };
-    } finally {
-      await browser.close();
-    }
-  }
-
-  async generateJobApplicationPreviewHTML(
-    userId: string,
-    application: ApplicationResponse,
-    request: JobApplicationResumeRequest
-  ): Promise<{ html: string; aiSelection?: IntelligentContentSelection; }> {
-    const { html, aiSelection } = await this.generateJobApplicationResumeHTML(userId, application, request);
-
-    // Add preview-specific styles
-    const previewHTML = html.replace(
-      '</style>',
-      `
-        .resume-container {
-          box-shadow: 0 0 20px rgba(0,0,0,0.1) !important;
-          margin: 20px auto !important;
-          background: white !important;
-          border: 1px solid #ddd !important;
-        }
-        
-        body {
-          background: #f5f5f5 !important;
-          padding: 20px !important;
-        }
-      </style>`
-    );
-
-    return { html: previewHTML, aiSelection };
-  }
-
-  // Helper methods for AI content selection integration
-  private applyIntelligentSelection(
-    resumeData: ResumeData,
-    aiSelection: IntelligentContentSelection
-  ): ResumeData {
-    return {
-      profile: resumeData.profile,
-      workExperiences: resumeData.workExperiences.filter(exp =>
-        aiSelection.selectedWorkExperiences.includes(exp.id)
-      ),
-      education: resumeData.education.filter(edu =>
-        aiSelection.selectedEducation.includes(edu.id)
-      ),
-      skills: resumeData.skills.filter(skill =>
-        aiSelection.selectedSkills.includes(skill.id)
-      ),
-      projects: resumeData.projects.filter(project =>
-        aiSelection.selectedProjects.includes(project.id)
-      ),
-      certifications: resumeData.certifications.filter(cert =>
-        aiSelection.selectedCertifications.includes(cert.id)
-      ),
-      achievements: resumeData.achievements.filter(achievement =>
-        aiSelection.selectedAchievements.includes(achievement.id)
-      ),
-    };
-  }
-
-  private applyManualOverrides(
-    resumeData: ResumeData,
-    overrides: JobApplicationResumeRequest['manualOverrides']
-  ): ResumeData {
-    if (!overrides) return resumeData;
-
-    const { workExperienceIds, educationIds, skillIds, projectIds, certificationIds, achievementIds } = overrides;
-
-    return {
-      profile: resumeData.profile,
-      workExperiences: workExperienceIds
-        ? resumeData.workExperiences.filter(exp => workExperienceIds.includes(exp.id))
-        : resumeData.workExperiences,
-      education: educationIds
-        ? resumeData.education.filter(edu => educationIds.includes(edu.id))
-        : resumeData.education,
-      skills: skillIds
-        ? resumeData.skills.filter(skill => skillIds.includes(skill.id))
-        : resumeData.skills,
-      projects: projectIds
-        ? resumeData.projects.filter(project => projectIds.includes(project.id))
-        : resumeData.projects,
-      certifications: certificationIds
-        ? resumeData.certifications.filter(cert => certificationIds.includes(cert.id))
-        : resumeData.certifications,
-      achievements: achievementIds
-        ? resumeData.achievements.filter(achievement => achievementIds.includes(achievement.id))
-        : resumeData.achievements,
-    };
-  }
-
-  private createContentSelectionFromData(resumeData: ResumeData) {
-    return {
-      includePersonalInfo: !!resumeData.profile,
-      includeSummary: !!(resumeData.profile?.professionalSummary),
-      includeWorkExperience: resumeData.workExperiences.length > 0,
-      workExperienceIds: resumeData.workExperiences.map(exp => exp.id),
-      includeEducation: resumeData.education.length > 0,
-      educationIds: resumeData.education.map(edu => edu.id),
-      includeSkills: resumeData.skills.length > 0,
-      skillCategories: [...new Set(resumeData.skills.map(skill => skill.category))],
-      includeProjects: resumeData.projects.length > 0,
-      projectIds: resumeData.projects.map(project => project.id),
-      includeCertifications: resumeData.certifications.length > 0,
-      certificationIds: resumeData.certifications.map(cert => cert.id),
-      includeAchievements: resumeData.achievements.length > 0,
-      achievementIds: resumeData.achievements.map(achievement => achievement.id),
-      includeReferences: false, // Usually not included in AI-generated resumes
-      referenceIds: [],
-    };
-  }
-
-  private generateResumeHTMLWithData(
-    resumeData: ResumeData,
-    contentSelection: {
-      includePersonalInfo: boolean;
-      includeSummary: boolean;
-      includeWorkExperience: boolean;
-      workExperienceIds: number[];
-      includeEducation: boolean;
-      educationIds: number[];
-      includeSkills: boolean;
-      skillCategories: string[];
-      includeProjects: boolean;
-      projectIds: number[];
-      includeCertifications: boolean;
-      certificationIds: number[];
-      includeAchievements: boolean;
-      achievementIds: number[];
-      includeReferences: boolean;
-      referenceIds: number[];
-    },
-    template: string,
-    title: string
-  ): string {
-    // Use existing template generation logic
-    switch (template) {
-      case 'professional':
-      default:
-        return generateProfessionalResumeHTML(
-          { ...resumeData, contentSelection },
-          title
-        );
-      // Add more templates here as they are created
     }
   }
 }

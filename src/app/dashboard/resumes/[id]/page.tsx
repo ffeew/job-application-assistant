@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { FormFieldError } from "@/components/ui/form-field-error";
@@ -17,7 +23,15 @@ import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-re
 import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
 import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
-import { resumeContentSchema, type ResumeContent } from "@/lib/validators/resume-content";
+import {
+  resumeContentSchema,
+  type ResumeContent,
+} from "@/lib/validators/resume-content";
+import { parseGeneratedResume } from "@/lib/resume-document";
+import {
+  StoredResumeView,
+  legacyResumeHTML,
+} from "../components/stored-resume-view";
 
 // Form data structure
 interface ResumeFormData {
@@ -35,11 +49,21 @@ interface ResumeFormData {
   skills: string;
 }
 
-export default function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
-  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
-  
+export default function EditResumePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
+    null,
+  );
+
   const router = useRouter();
-  const { data: resume, isLoading: resumeLoading, error } = useResume(resolvedParams?.id || "");
+  const {
+    data: resume,
+    isLoading: resumeLoading,
+    error,
+  } = useResume(resolvedParams?.id || "");
   const updateResumeMutation = useUpdateResume();
 
   const form = useForm<ResumeFormData>({
@@ -59,7 +83,12 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
     },
   });
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = form;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = form;
 
   // Resolve params Promise
   useEffect(() => {
@@ -88,15 +117,18 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
         };
       }
       // Compiler memoization can reuse register() props; retain refs to update mounted inputs.
-      reset({
-        title: resume.title,
-        isDefault: resume.isDefault,
-        personalInfo: content.personalInfo,
-        summary: content.summary || "",
-        experience: content.experience || "",
-        education: content.education || "",
-        skills: content.skills || "",
-      }, { keepFieldsRef: true });
+      reset(
+        {
+          title: resume.title,
+          isDefault: resume.isDefault,
+          personalInfo: content.personalInfo,
+          summary: content.summary || "",
+          experience: content.experience || "",
+          education: content.education || "",
+          skills: content.skills || "",
+        },
+        { keepFieldsRef: true },
+      );
     }
   }, [resume, reset]);
 
@@ -130,23 +162,33 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
       isDefault: data.isDefault,
     };
 
-    updateResumeMutation.mutate({
-      id: resolvedParams.id,
-      data: updateData
-    }, {
-      onSuccess: () => {
-        toast.success("Resume updated successfully!");
-        router.push("/dashboard/resumes");
+    updateResumeMutation.mutate(
+      {
+        id: resolvedParams.id,
+        data: updateData,
       },
-      onError: (error) => {
-        console.error("Error updating resume:", error);
-        toast.error("Error updating resume. Please try again.");
+      {
+        onSuccess: () => {
+          toast.success("Resume updated successfully!");
+          router.push("/dashboard/resumes");
+        },
+        onError: (error) => {
+          console.error("Error updating resume:", error);
+          toast.error("Error updating resume. Please try again.");
+        },
       },
-    });
+    );
   };
 
   if (!resolvedParams || resumeLoading || !resume) {
     return <ResumeDetailSkeleton />;
+  }
+
+  if (
+    parseGeneratedResume(resume.content) ||
+    legacyResumeHTML(resume.content)
+  ) {
+    return <StoredResumeView key={resume.id} resume={resume} />;
   }
 
   return (
@@ -204,10 +246,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    {...register("personalInfo.name")}
-                  />
+                  <Input id="name" {...register("personalInfo.name")} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="email">Email</Label>
@@ -221,17 +260,11 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    {...register("personalInfo.phone")}
-                  />
+                  <Input id="phone" {...register("personalInfo.phone")} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    {...register("personalInfo.address")}
-                  />
+                  <Input id="address" {...register("personalInfo.address")} />
                 </div>
               </div>
             </CardContent>
@@ -272,9 +305,7 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
           <Card>
             <CardHeader>
               <CardTitle>Education</CardTitle>
-              <CardDescription>
-                Your educational background
-              </CardDescription>
+              <CardDescription>Your educational background</CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -305,9 +336,14 @@ export default function EditResumePage({ params }: { params: Promise<{ id: strin
             <Button variant="outline" asChild>
               <Link href="/dashboard/resumes">Cancel</Link>
             </Button>
-            <Button type="submit" disabled={isSubmitting || updateResumeMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || updateResumeMutation.isPending}
+            >
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting || updateResumeMutation.isPending ? "Saving..." : "Save Changes"}
+              {isSubmitting || updateResumeMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </div>
         </div>

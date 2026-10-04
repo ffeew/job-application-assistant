@@ -1,12 +1,28 @@
 "use client";
+import {
+  parseGeneratedResume,
+  documentToResumeContent,
+} from "@/lib/resume-document";
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ArrowLeft, Sparkles, Save } from "lucide-react";
 import Link from "next/link";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
@@ -25,25 +41,40 @@ export default function NewCoverLetterPage() {
 
   // Zustand store selectors
   const selectedResumeId = useCoverLetterStore((state) => state.selectedResume);
-  const selectedApplication = useCoverLetterStore((state) => state.selectedApplication);
+  const selectedApplication = useCoverLetterStore(
+    (state) => state.selectedApplication,
+  );
   const manualCompany = useCoverLetterStore((state) => state.manualCompany);
   const manualPosition = useCoverLetterStore((state) => state.manualPosition);
   const jobDescription = useCoverLetterStore((state) => state.jobDescription);
   const applicantName = useCoverLetterStore((state) => state.applicantName);
-  const generatedContent = useCoverLetterStore((state) => state.generatedContent);
+  const generatedContent = useCoverLetterStore(
+    (state) => state.generatedContent,
+  );
   const title = useCoverLetterStore((state) => state.title);
 
   // Zustand store actions
-  const setSelectedResume = useCoverLetterStore((state) => state.setSelectedResume);
-  const setSelectedApplication = useCoverLetterStore((state) => state.setSelectedApplication);
+  const setSelectedResume = useCoverLetterStore(
+    (state) => state.setSelectedResume,
+  );
+  const setSelectedApplication = useCoverLetterStore(
+    (state) => state.setSelectedApplication,
+  );
   const setManualFields = useCoverLetterStore((state) => state.setManualFields);
-  const setApplicantName = useCoverLetterStore((state) => state.setApplicantName);
+  const setApplicantName = useCoverLetterStore(
+    (state) => state.setApplicantName,
+  );
   const setTitle = useCoverLetterStore((state) => state.setTitle);
-  const setGeneratedContent = useCoverLetterStore((state) => state.setGeneratedContent);
+  const setGeneratedContent = useCoverLetterStore(
+    (state) => state.setGeneratedContent,
+  );
   const reset = useCoverLetterStore((state) => state.reset);
 
   const selectedResume =
-    selectedResumeId || resumes.find((resume) => resume.isDefault)?.id || resumes[0]?.id || "";
+    selectedResumeId ||
+    resumes.find((resume) => resume.isDefault)?.id ||
+    resumes[0]?.id ||
+    "";
 
   const handleApplicationChange = (applicationId: string) => {
     if (applicationId === "none") {
@@ -51,12 +82,14 @@ export default function NewCoverLetterPage() {
       return;
     }
     setSelectedApplication(applicationId);
-    const app = applications.find(a => a.id === applicationId);
+    const app = applications.find((a) => a.id === applicationId);
     if (app) {
       setManualFields(app.company, app.position, app.jobDescription || "");
 
       // Auto-select tailored resume for this application if one exists
-      const tailoredResume = resumes.find(r => r.jobApplicationId === applicationId && r.isTailored);
+      const tailoredResume = resumes.find(
+        (r) => r.jobApplicationId === applicationId && r.isTailored,
+      );
       if (tailoredResume) {
         setSelectedResume(tailoredResume.id);
       }
@@ -69,32 +102,40 @@ export default function NewCoverLetterPage() {
       return;
     }
 
-    const selectedResumeData = resumes.find(r => r.id === selectedResume);
+    const selectedResumeData = resumes.find((r) => r.id === selectedResume);
     let resumeContent: unknown = null;
     if (selectedResumeData) {
       try {
-        resumeContent = JSON.parse(selectedResumeData.content);
+        const generated = parseGeneratedResume(selectedResumeData.content);
+        resumeContent = generated
+          ? documentToResumeContent(generated.document)
+          : (JSON.parse(selectedResumeData.content) as unknown);
       } catch {
         console.error("Failed to parse resume content");
       }
     }
 
-    generateCoverLetterMutation.mutate({
-      company: manualCompany,
-      position: manualPosition,
-      jobDescription,
-      resumeContent,
-      applicantName,
-    }, {
-      onSuccess: (data) => {
-        setGeneratedContent(data.coverLetter);
-        setTitle(`Cover Letter - ${manualCompany} ${manualPosition}`);
+    generateCoverLetterMutation.mutate(
+      {
+        company: manualCompany,
+        position: manualPosition,
+        jobDescription,
+        resumeContent,
+        applicantName,
       },
-      onError: (error: Error) => {
-        console.error("Error generating cover letter:", error);
-        toast.error(error.message || "Error generating cover letter. Please try again.");
+      {
+        onSuccess: (data) => {
+          setGeneratedContent(data.coverLetter);
+          setTitle(`Cover Letter - ${manualCompany} ${manualPosition}`);
+        },
+        onError: (error: Error) => {
+          console.error("Error generating cover letter:", error);
+          toast.error(
+            error.message || "Error generating cover letter. Please try again.",
+          );
+        },
       },
-    });
+    );
   };
 
   const handleSaveCoverLetter = () => {
@@ -103,23 +144,26 @@ export default function NewCoverLetterPage() {
       return;
     }
 
-    createCoverLetterMutation.mutate({
-      title,
-      content: generatedContent,
-      jobApplicationId: selectedApplication || undefined,
-      resumeId: selectedResume || undefined,
-      isAiGenerated: true,
-    }, {
-      onSuccess: () => {
-        toast.success("Cover letter saved successfully!");
-        reset(); // Clear the store after successful save
-        router.push("/dashboard/cover-letters");
+    createCoverLetterMutation.mutate(
+      {
+        title,
+        content: generatedContent,
+        jobApplicationId: selectedApplication || undefined,
+        resumeId: selectedResume || undefined,
+        isAiGenerated: true,
       },
-      onError: (error) => {
-        console.error("Error saving cover letter:", error);
-        toast.error("Error saving cover letter. Please try again.");
+      {
+        onSuccess: () => {
+          toast.success("Cover letter saved successfully!");
+          reset(); // Clear the store after successful save
+          router.push("/dashboard/cover-letters");
+        },
+        onError: (error) => {
+          console.error("Error saving cover letter:", error);
+          toast.error("Error saving cover letter. Please try again.");
+        },
       },
-    });
+    );
   };
 
   return (
@@ -151,14 +195,21 @@ export default function NewCoverLetterPage() {
             <CardContent className="flex flex-col gap-4">
               {applications.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="application">Select Application (Optional)</Label>
-                  <Select value={selectedApplication} onValueChange={handleApplicationChange}>
+                  <Label htmlFor="application">
+                    Select Application (Optional)
+                  </Label>
+                  <Select
+                    value={selectedApplication}
+                    onValueChange={handleApplicationChange}
+                  >
                     <SelectTrigger id="application">
                       <SelectValue placeholder="Choose an existing application..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None - Enter manually</SelectItem>
-                      {applications.map(app => (
+                      <SelectItem value="none">
+                        None - Enter manually
+                      </SelectItem>
+                      {applications.map((app) => (
                         <SelectItem key={app.id} value={app.id}>
                           {app.position} at {app.company}
                         </SelectItem>
@@ -175,7 +226,13 @@ export default function NewCoverLetterPage() {
                     id="company"
                     placeholder="Company name"
                     value={manualCompany}
-                    onChange={(e) => setManualFields(e.target.value, manualPosition, jobDescription)}
+                    onChange={(e) =>
+                      setManualFields(
+                        e.target.value,
+                        manualPosition,
+                        jobDescription,
+                      )
+                    }
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -184,7 +241,13 @@ export default function NewCoverLetterPage() {
                     id="position"
                     placeholder="Job position"
                     value={manualPosition}
-                    onChange={(e) => setManualFields(manualCompany, e.target.value, jobDescription)}
+                    onChange={(e) =>
+                      setManualFields(
+                        manualCompany,
+                        e.target.value,
+                        jobDescription,
+                      )
+                    }
                   />
                 </div>
               </div>
@@ -205,7 +268,13 @@ export default function NewCoverLetterPage() {
                   id="jobDescription"
                   placeholder="Paste the job description here for better personalization..."
                   value={jobDescription}
-                  onChange={(e) => setManualFields(manualCompany, manualPosition, e.target.value)}
+                  onChange={(e) =>
+                    setManualFields(
+                      manualCompany,
+                      manualPosition,
+                      e.target.value,
+                    )
+                  }
                   rows={6}
                 />
               </div>
@@ -221,12 +290,15 @@ export default function NewCoverLetterPage() {
             </CardHeader>
             <CardContent>
               {resumes.length > 0 ? (
-                <Select value={selectedResume} onValueChange={setSelectedResume}>
+                <Select
+                  value={selectedResume}
+                  onValueChange={setSelectedResume}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {resumes.map(resume => (
+                    {resumes.map((resume) => (
                       <SelectItem key={resume.id} value={resume.id}>
                         {resume.title}
                       </SelectItem>
@@ -235,7 +307,14 @@ export default function NewCoverLetterPage() {
                 </Select>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No resumes found. <Link href="/dashboard/resumes/new" className="text-primary hover:underline">Create one first</Link>.
+                  No resumes found.{" "}
+                  <Link
+                    href="/dashboard/resumes/new"
+                    className="text-primary hover:underline"
+                  >
+                    Create one first
+                  </Link>
+                  .
                 </p>
               )}
             </CardContent>
@@ -243,12 +322,18 @@ export default function NewCoverLetterPage() {
 
           <Button
             onClick={handleGenerateCoverLetter}
-            disabled={generateCoverLetterMutation.isPending || !manualCompany || !manualPosition}
+            disabled={
+              generateCoverLetterMutation.isPending ||
+              !manualCompany ||
+              !manualPosition
+            }
             size="lg"
             className="w-full"
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            {generateCoverLetterMutation.isPending ? "Generating..." : "Generate Cover Letter"}
+            {generateCoverLetterMutation.isPending
+              ? "Generating..."
+              : "Generate Cover Letter"}
           </Button>
         </div>
 
@@ -282,9 +367,15 @@ export default function NewCoverLetterPage() {
                       className="font-mono text-sm"
                     />
                   </div>
-                  <Button onClick={handleSaveCoverLetter} disabled={createCoverLetterMutation.isPending} className="w-full">
+                  <Button
+                    onClick={handleSaveCoverLetter}
+                    disabled={createCoverLetterMutation.isPending}
+                    className="w-full"
+                  >
                     <Save className="mr-2 h-4 w-4" />
-                    {createCoverLetterMutation.isPending ? "Saving..." : "Save Cover Letter"}
+                    {createCoverLetterMutation.isPending
+                      ? "Saving..."
+                      : "Save Cover Letter"}
                   </Button>
                 </>
               ) : (

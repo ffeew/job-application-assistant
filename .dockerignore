@@ -1,0 +1,6 @@
+**
+!services/
+!services/latex-compiler/
+!services/latex-compiler/*.ts
+!services/latex-compiler/*.tex
+!services/latex-compiler/Dockerfile

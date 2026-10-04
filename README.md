@@ -6,7 +6,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 
 - Structured profile builder covering personal details, work experience, education, skills, projects, certifications, achievements, and references.
 - One-click resume import that runs Mistral OCR to prefill personal details and stage suggested entries for work history, education, skills, and more—review everything before saving.
-- Resume library with CRUD, default resume selection, HTML previews, and PDF export using the professional template.
+- Resume library with CRUD, default resume selection, PDF previews, and LaTeX PDF export using the professional template.
 - Job-specific resume tailoring that calls Groq to analyze job descriptions, select relevant content, and produce an A4 PDF with optional manual overrides.
 - AI cover letter generator and conversation starter assistant that pull from saved profile/resume data (requires `GROQ_API_KEY`).
 - Application tracker and dashboard that surface counts, status breakdowns, and recent activity using Drizzle queries.
@@ -16,7 +16,7 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 - **Framework**: Next.js 16.3 (App Router), React 19.3 with React Compiler, TypeScript 5
 - **Data & Auth**: Drizzle ORM + Turso (libSQL), BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
-- **AI & Documents**: Vercel AI SDK with `@ai-sdk/groq` for text generation, Puppeteer for PDF export, AI content selection service for resume tailoring
+- **AI & Documents**: Vercel AI SDK with `@ai-sdk/groq` for text generation, a Docker-hosted pdfLaTeX compiler for PDF export, AI content selection and page fitting for resumes
 - **Tooling**: Bun (runtime and script runner), ESLint 9, TypeScript compiler checks, Drizzle Kit migrations
 
 ## Getting Started
@@ -64,6 +64,9 @@ bun run dev             # visit http://localhost:3000
 | `TURSO_AUTH_TOKEN`            | Yes      | Turso auth token                                                                 |
 | `GROQ_API_KEY`                | Yes\*    | Groq API key used for resume tailoring, cover letters, and conversation starters |
 | `GROQ_MODEL`                  | No       | Optional Groq model override; defaults to `openai/gpt-oss-120b`                  |
+| `GROQ_FALLBACK_MODEL`         | No       | Fitting fallback; defaults to `moonshotai/kimi-k2-instruct`                      |
+| `LATEX_COMPILER_URL`          | For PDFs | URL of the separate compiler service                                             |
+| `LATEX_COMPILER_TOKEN`        | For PDFs | Shared compiler authentication token (32+ characters)                            |
 | `MISTRAL_API_KEY`             | Yes\*    | Mistral OCR API key used to import resumes into the profile form                 |
 | `NEXT_PUBLIC_APP_URL`         | No       | Optional absolute app URL used in client code                                    |
 | `NODE_ENV`                    | No       | Defaults to `development`                                                        |
@@ -99,8 +102,12 @@ bun run dev             # visit http://localhost:3000
 ### Resume tooling
 
 - Resume list with default selection and JSON storage of resume content.
-- `/dashboard/resumes/generate` builds a resume from profile content and exports PDF/HTML via Puppeteer using the `professional` template.
-- General resume generation currently ships with the professional template; additional templates can be added under `src/lib/resume-templates/`.
+- `/dashboard/resumes/generate` builds a resume from profile content using the compact A4 LaTeX `professional` template, with PDF preview and download.
+- Both resume flows support a one- or two-page target. The app compiles the selected content, checks the real page count and layout warnings, and may shorten wording or remove less relevant bullets through up to three AI revisions. Font size and margins stay fixed; an unmet target returns a downloadable draft with a warning.
+
+### LaTeX compiler setup
+
+Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LATEX_COMPILER_TOKEN` in the app and compiler service. Follow [the compiler deployment guide](services/latex-compiler/README.md) to build and run the Docker image locally or on a container host. Keep the Next.js app on Vercel and expose the compiler through HTTPS in production. These settings are optional for other application features.
 
 ### Job-specific resume tailoring
 
@@ -124,7 +131,7 @@ bun run dev             # visit http://localhost:3000
 - Drizzle ORM interacts with Turso via `src/lib/db/db.ts`; migrations are tracked in `/migrations` and configured in `drizzle.config.ts`.
 - Front-end data access is handled through co-located `queries` and `mutations` that wrap REST endpoints with TanStack Query.
 - `@/lib/validators` re-exports schema types so client code can stay type-safe.
-- Resume PDFs are generated server-side with Puppeteer; previews reuse the same HTML with additional styling.
+- Resume PDFs are compiled by a separate authenticated LaTeX service. Preview, download, and save reuse one generated result. Saved generated resumes store a versioned document snapshot and recompile it without rerunning AI; legacy manual and HTML records remain readable. No database migration is needed.
 
 ## Database & migrations
 

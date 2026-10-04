@@ -1,9 +1,10 @@
-import { readApiError, parseJsonResponse } from "@/lib/api-response";
-import { jobApplicationResumeResponseSchema, saveTailoredResumeResponseSchema } from "@/app/api/applications/[id]/resume/validators";
+import { parseJsonResponse } from "@/lib/api-response";
+import {
+  jobApplicationResumeResponseSchema,
+  saveTailoredResumeResponseSchema,
+} from "@/app/api/applications/[id]/resume/validators";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type {
-  JobApplicationResumeRequest,
-} from "@/app/api/profile/validators";
+import type { JobApplicationResumeRequest } from "@/app/api/profile/validators";
 import type {
   JobApplicationResumeResponse,
   SaveTailoredResumeRequest,
@@ -17,29 +18,9 @@ export type {
 
 // API calls for job application resume generation
 const jobApplicationResumeApi = {
-  generatePDF: async (
-    applicationId: string,
-    data: Omit<JobApplicationResumeRequest, "applicationId">
-  ): Promise<Blob> => {
-    const response = await fetch(
-      `/api/applications/${applicationId}/resume?format=pdf`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }
-    );
-
-    if (!response.ok) {
-      throw await readApiError(response, "Failed to generate PDF");
-    }
-
-    return response.blob();
-  },
-
   generatePreview: async (
     applicationId: string,
-    data: Omit<JobApplicationResumeRequest, "applicationId">
+    data: Omit<JobApplicationResumeRequest, "applicationId">,
   ): Promise<JobApplicationResumeResponse> => {
     const response = await fetch(
       `/api/applications/${applicationId}/resume?format=preview`,
@@ -47,25 +28,16 @@ const jobApplicationResumeApi = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      }
+      },
     );
 
-    return parseJsonResponse(response, jobApplicationResumeResponseSchema, "Failed to generate preview");
+    return parseJsonResponse(
+      response,
+      jobApplicationResumeResponseSchema,
+      "Failed to generate preview",
+    );
   },
 };
-
-// Hook to generate job application resume PDF - returns blob (caller handles download)
-export function useGenerateJobApplicationPDF() {
-  return useMutation({
-    mutationFn: ({
-      applicationId,
-      data,
-    }: {
-      applicationId: string;
-      data: Omit<JobApplicationResumeRequest, "applicationId">;
-    }) => jobApplicationResumeApi.generatePDF(applicationId, data),
-  });
-}
 
 // Hook to generate job application resume preview
 export function useGenerateJobApplicationPreview() {
@@ -83,7 +55,7 @@ export function useGenerateJobApplicationPreview() {
 // API call to save tailored resume
 const saveTailoredResume = async (
   applicationId: string,
-  data: SaveTailoredResumeRequest
+  data: SaveTailoredResumeRequest,
 ): Promise<SaveTailoredResumeResponse> => {
   const response = await fetch(`/api/applications/${applicationId}/resume`, {
     method: "PUT",
@@ -91,7 +63,11 @@ const saveTailoredResume = async (
     body: JSON.stringify(data),
   });
 
-  return parseJsonResponse(response, saveTailoredResumeResponseSchema, "Failed to save tailored resume");
+  return parseJsonResponse(
+    response,
+    saveTailoredResumeResponseSchema,
+    "Failed to save tailored resume",
+  );
 };
 
 // Hook to save tailored resume for a job application
@@ -108,7 +84,9 @@ export function useSaveTailoredResume() {
     }) => saveTailoredResume(applicationId, data),
     onSuccess: (_, { applicationId }) => {
       // Invalidate related queries
-      void queryClient.invalidateQueries({ queryKey: ["job-application-resume", "info", applicationId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["job-application-resume", "info", applicationId],
+      });
       void queryClient.invalidateQueries({ queryKey: ["resumes"] });
     },
   });
