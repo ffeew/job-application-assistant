@@ -1,12 +1,16 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, Output } from "ai";
 import { Mistral } from "@mistralai/mistralai";
-import { randomUUID } from "node:crypto";
 import { Buffer } from "node:buffer";
 import { z } from "zod";
 import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
+import {
+  extractMarkdownFromOcrResponse,
+  processDocWithMistral,
+  processPdfWithMistral,
+} from "./mistral-ocr";
 import {
   resumeImportResponseSchema,
   type ResumeImportAchievement,
@@ -196,7 +200,7 @@ export class ResumeImportService {
         mimeType: normalizedMimeType,
       });
 
-      const markdown = this.extractMarkdownFromOcrResponse(response);
+      const markdown = extractMarkdownFromOcrResponse(response);
 
       if (!markdown) {
         throw new ResumeImportError("Mistral OCR response did not include markdown content.", 502);
@@ -800,43 +804,6 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return REFERENCE_RELATIONSHIPS.has(normalized) ? normalized : null;
   }
 
-  private extractMarkdownFromOcrResponse(response: unknown): string | null {
-    if (!response || typeof response !== "object") {
-      return null;
-    }
-
-    const pages = Array.isArray((response as { pages?: unknown; }).pages)
-      ? (response as { pages: unknown[]; }).pages
-      : [];
-
-    const sections = pages
-      .map((page) => {
-        if (page && typeof page === "object") {
-          if ("markdown" in page && typeof page.markdown === "string" && page.markdown.trim().length > 0) {
-            return page.markdown.trim();
-          }
-          if ("text" in page && typeof page.text === "string" && page.text.trim().length > 0) {
-            return page.text.trim();
-          }
-        }
-        return null;
-      })
-      .filter((section): section is string => Boolean(section && section.length > 0));
-
-    if (sections.length > 0) {
-      return sections.join("\n\n");
-    }
-
-    if (
-      "documentAnnotation" in (response as { documentAnnotation?: unknown; }) &&
-      typeof (response as { documentAnnotation?: unknown; }).documentAnnotation === "string"
-    ) {
-      return (response as { documentAnnotation: string; }).documentAnnotation;
-    }
-
-    return null;
-  }
-
   private collectWarnings(
     profile: CreateUserProfileRequest,
     extras: string[] = [],
@@ -929,72 +896,22 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const normalizedMime = mimeType.toLowerCase();
 
     if (normalizedMime === "application/pdf") {
-      return this.processPdfWithMistral(mistralClient, fileBuffer);
+      return processPdfWithMistral(mistralClient, fileBuffer);
     }
 
     if (
       normalizedMime === "application/msword" ||
       normalizedMime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      return this.processDocWithMistral(mistralClient, fileBuffer, normalizedMime);
+      return processDocWithMistral(mistralClient, fileBuffer, normalizedMime);
     }
 
     if (normalizedMime === "application/octet-stream") {
       // Best effort: assume PDF
-      return this.processPdfWithMistral(mistralClient, fileBuffer);
+      return processPdfWithMistral(mistralClient, fileBuffer);
     }
 
     throw new ResumeImportError("Unsupported resume file type for OCR.", 415);
   }
 
-  private async processPdfWithMistral(
-    client: Mistral,
-    fileBuffer: Buffer,
-  ): Promise<unknown> {
-    const base64File = fileBuffer.toString("base64");
-    return client.ocr.process({
-      model: "mistral-ocr-latest",
-      document: {
-        type: "document_url",
-        documentUrl: `data:application/pdf;base64,${base64File}`,
-      },
-    });
-  }
-
-  private async processDocWithMistral(
-    client: Mistral,
-    fileBuffer: Buffer,
-    mimeType: string,
-  ): Promise<unknown> {
-    const extension = mimeType === "application/msword" ? "doc" : "docx";
-    const uploaded = await client.files.upload({
-      file: {
-        fileName: `${randomUUID()}.${extension}`,
-        content: fileBuffer,
-      },
-      purpose: "ocr",
-    });
-
-    try {
-      const signedUrl = await client.files.getSignedUrl({
-        fileId: uploaded.id,
-      });
-
-      return await client.ocr.process({
-        model: "mistral-ocr-latest",
-        document: {
-          type: "document_url",
-          documentUrl: signedUrl.url,
-        },
-      });
-    } finally {
-      try {
-        await client.files.delete({
-          fileId: uploaded.id,
-        });
-      } catch (cleanupError) {
-        console.warn("Failed to delete temporary document from Mistral:", cleanupError);
-      }
-    }
-  }
 }

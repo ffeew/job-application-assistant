@@ -10,8 +10,8 @@ FROM dependencies AS builder
 COPY . .
 # Bundle project aliases while retaining these runtime packages as imports.
 # --packages=external also externalizes @/ aliases, which Node cannot resolve.
-RUN bun build scripts/migrate.ts --target=node --packages=external --outfile=build/migrate.mjs \
-    && bun build scripts/generation-worker.ts --target=node --external=pg --external=drizzle-orm --external=ai --external=@ai-sdk/groq --external=zod --external=dotenv/config --external=sonner --outfile=build/generation-worker.mjs
+RUN bun build scripts/migrate.ts --target=node --format=esm --packages=external --outfile=build/migrate.mjs \
+    && bun build scripts/generation-worker.ts --target=node --format=esm --external=pg --external=drizzle-orm --external=ai --external=@ai-sdk/groq --external=zod --external=dotenv/config --external=sonner --outfile=build/generation-worker.mjs
 # These values only satisfy import-time validation; no real secrets or database
 # are needed to build. Runtime containers validate their actual configuration.
 RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \

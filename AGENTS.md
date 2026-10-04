@@ -2,14 +2,14 @@
 
 ## Stack & Architecture Snapshot
 
-- **Framework**: Next.js 16 App Router with React 19.3, React Compiler, and TypeScript 5.
+- **Framework**: Next.js 16 App Router with React 19.3, React Compiler, and TypeScript 6.
 - **Data**: Drizzle ORM targeting PostgreSQL with node-postgres; migrations generated via Drizzle Kit.
 - **Auth**: BetterAuth with proxy-backed dashboard session-cookie checks and API session validation (see `src/lib/auth.ts`, `src/proxy.ts`).
 - **UI**: Tailwind CSS v4 + shadcn/ui primitives; Lucide icons; Sonner for notifications.
 - **State**: Zustand for shared and workflow state; TanStack Query for server state.
 - **Forms & Validation**: React Hook Form + Zod resolvers; shared schemas live with API validators.
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
-- **AI**: Vercel AI SDK with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Default model is `openai/gpt-oss-120b`; fallback is `moonshotai/kimi-k2-instruct`.
+- **AI**: Vercel AI SDK 7 with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Use `instructions` for system prompts. Default model is `openai/gpt-oss-120b`; fallback is `moonshotai/kimi-k2-instruct`.
 - **Documents**: A separate authenticated pdfLaTeX service renders resume PDFs using templates in `src/lib/resume-templates/`. Generation checks the compiled PDF and may revise content up to three times to meet a one- or two-page target.
 
 ## Module Organization
@@ -32,7 +32,7 @@
 - Quality gates: `bun run lint`, `bun run typecheck` (must be clean before PR or task completion).
 - Lint fixes: `bun run lint:fix`; focused tests: `bun run test`. CI runs all three quality gates.
 - Type checking generates Next.js route types before running `tsc`; `next-env.d.ts` is generated and ignored.
-- Runtime: Node.js 20.9.0+; CI uses Node.js 24 and frozen Bun lockfile installation.
+- Runtime: Node.js 22+; CI and Docker use Node.js 24 and frozen Bun lockfile installation.
 - Database utilities: `bun run db:push`, `bun run db:generate`, `bun run db:studio`; use `bun run db:migrate` to apply committed PostgreSQL migrations.
 
 ## Quality Requirements

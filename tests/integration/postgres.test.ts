@@ -1,13 +1,16 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { createHmac } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { NextRequest } from "next/server";
 import {
+  account,
   education,
   jobApplications,
   resumes,
   resumeGenerationJobs,
   skills,
+  session,
   user,
   userProfiles,
   workExperiences,
@@ -149,6 +152,59 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       asResponse: true,
     });
     expect(signedIn.status).toBe(200);
+  });
+
+  test("existing BetterAuth 1.3 credentials and session cookies remain usable", async () => {
+    const legacyUserId = crypto.randomUUID();
+    const legacyToken = crypto.randomUUID();
+    const now = new Date();
+    // BetterAuth 1.3.6 used NFKC-normalized scrypt (N=16384, r=16, p=1,
+    // dkLen=64) with a hex salt stored as text. This is synthetic test data.
+    const legacyHash =
+      "00112233445566778899aabbccddeeff:412ad5ae3664f13a503a14ecf04cffd2656f83fca8f90e540313cdd4eade6c816c33d57d274c088feca73baed98a9280a51b92ee86f729dcd20a7733d3c7aa9a";
+    await database.db.insert(user).values({
+      id: legacyUserId,
+      name: "Legacy Fixture",
+      email: `${legacyUserId}@example.test`,
+    });
+    try {
+      await database.db.insert(account).values({
+        id: crypto.randomUUID(),
+        accountId: legacyUserId,
+        providerId: "credential",
+        userId: legacyUserId,
+        password: legacyHash,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await database.db.insert(session).values({
+        id: crypto.randomUUID(),
+        token: legacyToken,
+        userId: legacyUserId,
+        expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
+        createdAt: now,
+        updatedAt: now,
+      });
+      const signature = createHmac("sha256", auth.auth.options.secret)
+        .update(legacyToken)
+        .digest("base64");
+      const legacyCookie = `better-auth.session_token=${encodeURIComponent(`${legacyToken}.${signature}`)}`;
+      const existingSession = await auth.auth.api.getSession({
+        headers: new Headers({ cookie: legacyCookie }),
+      });
+      expect(existingSession?.user.id).toBe(legacyUserId);
+
+      const signedIn = await auth.auth.api.signInEmail({
+        body: {
+          email: `${legacyUserId}@example.test`,
+          password: "Test-only-password-1234",
+        },
+        asResponse: true,
+      });
+      expect(signedIn.status).toBe(200);
+    } finally {
+      await database.db.delete(user).where(eq(user.id, legacyUserId));
+    }
   });
 
   test("numeric identities, CRUD, ownership, and DELETE RETURNING work with PostgreSQL", async () => {

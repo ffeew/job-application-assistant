@@ -13,17 +13,17 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.3 (App Router), React 19.3 with React Compiler, TypeScript 5
+- **Framework**: Next.js 16.3 (App Router), React 19.3 with React Compiler, TypeScript 6
 - **Data & Auth**: Drizzle ORM + PostgreSQL, BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
-- **AI & Documents**: Vercel AI SDK with `@ai-sdk/groq` for text generation, a Docker-hosted pdfLaTeX compiler for PDF export, AI content selection and page fitting for resumes
+- **AI & Documents**: Vercel AI SDK 7 with `@ai-sdk/groq` for text generation, a Docker-hosted pdfLaTeX compiler for PDF export, AI content selection and page fitting for resumes
 - **Tooling**: Bun (runtime and script runner), ESLint 9, TypeScript compiler checks, Drizzle Kit migrations
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20.9.0+ (Node.js 24 is used in CI)
+- Node.js 22+ (Node.js 24 is used in CI and Docker)
 - [Bun](https://bun.sh/) 1.1+ (recommended) or npm
 - Docker Engine with Compose v2 for PostgreSQL and the PDF compiler
 - Groq API key for AI functionality
@@ -107,6 +107,7 @@ Resume generation returns a job ID immediately and polls for completion. Work co
 
 - Eight profile sections (personal info, work experience, education, skills, projects, certifications, achievements, references) with React Hook Form + Zod validation.
 - Personal info card includes a resume uploader that calls `/api/profile/resume-import` to run Mistral OCR and prefill the form when `MISTRAL_API_KEY` is configured.
+- Resume imports use Mistral SDK 2 and `mistral-ocr-latest` (currently OCR 4.1). Tables, headers, and footers remain inline in the page Markdown so the profile parser retains contact details and tabular content. No new environment variables are required.
 - CRUD flows implemented with TanStack Query (`queries/` and `mutations/` folders) and Drizzle-backed API routes.
 
 ### Resume tooling
