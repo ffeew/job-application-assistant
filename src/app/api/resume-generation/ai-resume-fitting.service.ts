@@ -46,7 +46,7 @@ Keep all other entry fields and selected entries unchanged. Explain edits briefl
       applyResumeRevision(original, validated);
       return validated;
     } catch {
-      // Try the alternate model; invalid edits are never applied to the draft.
+      // A failed model must not prevent trying the fallback or alter the current draft.
     }
   }
   throw new Error(

@@ -3,7 +3,6 @@ const monthNames = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-/** Format a stored month without assuming split results or array entries exist. */
 export function formatMonthYear(value: string | null): string {
   if (!value || !/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) return "";
   const [year, month] = value.split("-");

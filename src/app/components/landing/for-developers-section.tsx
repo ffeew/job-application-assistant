@@ -19,7 +19,7 @@ import { GithubIcon } from "@/components/ui/github-icon";
 const technologies = [
   {
     icon: Layers,
-    title: "Next.js 15",
+    title: "Next.js 16",
     description: "App Router, Server Components, Turbopack",
   },
   {
@@ -60,7 +60,7 @@ const steps = [
     icon: Settings,
     title: "Configure & connect",
     description:
-      "Provision a PostgreSQL database, add Groq credentials, and run Drizzle migrations.",
+      "Configure PostgreSQL, authentication, Groq, Mistral, and the PDF compiler, then run Drizzle migrations.",
   },
   {
     icon: Code,
@@ -92,7 +92,6 @@ export function ForDevelopersSection() {
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mx-auto mt-10 max-w-5xl">
-            {/* Tech stack grid */}
             <div className="mb-10">
               <h3 className="mb-6 text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Core Technologies
@@ -120,7 +119,6 @@ export function ForDevelopersSection() {
               </div>
             </div>
 
-            {/* Supporting tech pills */}
             <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
               {supportingTech.map((tech) => (
                 <span
@@ -132,7 +130,6 @@ export function ForDevelopersSection() {
               ))}
             </div>
 
-            {/* Getting started steps */}
             <div>
               <h3 className="mb-6 text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Getting Started

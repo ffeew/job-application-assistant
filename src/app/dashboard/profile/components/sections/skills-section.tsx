@@ -89,7 +89,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 		? skills.find((s) => s.id === editingState.itemId)
 		: null;
 
-	// Group skills by category
 	const skillsByCategory = useMemo(() => {
 		const grouped: Record<string, SkillJsonResponse[]> = {};
 		skills.forEach((skill) => {
@@ -145,7 +144,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 					</Button>
 				</div>
 
-				{/* Pending imports */}
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
 						<CardContent className="pt-6">
@@ -185,7 +183,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 					</Card>
 				)}
 
-				{/* Empty state */}
 				{skills.length === 0 && pendingItems.length === 0 && (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -200,7 +197,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 					</Card>
 				)}
 
-				{/* Skills grouped by category */}
 				{Object.keys(skillsByCategory).length > 0 && (
 					<div className="flex flex-col gap-6">
 						{Object.entries(skillsByCategory).map(([category, categorySkills]) => {
@@ -257,7 +253,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 				)}
 			</div>
 
-			{/* Edit/Add Sheet */}
 			<Sheet open={isEditingSkill} onOpenChange={(open) => !open && cancelEditing()}>
 				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
 					<SheetHeader>
@@ -270,7 +265,6 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 				</SheetContent>
 			</Sheet>
 
-			{/* Delete confirmation */}
 			<AlertDialog open={deleteConfirmation?.section === "skills"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>

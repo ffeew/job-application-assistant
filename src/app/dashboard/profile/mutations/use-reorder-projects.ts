@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BulkUpdateOrderRequest } from '@/app/api/profile/validators';
 import { projectsKeys } from '../queries/use-projects';
 
-// Direct API call function
 const reorderProjectsApi = {
   bulkUpdateOrder: async (data: BulkUpdateOrderRequest): Promise<void> => {
     const response = await fetch('/api/profile/projects/order', {
@@ -18,7 +17,6 @@ const reorderProjectsApi = {
   },
 };
 
-// Hook to reorder projects
 export function useReorderProjects() {
   const queryClient = useQueryClient();
 

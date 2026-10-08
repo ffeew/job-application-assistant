@@ -5,7 +5,6 @@ import type { UpdateUserProfileRequest, UserProfileJsonResponse } from '@/app/ap
 import { userProfileKeys } from '../queries/use-user-profile';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateUserProfileApi = {
   update: async (data: UpdateUserProfileRequest): Promise<UserProfileJsonResponse> => {
     const response = await fetch('/api/profile', {
@@ -19,7 +18,6 @@ const updateUserProfileApi = {
   },
 };
 
-// Hook to update user profile
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient();
 

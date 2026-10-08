@@ -5,7 +5,6 @@ import type { UpdateAchievementRequest, AchievementJsonResponse } from '@/app/ap
 import { achievementsKeys } from '../queries/use-achievements';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateAchievementApi = {
   update: async (id: number, data: UpdateAchievementRequest): Promise<AchievementJsonResponse> => {
     const response = await fetch(`/api/profile/achievements/${id}`, {
@@ -19,7 +18,6 @@ const updateAchievementApi = {
   },
 };
 
-// Hook to update achievement
 export function useUpdateAchievement() {
   const queryClient = useQueryClient();
 

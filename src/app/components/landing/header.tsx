@@ -61,7 +61,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 									asChild
 									className="rounded-full px-5 text-sm font-medium"
 								>
-									<Link href="/dashboard">Try demo</Link>
+									<Link href="/dashboard">Dashboard</Link>
 								</Button>
 								<Button asChild className="rounded-full px-5">
 									<Link href="/sign-up">Get started</Link>

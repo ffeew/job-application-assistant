@@ -36,7 +36,6 @@ export default function ViewCoverLetterPage({
 	} = useCoverLetter(resolvedParams?.id || "");
 	const deleteCoverLetterMutation = useDeleteCoverLetter();
 
-	// Resolve params Promise
 	useEffect(() => {
 		const resolveParams = async () => {
 			const resolved = await params;
@@ -45,7 +44,6 @@ export default function ViewCoverLetterPage({
 		runAsyncAction(resolveParams());
 	}, [params]);
 
-	// Handle error case
 	useEffect(() => {
 		if (error) {
 			router.push("/dashboard/cover-letters");
@@ -100,7 +98,6 @@ export default function ViewCoverLetterPage({
 
 	return (
 		<div className="flex flex-col gap-6">
-			{/* Header */}
 			<div className="flex items-center gap-4">
 				<Button variant="outline" size="sm" asChild>
 					<Link href="/dashboard/cover-letters">
@@ -116,7 +113,6 @@ export default function ViewCoverLetterPage({
 				</div>
 			</div>
 
-			{/* Metadata Card */}
 			<Card>
 				<CardHeader>
 					<CardTitle>Details</CardTitle>
@@ -136,7 +132,6 @@ export default function ViewCoverLetterPage({
 				</CardContent>
 			</Card>
 
-			{/* Content Card */}
 			<Card>
 				<CardHeader>
 					<CardTitle>Content</CardTitle>
@@ -149,7 +144,6 @@ export default function ViewCoverLetterPage({
 				</CardContent>
 			</Card>
 
-			{/* Action Buttons */}
 			<div className="flex justify-end gap-4">
 				<Button variant="outline" onClick={withAsyncHandler(handleCopyContent)}>
 					<Copy className="mr-2 h-4 w-4" />

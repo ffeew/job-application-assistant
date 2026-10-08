@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { ApplicationJsonResponse as JobApplication } from '@/lib/validators';
 
-// Direct API call functions
 const applicationsApi = {
   getAll: async (): Promise<JobApplication[]> => {
     const response = await fetch('/api/applications');
@@ -16,7 +15,6 @@ const applicationsApi = {
   },
 };
 
-// Query keys for applications
 export const applicationsKeys = {
   all: ['applications'] as const,
   lists: () => [...applicationsKeys.all, 'list'] as const,
@@ -25,7 +23,6 @@ export const applicationsKeys = {
   detail: (id: string) => [...applicationsKeys.details(), id] as const,
 };
 
-// Hook to fetch all job applications
 export function useApplications() {
   return useQuery({
     queryKey: applicationsKeys.lists(),
@@ -33,7 +30,6 @@ export function useApplications() {
   });
 }
 
-// Hook to fetch a single job application
 export function useApplication(id: string) {
   return useQuery({
     queryKey: applicationsKeys.detail(id),

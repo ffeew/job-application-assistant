@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { CertificationJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const certificationsApi = {
   getAll: async (query?: ProfileQuery): Promise<CertificationJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const certificationsApi = {
   },
 };
 
-// Query keys for certifications
 export const certificationsKeys = {
   all: ['profile', 'certifications'] as const,
   lists: () => [...certificationsKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const certificationsKeys = {
   detail: (id: number) => [...certificationsKeys.details(), id] as const,
 };
 
-// Hook to fetch all certifications
 export function useCertifications(query?: ProfileQuery) {
   return useQuery({
     queryKey: certificationsKeys.list(query),
@@ -39,7 +36,6 @@ export function useCertifications(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single certification by ID
 export function useCertification(id: number) {
   return useQuery({
     queryKey: certificationsKeys.detail(id),

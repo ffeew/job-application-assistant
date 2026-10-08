@@ -38,12 +38,10 @@ export default function DashboardLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	// Zustand store selectors
 	const user = useDashboardStore((state) => state.user);
 	const isLoading = useDashboardStore((state) => state.isLoading);
 	const sidebarOpen = useDashboardStore((state) => state.sidebarOpen);
 
-	// Zustand store actions
 	const setUser = useDashboardStore((state) => state.setUser);
 	const setLoading = useDashboardStore((state) => state.setLoading);
 	const toggleSidebar = useDashboardStore((state) => state.toggleSidebar);
@@ -77,7 +75,6 @@ export default function DashboardLayout({
 			router.push("/sign-in");
 		} catch (error) {
 			console.error("Error signing out:", error);
-			// Even if sign out fails, redirect to sign-in page
 			router.push("/sign-in");
 		}
 	};
@@ -92,7 +89,6 @@ export default function DashboardLayout({
 
 	return (
 		<div className="min-h-screen bg-background">
-			{/* Mobile menu button */}
 			<div className="md:hidden fixed top-4 left-4 z-50">
 				<Button
 					variant="outline"
@@ -108,7 +104,6 @@ export default function DashboardLayout({
 				</Button>
 			</div>
 
-			{/* Sidebar */}
 			<div
 				className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r transform ${
 					sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -163,12 +158,10 @@ export default function DashboardLayout({
 				</div>
 			</div>
 
-			{/* Main content */}
 			<div className="md:ml-64">
 				<main className="p-6">{children}</main>
 			</div>
 
-			{/* Sidebar overlay */}
 			{sidebarOpen && (
 				<button
 					type="button"

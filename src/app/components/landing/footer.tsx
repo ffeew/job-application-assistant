@@ -3,7 +3,7 @@ import { Briefcase, Mail } from "lucide-react";
 import { GithubIcon } from "@/components/ui/github-icon";
 
 const productLinks = [
-	{ href: "/dashboard", label: "Try demo" },
+	{ href: "/dashboard", label: "Dashboard" },
 	{ href: "/sign-up", label: "Sign up" },
 	{ href: "#features", label: "Features" },
 	{ href: "#how-it-works", label: "How it works" },
@@ -16,7 +16,7 @@ const resourceLinks = [
 		external: true,
 	},
 	{
-		href: "https://github.com/ffeew/job-application-assistant/docs",
+		href: "https://github.com/ffeew/job-application-assistant#readme",
 		label: "Documentation",
 		external: true,
 	},
@@ -39,7 +39,6 @@ export function Footer() {
 		<footer className="relative border-t border-border/60 bg-gradient-to-b from-background to-accent/5 py-16 lg:py-20">
 			<div className="container mx-auto px-4">
 				<div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.5fr_1fr_1fr]">
-					{/* Brand column */}
 					<div className="flex flex-col gap-6">
 						<div className="flex items-center gap-3">
 							<span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -50,7 +49,7 @@ export function Footer() {
 									Job Application Assistant
 								</h3>
 								<p className="text-xs uppercase tracking-wider text-muted-foreground">
-									Open source &middot; AI-powered
+									Self-hosted &middot; AI-powered
 								</p>
 							</div>
 						</div>
@@ -75,7 +74,6 @@ export function Footer() {
 						</div>
 					</div>
 
-					{/* Product links */}
 					<div>
 						<h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
 							Product
@@ -94,7 +92,6 @@ export function Footer() {
 						</ul>
 					</div>
 
-					{/* Resource links */}
 					<div>
 						<h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
 							Resources
@@ -117,11 +114,9 @@ export function Footer() {
 					</div>
 				</div>
 
-				{/* Bottom bar */}
 				<div className="mt-12 flex flex-col gap-4 border-t border-border/60 pt-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
 					<p>
-						&copy; {year} Job Application Assistant. Released under the MIT
-						License.
+						&copy; {year} Job Application Assistant.
 					</p>
 					<p className="text-xs">
 						Built with Next.js, Tailwind, PostgreSQL &amp; Groq

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { profileRecordFields } from "@/lib/validators/transport";
 
-// User Profile Schema
 export const userProfileSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
@@ -37,7 +36,6 @@ export const userProfileResponseSchema = userProfileSchema.extend({
   updatedAt: z.date(),
 });
 
-// Work Experience Schema
 export const workExperienceSchema = z.object({
   jobTitle: z.string().min(1, "Job title is required"),
   company: z.string().min(1, "Company is required"),
@@ -65,7 +63,6 @@ export const workExperienceResponseSchema = workExperienceSchema.extend({
   updatedAt: z.date(),
 });
 
-// Education Schema
 export const educationSchema = z.object({
   degree: z.string().min(1, "Degree is required"),
   fieldOfStudy: z.string().nullable(),
@@ -95,7 +92,6 @@ export const educationResponseSchema = educationSchema.extend({
   updatedAt: z.date(),
 });
 
-// Skills Schema
 export const skillSchema = z.object({
   name: z.string().min(1, "Skill name is required"),
   category: z.enum([
@@ -123,7 +119,6 @@ export const skillResponseSchema = skillSchema.extend({
   updatedAt: z.date(),
 });
 
-// Projects Schema
 export const projectSchema = z.object({
   title: z.string().min(1, "Project title is required"),
   description: z.string().nullable(),
@@ -158,7 +153,6 @@ export const projectResponseSchema = projectSchema.extend({
   updatedAt: z.date(),
 });
 
-// Certifications Schema
 export const certificationSchema = z.object({
   name: z.string().min(1, "Certification name is required"),
   issuingOrganization: z.string().min(1, "Issuing organization is required"),
@@ -188,7 +182,6 @@ export const certificationResponseSchema = certificationSchema.extend({
   updatedAt: z.date(),
 });
 
-// Achievements Schema
 export const achievementSchema = z.object({
   title: z.string().min(1, "Achievement title is required"),
   description: z.string().nullable(),
@@ -211,7 +204,6 @@ export const achievementResponseSchema = achievementSchema.extend({
   updatedAt: z.date(),
 });
 
-// References Schema
 export const referenceSchema = z.object({
   name: z.string().min(1, "Reference name is required"),
   title: z.string().nullable(),
@@ -234,8 +226,7 @@ export const referenceResponseSchema = referenceSchema.extend({
   updatedAt: z.date(),
 });
 
-// Transport schemas validate stored response shapes, without reapplying form
-// constraints such as URL validation or date-input regular expressions.
+// Stored values may predate form constraints; transport validation must still accept them.
 export const userProfileJsonResponseSchema = z.object({
   ...profileRecordFields,
   firstName: z.string().nullable(),
@@ -351,7 +342,6 @@ export type AchievementJsonResponse = z.infer<
 >;
 export type ReferenceJsonResponse = z.infer<typeof referenceJsonResponseSchema>;
 
-// Query Schemas
 export const profileQuerySchema = z.object({
   limit: z
     .string()
@@ -363,12 +353,11 @@ export const profileQuerySchema = z.object({
     .transform(Number)
     .pipe(z.number().nonnegative())
     .optional(),
-  category: z.string().optional(), // For skills filtering
+  category: z.string().optional(),
   orderBy: z.enum(["displayOrder", "createdAt", "updatedAt"]).optional(),
   order: z.enum(["asc", "desc"]).default("asc"),
 });
 
-// Bulk operations
 export const bulkUpdateOrderSchema = z.object({
   items: z
     .array(
@@ -380,7 +369,6 @@ export const bulkUpdateOrderSchema = z.object({
     .min(1),
 });
 
-// Resume generation schemas
 export const resumeContentSelectionSchema = z.object({
   includePersonalInfo: z.boolean().default(true),
   includeSummary: z.boolean().default(true),
@@ -409,7 +397,6 @@ export const generateResumeSchema = z.object({
   contentSelection: resumeContentSelectionSchema,
 });
 
-// AI-powered resume generation schemas
 export const contentRelevanceScoreSchema = z.object({
   id: z.number(),
   type: z.enum([
@@ -469,7 +456,6 @@ export const jobAnalysisResponseSchema = z.object({
   summary: z.string(),
 });
 
-// Type exports
 export type CreateUserProfileRequest = z.infer<typeof createUserProfileSchema>;
 export type UpdateUserProfileRequest = z.infer<typeof updateUserProfileSchema>;
 export type UserProfileResponse = z.infer<typeof userProfileResponseSchema>;
@@ -519,7 +505,6 @@ export type ResumeContentSelection = z.infer<
 >;
 export type GenerateResumeRequest = z.infer<typeof generateResumeSchema>;
 
-// AI-powered resume generation types
 export type ContentRelevanceScore = z.infer<typeof contentRelevanceScoreSchema>;
 export type IntelligentContentSelection = z.infer<
   typeof intelligentContentSelectionSchema

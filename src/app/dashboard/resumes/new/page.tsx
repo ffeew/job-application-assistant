@@ -15,7 +15,6 @@ import { useCreateResume } from "@/app/dashboard/resumes/mutations/use-create-re
 import type { CreateResumeRequest } from "@/app/api/resumes/validators";
 import { toast } from "sonner";
 
-// Content structure for the resume
 interface ResumeContent {
   personalInfo: {
     name: string;
@@ -29,7 +28,6 @@ interface ResumeContent {
   skills: string;
 }
 
-// Form data structure
 interface ResumeFormData {
   title: string;
   isDefault: boolean;
@@ -69,7 +67,6 @@ export default function NewResumePage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onSubmit = (data: ResumeFormData) => {
-    // Validate required fields manually since we can't use Zod for the nested structure
     if (!data.title.trim()) {
       toast.error("Please enter a title for your resume");
       return;

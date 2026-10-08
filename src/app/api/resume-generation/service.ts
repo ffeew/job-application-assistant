@@ -188,7 +188,7 @@ export class ResumeGenerationService {
         selectedAchievements: achievementIds,
       };
     }
-    // Overrides apply only to their supplied section; unspecified sections retain AI selection.
+    // A manual choice in one section must not discard AI choices in other sections.
     const filtered = {
       ...data,
       skills: data.skills.filter((item) => skillIds.includes(item.id)),
@@ -233,14 +233,12 @@ export class ResumeGenerationService {
     try {
       const resumeData = await this.generateResumeData(userId);
 
-      // Check if user has a profile
       if (!resumeData.profile && request.contentSelection.includePersonalInfo) {
         errors.push(
           "User profile is required when personal information is included",
         );
       }
 
-      // Check if user has work experience when required
       if (
         request.contentSelection.includeWorkExperience &&
         resumeData.workExperiences.length === 0
@@ -250,7 +248,6 @@ export class ResumeGenerationService {
         );
       }
 
-      // Check if user has education when required
       if (
         request.contentSelection.includeEducation &&
         resumeData.education.length === 0
@@ -260,7 +257,6 @@ export class ResumeGenerationService {
         );
       }
 
-      // Check if user has skills when required
       if (
         request.contentSelection.includeSkills &&
         resumeData.skills.length === 0
@@ -270,7 +266,6 @@ export class ResumeGenerationService {
         );
       }
 
-      // Check specific ID selections
       if (request.contentSelection.workExperienceIds) {
         const availableIds = resumeData.workExperiences.map((exp) => exp.id);
         const missingIds = request.contentSelection.workExperienceIds.filter(

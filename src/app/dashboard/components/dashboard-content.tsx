@@ -98,7 +98,6 @@ export function DashboardContent() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
@@ -149,7 +148,6 @@ export function DashboardContent() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-3 sm:pb-4">
@@ -218,7 +216,6 @@ export function DashboardContent() {
         </Card>
       </div>
 
-      {/* Recent Activity */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>

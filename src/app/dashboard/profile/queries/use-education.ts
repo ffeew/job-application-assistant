@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { EducationJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const educationApi = {
   getAll: async (query?: ProfileQuery): Promise<EducationJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const educationApi = {
   },
 };
 
-// Query keys for education
 export const educationKeys = {
   all: ['profile', 'education'] as const,
   lists: () => [...educationKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const educationKeys = {
   detail: (id: number) => [...educationKeys.details(), id] as const,
 };
 
-// Hook to fetch all education entries
 export function useEducation(query?: ProfileQuery) {
   return useQuery({
     queryKey: educationKeys.list(query),
@@ -39,7 +36,6 @@ export function useEducation(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single education entry by ID
 export function useEducationById(id: number) {
   return useQuery({
     queryKey: educationKeys.detail(id),

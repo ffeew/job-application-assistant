@@ -16,7 +16,6 @@ export class ApplicationsService {
   ): Promise<ApplicationResponse[]> {
     const whereConditions = [eq(jobApplications.userId, userId)];
 
-    // Add query filters
     if (query?.status) {
       whereConditions.push(eq(jobApplications.status, query.status));
     }
@@ -32,7 +31,6 @@ export class ApplicationsService {
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
-    // Convert null to undefined and ensure proper typing
     return applications.map((app) => ({
       ...app,
       jobDescription: app.jobDescription ?? undefined,

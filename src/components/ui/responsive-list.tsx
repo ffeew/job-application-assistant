@@ -31,7 +31,6 @@ function ResponsiveList<T>({
 }: ResponsiveListProps<T>) {
   return (
     <>
-      {/* Mobile: Expandable List */}
       <div className="md:hidden">
         <Card layout="flush" className={cn("overflow-hidden", mobileClassName)}>
           <ExpandableList>
@@ -49,7 +48,6 @@ function ResponsiveList<T>({
         </Card>
       </div>
 
-      {/* Desktop: Card Grid */}
       <div className={cn("hidden md:grid gap-4 md:grid-cols-2 lg:grid-cols-3", desktopClassName)}>
         {items.map((item) => (
           <React.Fragment key={getItemId(item)}>

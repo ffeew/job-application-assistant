@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { resumeImportResponseSchema, type ResumeImportResponse } from '@/app/api/profile/resume-import/validators';
 import { parseJsonResponse } from "@/lib/api-response";
 
-// Direct API call function for resume import
 const resumeImportApi = {
   import: async (file: File): Promise<ResumeImportResponse> => {
     const formData = new FormData();
@@ -21,7 +20,6 @@ const resumeImportApi = {
   },
 };
 
-// Hook to import resume
 export function useImportResume() {
   return useMutation({
     mutationFn: (file: File) => resumeImportApi.import(file),

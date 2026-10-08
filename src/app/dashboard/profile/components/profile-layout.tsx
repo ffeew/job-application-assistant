@@ -23,7 +23,6 @@ import { useImportReviewStore } from "@/app/dashboard/profile/store/import-revie
 import type { ImportContextCounts } from "@/app/dashboard/profile/store/import-review-store";
 import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
 
-// Queries
 import { useUserProfile } from "@/app/dashboard/profile/queries/use-user-profile";
 import { useWorkExperiences } from "@/app/dashboard/profile/queries/use-work-experiences";
 import { useEducation } from "@/app/dashboard/profile/queries/use-education";
@@ -37,7 +36,6 @@ export function ProfileLayout() {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const activeSection = useProfileUIStore((state) => state.activeSection);
 
-	// Data queries
 	const { data: userProfile, isLoading: profileLoading } = useUserProfile();
 	const { data: workExperiences = [], isLoading: workLoading } = useWorkExperiences({
 		orderBy: "displayOrder",
@@ -68,10 +66,8 @@ export function ProfileLayout() {
 		order: "asc",
 	});
 
-	// Import store
 	const initializeImport = useImportReviewStore((state) => state.initialize);
 
-	// Section counts
 	const counts: Record<ProfileSection, number> = useMemo(
 		() => ({
 			personal: userProfile ? 1 : 0,
@@ -163,7 +159,6 @@ export function ProfileLayout() {
 
 	return (
 		<div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-			{/* Mobile sidebar toggle */}
 			<Button
 				variant="ghost"
 				size="icon"
@@ -173,7 +168,6 @@ export function ProfileLayout() {
 				{isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
 			</Button>
 
-			{/* Sidebar - hidden on mobile unless open */}
 			<div
 				className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 lg:relative lg:translate-x-0 ${
 					isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -182,7 +176,6 @@ export function ProfileLayout() {
 				<ProfileSidebar counts={counts} onImportPreview={handleImportPreview} />
 			</div>
 
-			{/* Overlay for mobile */}
 			{isSidebarOpen && (
 				<button
 					type="button"
@@ -192,7 +185,6 @@ export function ProfileLayout() {
 				/>
 			)}
 
-			{/* Main content */}
 			<div className="flex-1 flex flex-col overflow-hidden">
 				<ScrollArea className="flex-1">
 					<div className="p-6 lg:p-8 max-w-4xl mx-auto">

@@ -6,7 +6,6 @@ import { certificationsKeys } from '../queries/use-certifications';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createCertificationApi = {
   create: async (data: CreateCertificationRequest): Promise<CertificationJsonResponse> => {
     const response = await fetch('/api/profile/certifications', {
@@ -20,7 +19,6 @@ const createCertificationApi = {
   },
 };
 
-// Hook to create certification
 export function useCreateCertification() {
   const queryClient = useQueryClient();
 

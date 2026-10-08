@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { UserProfileJsonResponse } from '@/app/api/profile/validators';
 
-// Direct API call function
 const userProfileApi = {
   get: async (): Promise<UserProfileJsonResponse | null> => {
     const response = await fetch('/api/profile');
@@ -11,13 +10,11 @@ const userProfileApi = {
   },
 };
 
-// Query keys for user profile
 export const userProfileKeys = {
   all: ['profile', 'user'] as const,
   profile: () => [...userProfileKeys.all] as const,
 };
 
-// Hook to fetch user profile
 export function useUserProfile() {
   return useQuery({
     queryKey: userProfileKeys.profile(),

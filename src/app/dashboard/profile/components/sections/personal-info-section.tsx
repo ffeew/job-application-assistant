@@ -166,7 +166,6 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 		}
 	};
 
-	// Empty state
 	if (!profile) {
 		return (
 			<>
@@ -229,7 +228,6 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 		);
 	}
 
-	// Display existing profile
 	const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
 	const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ");
 
@@ -358,7 +356,6 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 	);
 }
 
-// Extracted form component to avoid repetition
 interface ProfileFormProps {
 	register: UseFormRegister<FieldValues>;
 	errors: FieldErrors;

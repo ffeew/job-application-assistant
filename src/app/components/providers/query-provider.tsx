@@ -10,16 +10,12 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // 5 minutes stale time
             staleTime: 5 * 60 * 1000,
-            // 10 minutes cache time
             gcTime: 10 * 60 * 1000,
             retry: (failureCount, error) => {
-              // Don't retry on 4xx errors (client errors)
               if (error instanceof Error && error.message.includes('4')) {
                 return false;
               }
-              // Retry up to 3 times for other errors
               return failureCount < 3;
             },
             refetchOnWindowFocus: false,
@@ -27,11 +23,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           },
           mutations: {
             retry: (failureCount, error) => {
-              // Don't retry mutations on client errors
               if (error instanceof Error && error.message.includes('4')) {
                 return false;
               }
-              // Retry once for server errors
               return failureCount < 1;
             },
           },

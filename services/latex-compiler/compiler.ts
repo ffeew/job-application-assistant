@@ -9,7 +9,7 @@ export const MAX_PDF_BYTES = 2 * 1024 * 1024;
 
 function run(command: string, args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    // Pass only compiler settings, never service tokens or application secrets.
+    // TeX subprocesses must not inherit service tokens or application secrets.
     const childEnvironment: NodeJS.ProcessEnv = {
       NODE_ENV: process.env.NODE_ENV,
       PATH: process.env.PATH ?? "/usr/bin:/bin",
@@ -32,7 +32,7 @@ function run(command: string, args: string[], cwd: string): Promise<string> {
         try {
           process.kill(-child.pid, "SIGKILL");
         } catch {
-          /* Already exited. */
+          /* The subprocess may exit between the timeout and this signal. */
         }
       } else child.kill("SIGKILL");
     };

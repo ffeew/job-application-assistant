@@ -17,7 +17,6 @@ const groq = createGroq({
   apiKey: env.GROQ_API_KEY,
 });
 
-// Zod schemas for AI response validation
 const jobAnalysisSchema = z.object({
   requirements: z.array(z.string()),
   skills: z.array(z.string()),
@@ -73,7 +72,7 @@ interface ContentRelevanceScore {
     | "project"
     | "certification"
     | "achievement";
-  score: number; // 0-100
+  score: number;
   reasoning: string;
   matchedKeywords: string[];
 }
@@ -132,13 +131,11 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     maxSkills: number = 12,
     signal?: AbortSignal,
   ): Promise<IntelligentContentSelection> {
-    // First analyze the job description
     const jobAnalysis = await this.analyzeJobDescription(
       jobDescription,
       signal,
     );
 
-    // Create content scoring prompt
     const contentPrompt = this.buildContentScoringPrompt(
       jobDescription,
       jobAnalysis,
@@ -171,7 +168,6 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         maxSkills,
       );
 
-      // If AI returned bad IDs and filtering produced empty results, use fallback
       const hasContent =
         validated.selectedWorkExperiences.length > 0 ||
         validated.selectedEducation.length > 0 ||
@@ -193,7 +189,6 @@ Focus on technical skills, qualifications, experience requirements, and key resp
       return validated;
     } catch (error) {
       console.error("Error selecting optimal content:", error);
-      // Return fallback selection
       return this.getFallbackSelection(
         profileData,
         maxWorkExperiences,
@@ -323,9 +318,7 @@ Be selective - quality over quantity. Choose items that directly support the app
   }
 
   /**
-   * Extract selected IDs from relevanceScores instead of the broken selectedXxx arrays.
-   * Groq's json_schema structured output concatenates number arrays (e.g., [2,3] → [23]),
-   * but relevanceScores entries have correct individual IDs.
+   * Use score-object IDs because AI selection arrays have contained concatenated IDs.
    */
   private validateAndFormatSelection(
     selection: z.infer<typeof intelligentContentSelectionSchema>,
@@ -340,7 +333,6 @@ Be selective - quality over quantity. Choose items that directly support the app
       achievement: new Set(profileData.achievements.map((ach) => ach.id)),
     };
 
-    // Extract IDs from relevanceScores, validated against actual profile data
     const idsFromScores = {
       selectedWorkExperiences: [] as number[],
       selectedEducation: [] as number[],
@@ -393,7 +385,6 @@ Be selective - quality over quantity. Choose items that directly support the app
     maxProjects: number,
     maxSkills: number,
   ): IntelligentContentSelection {
-    // Fallback to most recent/relevant items if AI fails
     return {
       selectedWorkExperiences: profileData.workExperiences
         .slice(0, maxWorkExperiences)

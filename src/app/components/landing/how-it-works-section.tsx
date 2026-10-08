@@ -17,14 +17,14 @@ const steps = [
 		number: "02",
 		title: "Paste a job listing",
 		description:
-			"Copy any job description and let our AI analyze the requirements. We identify key skills, qualifications, and culture signals.",
+			"Paste a job description so AI can identify its requirements, skills, and seniority and match them to your profile.",
 	},
 	{
 		icon: Sparkles,
 		number: "03",
 		title: "Get a tailored resume",
 		description:
-			"Receive an optimized resume highlighting your most relevant experiences. Export as PDF, edit manually, or regenerate with a different focus.",
+			"Review the selected experiences, adjust what to include, and preview or download your tailored PDF.",
 	},
 ];
 

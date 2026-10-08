@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BulkUpdateOrderRequest } from '@/app/api/profile/validators';
 import { educationKeys } from '../queries/use-education';
 
-// Direct API call function
 const reorderEducationApi = {
   bulkUpdateOrder: async (data: BulkUpdateOrderRequest): Promise<void> => {
     const response = await fetch('/api/profile/education/order', {
@@ -18,7 +17,6 @@ const reorderEducationApi = {
   },
 };
 
-// Hook to reorder education
 export function useReorderEducation() {
   const queryClient = useQueryClient();
 

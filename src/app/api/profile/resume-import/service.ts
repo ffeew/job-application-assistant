@@ -55,9 +55,8 @@ const mistralClient = new Mistral({
 });
 
 
-// Groq's structured output requires ALL properties to be in the JSON Schema's
-// `required` array. Using .nullable() makes fields required but allows null values.
-// Using .default([]) or .optional() creates optional fields which Groq rejects.
+// Groq's strict structured output requires every property; nullable fields allow
+// missing source values without optional JSON Schema properties.
 const aiProfileGenerationSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
@@ -908,7 +907,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     }
 
     if (normalizedMime === "application/octet-stream") {
-      // Best effort: assume PDF
+      // Generic upload MIME types may hide PDFs; let OCR attempt to read them.
       return processPdfWithMistral(mistralClient, fileBuffer);
     }
 

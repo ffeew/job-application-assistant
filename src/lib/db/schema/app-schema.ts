@@ -15,9 +15,9 @@ export const resumes = pgTable("resumes", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  content: text("content").notNull(), // JSON string containing resume data
+  content: text("content").notNull(),
   isDefault: boolean("is_default").default(false),
-  jobApplicationId: text("job_application_id"), // Linked job application for tailored resumes (FK added after jobApplications defined)
+  jobApplicationId: text("job_application_id"),
   isTailored: boolean("is_tailored").default(false),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
@@ -36,16 +36,16 @@ export const jobApplications = pgTable("job_applications", {
     .references(() => user.id, { onDelete: "cascade" }),
   company: text("company").notNull(),
   position: text("position").notNull(),
-  jobDescription: text("job_description"), // The full job posting description
+  jobDescription: text("job_description"),
   location: text("location"),
-  jobUrl: text("job_url"), // Link to original job posting
+  jobUrl: text("job_url"),
   salaryRange: text("salary_range"),
-  status: text("status").notNull().default("applied"), // applied, interviewing, rejected, offer, withdrawn
+  status: text("status").notNull().default("applied"),
   appliedAt: timestamp("applied_at", { withTimezone: true, mode: "date" }),
-  notes: text("notes"), // User's personal notes about the application
+  notes: text("notes"),
   contactEmail: text("contact_email"),
   contactName: text("contact_name"),
-  recruiterId: text("recruiter_id"), // If applicable
+  recruiterId: text("recruiter_id"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
@@ -69,7 +69,7 @@ export const coverLetters = pgTable("cover_letters", {
     onDelete: "set null",
   }),
   title: text("title").notNull(),
-  content: text("content").notNull(), // The actual cover letter text
+  content: text("content").notNull(),
   isAiGenerated: boolean("is_ai_generated").default(false),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
@@ -86,14 +86,13 @@ export const applicationStatuses = pgTable("application_statuses", {
   jobApplicationId: text("job_application_id")
     .notNull()
     .references(() => jobApplications.id, { onDelete: "cascade" }),
-  status: text("status").notNull(), // Status change
-  notes: text("notes"), // Optional notes about this status change
+  status: text("status").notNull(),
+  notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
 });
 
-// User Profile System - Structured data for resume generation
 export const userProfiles = pgTable("user_profiles", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   userId: text("user_id")
@@ -129,11 +128,11 @@ export const workExperiences = pgTable("work_experiences", {
   jobTitle: text("job_title").notNull(),
   company: text("company").notNull(),
   location: text("location"),
-  startDate: text("start_date").notNull(), // YYYY-MM format
-  endDate: text("end_date"), // YYYY-MM format, null for current
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date"),
   isCurrent: boolean("is_current").notNull().default(false),
-  description: text("description"), // Job responsibilities and achievements
-  technologies: text("technologies"), // Comma-separated or JSON array
+  description: text("description"),
+  technologies: text("technologies"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
@@ -152,10 +151,10 @@ export const education = pgTable("education", {
   fieldOfStudy: text("field_of_study"),
   institution: text("institution").notNull(),
   location: text("location"),
-  startDate: text("start_date"), // YYYY-MM format
-  endDate: text("end_date"), // YYYY-MM format
+  startDate: text("start_date"),
+  endDate: text("end_date"),
   gpa: text("gpa"),
-  honors: text("honors"), // Dean's List, Magna Cum Laude, etc.
+  honors: text("honors"),
   relevantCoursework: text("relevant_coursework"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
@@ -195,11 +194,11 @@ export const projects = pgTable("projects", {
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
-  technologies: text("technologies"), // Comma-separated or JSON array
+  technologies: text("technologies"),
   projectUrl: text("project_url"),
   githubUrl: text("github_url"),
-  startDate: text("start_date"), // YYYY-MM format
-  endDate: text("end_date"), // YYYY-MM format
+  startDate: text("start_date"),
+  endDate: text("end_date"),
   isOngoing: boolean("is_ongoing").notNull().default(false),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
@@ -217,8 +216,8 @@ export const certifications = pgTable("certifications", {
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   issuingOrganization: text("issuing_organization").notNull(),
-  issueDate: text("issue_date"), // YYYY-MM format
-  expirationDate: text("expiration_date"), // YYYY-MM format
+  issueDate: text("issue_date"),
+  expirationDate: text("expiration_date"),
   credentialId: text("credential_id"),
   credentialUrl: text("credential_url"),
   displayOrder: integer("display_order").notNull().default(0),
@@ -238,8 +237,8 @@ export const achievements = pgTable("achievements", {
   title: text("title").notNull(),
   description: text("description"),
   organization: text("organization"),
-  date: text("date"), // YYYY-MM format
-  url: text("url"), // Link to award or recognition
+  date: text("date"),
+  url: text("url"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())

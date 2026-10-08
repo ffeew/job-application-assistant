@@ -75,7 +75,6 @@ export default function EditApplicationPage({
 		formState: { errors, isSubmitting },
 	} = form;
 
-	// Resolve params Promise
 	useEffect(() => {
 		const resolveParams = async () => {
 			const resolved = await params;
@@ -84,7 +83,6 @@ export default function EditApplicationPage({
 		runAsyncAction(resolveParams());
 	}, [params]);
 
-	// Reset form with application data when loaded
 	useEffect(() => {
 		if (application) {
 			// Compiler memoization can reuse register() props; retain refs to update mounted inputs.

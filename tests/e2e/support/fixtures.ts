@@ -227,7 +227,6 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
           "Could not stream the downloaded PDF into the compiler container.",
         );
       try {
-        // Downloads can have mode 0600 and a host UID different from container node.
         const info = await execute("docker", [
           "exec",
           "--user",

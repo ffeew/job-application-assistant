@@ -90,11 +90,11 @@ export function parseGeneratedResume(
 export function serializeGeneratedResume(
   result: GeneratedResumeResult,
 ): string {
-  // The persisted snapshot deliberately excludes the binary PDF.
+  // Persist content snapshots so saved resumes can be recompiled without storing PDFs.
   return JSON.stringify(savedGeneratedResumeSchema.parse(result));
 }
 
-/** Plain content shared with legacy resume consumers, without LaTeX or PDF data. */
+/** Legacy consumers need plain sections rather than the generated document shape. */
 export function documentToResumeContent(document: ResumeDocument) {
   const sectionText = (kind: ResumeDocument["sections"][number]["kind"]) =>
     document.sections

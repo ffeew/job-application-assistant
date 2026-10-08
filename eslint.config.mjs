@@ -41,7 +41,6 @@ const eslintConfig = defineConfig([
         { ignoreArrowShorthand: true, ignoreVoidOperator: true },
       ],
       // Numeric interpolation is useful in UI text and generated documents.
-      // Retain every other restriction from the strict preset.
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {

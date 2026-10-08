@@ -5,7 +5,6 @@ import type { UpdateEducationRequest, EducationJsonResponse } from '@/app/api/pr
 import { educationKeys } from '../queries/use-education';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateEducationApi = {
   update: async (id: number, data: UpdateEducationRequest): Promise<EducationJsonResponse> => {
     const response = await fetch(`/api/profile/education/${id}`, {
@@ -19,7 +18,6 @@ const updateEducationApi = {
   },
 };
 
-// Hook to update education
 export function useUpdateEducation() {
   const queryClient = useQueryClient();
 

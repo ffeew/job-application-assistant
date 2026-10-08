@@ -49,10 +49,9 @@ export default function SignUpPage() {
 				name,
 			});
 			
-			// Wait a bit for the session to be properly established
+			// Allow the client session state to settle before checking it.
 			await new Promise(resolve => setTimeout(resolve, 100));
 			
-			// Verify session is established before redirecting
 			const session = await authClient.getSession();
 			if (session.data?.user) {
 				router.push("/dashboard");

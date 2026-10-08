@@ -4,7 +4,6 @@ import "./globals.css";
 import { QueryProvider } from "@/app/components/providers/query-provider";
 import { ThemeProvider } from "@/app/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-// Import env to trigger validation early
 import "@/lib/env";
 
 const dmSans = DM_Sans({
@@ -17,7 +16,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
 	title: "Job Application Assistant - AI-Powered Resume Optimization",
 	description:
-		"Transform your job search with AI-powered resume optimization, intelligent cover letters, and comprehensive application tracking. Open source and self-hosted.",
+		"Build your profile, tailor resumes and cover letters with AI, and track applications in a self-hosted workspace.",
 };
 
 export default function RootLayout({

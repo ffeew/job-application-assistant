@@ -5,7 +5,6 @@ import type { UpdateCertificationRequest, CertificationJsonResponse } from '@/ap
 import { certificationsKeys } from '../queries/use-certifications';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateCertificationApi = {
   update: async (id: number, data: UpdateCertificationRequest): Promise<CertificationJsonResponse> => {
     const response = await fetch(`/api/profile/certifications/${id}`, {
@@ -19,7 +18,6 @@ const updateCertificationApi = {
   },
 };
 
-// Hook to update certification
 export function useUpdateCertification() {
   const queryClient = useQueryClient();
 

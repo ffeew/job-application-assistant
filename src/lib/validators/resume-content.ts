@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Legacy editor content may omit sections; malformed field types are rejected.
+// Defaults keep legacy resumes readable when stored content omits sections.
 export const resumeContentSchema = z.object({
   personalInfo: z.object({
     name: z.string().default(""),

@@ -46,11 +46,9 @@ export default function GenerateResumePage() {
     error: dataError,
   } = useResumeData();
 
-  // Simple mutation hooks
   const validateMutation = useValidateResume();
   const previewMutation = useGenerateResumePreview();
 
-  // Derived state
   const preview = previewMutation.preview;
   const isValidating = validateMutation.isPending;
   const isGenerating = previewMutation.isPending;
@@ -111,7 +109,6 @@ export default function GenerateResumePage() {
     // Data is validated by Zod resolver, safe to cast
     const validatedData = data as GenerateResumeRequest;
     try {
-      // Validation step
       const validation = await validateMutation.mutateAsync(validatedData);
 
       if (!validation.valid) {
@@ -258,7 +255,6 @@ export default function GenerateResumePage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Configuration Panel */}
         <div className="flex flex-col gap-6">
           <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
             <Card>
@@ -517,7 +513,6 @@ export default function GenerateResumePage() {
           </form>
         </div>
 
-        {/* Preview Panel */}
         <div>
           <Card>
             <CardHeader>

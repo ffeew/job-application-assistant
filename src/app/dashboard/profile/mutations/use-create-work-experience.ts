@@ -6,7 +6,6 @@ import { workExperiencesKeys } from '../queries/use-work-experiences';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createWorkExperienceApi = {
   create: async (data: CreateWorkExperienceRequest): Promise<WorkExperienceJsonResponse> => {
     const response = await fetch('/api/profile/work-experiences', {
@@ -20,7 +19,6 @@ const createWorkExperienceApi = {
   },
 };
 
-// Hook to create work experience
 export function useCreateWorkExperience() {
   const queryClient = useQueryClient();
 

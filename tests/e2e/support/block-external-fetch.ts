@@ -4,7 +4,7 @@ if (!origins)
 const allowed = new Set(origins.split(","));
 const originalFetch = globalThis.fetch;
 
-// Guard both the app and real worker against unexpected external requests.
+// Block external requests so browser tests cannot contact live AI providers.
 globalThis.fetch = (input, init) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (!allowed.has(url.origin)) {

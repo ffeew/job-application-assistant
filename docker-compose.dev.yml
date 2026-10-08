@@ -1,4 +1,3 @@
-# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db latex-compiler
 services:
   db:
     ports:

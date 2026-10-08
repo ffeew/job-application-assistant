@@ -7,7 +7,7 @@ function reportAsyncError(error: unknown): void {
   toast.error("The action failed. Please try again.");
 }
 
-/** Observe background work that can reject; action-specific errors stay local. */
+/** Background failures need an observer even when no caller awaits them. */
 export function runAsyncAction(
   action: Promise<unknown>,
   onError: ErrorHandler = reportAsyncError,
@@ -15,7 +15,7 @@ export function runAsyncAction(
   void action.catch(onError);
 }
 
-/** Adapt async actions to React's void-returning event handler contract. */
+/** React does not observe rejected event-handler promises. */
 export function withAsyncHandler<Args extends unknown[]>(
   handler: (...args: Args) => Promise<unknown>,
   onError: ErrorHandler = reportAsyncError,

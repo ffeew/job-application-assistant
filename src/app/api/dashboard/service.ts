@@ -10,14 +10,12 @@ import type {
 
 export class DashboardService {
   async getDashboardStats(userId: string): Promise<DashboardStats> {
-    // Get total counts
     const [applicationsList, resumesList, coverLettersList] = await Promise.all([
       db.select().from(jobApplications).where(eq(jobApplications.userId, userId)),
       db.select().from(resumes).where(eq(resumes.userId, userId)),
       db.select().from(coverLetters).where(eq(coverLetters.userId, userId)),
     ]);
 
-    // Count applications by status
     const applicationsByStatus = {
       applied: 0,
       interviewing: 0,
@@ -41,11 +39,9 @@ export class DashboardService {
   }
 
   async getDashboardActivity(userId: string, query?: ActivityQuery): Promise<DashboardActivity> {
-    // Use a temporary type for internal processing with Date objects
     type ActivityItemWithDate = Omit<ActivityItem, 'createdAt'> & { createdAt: Date };
     const activities: ActivityItemWithDate[] = [];
 
-    // Get recent applications
     if (!query?.type || query.type === 'application') {
       const applications = await db
         .select()
@@ -66,7 +62,6 @@ export class DashboardService {
       });
     }
 
-    // Get recent resumes
     if (!query?.type || query.type === 'resume') {
       const resumesList = await db
         .select()
@@ -87,7 +82,6 @@ export class DashboardService {
       });
     }
 
-    // Get recent cover letters
     if (!query?.type || query.type === 'cover_letter') {
       const coverLettersList = await db
         .select()
@@ -110,7 +104,6 @@ export class DashboardService {
       });
     }
 
-    // Sort by creation date, limit, and convert dates to ISO strings
     return activities
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, query?.limit || 10)

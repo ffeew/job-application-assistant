@@ -1,22 +1,18 @@
 import { z } from "zod";
 import { serializedTimestamps } from "@/lib/validators/transport";
 
-// Base resume schema
 export const resumeSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"), // JSON string
+  content: z.string().min(1, "Content is required"),
   isDefault: z.boolean().default(false),
-  jobApplicationId: z.string().optional(), // For tailored resumes linked to job applications
+  jobApplicationId: z.string().optional(),
   isTailored: z.boolean().default(false),
 });
 
-// Create resume request
 export const createResumeSchema = resumeSchema;
 
-// Update resume request
 export const updateResumeSchema = resumeSchema.partial();
 
-// Resume response with database fields
 export const resumeResponseSchema = resumeSchema.extend({
   id: z.string(),
   userId: z.string(),
@@ -26,7 +22,6 @@ export const resumeResponseSchema = resumeSchema.extend({
   updatedAt: z.date(),
 });
 
-// Infer types for use throughout the application
 export type CreateResumeRequest = z.infer<typeof createResumeSchema>;
 export type UpdateResumeRequest = z.infer<typeof updateResumeSchema>;
 export type ResumeResponse = z.infer<typeof resumeResponseSchema>;
@@ -44,7 +39,6 @@ export const resumeJsonResponseSchema = z.object({
 
 export type ResumeJsonResponse = z.infer<typeof resumeJsonResponseSchema>;
 
-// Query parameters for filtering
 export const resumesQuerySchema = z.object({
   isDefault: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
   isTailored: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),

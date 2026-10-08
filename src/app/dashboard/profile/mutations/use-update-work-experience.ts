@@ -5,7 +5,6 @@ import type { UpdateWorkExperienceRequest, WorkExperienceJsonResponse } from '@/
 import { workExperiencesKeys } from '../queries/use-work-experiences';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateWorkExperienceApi = {
   update: async (id: number, data: UpdateWorkExperienceRequest): Promise<WorkExperienceJsonResponse> => {
     const response = await fetch(`/api/profile/work-experiences/${id}`, {
@@ -19,7 +18,6 @@ const updateWorkExperienceApi = {
   },
 };
 
-// Hook to update work experience
 export function useUpdateWorkExperience() {
   const queryClient = useQueryClient();
 

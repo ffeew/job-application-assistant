@@ -6,7 +6,6 @@ import { referencesKeys } from '../queries/use-references';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createReferenceApi = {
   create: async (data: CreateReferenceRequest): Promise<ReferenceJsonResponse> => {
     const response = await fetch('/api/profile/references', {
@@ -20,7 +19,6 @@ const createReferenceApi = {
   },
 };
 
-// Hook to create reference
 export function useCreateReference() {
   const queryClient = useQueryClient();
 

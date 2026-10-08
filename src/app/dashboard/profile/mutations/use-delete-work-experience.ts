@@ -3,7 +3,6 @@ import { workExperiencesKeys } from '../queries/use-work-experiences';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const deleteWorkExperienceApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/work-experiences/${id}`, {
@@ -15,7 +14,6 @@ const deleteWorkExperienceApi = {
   },
 };
 
-// Hook to delete work experience
 export function useDeleteWorkExperience() {
   const queryClient = useQueryClient();
 

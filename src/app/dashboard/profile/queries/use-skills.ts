@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { SkillJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const skillsApi = {
   getAll: async (query?: ProfileQuery): Promise<SkillJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -23,7 +22,6 @@ const skillsApi = {
   },
 };
 
-// Query keys for skills
 export const skillsKeys = {
   all: ['profile', 'skills'] as const,
   lists: () => [...skillsKeys.all, 'list'] as const,
@@ -32,7 +30,6 @@ export const skillsKeys = {
   detail: (id: number) => [...skillsKeys.details(), id] as const,
 };
 
-// Hook to fetch all skills
 export function useSkills(query?: ProfileQuery) {
   return useQuery({
     queryKey: skillsKeys.list(query),
@@ -40,7 +37,6 @@ export function useSkills(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single skill by ID
 export function useSkill(id: number) {
   return useQuery({
     queryKey: skillsKeys.detail(id),

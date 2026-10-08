@@ -241,7 +241,6 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
 						? "Profile updated successfully!"
 						: "Profile created successfully!"
 				);
-				// Success is handled by React Query cache updates
 			},
 			onError: (error) => {
 				console.error("Error saving profile:", error);

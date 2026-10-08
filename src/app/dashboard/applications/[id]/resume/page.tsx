@@ -60,14 +60,12 @@ export default function JobApplicationResumePage({
     error,
   } = useApplicationResumeInfo(resolvedParams?.id || "");
 
-  // Simple mutation hooks
   const previewMutation = useGenerateJobApplicationPreview(resolvedParams?.id);
   const preview = previewMutation.preview;
   const aiSelection = preview?.aiSelection ?? null;
   const resumeContent = preview ? serializeGeneratedResume(preview) : null;
   const saveMutation = useSaveTailoredResume();
 
-  // Derived state
   const isGeneratingPreview = previewMutation.isPending;
   const isGeneratingPDF = previewMutation.isPending || saveMutation.isPending;
   const isSaving = saveMutation.isPending;
@@ -114,7 +112,6 @@ export default function JobApplicationResumePage({
     ? resumeRequestKey(preview.config) !== resumeRequestKey(watchedValues)
     : false;
 
-  // Resolve params Promise
   useEffect(() => {
     const resolveParams = async () => {
       const resolved = await params;
@@ -123,7 +120,6 @@ export default function JobApplicationResumePage({
     runAsyncAction(resolveParams());
   }, [params]);
 
-  // Set default resume title when application loads
   useEffect(() => {
     if (applicationInfo && !applicationInfo.hasJobDescription)
       setValue("useAISelection", false);
@@ -216,7 +212,6 @@ export default function JobApplicationResumePage({
     }
   };
 
-  // Resolve params Promise
   useEffect(() => {
     const resolveParams = async () => {
       const resolved = await params;
@@ -301,7 +296,6 @@ export default function JobApplicationResumePage({
         </div>
       </div>
 
-      {/* Application Context Card */}
       <Card className="border-blue-200 bg-blue-50">
         <CardContent>
           <div className="flex items-center gap-2 text-blue-800">
@@ -348,7 +342,6 @@ export default function JobApplicationResumePage({
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Configuration Panel */}
         <div className="flex flex-col gap-6">
           <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
             <Card>
@@ -398,7 +391,6 @@ export default function JobApplicationResumePage({
 
                 <hr className="my-4" />
 
-                {/* AI Configuration */}
                 {applicationInfo.hasJobDescription && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-3">
@@ -556,7 +548,6 @@ export default function JobApplicationResumePage({
             </Card>
           </form>
 
-          {/* AI Selection Results */}
           {aiSelection && (
             <Card className="border-purple-200 bg-purple-50">
               <CardHeader>
@@ -628,7 +619,6 @@ export default function JobApplicationResumePage({
           )}
         </div>
 
-        {/* Preview Panel */}
         <div>
           <Card>
             <CardHeader>

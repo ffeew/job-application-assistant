@@ -3,7 +3,6 @@ import { parseJsonResponse, readApiError } from "@/lib/api-response";
 import { useQuery } from "@tanstack/react-query";
 import type { ResumeJsonResponse as Resume } from "@/app/api/resumes/validators";
 
-// Direct API call functions
 const resumesApi = {
   getAll: async (): Promise<Resume[]> => {
     const response = await fetch("/api/resumes");
@@ -24,7 +23,6 @@ const resumesApi = {
   },
 };
 
-// Query keys for resumes
 export const resumesKeys = {
   all: ["resumes"] as const,
   lists: () => [...resumesKeys.all, "list"] as const,
@@ -34,7 +32,6 @@ export const resumesKeys = {
   detail: (id: string) => [...resumesKeys.details(), id] as const,
 };
 
-// Hook to fetch all resumes
 export function useResumes() {
   return useQuery({
     queryKey: resumesKeys.lists(),
@@ -42,7 +39,6 @@ export function useResumes() {
   });
 }
 
-// Hook to fetch a single resume
 export function useResume(id: string) {
   return useQuery({
     queryKey: resumesKeys.detail(id),

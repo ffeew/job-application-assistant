@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCardSkeleton />
         <StatCardSkeleton />
@@ -14,7 +13,6 @@ export function DashboardSkeleton() {
         <StatCardSkeleton />
       </div>
 
-      {/* Activity Feed */}
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-32" />

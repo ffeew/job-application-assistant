@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { ApplicationResumeInfoResponse } from "@/app/api/applications/[id]/resume/validators";
 
-// Direct API call function
 const applicationResumeInfoApi = {
   get: async (applicationId: string): Promise<ApplicationResumeInfoResponse> => {
     const response = await fetch(`/api/applications/${applicationId}/resume`);
@@ -11,13 +10,11 @@ const applicationResumeInfoApi = {
   },
 };
 
-// Query keys
 export const applicationResumeInfoKeys = {
   all: ['job-application-resume'] as const,
   applicationInfo: (applicationId: string) => [...applicationResumeInfoKeys.all, 'info', applicationId] as const,
 };
 
-// Hook to get application info for resume generation
 export function useApplicationResumeInfo(applicationId: string) {
   return useQuery({
     queryKey: applicationResumeInfoKeys.applicationInfo(applicationId),

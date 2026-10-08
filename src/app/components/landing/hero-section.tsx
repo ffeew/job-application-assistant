@@ -11,7 +11,6 @@ function ResumePreviewCard() {
 		<div className="relative">
 			<div className="absolute inset-0 -z-10 rounded-[32px] bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
 			<div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 p-8 shadow-2xl shadow-primary/10 backdrop-blur-sm">
-				{/* Decorative resume preview */}
 				<div className="flex flex-col gap-5 w-[300px]">
 					<div className="flex items-center justify-between text-xs font-medium uppercase tracking-widest text-muted-foreground">
 						<span>Resume preview</span>
@@ -76,14 +75,12 @@ export function HeroSection() {
 			ref={ref}
 			className="relative overflow-hidden bg-gradient-to-b from-background via-background to-accent/5 py-16 sm:py-24 lg:py-32"
 		>
-			{/* Ambient warm glow */}
 			<div className="absolute inset-x-0 top-[-150px] -z-10 flex justify-center opacity-40">
 				<div className="h-[500px] w-[500px] rounded-full bg-primary/30 blur-[180px]" />
 			</div>
 
 			<div className="container relative mx-auto px-4">
 				<div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
-					{/* Left column */}
 					<div
 						className={`flex flex-col justify-center gap-8 ${isVisible ? "animate-fade-in-up" : "before-animate"}`}
 					>
@@ -113,7 +110,7 @@ export function HeroSection() {
 								asChild
 							>
 								<Link href="/sign-up">
-									Start for free
+									Get started
 									<ArrowRight className="ml-2 h-5 w-5" />
 								</Link>
 							</Button>
@@ -127,11 +124,10 @@ export function HeroSection() {
 							</Button>
 						</div>
 
-						{/* Trust indicators */}
 						<div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
 							<div className="flex items-center gap-2">
 								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
-								<span>Open source</span>
+								<span>Source on GitHub</span>
 							</div>
 							<div className="flex items-center gap-2">
 								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -139,12 +135,11 @@ export function HeroSection() {
 							</div>
 							<div className="flex items-center gap-2">
 								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
-								<span>Privacy-first</span>
+								<span>Profile and application tools</span>
 							</div>
 						</div>
 					</div>
 
-					{/* Right column - editorial visual */}
 					<div
 						className={`relative hidden lg:flex lg:items-center lg:justify-center ${isVisible ? "animate-fade-in stagger-3" : "before-animate"}`}
 					>

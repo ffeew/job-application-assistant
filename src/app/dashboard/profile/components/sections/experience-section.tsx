@@ -146,7 +146,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 					</Button>
 				</div>
 
-				{/* Pending imports */}
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
 						<CardContent className="pt-6 flex flex-col gap-4">
@@ -232,7 +231,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 					</Card>
 				)}
 
-				{/* Empty state */}
 				{experiences.length === 0 && pendingItems.length === 0 && (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -249,7 +247,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 					</Card>
 				)}
 
-				{/* Experience cards */}
 				<div className="flex flex-col gap-3">
 					{experiences.map((experience) => (
 						<Card key={experience.id} className="group hover:shadow-md transition-shadow">
@@ -315,7 +312,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				</div>
 			</div>
 
-			{/* Edit/Add Sheet */}
 			<Sheet open={isEditingExperience} onOpenChange={(open) => !open && cancelEditing()}>
 				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
 					<SheetHeader>
@@ -336,7 +332,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				</SheetContent>
 			</Sheet>
 
-			{/* Delete confirmation */}
 			<AlertDialog open={deleteConfirmation?.section === "experience"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -355,7 +350,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 	);
 }
 
-// Form component for the Sheet
 interface ExperienceFormProps {
 	experience?: WorkExperienceJsonResponse | null;
 	onSuccess: () => void;
@@ -517,7 +511,6 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 	);
 }
 
-// Inline form for editing pending items
 interface PendingEditFormProps {
 	initialValues: CreateWorkExperienceRequest;
 	onSave: (data: CreateWorkExperienceRequest) => void;

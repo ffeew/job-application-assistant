@@ -6,7 +6,6 @@ import { educationKeys } from '../queries/use-education';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createEducationApi = {
   create: async (data: CreateEducationRequest): Promise<EducationJsonResponse> => {
     const response = await fetch('/api/profile/education', {
@@ -20,7 +19,6 @@ const createEducationApi = {
   },
 };
 
-// Hook to create education
 export function useCreateEducation() {
   const queryClient = useQueryClient();
 

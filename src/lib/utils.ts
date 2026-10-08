@@ -5,10 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Downloads a PDF blob as a file.
- * Separates DOM manipulation from data fetching for cleaner mutation hooks.
- */
+/** Keep browser download effects separate from mutation data fetching. */
 export function downloadPDF(blob: Blob, filename: string): void {
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9-_]/g, "_");
   const url = URL.createObjectURL(blob);

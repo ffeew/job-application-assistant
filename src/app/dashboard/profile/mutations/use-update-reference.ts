@@ -5,7 +5,6 @@ import type { UpdateReferenceRequest, ReferenceJsonResponse } from '@/app/api/pr
 import { referencesKeys } from '../queries/use-references';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateReferenceApi = {
   update: async (id: number, data: UpdateReferenceRequest): Promise<ReferenceJsonResponse> => {
     const response = await fetch(`/api/profile/references/${id}`, {
@@ -19,7 +18,6 @@ const updateReferenceApi = {
   },
 };
 
-// Hook to update reference
 export function useUpdateReference() {
   const queryClient = useQueryClient();
 

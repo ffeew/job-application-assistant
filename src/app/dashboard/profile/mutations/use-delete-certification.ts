@@ -3,7 +3,6 @@ import { certificationsKeys } from '../queries/use-certifications';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const deleteCertificationApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/certifications/${id}`, {
@@ -15,7 +14,6 @@ const deleteCertificationApi = {
   },
 };
 
-// Hook to delete certification
 export function useDeleteCertification() {
   const queryClient = useQueryClient();
 

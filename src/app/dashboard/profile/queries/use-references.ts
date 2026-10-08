@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { ReferenceJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const referencesApi = {
   getAll: async (query?: ProfileQuery): Promise<ReferenceJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const referencesApi = {
   },
 };
 
-// Query keys for references
 export const referencesKeys = {
   all: ['profile', 'references'] as const,
   lists: () => [...referencesKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const referencesKeys = {
   detail: (id: number) => [...referencesKeys.details(), id] as const,
 };
 
-// Hook to fetch all references
 export function useReferences(query?: ProfileQuery) {
   return useQuery({
     queryKey: referencesKeys.list(query),
@@ -39,7 +36,6 @@ export function useReferences(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single reference by ID
 export function useReference(id: number) {
   return useQuery({
     queryKey: referencesKeys.detail(id),

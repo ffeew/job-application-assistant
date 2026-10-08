@@ -1,9 +1,9 @@
 import { Star, Users, Shield } from "lucide-react";
 
 const stats = [
-	{ icon: Shield, label: "Open source", value: "MIT License" },
+	{ icon: Shield, label: "Source available", value: "View on GitHub" },
 	{ icon: Star, label: "Self-hosted", value: "Full control" },
-	{ icon: Users, label: "Privacy-first", value: "Your data stays yours" },
+	{ icon: Users, label: "Candidate data", value: "Self-hosted storage" },
 ];
 
 export function TrustBar() {

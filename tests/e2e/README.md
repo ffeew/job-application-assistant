@@ -1,5 +1,8 @@
 # Browser tests
 
+For lint, type checking, unit tests, PostgreSQL integration tests, and CI coverage,
+see the [testing guide](../../docs/testing.md).
+
 The Playwright suite uses desktop Chromium, the production standalone Next.js
 application, PostgreSQL 18 in Testcontainers, and the real LaTeX compiler image.
 Docker must be running. Node.js 24, pnpm, and the Docker CLI are required; there
@@ -15,8 +18,7 @@ pnpm run test:e2e:ui
 The first run builds the compiler's TeX/font packages. Later runs use Docker's
 build cache. To use an image already built from the current compiler sources,
 set `E2E_LATEX_IMAGE` to its local tag; the harness then skips the image build.
-CI builds this image using the GitHub Actions BuildKit cache and runs all tests
-on PRs, main pushes, and workflow dispatch.
+CI builds this image using the GitHub Actions BuildKit cache.
 
 The app runs at `http://127.0.0.1:3100`; the port must be free. Test-only
 `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup
@@ -34,8 +36,7 @@ timing-dependent sleeps. Workers stop before candidate cleanup; the app and
 disposable containers stop at suite teardown, including setup failures.
 
 Browser files use `.e2e.ts`, which Playwright explicitly discovers and Vitest's test
-runner does not. Existing `pnpm run test` and PostgreSQL integration tests remain
-independent. To run a subset or disable CI retries:
+runner does not. To run a subset or disable CI retries:
 
 ```sh
 pnpm run test:e2e tests/e2e/profile.e2e.ts

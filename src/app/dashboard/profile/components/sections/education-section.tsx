@@ -136,7 +136,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 					</Button>
 				</div>
 
-				{/* Pending imports */}
 				{pendingItems.length > 0 && (
 					<Card className="border-dashed border-primary/40 bg-primary/5">
 						<CardContent className="pt-6 flex flex-col gap-3">
@@ -164,7 +163,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 					</Card>
 				)}
 
-				{/* Empty state */}
 				{education.length === 0 && pendingItems.length === 0 && (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -179,7 +177,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 					</Card>
 				)}
 
-				{/* Education cards */}
 				<div className="flex flex-col gap-3">
 					{education.map((edu) => (
 						<Card key={edu.id} className="group hover:shadow-md transition-shadow">
@@ -225,7 +222,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 				</div>
 			</div>
 
-			{/* Edit/Add Sheet */}
 			<Sheet open={isEditingEducation} onOpenChange={(open) => !open && cancelEditing()}>
 				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
 					<SheetHeader>
@@ -238,7 +234,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 				</SheetContent>
 			</Sheet>
 
-			{/* Delete confirmation */}
 			<AlertDialog open={deleteConfirmation?.section === "education"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>

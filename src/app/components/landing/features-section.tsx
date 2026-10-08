@@ -142,10 +142,10 @@ const heroFeatures = [
     icon: FileText,
     title: "Smart Resume Builder",
     description:
-      "Create ATS-optimized resumes with AI scoring and relevance analysis. Get intelligent suggestions for every job posting and see exactly why each experience matters.",
+      "Tailor resumes with AI relevance scoring and explanations. Choose which profile entries to include and export a PDF for each job.",
     benefits: [
       "AI-powered relevance scoring with explanations",
-      "Live preview with manual override controls",
+      "PDF preview with manual content selection",
       "PDF preview and export with automatic page fitting",
     ],
     imagePosition: "right" as const,
@@ -153,13 +153,13 @@ const heroFeatures = [
   },
   {
     icon: PenTool,
-    title: "Instant Cover Letters",
+    title: "AI Cover Letters",
     description:
-      "Generate compelling, personalized cover letters in seconds. Our AI adapts to company culture, role requirements, and your unique voice.",
+      "Draft cover letters from the job description and your resume details. Edit the wording and save each letter alongside its application.",
     benefits: [
-      "Job-specific customization engine",
-      "Company research integration",
-      "Multiple tone and style options",
+      "Drafts based on job and resume details",
+      "Editable cover letters",
+      "Saved letters linked to applications",
     ],
     imagePosition: "left" as const,
     Preview: CoverLetterPreview,
@@ -168,11 +168,11 @@ const heroFeatures = [
     icon: BarChart3,
     title: "Application Tracking",
     description:
-      "Visualize your entire job search pipeline at a glance. Set reminders, track response rates, and identify what\u2019s working.",
+      "Keep job applications, recruiter details, and notes in one place. Track statuses and view your application counts and offer rate.",
     benefits: [
-      "Kanban-style pipeline visualization",
-      "Automated follow-up reminders",
-      "Success rate analytics",
+      "Application cards and status summaries",
+      "Recruiter details and application notes",
+      "Application counts and offer rate",
     ],
     imagePosition: "right" as const,
     Preview: ApplicationTrackerPreview,
@@ -188,15 +188,15 @@ const secondaryFeatures = [
   },
   {
     icon: Zap,
-    title: "Lightning Fast",
+    title: "Resume Generation",
     description:
-      "Instant previews, real-time updates, and optimized performance. No waiting around while job hunting.",
+      "Start a resume, leave the page, and return to see the result. Preview and download when it is ready.",
   },
   {
     icon: Shield,
-    title: "Privacy First",
+    title: "Self-Hosted Storage",
     description:
-      "Self-hosted and open source. Your data stays yours, always. Enterprise-grade security without compromise.",
+      "Store your profile, applications, and saved documents on your own server.",
   },
 ];
 
@@ -218,7 +218,6 @@ function HeroFeatureItem({
         isImageRight ? "" : "lg:[direction:rtl] lg:[&>*]:[direction:ltr]"
       } ${isVisible ? "animate-fade-in-up" : "before-animate"}`}
     >
-      {/* Content */}
       <div className="flex flex-col justify-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-2 ring-primary/20">
           <Icon className="h-8 w-8 text-primary" />
@@ -242,7 +241,6 @@ function HeroFeatureItem({
         </ul>
       </div>
 
-      {/* Feature preview */}
       <div className="flex items-center justify-center">
         <div className="relative w-full max-w-md">
           <div className="absolute inset-0 -z-10 rounded-[24px] bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-2xl" />
@@ -292,7 +290,6 @@ export function FeaturesSection() {
       className="relative bg-background py-24 sm:py-32 lg:py-40"
     >
       <div className="container mx-auto px-4">
-        {/* Section header */}
         <div
           ref={headerRef}
           className={`mx-auto mb-16 max-w-2xl text-center lg:mb-24 ${headerVisible ? "animate-fade-in-up" : "before-animate"}`}
@@ -307,12 +304,11 @@ export function FeaturesSection() {
             Everything you need to stand out
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-            Purpose-built tools covering the full job search lifecycle, from
-            capturing your experience to measuring success.
+            Keep your experience organized, tailor application documents, and
+            track your job search in one place.
           </p>
         </div>
 
-        {/* Hero features */}
         <div className="flex flex-col gap-24 lg:gap-32">
           {heroFeatures.map((feature, index) => (
             <HeroFeatureItem
@@ -323,7 +319,6 @@ export function FeaturesSection() {
           ))}
         </div>
 
-        {/* Secondary features */}
         <SecondaryFeaturesGrid />
       </div>
     </section>

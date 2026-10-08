@@ -5,7 +5,6 @@ import type { UpdateProjectRequest, ProjectJsonResponse } from '@/app/api/profil
 import { projectsKeys } from '../queries/use-projects';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateProjectApi = {
   update: async (id: number, data: UpdateProjectRequest): Promise<ProjectJsonResponse> => {
     const response = await fetch(`/api/profile/projects/${id}`, {
@@ -19,7 +18,6 @@ const updateProjectApi = {
   },
 };
 
-// Hook to update project
 export function useUpdateProject() {
   const queryClient = useQueryClient();
 

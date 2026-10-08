@@ -5,7 +5,6 @@ import { Resend } from "resend";
 import { db } from "./db/db";
 import { env } from "./env";
 
-// Email sending function with Resend integration
 async function sendEmail({
   to,
   subject,
@@ -15,7 +14,6 @@ async function sendEmail({
   subject: string;
   text: string;
 }) {
-  // If Resend API key is not configured, log to console (development mode)
   if (!env.RESEND_API_KEY) {
     console.log(`
 [DEV] Email would be sent to: ${to}
@@ -25,7 +23,6 @@ Content: ${text}
     return;
   }
 
-  // Send email using Resend in production
   const resend = new Resend(env.RESEND_API_KEY);
   const fromEmail = env.RESEND_FROM_EMAIL || "noreply@example.com";
 
@@ -70,7 +67,7 @@ Best regards,
 Job Application Assistant Team`,
       });
     },
-    resetPasswordTokenExpiresIn: 3600, // 1 hour
+    resetPasswordTokenExpiresIn: 3600,
   },
-  plugins: [nextCookies()], // This should be the last plugin
+  plugins: [nextCookies()], // Keep this last so cookies set by other plugins reach Next.js.
 });

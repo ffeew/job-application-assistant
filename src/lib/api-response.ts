@@ -3,7 +3,7 @@ import { z } from "zod";
 const apiErrorSchema = z.object({ error: z.string().trim().min(1) });
 const invalidResponseMessage = "Received an invalid server response. Please try again.";
 
-/** Read an HTTP error without trusting JSON or exposing validation details. */
+/** Keep response parsing and validation details out of user-facing errors. */
 export async function readApiError(
   response: Response,
   fallbackMessage: string,
@@ -13,7 +13,7 @@ export async function readApiError(
   return new Error(parsed.success ? parsed.data.error : fallbackMessage);
 }
 
-/** Validate the wire response before it enters a query cache or workflow state. */
+/** Invalid server data must not reach query caches or workflow state. */
 export async function parseJsonResponse<S extends z.ZodType>(
   response: Response,
   schema: S,

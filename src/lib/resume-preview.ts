@@ -5,7 +5,7 @@ export function pdfBase64ToBlob(base64: string): Blob {
   return new Blob([bytes], { type: "application/pdf" });
 }
 
-/** Stable comparison despite form registration order and legacy template names. */
+/** Registration order and template aliases must not invalidate equivalent previews. */
 export function resumeRequestKey(value: unknown): string {
   const normalize = (item: unknown): unknown => {
     if (Array.isArray(item))

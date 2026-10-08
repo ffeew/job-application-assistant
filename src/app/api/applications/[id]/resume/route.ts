@@ -24,7 +24,7 @@ export async function POST(
 
     const { id: applicationId } = await params;
     const body: unknown = await request.json();
-    // Add the path-owned ID only after validating that the JSON is an object.
+    // Merging the path ID must not turn a non-object body into a valid request.
     const requestFields = z.record(z.string(), z.unknown()).parse(body);
     const validatedRequest = jobApplicationResumeRequestSchema.parse({
       ...requestFields,
@@ -78,7 +78,6 @@ export async function GET(
       );
     }
 
-    // Check if a tailored resume already exists for this application
     const existingTailoredResume =
       await resumesService.getTailoredResumeByApplication(
         session.user.id,
@@ -110,7 +109,6 @@ export async function GET(
   }
 }
 
-// Save (or update) tailored resume for this job application
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -125,7 +123,6 @@ export async function PUT(
     const body: unknown = await request.json();
     const validatedData = saveTailoredResumeRequestSchema.parse(body);
 
-    // Verify the application exists and belongs to the user
     const application = await applicationsService.getApplicationById(
       session.user.id,
       applicationId,
@@ -138,7 +135,6 @@ export async function PUT(
       );
     }
 
-    // Check if a tailored resume already exists for this application
     const existingResume = await resumesService.getTailoredResumeByApplication(
       session.user.id,
       applicationId,
@@ -146,7 +142,6 @@ export async function PUT(
 
     let resume;
     if (existingResume) {
-      // Update existing tailored resume
       resume = await resumesService.updateResume(
         session.user.id,
         existingResume.id,
@@ -156,7 +151,6 @@ export async function PUT(
         },
       );
     } else {
-      // Create new tailored resume
       resume = await resumesService.createResume(session.user.id, {
         title: validatedData.title,
         content: validatedData.content,

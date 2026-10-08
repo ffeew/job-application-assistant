@@ -5,7 +5,6 @@ import type { UpdateSkillRequest, SkillJsonResponse } from '@/app/api/profile/va
 import { skillsKeys } from '../queries/use-skills';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateSkillApi = {
   update: async (id: number, data: UpdateSkillRequest): Promise<SkillJsonResponse> => {
     const response = await fetch(`/api/profile/skills/${id}`, {
@@ -19,7 +18,6 @@ const updateSkillApi = {
   },
 };
 
-// Hook to update skill
 export function useUpdateSkill() {
   const queryClient = useQueryClient();
 

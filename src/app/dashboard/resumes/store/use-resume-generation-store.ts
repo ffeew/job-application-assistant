@@ -15,16 +15,13 @@ interface ValidationResult {
 }
 
 interface ResumeGenerationState {
-  // Preview state
   preview: GeneratedResumeResult | null;
   aiSelection: IntelligentContentSelection | null;
 
-  // Workflow state
   validationResult: ValidationResult | null;
   generationStatus: GenerationStatus;
   generationError: string | null;
 
-  // Actions
   setPreview: (preview: GeneratedResumeResult | null) => void;
   setAISelection: (selection: IntelligentContentSelection | null) => void;
   setValidationResult: (result: ValidationResult | null) => void;
@@ -45,7 +42,6 @@ export const useResumeGenerationStore = create<ResumeGenerationState>()(
   (set) => ({
     ...initialState,
 
-    // Actions
     setPreview: (preview) => set({ preview }),
     setAISelection: (selection) => set({ aiSelection: selection }),
     setValidationResult: (result) => set({ validationResult: result }),

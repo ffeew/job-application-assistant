@@ -4,8 +4,8 @@ import type { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
-// The latest alias tracks Mistral's current OCR model. Keep tables, headers,
-// and footers inline so the profile parser sees the whole resume in Markdown.
+// Keep tables, headers, and footers inline so the profile parser receives the
+// whole resume in Markdown.
 const ocrOptions = {
   model: "mistral-ocr-latest",
   tableFormat: null,

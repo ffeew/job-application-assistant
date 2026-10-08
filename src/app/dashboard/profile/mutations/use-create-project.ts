@@ -6,7 +6,6 @@ import { projectsKeys } from '../queries/use-projects';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createProjectApi = {
   create: async (data: CreateProjectRequest): Promise<ProjectJsonResponse> => {
     const response = await fetch('/api/profile/projects', {
@@ -20,7 +19,6 @@ const createProjectApi = {
   },
 };
 
-// Hook to create project
 export function useCreateProject() {
   const queryClient = useQueryClient();
 

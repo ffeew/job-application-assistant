@@ -5,7 +5,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from "@tanstack/react-query";
 import type { ResumeDataJsonResponse } from "@/app/api/resume-generation/validators";
 
-// Resume Data API call
 const resumeDataApi = {
   get: async (): Promise<ResumeDataJsonResponse> => {
     const response = await fetch("/api/resume-generation");
@@ -13,13 +12,11 @@ const resumeDataApi = {
   },
 };
 
-// Query Keys
 export const resumeDataKeys = {
   all: ["resume-generation"] as const,
   data: () => [...resumeDataKeys.all, "data"] as const,
 };
 
-// Hook to fetch resume data
 export function useResumeData() {
   return useQuery({
     queryKey: resumeDataKeys.data(),

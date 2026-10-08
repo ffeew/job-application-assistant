@@ -1,14 +1,11 @@
 import { z } from "zod";
 import { databaseUrlSchema } from "./db/config";
 
-// Define the schema for environment variables
 const envSchema = z.object({
-  // Node environment
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
 
-  // Better Auth configuration
   BETTER_AUTH_SECRET: z
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
@@ -16,19 +13,16 @@ const envSchema = z.object({
 
   DATABASE_URL: databaseUrlSchema,
 
-  // AI Configuration (Groq)
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features"),
   GROQ_MODEL: z.string().default("qwen/qwen3.8-27b"),
   GROQ_FALLBACK_MODEL: z.string().default("openai/gpt-oss-120b"),
   LATEX_COMPILER_URL: z.url().optional(),
   LATEX_COMPILER_TOKEN: z.string().min(32).optional(),
 
-  // OCR configuration (Mistral)
   MISTRAL_API_KEY: z
     .string()
     .min(1, "MISTRAL_API_KEY is required for resume imports"),
 
-  // Email configuration (Resend)
   RESEND_API_KEY: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.string().optional(),
@@ -38,10 +32,8 @@ const envSchema = z.object({
     z.email().optional(),
   ),
 
-  // Next.js configuration
   NEXT_PUBLIC_APP_URL: z.url().optional(),
 
-  // Port configuration
   PORT: z
     .string()
     .default("3000")
@@ -49,10 +41,8 @@ const envSchema = z.object({
     .pipe(z.number().int().positive()),
 });
 
-// Infer the type from the schema
 export type Env = z.infer<typeof envSchema>;
 
-// Validate environment variables
 function validateEnv(): Env {
   try {
     console.log("Validating environment variables...");
@@ -104,7 +94,6 @@ function validateEnv(): Env {
       );
     }
 
-    // Fallback for other types of errors
     console.error("❌ Environment validation failed:", error);
     throw new Error(
       "Environment validation failed. Check console for details.",
@@ -112,5 +101,4 @@ function validateEnv(): Env {
   }
 }
 
-// Export validated environment variables for server-side use
 export const env = validateEnv();

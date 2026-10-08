@@ -8,7 +8,6 @@ import type {
 import { resumesKeys } from '../queries/use-resumes';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateResumeApi = {
   update: async (id: string, data: UpdateResumeData): Promise<Resume> => {
     const response = await fetch(`/api/resumes/${id}`, {
@@ -22,7 +21,6 @@ const updateResumeApi = {
   },
 };
 
-// Hook to update a resume
 export function useUpdateResume() {
   const queryClient = useQueryClient();
 
@@ -30,11 +28,9 @@ export function useUpdateResume() {
     mutationFn: ({ id, data }: { id: string; data: UpdateResumeData }) =>
       updateResumeApi.update(id, data),
     onSuccess: (updatedResume) => {
-      // Update the specific resume in cache
       queryClient.setQueryData(resumesKeys.detail(updatedResume.id), updatedResume);
-      // Invalidate resume list to refetch (for default status changes)
+      // Changing the default resume can also change other entries in the list.
       void queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
-      // Invalidate dashboard activity for recent activity
       void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { serializedTimestamps } from "@/lib/validators/transport";
 
-// Base cover letter schema
 export const coverLetterSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
@@ -10,13 +9,10 @@ export const coverLetterSchema = z.object({
   resumeId: z.string().optional(),
 });
 
-// Create cover letter request
 export const createCoverLetterSchema = coverLetterSchema;
 
-// Update cover letter request
 export const updateCoverLetterSchema = coverLetterSchema.partial();
 
-// Cover letter response with database fields
 export const coverLetterResponseSchema = coverLetterSchema.extend({
   id: z.string(),
   userId: z.string(),
@@ -24,22 +20,19 @@ export const coverLetterResponseSchema = coverLetterSchema.extend({
   updatedAt: z.date(),
 });
 
-// Generate cover letter request
 export const generateCoverLetterSchema = z.object({
   company: z.string().min(1, "Company is required"),
   position: z.string().min(1, "Position is required"),
   jobDescription: z.string().optional(),
-  resumeContent: z.unknown().optional(), // Can be parsed JSON object
+  resumeContent: z.unknown().optional(),
   applicantName: z.string().optional(),
 });
 
-// Generate cover letter response
 export const generateCoverLetterResponseSchema = z.object({
   coverLetter: z.string(),
   success: z.boolean(),
 });
 
-// Infer types for use throughout the application
 export type CreateCoverLetterRequest = z.infer<typeof createCoverLetterSchema>;
 export type UpdateCoverLetterRequest = z.infer<typeof updateCoverLetterSchema>;
 export type CoverLetterResponse = z.infer<typeof coverLetterResponseSchema>;
@@ -59,7 +52,6 @@ export type CoverLetterJsonResponse = z.infer<typeof coverLetterJsonResponseSche
 export type GenerateCoverLetterRequest = z.infer<typeof generateCoverLetterSchema>;
 export type GenerateCoverLetterResponse = z.infer<typeof generateCoverLetterResponseSchema>;
 
-// Query parameters for filtering
 export const coverLettersQuerySchema = z.object({
   isAiGenerated: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
   jobApplicationId: z.string().optional(),

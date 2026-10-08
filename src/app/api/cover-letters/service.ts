@@ -22,7 +22,6 @@ export class CoverLettersService {
   ): Promise<CoverLetterResponse[]> {
     const whereConditions = [eq(coverLetters.userId, userId)];
 
-    // Add query filters
     if (query?.isAiGenerated !== undefined) {
       whereConditions.push(eq(coverLetters.isAiGenerated, query.isAiGenerated));
     }
@@ -43,7 +42,6 @@ export class CoverLettersService {
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
-    // Convert null to undefined and ensure proper typing
     return coverLettersList.map((letter) => ({
       ...letter,
       jobApplicationId: letter.jobApplicationId ?? undefined,

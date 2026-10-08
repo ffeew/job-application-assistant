@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { WorkExperienceJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const workExperiencesApi = {
   getAll: async (query?: ProfileQuery): Promise<WorkExperienceJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const workExperiencesApi = {
   },
 };
 
-// Query keys for work experiences
 export const workExperiencesKeys = {
   all: ['profile', 'work-experiences'] as const,
   lists: () => [...workExperiencesKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const workExperiencesKeys = {
   detail: (id: number) => [...workExperiencesKeys.details(), id] as const,
 };
 
-// Hook to fetch all work experiences
 export function useWorkExperiences(query?: ProfileQuery) {
   return useQuery({
     queryKey: workExperiencesKeys.list(query),
@@ -39,7 +36,6 @@ export function useWorkExperiences(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single work experience by ID
 export function useWorkExperience(id: number) {
   return useQuery({
     queryKey: workExperiencesKeys.detail(id),

@@ -1,4 +1,3 @@
-// Re-export all validators and their types for easy importing
 export * from "@/app/api/applications/validators";
 export * from "@/app/api/resumes/validators";
 export * from "@/app/api/cover-letters/validators";

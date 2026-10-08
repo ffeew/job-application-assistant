@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BulkUpdateOrderRequest } from '@/app/api/profile/validators';
 import { skillsKeys } from '../queries/use-skills';
 
-// Direct API call function
 const reorderSkillsApi = {
   bulkUpdateOrder: async (data: BulkUpdateOrderRequest): Promise<void> => {
     const response = await fetch('/api/profile/skills/order', {
@@ -18,7 +17,6 @@ const reorderSkillsApi = {
   },
 };
 
-// Hook to reorder skills
 export function useReorderSkills() {
   const queryClient = useQueryClient();
 

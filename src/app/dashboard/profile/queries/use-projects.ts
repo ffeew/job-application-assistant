@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { ProjectJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const projectsApi = {
   getAll: async (query?: ProfileQuery): Promise<ProjectJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const projectsApi = {
   },
 };
 
-// Query keys for projects
 export const projectsKeys = {
   all: ['profile', 'projects'] as const,
   lists: () => [...projectsKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const projectsKeys = {
   detail: (id: number) => [...projectsKeys.details(), id] as const,
 };
 
-// Hook to fetch all projects
 export function useProjects(query?: ProfileQuery) {
   return useQuery({
     queryKey: projectsKeys.list(query),
@@ -39,7 +36,6 @@ export function useProjects(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single project by ID
 export function useProject(id: number) {
   return useQuery({
     queryKey: projectsKeys.detail(id),

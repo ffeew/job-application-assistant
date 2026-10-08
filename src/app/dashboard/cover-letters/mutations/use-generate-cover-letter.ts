@@ -6,7 +6,6 @@ import type {
   GenerateCoverLetterResponse
 } from '@/lib/validators';
 
-// Direct API call function
 const generateCoverLetterApi = {
   generate: async (data: GenerateCoverLetterData): Promise<GenerateCoverLetterResponse> => {
     const response = await fetch('/api/cover-letters/generate', {
@@ -20,10 +19,9 @@ const generateCoverLetterApi = {
   },
 };
 
-// Hook to generate a cover letter with AI
 export function useGenerateCoverLetter() {
   return useMutation({
     mutationFn: (data: GenerateCoverLetterData) => generateCoverLetterApi.generate(data),
-    // Note: This doesn't invalidate any queries as it just generates content
+    // Generated text remains a draft until it is saved.
   });
 }

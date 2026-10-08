@@ -6,7 +6,6 @@ import { skillsKeys } from '../queries/use-skills';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createSkillApi = {
   create: async (data: CreateSkillRequest): Promise<SkillJsonResponse> => {
     const response = await fetch('/api/profile/skills', {
@@ -20,7 +19,6 @@ const createSkillApi = {
   },
 };
 
-// Hook to create skill
 export function useCreateSkill() {
   const queryClient = useQueryClient();
 

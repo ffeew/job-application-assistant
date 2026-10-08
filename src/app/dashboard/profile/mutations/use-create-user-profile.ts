@@ -5,7 +5,6 @@ import type { CreateUserProfileRequest, UserProfileJsonResponse } from '@/app/ap
 import { userProfileKeys } from '../queries/use-user-profile';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 
-// Direct API call function
 const createUserProfileApi = {
   create: async (data: CreateUserProfileRequest): Promise<UserProfileJsonResponse> => {
     const response = await fetch('/api/profile', {
@@ -19,7 +18,6 @@ const createUserProfileApi = {
   },
 };
 
-// Hook to create user profile
 export function useCreateUserProfile() {
   const queryClient = useQueryClient();
 

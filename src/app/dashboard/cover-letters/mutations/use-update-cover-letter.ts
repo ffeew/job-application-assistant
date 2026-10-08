@@ -8,7 +8,6 @@ import type {
 import { coverLettersKeys } from '../queries/use-cover-letters';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const updateCoverLetterApi = {
   update: async (id: string, data: UpdateCoverLetterData): Promise<CoverLetter> => {
     const response = await fetch(`/api/cover-letters/${id}`, {
@@ -22,7 +21,6 @@ const updateCoverLetterApi = {
   },
 };
 
-// Hook to update a cover letter
 export function useUpdateCoverLetter() {
   const queryClient = useQueryClient();
 
@@ -30,11 +28,8 @@ export function useUpdateCoverLetter() {
     mutationFn: ({ id, data }: { id: string; data: UpdateCoverLetterData }) =>
       updateCoverLetterApi.update(id, data),
     onSuccess: (updatedCoverLetter) => {
-      // Update the specific cover letter in cache
       queryClient.setQueryData(coverLettersKeys.detail(updatedCoverLetter.id), updatedCoverLetter);
-      // Invalidate cover letters list to refetch
       void queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
-      // Invalidate dashboard activity for recent activity
       void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });

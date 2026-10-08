@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Dates stay serialized on the client; domain response schemas keep Date objects.
+// JSON timestamps need separate schemas from domain Date objects.
 export const serializedTimestamps = {
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

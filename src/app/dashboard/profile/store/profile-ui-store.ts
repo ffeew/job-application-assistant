@@ -23,29 +23,23 @@ interface DeleteConfirmation {
 }
 
 interface ProfileUIState {
-	// Navigation (persisted to localStorage)
 	activeSection: ProfileSection;
 	setActiveSection: (section: ProfileSection) => void;
 
-	// Editing state (replaces isAdding, editingItem in each component)
 	editingState: EditingState;
 	startAdding: (section: ProfileSection) => void;
 	startEditing: (section: ProfileSection, itemId: number) => void;
 	cancelEditing: () => void;
 
-	// Pending item editing (for import drafts)
 	editingPendingId: string | null;
 	startEditingPending: (id: string) => void;
 	cancelEditingPending: () => void;
 
-	// Sheet state (for complex forms)
 	isSheetOpen: boolean;
 
-	// Saving indicator
 	savingItemId: number | string | null;
 	setSavingItemId: (id: number | string | null) => void;
 
-	// Delete confirmation dialog state
 	deleteConfirmation: DeleteConfirmation | null;
 	openDeleteConfirmation: (section: ProfileSection, itemId: number) => void;
 	closeDeleteConfirmation: () => void;
@@ -54,7 +48,6 @@ interface ProfileUIState {
 export const useProfileUIStore = create<ProfileUIState>()(
 	persist(
 		(set) => ({
-			// Navigation
 			activeSection: "personal",
 			setActiveSection: (section) => {
 				set({
@@ -65,7 +58,6 @@ export const useProfileUIStore = create<ProfileUIState>()(
 				});
 			},
 
-			// Editing state
 			editingState: null,
 			startAdding: (section) => {
 				set({
@@ -88,7 +80,6 @@ export const useProfileUIStore = create<ProfileUIState>()(
 				});
 			},
 
-			// Pending item editing
 			editingPendingId: null,
 			startEditingPending: (id) => {
 				set({
@@ -101,14 +92,11 @@ export const useProfileUIStore = create<ProfileUIState>()(
 				set({ editingPendingId: null });
 			},
 
-			// Sheet state
 			isSheetOpen: false,
 
-			// Saving state
 			savingItemId: null,
 			setSavingItemId: (id) => set({ savingItemId: id }),
 
-			// Delete confirmation state
 			deleteConfirmation: null,
 			openDeleteConfirmation: (section, itemId) =>
 				set({ deleteConfirmation: { section, itemId } }),
@@ -117,7 +105,7 @@ export const useProfileUIStore = create<ProfileUIState>()(
 		{
 			name: "profile-ui-state",
 			partialize: (state) => ({
-				// Only persist navigation, not editing state
+				// Restore the selected section without reopening interrupted edits.
 				activeSection: state.activeSection,
 			}),
 		}

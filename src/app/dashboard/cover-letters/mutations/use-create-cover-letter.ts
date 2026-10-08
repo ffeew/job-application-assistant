@@ -9,7 +9,6 @@ import { coverLettersKeys } from '../queries/use-cover-letters';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createCoverLetterApi = {
   create: async (data: CreateCoverLetterData): Promise<CoverLetter> => {
     const response = await fetch('/api/cover-letters', {
@@ -23,18 +22,14 @@ const createCoverLetterApi = {
   },
 };
 
-// Hook to create a cover letter
 export function useCreateCoverLetter() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CreateCoverLetterData) => createCoverLetterApi.create(data),
     onSuccess: () => {
-      // Invalidate cover letters list to refetch
       void queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
-      // Invalidate dashboard stats as cover letter count changed
       void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      // Invalidate dashboard activity for recent activity
       void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
     },
   });

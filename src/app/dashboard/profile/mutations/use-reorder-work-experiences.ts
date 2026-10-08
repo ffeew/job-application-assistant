@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BulkUpdateOrderRequest } from '@/app/api/profile/validators';
 import { workExperiencesKeys } from '../queries/use-work-experiences';
 
-// Direct API call function
 const reorderWorkExperiencesApi = {
   bulkUpdateOrder: async (data: BulkUpdateOrderRequest): Promise<void> => {
     const response = await fetch('/api/profile/work-experiences/order', {
@@ -18,7 +17,6 @@ const reorderWorkExperiencesApi = {
   },
 };
 
-// Hook to reorder work experiences
 export function useReorderWorkExperiences() {
   const queryClient = useQueryClient();
 

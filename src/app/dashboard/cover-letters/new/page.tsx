@@ -39,7 +39,6 @@ export default function NewCoverLetterPage() {
   const generateCoverLetterMutation = useGenerateCoverLetter();
   const createCoverLetterMutation = useCreateCoverLetter();
 
-  // Zustand store selectors
   const selectedResumeId = useCoverLetterStore((state) => state.selectedResume);
   const selectedApplication = useCoverLetterStore(
     (state) => state.selectedApplication,
@@ -53,7 +52,6 @@ export default function NewCoverLetterPage() {
   );
   const title = useCoverLetterStore((state) => state.title);
 
-  // Zustand store actions
   const setSelectedResume = useCoverLetterStore(
     (state) => state.setSelectedResume,
   );
@@ -86,7 +84,6 @@ export default function NewCoverLetterPage() {
     if (app) {
       setManualFields(app.company, app.position, app.jobDescription || "");
 
-      // Auto-select tailored resume for this application if one exists
       const tailoredResume = resumes.find(
         (r) => r.jobApplicationId === applicationId && r.isTailored,
       );
@@ -155,7 +152,7 @@ export default function NewCoverLetterPage() {
       {
         onSuccess: () => {
           toast.success("Cover letter saved successfully!");
-          reset(); // Clear the store after successful save
+          reset();
           router.push("/dashboard/cover-letters");
         },
         onError: (error) => {

@@ -4,7 +4,7 @@ import { ResumeImportService, ResumeImportError } from "./service";
 
 export const runtime = "nodejs";
 
-const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
   "application/msword",

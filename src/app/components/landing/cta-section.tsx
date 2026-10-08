@@ -21,8 +21,8 @@ export function CTASection() {
 						Ready to transform your job search?
 					</h2>
 					<p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-						Join thousands using AI-powered resume optimization to land more
-						interviews. Start for free, self-host for complete control.
+						Build your profile, tailor resumes and cover letters, and keep
+						your applications organized on your own server.
 					</p>
 
 					<div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -32,7 +32,7 @@ export function CTASection() {
 							asChild
 						>
 							<Link href="/sign-up">
-								Start for free
+								Get started
 								<ArrowRight className="ml-2 h-5 w-5" />
 							</Link>
 						</Button>
@@ -53,7 +53,7 @@ export function CTASection() {
 					</div>
 
 					<p className="mt-8 text-sm text-muted-foreground">
-						No credit card required &middot; Open source &middot; Self-hosted
+						Source on GitHub &middot; Self-hosted
 					</p>
 				</div>
 			</div>

@@ -70,7 +70,7 @@ export function MobileMenu({ isAuthenticated }: MobileMenuProps) {
 									className="w-full rounded-full"
 								>
 									<Link href="/dashboard" onClick={() => setOpen(false)}>
-										Try demo
+										Dashboard
 									</Link>
 								</Button>
 								<Button asChild size="lg" className="w-full rounded-full">

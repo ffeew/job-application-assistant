@@ -36,7 +36,6 @@ export function useGenerateJobApplicationPreview(
   };
 }
 
-// API call to save tailored resume
 const saveTailoredResume = async (
   applicationId: string,
   data: SaveTailoredResumeRequest,
@@ -54,7 +53,6 @@ const saveTailoredResume = async (
   );
 };
 
-// Hook to save tailored resume for a job application
 export function useSaveTailoredResume() {
   const queryClient = useQueryClient();
 
@@ -67,7 +65,6 @@ export function useSaveTailoredResume() {
       data: SaveTailoredResumeRequest;
     }) => saveTailoredResume(applicationId, data),
     onSuccess: (_, { applicationId }) => {
-      // Invalidate related queries
       void queryClient.invalidateQueries({
         queryKey: ["job-application-resume", "info", applicationId],
       });

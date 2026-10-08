@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface CoverLetterState {
-	// Form fields
 	selectedResume: string;
 	selectedApplication: string;
 	manualCompany: string;
@@ -11,10 +10,8 @@ interface CoverLetterState {
 	applicantName: string;
 	title: string;
 
-	// Generation result
 	generatedContent: string;
 
-	// Actions
 	setSelectedResume: (id: string) => void;
 	setSelectedApplication: (id: string) => void;
 	setManualFields: (
@@ -66,7 +63,7 @@ export const useCoverLetterStore = create<CoverLetterState>()(
 		{
 			name: "cover-letter-draft",
 			partialize: (state) => ({
-				// Persist form fields for draft recovery
+				// Preserve unfinished cover letters across reloads.
 				manualCompany: state.manualCompany,
 				manualPosition: state.manualPosition,
 				jobDescription: state.jobDescription,

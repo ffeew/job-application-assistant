@@ -6,7 +6,6 @@ import { achievementsKeys } from '../queries/use-achievements';
 import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
 import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
 
-// Direct API call function
 const createAchievementApi = {
   create: async (data: CreateAchievementRequest): Promise<AchievementJsonResponse> => {
     const response = await fetch('/api/profile/achievements', {
@@ -20,7 +19,6 @@ const createAchievementApi = {
   },
 };
 
-// Hook to create achievement
 export function useCreateAchievement() {
   const queryClient = useQueryClient();
 

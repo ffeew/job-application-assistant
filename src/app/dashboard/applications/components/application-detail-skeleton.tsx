@@ -4,7 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function ApplicationDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-8 w-64" />
@@ -16,7 +15,6 @@ export function ApplicationDetailSkeleton() {
         </div>
       </div>
 
-      {/* Details Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -55,7 +53,6 @@ export function ApplicationDetailSkeleton() {
         </Card>
       </div>
 
-      {/* Job Description */}
       <Card>
         <CardHeader>
           <Skeleton className="h-5 w-40" />
@@ -68,7 +65,6 @@ export function ApplicationDetailSkeleton() {
         </CardContent>
       </Card>
 
-      {/* Notes */}
       <Card>
         <CardHeader>
           <Skeleton className="h-5 w-24" />

@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
     try {
       const result = await authClient.requestPasswordReset({
         email,
-        redirectTo: `${window.location.origin}/reset-password`, // Full URL for email link
+        redirectTo: `${window.location.origin}/reset-password`, // Password-reset emails need an absolute URL.
       });
       
       if (result.error) {

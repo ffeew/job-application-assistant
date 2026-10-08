@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 
-// Resolve project aliases before externalizing packages needed at runtime.
+// Bundle project aliases so Node can run the entrypoints while packages stay external.
 await build({
   entryPoints: {
     migrate: "scripts/migrate.mts",

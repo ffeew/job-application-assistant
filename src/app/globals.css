@@ -42,10 +42,8 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Monochrome with Purple Accents Theme */
 :root {
   --radius: 0.75rem;
-  /* Light Mode - Pure Neutral Gray with Purple Accents */
   --background: #FAFAFA;
   --foreground: #1A1A1A;
   --card: #FFFFFF;
@@ -78,7 +76,6 @@
   --sidebar-border: #E5E5E5;
   --sidebar-ring: #8B5CF6;
 
-  /* Status colors - light mode */
   --status-applied: #3B82F6;
   --status-applied-bg: #3B82F615;
   --status-interviewing: #F59E0B;
@@ -92,7 +89,6 @@
 }
 
 .dark {
-  /* Dark Mode - Pure Neutral Gray with Purple Accents */
   --background: #121212;
   --foreground: #F5F5F5;
   --card: #1E1E1E;
@@ -125,7 +121,6 @@
   --sidebar-border: #333333;
   --sidebar-ring: #A78BFA;
 
-  /* Status colors - dark mode */
   --status-applied: #60A5FA;
   --status-applied-bg: #60A5FA20;
   --status-interviewing: #FBBF24;
@@ -147,7 +142,6 @@
   }
 }
 
-/* Scroll-triggered animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;

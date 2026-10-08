@@ -3,7 +3,6 @@ import { parseJsonResponse } from "@/lib/api-response";
 import { useQuery } from '@tanstack/react-query';
 import type { AchievementJsonResponse, ProfileQuery } from '@/app/api/profile/validators';
 
-// Direct API call functions
 const achievementsApi = {
   getAll: async (query?: ProfileQuery): Promise<AchievementJsonResponse[]> => {
     const searchParams = new URLSearchParams();
@@ -22,7 +21,6 @@ const achievementsApi = {
   },
 };
 
-// Query keys for achievements
 export const achievementsKeys = {
   all: ['profile', 'achievements'] as const,
   lists: () => [...achievementsKeys.all, 'list'] as const,
@@ -31,7 +29,6 @@ export const achievementsKeys = {
   detail: (id: number) => [...achievementsKeys.details(), id] as const,
 };
 
-// Hook to fetch all achievements
 export function useAchievements(query?: ProfileQuery) {
   return useQuery({
     queryKey: achievementsKeys.list(query),
@@ -39,7 +36,6 @@ export function useAchievements(query?: ProfileQuery) {
   });
 }
 
-// Hook to fetch a single achievement by ID
 export function useAchievement(id: number) {
   return useQuery({
     queryKey: achievementsKeys.detail(id),

@@ -40,7 +40,6 @@ import type {
 } from "./validators";
 
 export class ProfileService {
-  // User Profile Methods
   async getUserProfile(userId: string): Promise<UserProfileResponse | null> {
     const profilesList = await db
       .select()
@@ -92,7 +91,6 @@ export class ProfileService {
     return profile || null;
   }
 
-  // Work Experience Methods
   async getWorkExperiences(
     userId: string,
     query?: ProfileQuery,
@@ -186,7 +184,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Education Methods
   async getEducation(
     userId: string,
     query?: ProfileQuery,
@@ -274,7 +271,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Skills Methods
   async getSkills(
     userId: string,
     query?: ProfileQuery,
@@ -376,7 +372,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Projects Methods
   async getProjects(
     userId: string,
     query?: ProfileQuery,
@@ -462,7 +457,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Certifications Methods
   async getCertifications(
     userId: string,
     query?: ProfileQuery,
@@ -548,7 +542,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Achievements Methods
   async getAchievements(
     userId: string,
     query?: ProfileQuery,
@@ -634,7 +627,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // References Methods
   async getReferences(
     userId: string,
     query?: ProfileQuery,
@@ -720,7 +712,6 @@ export class ProfileService {
     return result.length > 0;
   }
 
-  // Bulk operations for reordering
   async bulkUpdateWorkExperienceOrder(
     userId: string,
     data: BulkUpdateOrderRequest,

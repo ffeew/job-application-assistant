@@ -16,7 +16,6 @@ export class ResumesService {
   ): Promise<ResumeResponse[]> {
     const whereConditions = [eq(resumes.userId, userId)];
 
-    // Add query filters
     if (query?.isDefault !== undefined) {
       whereConditions.push(eq(resumes.isDefault, query.isDefault));
     }
@@ -71,7 +70,6 @@ export class ResumesService {
     const id = randomUUID();
     const now = new Date();
 
-    // If this is being set as default, unset all other defaults first
     if (data.isDefault) {
       await this.unsetAllDefaults(userId);
     }
@@ -109,7 +107,6 @@ export class ResumesService {
   ): Promise<ResumeResponse | null> {
     const now = new Date();
 
-    // If this is being set as default, unset all other defaults first
     if (data.isDefault) {
       await this.unsetAllDefaults(userId);
     }

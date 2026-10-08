@@ -33,7 +33,6 @@ import {
   legacyResumeHTML,
 } from "../components/stored-resume-view";
 
-// Form data structure
 interface ResumeFormData {
   title: string;
   isDefault: boolean;
@@ -90,7 +89,6 @@ export default function EditResumePage({
     formState: { errors, isSubmitting },
   } = form;
 
-  // Resolve params Promise
   useEffect(() => {
     const resolveParams = async () => {
       const resolved = await params;
@@ -99,7 +97,6 @@ export default function EditResumePage({
     runAsyncAction(resolveParams());
   }, [params]);
 
-  // Populate form when resume data is loaded
   useEffect(() => {
     if (resume) {
       let content: ResumeContent;
@@ -132,7 +129,6 @@ export default function EditResumePage({
     }
   }, [resume, reset]);
 
-  // Handle error case
   useEffect(() => {
     if (error) {
       router.push("/dashboard/resumes");
@@ -140,7 +136,6 @@ export default function EditResumePage({
   }, [error, router]);
 
   const onSubmit = (data: ResumeFormData) => {
-    // Validate required fields
     if (!data.title.trim()) {
       toast.error("Please enter a title for your resume");
       return;
