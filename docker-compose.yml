@@ -12,8 +12,8 @@ x-runtime-environment: &runtime-environment
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
   BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to your public HTTPS origin}
   GROQ_API_KEY: ${GROQ_API_KEY:?Set GROQ_API_KEY in .env}
-  GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
-  GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-moonshotai/kimi-k2-instruct}
+  GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3.8-27b}
+  GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-openai/gpt-oss-120b}
   MISTRAL_API_KEY: ${MISTRAL_API_KEY:?Set MISTRAL_API_KEY in .env}
   LATEX_COMPILER_URL: http://latex-compiler:8080
   LATEX_COMPILER_TOKEN: ${LATEX_COMPILER_TOKEN:?Set LATEX_COMPILER_TOKEN in .env}

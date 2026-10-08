@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
+import { getGroqGenerationOptions } from "@/lib/groq-model";
 import {
   extractMarkdownFromOcrResponse,
   processDocWithMistral,
@@ -280,10 +281,10 @@ Populate the provided schema using only facts that appear in the resume. Use nul
 
     const result = await generateText({
       model: groq(env.GROQ_MODEL),
+      ...getGroqGenerationOptions(env.GROQ_MODEL, 20000),
       output: Output.object({ schema: aiProfileGenerationSchema }),
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
-      maxOutputTokens: 20000,
     });
 
     const aiData = aiProfileGenerationSchema.parse(result.output);

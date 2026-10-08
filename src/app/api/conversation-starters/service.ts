@@ -1,6 +1,7 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
+import { getGroqGenerationOptions } from "@/lib/groq-model";
 import {
   parseGeneratedResume,
   documentToResumeContent,
@@ -119,9 +120,9 @@ Return only the message text and avoid placeholders or brackets.`;
 
       const result = await generateText({
         model: groq(this.model),
+        ...getGroqGenerationOptions(this.model, 600),
         prompt,
         temperature: 0.65,
-        maxOutputTokens: 600,
       });
 
       return {

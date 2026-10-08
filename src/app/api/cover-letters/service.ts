@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
+import { getGroqGenerationOptions } from "@/lib/groq-model";
 import type {
   CoverLetterResponse,
   CoverLettersQuery,
@@ -187,9 +188,9 @@ Format the cover letter properly with appropriate salutations and structure. Do 
 
       const result = await generateText({
         model: groq(env.GROQ_MODEL),
+        ...getGroqGenerationOptions(env.GROQ_MODEL, 1000),
         prompt,
         temperature: 0.7,
-        maxOutputTokens: 1000,
       });
 
       return {

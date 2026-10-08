@@ -1,6 +1,7 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, Output } from "ai";
 import { env } from "@/lib/env";
+import { getGroqGenerationOptions } from "@/lib/groq-model";
 import {
   applyResumeRevision,
   resumeRevisionSchema,
@@ -21,6 +22,7 @@ export async function reviseResumeWithAI(
     try {
       const { output } = await generateText({
         model: groq(model),
+        ...getGroqGenerationOptions(model),
         temperature: 0.2,
         maxRetries: 0,
         abortSignal: AbortSignal.any([signal, AbortSignal.timeout(25000)]),

@@ -73,8 +73,8 @@ Resume generation returns a job ID immediately and polls for completion. Work co
 | `POSTGRES_PASSWORD`          | Compose  | PostgreSQL password; Compose encodes credentials for its internal connection URL  |
 | `POSTGRES_USER` / `POSTGRES_DB` | No      | Compose user/database names, defaulting to `job_assistant`                         |
 | `GROQ_API_KEY`                | Yes\*    | Groq API key used for resume tailoring, cover letters, and conversation starters |
-| `GROQ_MODEL`                  | No       | Optional Groq model override; defaults to `openai/gpt-oss-120b`                  |
-| `GROQ_FALLBACK_MODEL`         | No       | Fitting fallback; defaults to `moonshotai/kimi-k2-instruct`                      |
+| `GROQ_MODEL`                  | No       | Optional Groq model override; defaults to `qwen/qwen3.8-27b`                    |
+| `GROQ_FALLBACK_MODEL`         | No       | Fitting fallback; defaults to `openai/gpt-oss-120b`                              |
 | `LATEX_COMPILER_URL`          | For PDFs | URL of the separate compiler service                                             |
 | `LATEX_COMPILER_TOKEN`        | For PDFs | Shared compiler authentication token (32+ characters)                            |
 | `MISTRAL_API_KEY`             | Yes\*    | Mistral OCR API key used to import resumes into the profile form                 |
@@ -83,6 +83,10 @@ Resume generation returns a job ID immediately and polls for completion. Work co
 | `PORT`                        | No       | Server port, defaults to `3000`                                                  |
 
 \*AI-powered routes return errors if the corresponding key is missing (Groq for content generation, Mistral for resume imports).
+
+Groq generation defaults to [Qwen 3.8 27B](https://console.groq.com/docs/model/qwen/qwen3.8-27b) in non-thinking mode. Qwen is currently a preview model and has higher token prices than GPT-OSS 120B. Requests with an explicit output budget are capped at Qwen's 16,384-token limit; resume fitting tries GPT-OSS 120B if the primary model fails. Resume imports retain their basic text-extraction fallback.
+
+For existing deployments, update any `GROQ_MODEL` and `GROQ_FALLBACK_MODEL` overrides to the defaults above and restart the app and generation worker. To switch the primary back to GPT-OSS, set `GROQ_MODEL=openai/gpt-oss-120b` and restart both processes. Check Groq's [supported models](https://console.groq.com/docs/models) and [deprecation history](https://console.groq.com/docs/deprecations) when changing overrides.
 
 ## Project structure
 

@@ -2,6 +2,7 @@ import { generateText, Output } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { env } from "@/lib/env";
+import { getGroqGenerationOptions } from "@/lib/groq-model";
 import type {
   AchievementResponse,
   CertificationResponse,
@@ -106,6 +107,7 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     try {
       const { output } = await generateText({
         model: groq(this.model),
+        ...getGroqGenerationOptions(this.model),
         output: Output.object({ schema: jobAnalysisSchema }),
         prompt,
         temperature: 0.3,
@@ -147,6 +149,7 @@ Focus on technical skills, qualifications, experience requirements, and key resp
     try {
       const { output } = await generateText({
         model: groq(this.model),
+        ...getGroqGenerationOptions(this.model),
         output: Output.object({ schema: intelligentContentSelectionSchema }),
         prompt: contentPrompt,
         temperature: 0.2,

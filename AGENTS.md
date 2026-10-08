@@ -9,7 +9,7 @@
 - **State**: Zustand for shared and workflow state; TanStack Query for server state.
 - **Forms & Validation**: React Hook Form + Zod resolvers; shared schemas live with API validators.
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
-- **AI**: Vercel AI SDK 7 with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Use `instructions` for system prompts. Default model is `openai/gpt-oss-120b`; fallback is `moonshotai/kimi-k2-instruct`.
+- **AI**: Vercel AI SDK 7 with Groq (`@ai-sdk/groq`) powering cover letters, resume tailoring, and conversation starters. Use `instructions` for system prompts. Default model is `qwen/qwen3.8-27b`; resume-fitting fallback is `openai/gpt-oss-120b`. Apply `getGroqGenerationOptions` to each request for Qwen's non-thinking mode and 16,384-token output limit.
 - **Documents**: A separate authenticated pdfLaTeX service renders resume PDFs using templates in `src/lib/resume-templates/`. Generation checks the compiled PDF and may revise content up to three times to meet a one- or two-page target.
 
 ## Module Organization

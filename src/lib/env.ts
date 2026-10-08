@@ -18,8 +18,8 @@ const envSchema = z.object({
 
   // AI Configuration (Groq)
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for AI features"),
-  GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
-  GROQ_FALLBACK_MODEL: z.string().default("moonshotai/kimi-k2-instruct"),
+  GROQ_MODEL: z.string().default("qwen/qwen3.8-27b"),
+  GROQ_FALLBACK_MODEL: z.string().default("openai/gpt-oss-120b"),
   LATEX_COMPILER_URL: z.url().optional(),
   LATEX_COMPILER_TOKEN: z.string().min(32).optional(),
 
