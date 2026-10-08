@@ -1,7 +1,10 @@
-FROM oven/bun:1.2.15 AS build
+FROM node:24-bookworm-slim AS build
+RUN npm install --global pnpm@12.10.1
 WORKDIR /build
-COPY services/latex-compiler ./services/latex-compiler
-RUN bun build services/latex-compiler/index.ts --target=node --format=esm --outfile=server.mjs
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build:runtime
 
 FROM node:24-bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,7 +16,7 @@ WORKDIR /app
 COPY services/latex-compiler/smoke.tex /tmp/smoke.tex
 RUN cd /tmp && pdflatex -no-shell-escape -interaction=nonstopmode -halt-on-error smoke.tex \
     && pdfinfo smoke.pdf && rm -f smoke.*
-COPY --from=build /build/server.mjs ./server.mjs
+COPY --from=build /build/build/latex-compiler.mjs ./server.mjs
 USER node
 ENV PORT=8080
 EXPOSE 8080

@@ -1,4 +1,4 @@
-import { expect, spyOn, test } from "bun:test";
+import { expect, vi, test } from "vitest";
 import { Mistral } from "@mistralai/mistralai";
 import { HTTPClient } from "@mistralai/mistralai/lib/http";
 import { Buffer } from "node:buffer";
@@ -207,7 +207,7 @@ test.each(["sign", "ocr", "invalid"] as const)(
 
 test("temporary file cleanup failure does not discard a successful OCR result", async () => {
   const fixture = mistralFixture("delete");
-  const warning = spyOn(console, "warn").mockImplementation(() => {});
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
   try {
     const result = await processDocWithMistral(
       fixture.client,

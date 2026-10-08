@@ -1,5 +1,5 @@
 import { rejects } from "node:assert/strict";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { parseJsonResponse, readApiError } from "./api-response";
 import {

@@ -22,7 +22,7 @@ export function getRuntime(): Runtime {
 
 export function runtimeEnvironment(
   runtime: Runtime,
-): Record<string, string | undefined> {
+): NodeJS.ProcessEnv {
   // Carry tooling/OS settings without inheriting application secrets from .env.
   const inherited: Record<string, string | undefined> = {};
   for (const key of [
@@ -36,7 +36,11 @@ export function runtimeEnvironment(
     "SystemRoot",
     "WINDIR",
     "CI",
-    "BUN_INSTALL_CACHE_DIR",
+    "PNPM_HOME",
+    "XDG_DATA_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_STATE_HOME",
+    "XDG_CONFIG_HOME",
     "NODE_EXTRA_CA_CERTS",
     "HTTP_PROXY",
     "HTTPS_PROXY",

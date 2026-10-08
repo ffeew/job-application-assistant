@@ -7,14 +7,13 @@ import { setTimeout as delay } from "node:timers/promises";
 export async function startProcess(
   command: string,
   args: string[],
-  env: Record<string, string | undefined>,
+  env: NodeJS.ProcessEnv,
   logPath: string,
 ) {
   await mkdir(dirname(logPath), { recursive: true });
   const log = await open(logPath, "a");
   const child = spawn(command, args, {
-    // Bun augments ProcessEnv with bundler booleans; child env values are strings.
-    env: env as unknown as NodeJS.ProcessEnv,
+    env,
     detached: process.platform !== "win32",
     stdio: ["ignore", log.fd, log.fd],
   });
@@ -71,7 +70,7 @@ export type ManagedProcess = Awaited<ReturnType<typeof startProcess>>;
 export async function runProcess(
   command: string,
   args: string[],
-  env: Record<string, string | undefined>,
+  env: NodeJS.ProcessEnv,
   logPath: string,
   timeout = 15 * 60_000,
 ) {

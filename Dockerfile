@@ -1,27 +1,24 @@
 FROM node:24-bookworm-slim AS base
-COPY --from=oven/bun:1.2.15 /usr/local/bin/bun /usr/local/bin/bun
+RUN npm install --global pnpm@12.10.1
 WORKDIR /app
 
 FROM base AS dependencies
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS builder
 COPY . .
-# Bundle project aliases while retaining these runtime packages as imports.
-# --packages=external also externalizes @/ aliases, which Node cannot resolve.
-RUN bun build scripts/migrate.ts --target=node --format=esm --packages=external --outfile=build/migrate.mjs \
-    && bun build scripts/generation-worker.ts --target=node --format=esm --external=pg --external=drizzle-orm --external=ai --external=@ai-sdk/groq --external=zod --external=dotenv/config --external=sonner --outfile=build/generation-worker.mjs
+RUN pnpm run build:runtime
 # These values only satisfy import-time validation; no real secrets or database
 # are needed to build. Runtime containers validate their actual configuration.
 RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
     BETTER_AUTH_SECRET=build-only-placeholder-secret-never-use-in-production \
     BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=build-only MISTRAL_API_KEY=build-only \
-    bun run build
+    pnpm run build
 
 FROM base AS production-dependencies
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
 FROM node:24-bookworm-slim AS script-runtime
 WORKDIR /app

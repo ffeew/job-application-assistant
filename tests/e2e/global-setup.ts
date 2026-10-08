@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { build } from "esbuild";
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
@@ -126,7 +127,7 @@ export default async function globalSetup() {
     }
     console.log("E2E containers ready; building the production application.");
     await runProcess(
-      "bun",
+      "pnpm",
       ["run", "build"],
       environment,
       `${LOG_DIRECTORY}/build.log`,
@@ -140,17 +141,19 @@ export default async function globalSetup() {
       { recursive: true },
     );
     await runProcess(
-      "bun",
-      [
-        "build",
-        "tests/e2e/support/block-external-fetch.ts",
-        "--target=node",
-        "--format=esm",
-        `--outfile=${BUILD_DIRECTORY}/block-external-fetch.mjs`,
-      ],
+      "pnpm",
+      ["run", "build:runtime"],
       environment,
       `${LOG_DIRECTORY}/build.log`,
     );
+    await build({
+      entryPoints: ["tests/e2e/support/block-external-fetch.ts"],
+      bundle: true,
+      platform: "node",
+      target: "node24",
+      format: "esm",
+      outfile: `${BUILD_DIRECTORY}/block-external-fetch.mjs`,
+    });
     application = await startProcess(
       process.execPath,
       [

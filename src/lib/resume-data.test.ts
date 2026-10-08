@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { buildResumeDocument, type ResumeData } from "./resume-data";
 import { resumeContentSelectionSchema } from "@/app/api/profile/validators";
 import { saveTailoredResumeRequestSchema } from "@/app/api/applications/[id]/resume/validators";

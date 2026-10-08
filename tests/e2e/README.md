@@ -2,14 +2,14 @@
 
 The Playwright suite uses desktop Chromium, the production standalone Next.js
 application, PostgreSQL 18 in Testcontainers, and the real LaTeX compiler image.
-Docker must be running. Node.js 24, Bun, and the Docker CLI are required; there
+Docker must be running. Node.js 24, pnpm, and the Docker CLI are required; there
 is no need to start Compose, configure a development database, or supply AI keys.
 
 ```sh
-bun install
-bunx playwright install --with-deps chromium
-bun run test:e2e
-bun run test:e2e:ui
+pnpm install
+pnpm exec playwright install --with-deps chromium
+pnpm run test:e2e
+pnpm run test:e2e:ui
 ```
 
 The first run builds the compiler's TeX/font packages. Later runs use Docker's
@@ -33,14 +33,14 @@ The queued-job test starts the real worker only after navigation, avoiding
 timing-dependent sleeps. Workers stop before candidate cleanup; the app and
 disposable containers stop at suite teardown, including setup failures.
 
-Browser files use `.e2e.ts`, which Playwright explicitly discovers and Bun's test
-runner does not. Existing `bun run test` and PostgreSQL integration tests remain
+Browser files use `.e2e.ts`, which Playwright explicitly discovers and Vitest's test
+runner does not. Existing `pnpm run test` and PostgreSQL integration tests remain
 independent. To run a subset or disable CI retries:
 
 ```sh
-bun run test:e2e tests/e2e/profile.e2e.ts
-bun run test:e2e --retries=0
-node node_modules/@playwright/test/cli.js show-report artifacts/e2e/report
+pnpm run test:e2e tests/e2e/profile.e2e.ts
+pnpm run test:e2e --retries=0
+pnpm exec playwright show-report artifacts/e2e/report
 ```
 
 Browser reports, screenshots, retained failure traces, downloaded PDFs, per-test

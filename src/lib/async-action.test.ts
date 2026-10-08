@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { runAsyncAction, withAsyncHandler } from "./async-action";
 
 describe("async event adapters", () => {

@@ -20,7 +20,7 @@ Production builds use non-secret placeholders and do not connect to a live datab
 
 ## Updates and rollback
 
-Back up the database before updates. Generate and commit schema migrations during development with `bun run db:generate`; deploy committed migrations rather than using `db:push` against production.
+Back up the database before updates. Generate and commit schema migrations during development with `pnpm run db:generate`; deploy committed migrations rather than using `db:push` against production.
 
 ```sh
 docker compose build
@@ -70,22 +70,22 @@ Use `BETTER_AUTH_URL=http://localhost:3000`, a host `DATABASE_URL` pointing to `
 
 ```sh
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db latex-compiler
-bun install --frozen-lockfile
-bun run db:migrate
-bun run worker  # separate terminal
-bun run dev    # separate terminal
+pnpm install --frozen-lockfile
+pnpm run db:migrate
+pnpm run worker  # separate terminal
+pnpm run dev    # separate terminal
 ```
 
-The development override exposes PostgreSQL and the compiler on loopback only. Do not include that override in the production stack. `bun run db:push` is available for disposable local experiments.
+The development override exposes PostgreSQL and the compiler on loopback only. Do not include that override in the production stack. `pnpm run db:push` is available for disposable local experiments.
 
-Run `bun run lint`, `bun run typecheck`, and `bun run test`. Integration tests require a dedicated disposable PostgreSQL database whose name ends in `_test`, fake service credentials, and `RUN_DB_INTEGRATION=1`:
+Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run test`. Integration tests require a dedicated disposable PostgreSQL database whose name ends in `_test`, fake service credentials, and `RUN_DB_INTEGRATION=1`:
 
 ```sh
 NODE_ENV=test RUN_DB_INTEGRATION=1 \
 DATABASE_URL=postgresql://test:test@localhost:5432/job_assistant_test \
 BETTER_AUTH_SECRET=test-only-secret-at-least-thirty-two-characters \
 BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=test-only MISTRAL_API_KEY=test-only \
-RESEND_API_KEY= RESEND_FROM_EMAIL= bun run test:integration
+RESEND_API_KEY= RESEND_FROM_EMAIL= pnpm run test:integration
 ```
 
 Tests apply the baseline twice, create sanitized fixtures, and check authentication, CRUD/types/cascades, endpoint ownership, queue claims, interrupted-job recovery, stale completion, save intent, slow mocked generation, failure handling, PDF retrieval, and retention. CI provisions PostgreSQL 18 for these tests.

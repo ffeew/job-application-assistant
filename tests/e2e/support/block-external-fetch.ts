@@ -4,21 +4,18 @@ if (!origins)
 const allowed = new Set(origins.split(","));
 const originalFetch = globalThis.fetch;
 
-// Preserve Bun's fetch extensions while guarding both the app and real worker.
-globalThis.fetch = Object.assign(
-  (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-    const url = new URL(input instanceof Request ? input.url : String(input));
-    if (!allowed.has(url.origin)) {
-      console.error(
-        `E2E blocked unexpected external request to ${url.origin}.`,
-      );
-      throw new Error(
-        `E2E blocked unexpected external request to ${url.origin}.`,
-      );
-    }
-    return originalFetch(input, init);
-  },
-  originalFetch,
-);
+// Guard both the app and real worker against unexpected external requests.
+globalThis.fetch = (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  if (!allowed.has(url.origin)) {
+    console.error(
+      `E2E blocked unexpected external request to ${url.origin}.`,
+    );
+    throw new Error(
+      `E2E blocked unexpected external request to ${url.origin}.`,
+    );
+  }
+  return originalFetch(input, init);
+};
 
 export {};

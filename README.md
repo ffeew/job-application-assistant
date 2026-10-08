@@ -17,45 +17,50 @@ Job Application Assistant is a full-stack Next.js App Router project that centra
 - **Data & Auth**: Drizzle ORM + PostgreSQL, BetterAuth sessions, Zod validators
 - **Client**: Tailwind CSS v4, Shadcn UI, Lucide icons, Sonner toasts, React Hook Form, TanStack Query
 - **AI & Documents**: Vercel AI SDK 7 with `@ai-sdk/groq` for text generation, a Docker-hosted pdfLaTeX compiler for PDF export, AI content selection and page fitting for resumes
-- **Tooling**: Bun (runtime and script runner), ESLint 9, TypeScript compiler checks, Drizzle Kit migrations
+- **Tooling**: Node.js 24, pnpm, Vitest, ESLint 9, TypeScript compiler checks, Drizzle Kit migrations
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 22+ (Node.js 24 is used in CI and Docker)
-- [Bun](https://bun.sh/) 1.1+ (recommended) or npm
+- Node.js 24 (use `fnm install` and `fnm use`; fnm reads the committed `.nvmrc`)
+- [pnpm](https://pnpm.io/installation) 12.10.1 (pinned in `package.json`)
 - Docker Engine with Compose v2 for PostgreSQL and the PDF compiler
 - Groq API key for AI functionality
 - Mistral API key for resume OCR imports
 
 ### Setup
 
+If pnpm is not already available under Node.js 24, run `npm install --global pnpm@12.10.1` after `fnm use`.
+
 ```bash
 git clone https://github.com/ffeew/job-application-assistant
 cd job-application-assistant
 
-bun install             # or npm install
+fnm install
+fnm use
+pnpm install
 cp .env.example .env    # then fill in the values
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db latex-compiler
-bun run db:migrate      # apply committed PostgreSQL migrations
-bun run worker          # run in a separate terminal for resume generation
-bun run dev             # run in another terminal; visit http://localhost:3000
+pnpm run db:migrate      # apply committed PostgreSQL migrations
+pnpm run worker          # run in a separate terminal for resume generation
+pnpm run dev             # run in another terminal; visit http://localhost:3000
 ```
 
 ### Useful scripts
 
-- `bun run dev` – start the Turbopack dev server
-- `bun run build` – run ESLint, then build for production with Turbopack and type checks
-- `bun run start` – serve the production build
-- `bun run lint` – strict ESLint checks; errors and warnings fail the command
-- `bun run lint:fix` – apply ESLint's safe automatic fixes, then report remaining findings
-- `bun run typecheck` – generate Next.js route types, then run TypeScript checks
-- `bun run test` – run the focused Bun tests
-- `bun run db:push` / `bun run db:generate` / `bun run db:studio` – Drizzle Kit helpers
-- `bun run db:migrate` – apply committed PostgreSQL migrations
-- `bun run worker` – process queued resume generation jobs
-- `bun run test:integration` – PostgreSQL/API/worker integration tests (see the deployment guide)
+- `pnpm run dev` – start the Turbopack dev server
+- `pnpm run build` – run ESLint, then build for production with Turbopack and type checks
+- `pnpm run start` – serve the production build
+- `pnpm run lint` – strict ESLint checks; errors and warnings fail the command
+- `pnpm run lint:fix` – apply ESLint's safe automatic fixes, then report remaining findings
+- `pnpm run typecheck` – generate Next.js route types, then run TypeScript checks
+- `pnpm run test` – run the focused Vitest tests on Node.js
+- `pnpm run build:runtime` – bundle the migrator, worker, and PDF compiler for Node.js
+- `pnpm run db:push` / `pnpm run db:generate` / `pnpm run db:studio` – Drizzle Kit helpers
+- `pnpm run db:migrate` – apply committed PostgreSQL migrations
+- `pnpm run worker` – process queued resume generation jobs
+- `pnpm run test:integration` – PostgreSQL/API/worker integration tests (see the deployment guide)
 
 ## Self-hosted deployment
 
@@ -150,23 +155,23 @@ Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LA
 
 ## Database & migrations
 
-- Update the schema in `src/lib/db/schema/`, then run `bun run db:generate` to create SQL migrations.
-- Apply committed migrations with `bun run db:migrate`; use `bun run db:push` only for disposable local schema experiments.
+- Update the schema in `src/lib/db/schema/`, then run `pnpm run db:generate` to create SQL migrations.
+- Apply committed migrations with `pnpm run db:migrate`; use `pnpm run db:push` only for disposable local schema experiments.
 - The squashed PostgreSQL baseline initializes a fresh database; historical Turso data is not imported.
 - Keep the generated SQL in `migrations/` under version control.
 
 ## Quality checks & testing
 
 Browser E2E tests use Playwright with seeded PostgreSQL Testcontainers and the
-real PDF compiler. Run `bunx playwright install --with-deps chromium`, then
-`bun run test:e2e` with Docker running. See [the browser testing guide](tests/e2e/README.md)
+real PDF compiler. Run `pnpm exec playwright install --with-deps chromium`, then
+`pnpm run test:e2e` with Docker running. See [the browser testing guide](tests/e2e/README.md)
 for fixtures, UI mode, artifacts, and CI details.
 
 PostgreSQL integration tests are opt-in with `RUN_DB_INTEGRATION=1` and a dedicated `DATABASE_URL` whose database name ends in `_test`. CI runs them against PostgreSQL 18 with fake service credentials; ordinary unit tests require no database. See the deployment guide for the full command.
 
 
-- Run `bun run lint`, `bun run typecheck`, and `bun run test` before opening a pull request. Production builds invoke the same lint gate before Next.js compiles and checks types; Next.js 16 does not run linting itself.
-- CI uses Node.js 24 and `bun install --frozen-lockfile` before running all three checks. Tests use sanitized fixtures and need no database or AI credentials.
+- Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run test` before opening a pull request. Production builds invoke the same lint gate before Next.js compiles and checks types; Next.js 16 does not run linting itself.
+- CI uses Node.js 24 and `pnpm install --frozen-lockfile` before running all three checks. Tests use sanitized fixtures and need no database or AI credentials.
 - ESLint combines core recommended rules, Next.js Core Web Vitals and React Compiler checks, TypeScript ESLint's `strictTypeChecked` preset, TanStack Query's recommended rules, and JSX accessibility checks for HTML and shared form controls. Type-aware rules use the existing TypeScript project; JavaScript configuration files stay untyped. Generated Next.js files and build output are ignored.
 - TypeScript also enables `noUncheckedIndexedAccess`: array and dictionary lookups must account for missing values. Keep defensive guards and correct their types rather than suppressing lint errors.
 - The two intentional strict-preset adjustments allow concise callbacks returning `void`, explicit `void` expressions, and numeric template interpolation. Other template restrictions remain strict. Unused lint directives and inline configurations fail linting. TypeScript ESLint is pinned because its strict preset can change in minor releases; review preset changes when upgrading it.

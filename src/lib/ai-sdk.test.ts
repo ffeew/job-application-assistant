@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
@@ -32,37 +32,34 @@ function groqFixture(content: string, modelId = "qwen/qwen3.8-27b") {
   const requests: z.infer<typeof requestSchema>[] = [];
   const groq = createGroq({
     apiKey: "test-only",
-    fetch: Object.assign(
-      (...args: Parameters<typeof fetch>) => {
-        const init = args[1];
-        init?.signal?.throwIfAborted();
-        if (typeof init?.body !== "string") {
-          throw new Error("Expected a JSON request body.");
-        }
-        const body: unknown = JSON.parse(init.body);
-        requests.push(requestSchema.parse(body));
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              id: "chatcmpl-test",
-              object: "chat.completion",
-              created: 0,
-              model: modelId,
-              choices: [
-                {
-                  index: 0,
-                  message: { role: "assistant", content },
-                  finish_reason: "stop",
-                },
-              ],
-              usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
-            }),
-            { headers: { "Content-Type": "application/json" } },
-          ),
-        );
-      },
-      { preconnect: fetch.preconnect },
-    ),
+    fetch: (...args: Parameters<typeof fetch>) => {
+      const init = args[1];
+      init?.signal?.throwIfAborted();
+      if (typeof init?.body !== "string") {
+        throw new Error("Expected a JSON request body.");
+      }
+      const body: unknown = JSON.parse(init.body);
+      requests.push(requestSchema.parse(body));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "chatcmpl-test",
+            object: "chat.completion",
+            created: 0,
+            model: modelId,
+            choices: [
+              {
+                index: 0,
+                message: { role: "assistant", content },
+                finish_reason: "stop",
+              },
+            ],
+            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    },
   });
   return { model: groq(modelId), requests };
 }

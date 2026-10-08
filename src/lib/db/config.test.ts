@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { databaseUrlSchema } from "./config";
 
 test("accepts PostgreSQL URLs, including encoded credentials", () => {

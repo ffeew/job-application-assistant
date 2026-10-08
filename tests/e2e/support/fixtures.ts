@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFile, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { promisify } from "node:util";
+import { resolve } from "node:path";
 import {
   test as base,
   expect,
@@ -13,7 +14,12 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { z } from "zod";
 import * as schema from "../../../src/lib/db/schema";
-import { BASE_URL, getRuntime, runtimeEnvironment } from "./runtime";
+import {
+  BASE_URL,
+  BUILD_DIRECTORY,
+  getRuntime,
+  runtimeEnvironment,
+} from "./runtime";
 import { startProcess, type ManagedProcess } from "./process";
 
 const execute = promisify(execFile);
@@ -174,11 +180,11 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
           if (managed)
             throw new Error("The generation worker is already running.");
           managed = await startProcess(
-            "bun",
+            process.execPath,
             [
-              "--preload",
-              "./tests/e2e/support/block-external-fetch.ts",
-              "scripts/generation-worker.ts",
+              "--import",
+              resolve(`${BUILD_DIRECTORY}/block-external-fetch.mjs`),
+              "build/generation-worker.mjs",
             ],
             runtimeEnvironment(getRuntime()),
             logPath,

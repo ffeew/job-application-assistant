@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { spawnSync } from "node:child_process";
 import { compileLatex, inspectLatexLog, MAX_TEX_BYTES } from "./compiler";
 import { createCompilerServer } from "./server";

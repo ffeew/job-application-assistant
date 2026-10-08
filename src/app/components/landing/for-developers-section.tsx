@@ -54,7 +54,7 @@ const steps = [
     icon: GithubIcon,
     title: "Clone & deploy",
     description:
-      "Fork the repository, install dependencies with Bun, and self-host with Docker Compose.",
+      "Fork the repository, install dependencies with pnpm, and self-host with Docker Compose.",
   },
   {
     icon: Settings,

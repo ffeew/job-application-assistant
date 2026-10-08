@@ -1,4 +1,5 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
+import { spawnSync } from "node:child_process";
 import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,16 +18,16 @@ test("container credentials round-trip reserved characters without changing the 
     );
     const password = "p@ss/%40:#?";
     const username = "demo@%40";
-    const output = Bun.spawnSync(
+    const output = spawnSync(
+      process.execPath,
       [
-        process.execPath,
         join(directory, "scripts", "entrypoint.mjs"),
         "migrate.mjs",
       ],
       {
-        stdout: "pipe",
-        stderr: "pipe",
+        encoding: "utf8",
         env: {
+          NODE_ENV: "test",
           PATH: process.env.PATH,
           PGHOST: "db",
           PGUSER: username,
@@ -35,8 +36,9 @@ test("container credentials round-trip reserved characters without changing the 
         },
       },
     );
-    expect(output.exitCode).toBe(0);
-    const url = new URL(new TextDecoder().decode(output.stdout).trim());
+    if (output.error) throw output.error;
+    expect(output.status).toBe(0);
+    const url = new URL(output.stdout.trim());
     expect(url.hostname).toBe("db");
     expect(decodeURIComponent(url.username)).toBe(username);
     expect(decodeURIComponent(url.password)).toBe(password);
