@@ -493,9 +493,12 @@ function ProfileForm({
 			</div>
 
 			<div className="flex flex-col gap-4">
-				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+				<Label
+					htmlFor="professionalSummary"
+					className="text-sm font-medium text-muted-foreground uppercase tracking-wide"
+				>
 					Professional Summary
-				</h3>
+				</Label>
 				<div className="flex flex-col gap-2">
 					<Textarea
 						id="professionalSummary"

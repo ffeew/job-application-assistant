@@ -191,6 +191,7 @@ export default function ApplicationsPage() {
 									<Button
 										variant="outline"
 										size="sm"
+										aria-label={`Delete application at ${application.company}`}
 										onClick={() => handleDeleteApplication(application.id)}
 										disabled={deleteApplicationMutation.isPending}
 									>
@@ -256,6 +257,7 @@ export default function ApplicationsPage() {
 										<Button
 											variant="outline"
 											size="sm"
+											aria-label={`Delete application at ${application.company}`}
 											onClick={() => handleDeleteApplication(application.id)}
 											disabled={deleteApplicationMutation.isPending}
 										>

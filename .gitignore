@@ -12,9 +12,11 @@
 
 # testing
 /coverage
+/artifacts/e2e/
 
 # next.js
 /.next/
+/.next-e2e/
 /out/
 
 # production

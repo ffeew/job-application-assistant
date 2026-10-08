@@ -153,6 +153,11 @@ Resume generation requires `LATEX_COMPILER_URL` and a matching 32+ character `LA
 
 ## Quality checks & testing
 
+Browser E2E tests use Playwright with seeded PostgreSQL Testcontainers and the
+real PDF compiler. Run `bunx playwright install --with-deps chromium`, then
+`bun run test:e2e` with Docker running. See [the browser testing guide](tests/e2e/README.md)
+for fixtures, UI mode, artifacts, and CI details.
+
 PostgreSQL integration tests are opt-in with `RUN_DB_INTEGRATION=1` and a dedicated `DATABASE_URL` whose database name ends in `_test`. CI runs them against PostgreSQL 18 with fake service credentials; ordinary unit tests require no database. See the deployment guide for the full command.
 
 

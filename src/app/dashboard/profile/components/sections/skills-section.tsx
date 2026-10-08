@@ -232,6 +232,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 														variant="ghost"
 														size="icon"
 														className="h-6 w-6"
+														aria-label={`Edit ${skill.name}`}
 														onClick={() => startEditing("skills", skill.id)}
 													>
 														<Edit className="h-3 w-3" />
@@ -240,6 +241,7 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 														variant="ghost"
 														size="icon"
 														className="h-6 w-6"
+														aria-label={`Delete ${skill.name}`}
 														onClick={() => openDeleteConfirmation("skills", skill.id)}
 													>
 														<Trash2 className="h-3 w-3" />
@@ -332,7 +334,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="category">Category *</Label>
 				<Select value={category} onValueChange={(value) => setValue("category", value as "technical" | "soft" | "language" | "tool" | "framework" | "other")}>
-					<SelectTrigger>
+					<SelectTrigger id="category">
 						<SelectValue placeholder="Select category" />
 					</SelectTrigger>
 					<SelectContent>
@@ -346,7 +348,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="proficiencyLevel">Proficiency Level</Label>
 				<Select value={proficiencyLevel || ""} onValueChange={(value) => setValue("proficiencyLevel", (value || null) as "beginner" | "intermediate" | "advanced" | "expert" | null)}>
-					<SelectTrigger>
+					<SelectTrigger id="proficiencyLevel">
 						<SelectValue placeholder="Select level" />
 					</SelectTrigger>
 					<SelectContent>

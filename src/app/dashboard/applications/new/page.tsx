@@ -153,10 +153,16 @@ export default function NewApplicationPage() {
                     name="status"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          // Status is required; ignore empty native-select synchronization events.
+                          if (value !== "") field.onChange(value);
+                        }}
+                      >
+                        <SelectTrigger id="status">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="applied">Applied</SelectItem>
                           <SelectItem value="interviewing">Interviewing</SelectItem>

@@ -204,9 +204,12 @@ export default function EditApplicationPage({
 										render={({ field }) => (
 											<Select
 												value={field.value}
-												onValueChange={field.onChange}
+												onValueChange={(value) => {
+													// Radix's native select can emit an empty value while reset synchronizes options.
+													if (value !== "") field.onChange(value);
+												}}
 											>
-												<SelectTrigger>
+												<SelectTrigger id="status">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
