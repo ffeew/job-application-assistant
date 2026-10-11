@@ -11,7 +11,11 @@ export const coverLetterSchema = z.object({
 
 export const createCoverLetterSchema = coverLetterSchema;
 
-export const updateCoverLetterSchema = coverLetterSchema.partial();
+// Partial schemas keep field defaults, so an omitted key would overwrite the
+// stored value on update. Defaulted fields are redeclared as plain optionals.
+export const updateCoverLetterSchema = coverLetterSchema.partial().extend({
+  isAiGenerated: z.boolean().optional(),
+});
 
 export const coverLetterResponseSchema = coverLetterSchema.extend({
   id: z.string(),

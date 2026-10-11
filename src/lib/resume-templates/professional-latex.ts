@@ -29,6 +29,19 @@ export function escapeLatex(value: string): string {
     .replace(/\r?\n/g, " ");
 }
 
+/**
+ * hyperref writes the \href target into the PDF verbatim, so text escapes such
+ * as \textasciitilde{} would corrupt it. Unsafe characters are percent-encoded
+ * and only the characters TeX would otherwise interpret are backslash-escaped.
+ */
+export function escapeLatexUrl(value: string): string {
+  return Array.from(value)
+    .filter((character) => character.charCodeAt(0) >= 32)
+    .join("")
+    .replace(/[\\{}^$\s"<>`|]/g, (character) => encodeURIComponent(character))
+    .replace(/[%#&_]/g, (character) => `\\${character}`);
+}
+
 /** Formatting must not let resume text inject LaTeX commands. */
 export function formatLatex(value: string): string {
   return value
@@ -47,7 +60,7 @@ function link(url: string | undefined, label: string, header = false): string {
   // Prevent PDF links from opening local files or using executable URL schemes.
   if (!url || !/^(https?:\/\/|mailto:)/i.test(url)) return escapeLatex(label);
   const display = escapeLatex(label).replace(/([/.@-])/g, "$1\\allowbreak{}");
-  return `\\href{${escapeLatex(url)}}{${header ? `\\textcolor{black}{${display}}` : display}}`;
+  return `\\href{${escapeLatexUrl(url)}}{${header ? `\\textcolor{black}{${display}}` : display}}`;
 }
 
 export function generateProfessionalResumeLatex(
@@ -78,7 +91,7 @@ ${entry.links.length ? `${entry.links.map((item) => link(item.url, item.text)).j
 ${
   entry.bullets.length
     ? String.raw`\begin{itemize}
-${entry.bullets.map((bullet) => `\\item ${formatLatex(bullet.text)}`).join("\n")}
+${entry.bullets.map((bullet) => `\\item{} ${formatLatex(bullet.text)}`).join("\n")}
 \end{itemize}`
     : ""
 }`,

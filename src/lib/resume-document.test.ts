@@ -7,6 +7,7 @@ import {
 } from "./resume-document";
 import {
   escapeLatex,
+  escapeLatexUrl,
   formatLatex,
   generateProfessionalResumeLatex,
 } from "./resume-templates/professional-latex";
@@ -23,6 +24,26 @@ test("escapes TeX input and permits only text emphasis", () => {
   expect(generateProfessionalResumeLatex(syntheticResume())).toContain(
     "left=0.5in,right=0.5in,top=0.43in,bottom=0.35in",
   );
+});
+
+test("link targets keep URL characters and bullets never read a leading bracket as a label", () => {
+  expect(escapeLatexUrl("https://uni.test/~alex/a_b?x=1&y=2#f%20g")).toBe(
+    "https://uni.test/~alex/a\\_b?x=1\\&y=2\\#f\\%20g",
+  );
+  expect(escapeLatexUrl("https://uni.test/a\\b{c}^d $e")).toBe(
+    "https://uni.test/a\\%5Cb\\%7Bc\\%7D\\%5Ed\\%20\\%24e",
+  );
+  const resume = syntheticResume(1);
+  const contact = resume.contacts[1];
+  const bullet = resume.sections[0]?.entries[0]?.bullets[0];
+  if (!contact || !bullet) throw new Error("Fixture is missing entries");
+  contact.url = "https://uni.test/~alex";
+  bullet.text = "[Python] Built a parser";
+  const latex = generateProfessionalResumeLatex(resume);
+  expect(latex).toContain("\\href{https://uni.test/~alex}");
+  expect(latex).toContain("\\item{} [Python] Built a parser");
+  contact.url = "file:///etc/passwd";
+  expect(generateProfessionalResumeLatex(resume)).not.toContain("\\href{file");
 });
 
 test("saved snapshots omit PDF bytes and remain readable by legacy consumers", () => {

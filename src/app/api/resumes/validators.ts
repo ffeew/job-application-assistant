@@ -11,7 +11,12 @@ export const resumeSchema = z.object({
 
 export const createResumeSchema = resumeSchema;
 
-export const updateResumeSchema = resumeSchema.partial();
+// Partial schemas keep field defaults, so an omitted key would overwrite the
+// stored value on update. Defaulted fields are redeclared as plain optionals.
+export const updateResumeSchema = resumeSchema.partial().extend({
+  isDefault: z.boolean().optional(),
+  isTailored: z.boolean().optional(),
+});
 
 export const resumeResponseSchema = resumeSchema.extend({
   id: z.string(),

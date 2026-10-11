@@ -18,7 +18,11 @@ export const applicationSchema = z.object({
 
 export const createApplicationSchema = applicationSchema;
 
-export const updateApplicationSchema = applicationSchema.partial();
+// Partial schemas keep field defaults, so an omitted key would overwrite the
+// stored value on update. Defaulted fields are redeclared as plain optionals.
+export const updateApplicationSchema = applicationSchema.partial().extend({
+  status: applicationSchema.shape.status.unwrap().optional(),
+});
 
 export const applicationResponseSchema = applicationSchema.extend({
   id: z.string(),

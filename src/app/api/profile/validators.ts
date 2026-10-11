@@ -54,7 +54,12 @@ export const workExperienceSchema = z.object({
 });
 
 export const createWorkExperienceSchema = workExperienceSchema;
-export const updateWorkExperienceSchema = workExperienceSchema.partial();
+// Partial schemas keep field defaults, so an omitted key would overwrite the
+// stored value on update. Defaulted fields are redeclared as plain optionals.
+export const updateWorkExperienceSchema = workExperienceSchema.partial().extend({
+  isCurrent: z.boolean().optional(),
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const workExperienceResponseSchema = workExperienceSchema.extend({
   id: z.number(),
@@ -83,7 +88,9 @@ export const educationSchema = z.object({
 });
 
 export const createEducationSchema = educationSchema;
-export const updateEducationSchema = educationSchema.partial();
+export const updateEducationSchema = educationSchema.partial().extend({
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const educationResponseSchema = educationSchema.extend({
   id: z.number(),
@@ -110,7 +117,9 @@ export const skillSchema = z.object({
 });
 
 export const createSkillSchema = skillSchema;
-export const updateSkillSchema = skillSchema.partial();
+export const updateSkillSchema = skillSchema.partial().extend({
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const skillResponseSchema = skillSchema.extend({
   id: z.number(),
@@ -144,7 +153,10 @@ export const projectSchema = z.object({
 });
 
 export const createProjectSchema = projectSchema;
-export const updateProjectSchema = projectSchema.partial();
+export const updateProjectSchema = projectSchema.partial().extend({
+  isOngoing: z.boolean().optional(),
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const projectResponseSchema = projectSchema.extend({
   id: z.number(),
@@ -173,7 +185,9 @@ export const certificationSchema = z.object({
 });
 
 export const createCertificationSchema = certificationSchema;
-export const updateCertificationSchema = certificationSchema.partial();
+export const updateCertificationSchema = certificationSchema.partial().extend({
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const certificationResponseSchema = certificationSchema.extend({
   id: z.number(),
@@ -195,7 +209,9 @@ export const achievementSchema = z.object({
 });
 
 export const createAchievementSchema = achievementSchema;
-export const updateAchievementSchema = achievementSchema.partial();
+export const updateAchievementSchema = achievementSchema.partial().extend({
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const achievementResponseSchema = achievementSchema.extend({
   id: z.number(),
@@ -217,7 +233,9 @@ export const referenceSchema = z.object({
 });
 
 export const createReferenceSchema = referenceSchema;
-export const updateReferenceSchema = referenceSchema.partial();
+export const updateReferenceSchema = referenceSchema.partial().extend({
+  displayOrder: z.number().int().min(0).optional(),
+});
 
 export const referenceResponseSchema = referenceSchema.extend({
   id: z.number(),

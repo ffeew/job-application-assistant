@@ -21,6 +21,9 @@ import {
 
 const LEASE_MS = 5 * 60 * 1000;
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+// A restored failure is only useful right after it happened; later it would
+// greet a returning user with an error for something they are no longer doing.
+const FAILURE_VISIBLE_MS = 15 * 60 * 1000;
 type Job = typeof resumeGenerationJobs.$inferSelect;
 export type ClaimedGenerationJob = Job & { claimToken: string };
 
@@ -94,6 +97,7 @@ export async function getGenerationJob(userId: string, id: string) {
 export async function getLatestGenerationJob(
   userId: string,
   applicationId: string | null,
+  now = new Date(),
 ) {
   const [job] = await db
     .select()
@@ -111,6 +115,11 @@ export async function getLatestGenerationJob(
       desc(resumeGenerationJobs.id),
     )
     .limit(1);
+  if (
+    job?.status === "failed" &&
+    job.updatedAt.getTime() < now.getTime() - FAILURE_VISIBLE_MS
+  )
+    return null;
   return job ? response(job) : null;
 }
 

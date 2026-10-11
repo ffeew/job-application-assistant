@@ -426,6 +426,16 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     expect((await jobs.getGenerationJob(userId, failed.id))?.error).toBe(
       "Resume generation failed. Please retry.",
     );
+    expect((await jobs.getLatestGenerationJob(userId, null))?.id).toBe(
+      failed.id,
+    );
+    expect(
+      await jobs.getLatestGenerationJob(
+        userId,
+        null,
+        new Date(Date.now() + 16 * 60 * 1000),
+      ),
+    ).toBeNull();
     await enqueue();
     expect(await jobs.claimGenerationJob()).not.toBeNull();
   });
