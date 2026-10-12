@@ -1,22 +1,45 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import {
+	Archivo,
+	Big_Shoulders_Stencil,
+	STIX_Two_Text,
+} from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/app/components/providers/query-provider";
 import { ThemeProvider } from "@/app/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "@/lib/env";
 
-const dmSans = DM_Sans({
-	weight: ["400", "500", "700"],
-	variable: "--font-sans",
+// The width axis supplies the condensed cut used for titles.
+const archivo = Archivo({
+	axes: ["wdth"],
+	variable: "--font-archivo",
 	subsets: ["latin"],
 	display: "swap",
 });
 
+// Close to the newtxtext face the LaTeX template compiles with; documents only.
+const stixTwoText = STIX_Two_Text({
+	style: ["normal", "italic"],
+	variable: "--font-stix",
+	subsets: ["latin"],
+	display: "swap",
+});
+
+// Rubber stamps only: status and page-fit verdicts.
+const bigShouldersStencil = Big_Shoulders_Stencil({
+	weight: ["700"],
+	variable: "--font-big-shoulders-stencil",
+	subsets: ["latin"],
+	display: "swap",
+	// Next has no metrics for this face; stamps are short, so a shift on swap is harmless.
+	adjustFontFallback: false,
+});
+
 export const metadata: Metadata = {
-	title: "Job Application Assistant - AI-Powered Resume Optimization",
+	title: "Job Application Assistant",
 	description:
-		"Build your profile, tailor resumes and cover letters with AI, and track applications in a self-hosted workspace.",
+		"Keep one career profile, tailor a one-page resume to each job, and track your applications on your own server.",
 };
 
 export default function RootLayout({
@@ -25,11 +48,15 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
-			<body className={`${dmSans.variable} antialiased`}>
+		<html
+			lang="en"
+			className={`${archivo.variable} ${stixTwoText.variable} ${bigShouldersStencil.variable}`}
+			suppressHydrationWarning
+		>
+			<body className="font-sans antialiased">
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="dark"
+					defaultTheme="system"
 					enableSystem
 					disableTransitionOnChange
 				>

@@ -1,262 +1,273 @@
 "use client";
 
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Briefcase, PenTool, Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import type { ActivityItem } from "@/app/api/dashboard/validators";
+import { cn } from "@/lib/utils";
 import { useDashboardStats } from "../queries/use-dashboard-stats";
 import { useDashboardActivity } from "../queries/use-dashboard-activity";
+import {
+  applicationStatuses,
+  statusFills,
+  statusLabels,
+  StatusMark,
+} from "../applications/components/status-mark";
 import { DashboardSkeleton } from "./dashboard-skeleton";
+import { EmptyState } from "./empty-state";
+import { PageHeader } from "./page-header";
 
-const formatRelativeTime = (timestamp: string | Date) => {
-  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+const plural = (count: number, noun: string) =>
+  `${count} ${noun}${count === 1 ? "" : "s"}`;
 
-  if (diffInSeconds < 60) return "Just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+const formatRelativeTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 60) return "Just now";
+  if (seconds < 3600) return `${plural(Math.floor(seconds / 60), "minute")} ago`;
+  if (seconds < 86400) return `${plural(Math.floor(seconds / 3600), "hour")} ago`;
+  if (seconds < 604800) return `${plural(Math.floor(seconds / 86400), "day")} ago`;
   return date.toLocaleDateString();
 };
 
-const getActivityIcon = (type: string) => {
-  switch (type) {
-    case 'application':
-      return Briefcase;
-    case 'cover_letter':
-      return PenTool;
-    case 'resume':
-    default:
-      return FileText;
-  }
+const activityNouns: Record<ActivityItem["type"], string> = {
+  application: "Application",
+  resume: "Resume",
+  cover_letter: "Cover letter",
 };
 
-const getActivityIconColor = (type: string, action: string) => {
-  const actionIntensity = action === 'created' ? '600' : action === 'updated' ? '500' : '400';
-  const baseColors = {
-    application: `text-blue-${actionIntensity}`,
-    cover_letter: `text-purple-${actionIntensity}`,
-    resume: `text-green-${actionIntensity}`,
-  };
-  return baseColors[type as keyof typeof baseColors] || `text-gray-${actionIntensity}`;
+const activityVerbs: Record<ActivityItem["action"], string> = {
+  created: "added",
+  updated: "updated",
+  deleted: "deleted",
 };
 
-const getActivityBackgroundColor = (type: string) => {
-  const backgroundColors = {
-    application: 'bg-blue-100 dark:bg-blue-900',
-    cover_letter: 'bg-purple-100 dark:bg-purple-900',
-    resume: 'bg-green-100 dark:bg-green-900',
-  };
-  return backgroundColors[type as keyof typeof backgroundColors] || 'bg-gray-100 dark:bg-gray-900';
-};
+const addApplicationButton = (
+  <Button asChild>
+    <Link href="/dashboard/applications/new">
+      <Plus />
+      Add application
+    </Link>
+  </Button>
+);
 
 export function DashboardContent() {
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorObj, refetch: refetchStats } = useDashboardStats();
-  const { data: activity = [], isLoading: activityLoading, isError: activityError, error: activityErrorObj, refetch: refetchActivity } = useDashboardActivity();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
+  } = useDashboardStats();
+  const {
+    data: activity = [],
+    isLoading: activityLoading,
+    error: activityError,
+    refetch: refetchActivity,
+  } = useDashboardActivity();
 
-  const isLoading = statsLoading || activityLoading;
-  const isError = statsError || activityError;
-  const error = statsErrorObj || activityErrorObj;
-
-  const refetch = () => {
-    void refetchStats();
-    void refetchActivity();
-  };
-
-  if (isLoading) {
+  if (statsLoading || activityLoading) {
     return <DashboardSkeleton />;
   }
 
-  if (isError) {
+  const error = statsError ?? activityError;
+  if (error || !stats) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Error loading dashboard</p>
-          </div>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-red-600 mb-4">{error?.message || 'Failed to load dashboard data'}</p>
-            <Button onClick={() => refetch()}>Try Again</Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col gap-8">
+        <PageHeader title="Dashboard" />
+        <Notice tone="error" title="The dashboard didn't load">
+          <p>{error?.message ?? "No data came back from the server."}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => {
+              void refetchStats();
+              void refetchActivity();
+            }}
+          >
+            Try again
+          </Button>
+        </Notice>
       </div>
     );
   }
 
+  const counts = stats.applicationsByStatus;
+  const total = stats.totalApplications;
+  const inProgress = counts.applied + counts.interviewing;
+  const segments = applicationStatuses.filter((status) => counts[status] > 0);
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back! Here&apos;s an overview of your job search activity.
-          </p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Dashboard"
+        description="Where your applications stand and what changed recently."
+        actions={addApplicationButton}
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Resumes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalResumes || 0}</div>
-          </CardContent>
-        </Card>
+      {total === 0 ? (
+        <EmptyState
+          title="No applications yet"
+          actions={
+            <>
+              {addApplicationButton}
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/profile">Open your profile</Link>
+              </Button>
+            </>
+          }
+        >
+          Fill in your profile first, then add the job you want to apply to.
+          Each application can have its own tailored resume.
+        </EmptyState>
+      ) : (
+        <section aria-labelledby="pipeline-title">
+          <Card layout="flush" className="flex flex-col gap-6 p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+              <h2 id="pipeline-title" className="text-lg font-semibold">
+                Applications
+              </h2>
+              <Link
+                href="/dashboard/applications"
+                className="text-link text-sm underline underline-offset-4 hover:no-underline"
+              >
+                View all applications
+              </Link>
+            </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
-            <CardTitle className="text-sm font-medium">Applications</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalApplications || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {(stats?.applicationsByStatus.applied || 0) + (stats?.applicationsByStatus.interviewing || 0)} active
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+              {applicationStatuses.map((status) => (
+                <li key={status} className="flex flex-col items-start gap-3">
+                  <span
+                    className={cn(
+                      "title text-5xl leading-none tabular-nums",
+                      counts[status] === 0 && "text-muted-foreground/60",
+                    )}
+                  >
+                    {counts[status]}
+                  </span>
+                  <StatusMark status={status} />
+                </li>
+              ))}
+            </ul>
+
+            {/* The counts above carry every value, so the strip is decorative for assistive tech. */}
+            <div aria-hidden="true" className="flex gap-0.5">
+              {segments.map((status) => (
+                <div
+                  key={status}
+                  className="group relative min-w-3 basis-0"
+                  // Segment width is the data: one flex unit per application.
+                  style={{ flexGrow: counts[status] }}
+                >
+                  <div
+                    className={`h-4 transition-[filter] group-first:rounded-l-sm group-last:rounded-r-sm group-hover:brightness-125 ${statusFills[status]}`}
+                  />
+                  <div className="bg-foreground text-background pointer-events-none absolute bottom-full left-1/2 mb-1 hidden -translate-x-1/2 rounded-md px-2 py-1 text-xs whitespace-nowrap group-hover:block">
+                    {statusLabels[status]}: {counts[status]}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-muted-foreground text-sm">
+              <strong className="text-foreground font-semibold">
+                {plural(total, "application")}
+              </strong>
+              . {inProgress} in progress
+              {counts.offer > 0 &&
+                `, ${plural(counts.offer, "offer")} (${Math.round((counts.offer / total) * 100)}% of all applications)`}
+              .
             </p>
-          </CardContent>
-        </Card>
+          </Card>
+        </section>
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cover Letters</CardTitle>
-            <PenTool className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalCoverLetters || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats ? Math.round(((stats.applicationsByStatus.offer || 0) / Math.max(stats.totalApplications, 1)) * 100) : 0}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Offer rate
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="w-full min-w-0 overflow-hidden">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg truncate">Resume Management</CardTitle>
-            <CardDescription className="text-sm leading-relaxed">
-              Create and manage your resumes
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 px-4 sm:px-6">
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/resumes/new">
-                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  New Resume
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/resumes">View All</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="w-full min-w-0 overflow-hidden">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg truncate">Job Applications</CardTitle>
-            <CardDescription className="text-sm leading-relaxed">
-              Track your job applications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 px-4 sm:px-6">
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/applications/new">
-                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Add Application
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/applications">View All</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="w-full min-w-0 overflow-hidden sm:col-span-2 lg:col-span-1">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg truncate">Cover Letters</CardTitle>
-            <CardDescription className="text-sm leading-relaxed">
-              Generate AI-powered cover letters
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 px-4 sm:px-6">
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/cover-letters/new">
-                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Generate Letter
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="text-xs sm:text-sm">
-                <Link href="/dashboard/cover-letters">View All</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>
-            Your latest job search activities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {activity.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No recent activity yet.</p>
-              <p className="text-sm">Start by creating a resume or adding a job application!</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {activity.map((activityItem) => {
-                const IconComponent = getActivityIcon(activityItem.type);
-                const iconColor = getActivityIconColor(activityItem.type, activityItem.action);
-                const backgroundColor = getActivityBackgroundColor(activityItem.type);
-
-                return (
-                  <div key={activityItem.id} className="flex items-center gap-4">
-                    <div className={`${backgroundColor} p-2 rounded-full`}>
-                      <IconComponent className={`h-4 w-4 ${iconColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activityItem.title}</p>
-                      {activityItem.description && (
-                        <p className="text-xs text-muted-foreground">{activityItem.description}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {formatRelativeTime(activityItem.createdAt)}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section aria-labelledby="activity-title">
+          <Card layout="flush">
+            <h2
+              id="activity-title"
+              className="border-b px-6 py-4 text-lg font-semibold"
+            >
+              Recent activity
+            </h2>
+            {activity.length === 0 ? (
+              <p className="text-muted-foreground px-6 py-6 text-sm">
+                Nothing yet. Changes to your applications, resumes and cover
+                letters show up here.
+              </p>
+            ) : (
+              <ul>
+                {activity.map((item) => (
+                  <li
+                    key={item.id}
+                    className="grid gap-x-6 gap-y-0.5 border-b px-6 py-3 text-sm last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto]"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{item.title}</p>
+                      <p className="text-muted-foreground">
+                        {activityNouns[item.type]} {activityVerbs[item.action]}
                       </p>
                     </div>
-                  </div>
-                );
-              })}
+                    <p className="text-muted-foreground tabular-nums sm:text-right">
+                      {formatRelativeTime(item.createdAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </section>
+
+        <section aria-labelledby="documents-title">
+          <Card layout="flush">
+            <h2
+              id="documents-title"
+              className="border-b px-6 py-4 text-lg font-semibold"
+            >
+              Documents
+            </h2>
+            <ul className="text-sm">
+              <li className="flex items-center justify-between gap-4 border-b px-6 py-3">
+                <Link
+                  href="/dashboard/resumes"
+                  className="text-link underline underline-offset-4 hover:no-underline"
+                >
+                  Resumes
+                </Link>
+                <span className="font-semibold tabular-nums">
+                  {stats.totalResumes}
+                </span>
+              </li>
+              <li className="flex items-center justify-between gap-4 px-6 py-3">
+                <Link
+                  href="/dashboard/cover-letters"
+                  className="text-link underline underline-offset-4 hover:no-underline"
+                >
+                  Cover letters
+                </Link>
+                <span className="font-semibold tabular-nums">
+                  {stats.totalCoverLetters}
+                </span>
+              </li>
+            </ul>
+            <div className="flex flex-col gap-2 border-t p-4">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/resumes/generate">
+                  Generate resume from profile
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/cover-letters/new">Write cover letter</Link>
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </Card>
+        </section>
+      </div>
     </div>
   );
 }

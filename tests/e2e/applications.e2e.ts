@@ -7,7 +7,7 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
 }) => {
   await page.goto("/dashboard/applications/new");
   await page
-    .getByRole("button", { name: "Save Application", exact: true })
+    .getByRole("button", { name: "Save application", exact: true })
     .click();
   await expect(
     page.getByText("Company is required", { exact: true }),
@@ -20,7 +20,7 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
     .getByLabel("Position *", { exact: true })
     .fill("Platform Engineer");
   await page
-    .getByRole("button", { name: "Save Application", exact: true })
+    .getByRole("button", { name: "Save application", exact: true })
     .click();
   await expect(page).toHaveURL(/\/dashboard\/applications$/);
   await expect(
@@ -29,16 +29,15 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
       .filter({ visible: true }),
   ).toBeVisible();
   await page.goto("/dashboard");
-  const applicationsCard = page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Applications", { exact: true }) });
-  await expect(applicationsCard.getByText("2", { exact: true })).toBeVisible();
+  const pipeline = page.getByRole("region", { name: "Applications" });
+  await expect(
+    pipeline.getByText("2 applications", { exact: true }),
+  ).toBeVisible();
   await page.goto("/dashboard/applications");
-  const card = page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Browser Test Co", { exact: true }) })
-    .filter({ visible: true });
-  await card.getByRole("link", { name: "Edit", exact: true }).click();
+  const row = page
+    .getByRole("listitem")
+    .filter({ has: page.getByText("Browser Test Co", { exact: true }) });
+  await row.getByRole("link", { name: "Edit", exact: true }).click();
   await expect(page.getByLabel("Company *", { exact: true })).toHaveValue(
     "Browser Test Co",
   );
@@ -47,9 +46,9 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
   await page
     .getByLabel("Notes", { exact: true })
     .fill("Technical interview scheduled.");
-  await page.getByRole("button", { name: "Save Changes", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard\/applications$/);
-  await card.getByRole("link", { name: "Edit", exact: true }).click();
+  await row.getByRole("link", { name: "Edit", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard\/applications\/[a-f\d-]+$/);
   await page.reload();
   await expect(page.getByLabel("Status", { exact: true })).toHaveText(
@@ -59,14 +58,15 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
     "Technical interview scheduled.",
   );
   await page.goto("/dashboard/applications");
-  page.once("dialog", (dialog) => {
-    void dialog.accept().catch((error: unknown) => console.error(error));
-  });
   await page
     .getByRole("button", {
       name: "Delete application at Browser Test Co",
       exact: true,
     })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete", exact: true })
     .click();
   await expect(
     page
@@ -74,7 +74,9 @@ test("create, edit, and delete an application and refresh dashboard counts", asy
       .filter({ visible: true }),
   ).not.toBeVisible();
   await page.goto("/dashboard");
-  await expect(applicationsCard.getByText("1", { exact: true })).toBeVisible();
+  await expect(
+    pipeline.getByText("1 application", { exact: true }),
+  ).toBeVisible();
 });
 
 test("another candidate cannot see or retrieve an application", async ({
@@ -109,11 +111,11 @@ test("another candidate cannot see or retrieve an application", async ({
       `/dashboard/applications/${candidate.applicationId}/resume`,
     );
     await expect(
-      otherPage.getByText("Error loading application", { exact: true }),
+      otherPage.getByText("This application didn't load", { exact: true }),
     ).toBeVisible();
     await expect(
       otherPage.getByRole("button", {
-        name: "Generate & Save PDF",
+        name: "Save and download PDF",
         exact: true,
       }),
     ).not.toBeVisible();

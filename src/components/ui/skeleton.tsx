@@ -6,7 +6,8 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-muted", className)}
+      // Translucent ink reads on both the desk and paper panels.
+      className={cn("animate-pulse rounded-md bg-foreground/10", className)}
       aria-busy="true"
       aria-live="polite"
       role="status"

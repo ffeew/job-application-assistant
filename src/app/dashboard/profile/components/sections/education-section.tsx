@@ -5,41 +5,9 @@ import { formatMonthYear } from "@/lib/format-month-year";
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-	Plus,
-	Edit,
-	Trash2,
-	GraduationCap,
-	Calendar,
-	MapPin,
-	Save,
-	Loader2,
-	Check,
-	X,
-} from "lucide-react";
 import { toast } from "sonner";
 import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { useUpdateEducation } from "@/app/dashboard/profile/mutations/use-update-education";
@@ -50,6 +18,19 @@ import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
+import {
+	AddButton,
+	DeleteEntryDialog,
+	EntryMeta,
+	EntryPanel,
+	EntryRow,
+	EntrySheet,
+	FormActions,
+	PendingPanel,
+	PendingRow,
+	SectionEmpty,
+	SectionHeader,
+} from "../section-parts";
 
 interface EducationSectionProps {
 	education: EducationJsonResponse[];
@@ -83,12 +64,12 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 		if (!deleteConfirmation || deleteConfirmation.section !== "education") return;
 		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
-				toast.success("Education deleted successfully!");
+				toast.success("Education entry deleted");
 				closeDeleteConfirmation();
 			},
 			onError: (error) => {
 				console.error("Error deleting education:", error);
-				toast.error("Error deleting education. Please try again.");
+				toast.error("Couldn't delete the entry. Try again.");
 			},
 		});
 	};
@@ -98,10 +79,10 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 		try {
 			await createMutation.mutateAsync(data);
 			removePendingItem(id);
-			toast.success("Education saved to your profile.");
+			toast.success("Education entry saved");
 		} catch (error) {
 			console.error("Failed to save education:", error);
-			toast.error("Failed to save education. Please try again.");
+			toast.error("Couldn't save the entry. Try again.");
 		} finally {
 			setSavingItemId(null);
 		}
@@ -110,142 +91,103 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 	const formatDate = formatMonthYear;
 
 	if (isLoading) {
-		return (
-			<div className="flex flex-col gap-4">
-				{Array.from({ length: 2 }).map((_, i) => (
-					<ProfileItemSkeleton key={i} />
-				))}
-			</div>
-		);
+		return <ProfileItemSkeleton />;
 	}
+
+	// An empty section offers its one action in the empty state instead.
+	const isEmpty = education.length === 0 && pendingItems.length === 0;
+
+	const addButton = (
+		<AddButton onClick={() => startAdding("education")}>Add education</AddButton>
+	);
 
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-bold flex items-center gap-2">
-							<GraduationCap className="h-6 w-6" />
-							Education
-						</h1>
-						<p className="text-muted-foreground">Your academic background</p>
-					</div>
-					<Button onClick={() => startAdding("education")}>
-						<Plus className="mr-2 h-4 w-4" />
-						Add Education
-					</Button>
-				</div>
+				<SectionHeader
+					title="Education"
+					description="Degrees and courses, most recent first."
+					action={isEmpty ? undefined : addButton}
+				/>
 
 				{pendingItems.length > 0 && (
-					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 flex flex-col gap-3">
-							<p className="text-sm font-semibold text-primary">
-								{pendingItems.length} pending education entr{pendingItems.length !== 1 ? "ies" : "y"} from import
-							</p>
-							{pendingItems.map((item) => (
-								<div key={item.id} className="flex items-center justify-between rounded-md border border-primary/20 bg-background p-3">
-									<div>
-										<p className="font-medium">{item.request.degree}</p>
-										<p className="text-sm text-muted-foreground">{item.request.institution}</p>
-									</div>
-									<div className="flex gap-2">
-										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}>
-											<X className="h-4 w-4" />
-										</Button>
-										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
-											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-											Save
-										</Button>
-									</div>
-								</div>
-							))}
-						</CardContent>
-					</Card>
+					<PendingPanel
+						count={pendingItems.length}
+						singular="education entry"
+						plural="education entries"
+					>
+						{pendingItems.map((item) => (
+							<PendingRow
+								key={item.id}
+								name={item.request.degree}
+								isSaving={savingItemId === item.id}
+								onDiscard={() => removePendingItem(item.id)}
+								onSave={withAsyncHandler(() =>
+									handleSavePending(item.id, item.request),
+								)}
+							>
+								<p className="font-medium">{item.request.degree}</p>
+								<p className="text-muted-foreground text-sm">
+									{item.request.institution}
+								</p>
+							</PendingRow>
+						))}
+					</PendingPanel>
 				)}
 
-				{education.length === 0 && pendingItems.length === 0 && (
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
-							<GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No education added</h3>
-							<p className="text-muted-foreground mb-6">Add your academic background.</p>
-							<Button onClick={() => startAdding("education")}>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Education
-							</Button>
-						</CardContent>
-					</Card>
+				{isEmpty && (
+					<SectionEmpty title="No education yet" action={addButton}>
+						Add the degrees or courses you want on your resumes.
+					</SectionEmpty>
 				)}
 
-				<div className="flex flex-col gap-3">
-					{education.map((edu) => (
-						<Card key={edu.id} className="group hover:shadow-md transition-shadow">
-							<CardContent className="p-4">
-								<div className="flex items-start justify-between">
-									<div className="flex-1 flex flex-col gap-2">
-										<div>
-											<h3 className="font-semibold text-lg">{edu.degree}</h3>
-											{edu.fieldOfStudy && <p className="text-muted-foreground">{edu.fieldOfStudy}</p>}
-											<p className="text-muted-foreground">{edu.institution}</p>
-										</div>
-										<div className="flex items-center gap-4 text-sm text-muted-foreground">
-											{(edu.startDate || edu.endDate) && (
-												<div className="flex items-center gap-1">
-													<Calendar className="h-4 w-4" />
-													<span>{formatDate(edu.startDate)} - {formatDate(edu.endDate)}</span>
-												</div>
-											)}
-											{edu.location && (
-												<div className="flex items-center gap-1">
-													<MapPin className="h-4 w-4" />
-													<span>{edu.location}</span>
-												</div>
-											)}
-										</div>
-										<div className="flex flex-wrap gap-2">
-											{edu.gpa && <Badge variant="secondary">{edu.gpa}</Badge>}
-											{edu.honors && <Badge variant="outline">{edu.honors}</Badge>}
-										</div>
-									</div>
-									<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
-										<Button variant="ghost" size="icon" onClick={() => startEditing("education", edu.id)}>
-											<Edit className="h-4 w-4" />
-										</Button>
-										<Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation("education", edu.id)}>
-											<Trash2 className="h-4 w-4" />
-										</Button>
-									</div>
+				{education.length > 0 && (
+					<EntryPanel>
+						{education.map((edu) => (
+							<EntryRow
+								key={edu.id}
+								name={edu.degree}
+								onEdit={() => startEditing("education", edu.id)}
+								onDelete={() => openDeleteConfirmation("education", edu.id)}
+							>
+								<div>
+									<h3 className="font-semibold">
+										{edu.degree}
+										{edu.fieldOfStudy && `, ${edu.fieldOfStudy}`}
+									</h3>
+									<p className="text-muted-foreground">{edu.institution}</p>
 								</div>
-							</CardContent>
-						</Card>
-					))}
-				</div>
+								<EntryMeta>
+									{(edu.startDate || edu.endDate) && (
+										<span>
+											{formatDate(edu.startDate)} to {formatDate(edu.endDate)}
+										</span>
+									)}
+									{edu.location && <span>{edu.location}</span>}
+									{edu.gpa && <span>GPA {edu.gpa}</span>}
+									{edu.honors && <span>{edu.honors}</span>}
+								</EntryMeta>
+							</EntryRow>
+						))}
+					</EntryPanel>
+				)}
 			</div>
 
-			<Sheet open={isEditingEducation} onOpenChange={(open) => !open && cancelEditing()}>
-				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-					<SheetHeader>
-						<SheetTitle>{editingEducation ? "Edit Education" : "Add Education"}</SheetTitle>
-						<SheetDescription>
-							{editingEducation ? "Update your education details" : "Add a new education entry"}
-						</SheetDescription>
-					</SheetHeader>
-					<EducationForm education={editingEducation} onSuccess={cancelEditing} onCancel={cancelEditing} />
-				</SheetContent>
-			</Sheet>
+			<EntrySheet
+				open={isEditingEducation}
+				onClose={cancelEditing}
+				title={editingEducation ? "Edit education" : "Add education"}
+				description="Appears in the Education section of your resumes."
+			>
+				<EducationForm education={editingEducation} onSuccess={cancelEditing} onCancel={cancelEditing} />
+			</EntrySheet>
 
-			<AlertDialog open={deleteConfirmation?.section === "education"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete education?</AlertDialogTitle>
-						<AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteEntryDialog
+				open={deleteConfirmation?.section === "education"}
+				onClose={closeDeleteConfirmation}
+				onConfirm={handleDelete}
+				title="Delete this education entry?"
+			/>
 		</>
 	);
 }
@@ -276,13 +218,13 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 		const validatedData = data as CreateEducationRequest;
 		if (education) {
 			updateMutation.mutate({ id: education.id, data: validatedData }, {
-				onSuccess: () => { toast.success("Education updated!"); onSuccess(); },
-				onError: () => toast.error("Error updating education."),
+				onSuccess: () => { toast.success("Changes saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the changes. Try again."),
 			});
 		} else {
 			createMutation.mutate(validatedData, {
-				onSuccess: () => { toast.success("Education added!"); onSuccess(); },
-				onError: () => toast.error("Error adding education."),
+				onSuccess: () => { toast.success("Education entry saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the entry. Try again."),
 			});
 		}
 	};
@@ -292,56 +234,50 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 			<div className="grid grid-cols-2 gap-4">
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="degree">Degree *</Label>
-					<Input id="degree" {...register("degree")} placeholder="Bachelor of Science" />
+					<Input id="degree" {...register("degree")} />
 					<FormFieldError message={errors.degree?.message} />
 				</div>
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="fieldOfStudy">Field of Study</Label>
-					<Input id="fieldOfStudy" {...register("fieldOfStudy")} placeholder="Computer Science" />
+					<Label htmlFor="fieldOfStudy">Field of study</Label>
+					<Input id="fieldOfStudy" {...register("fieldOfStudy")} />
 				</div>
 			</div>
 			<div className="grid grid-cols-2 gap-4">
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="institution">Institution *</Label>
-					<Input id="institution" {...register("institution")} placeholder="University" />
+					<Input id="institution" {...register("institution")} />
 					<FormFieldError message={errors.institution?.message} />
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="location">Location</Label>
-					<Input id="location" {...register("location")} placeholder="City, State" />
+					<Input id="location" {...register("location")} />
 				</div>
 			</div>
 			<div className="grid grid-cols-2 gap-4">
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="startDate">Start Date</Label>
+					<Label htmlFor="startDate">Start date</Label>
 					<Input id="startDate" type="month" {...register("startDate")} />
 				</div>
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="endDate">End Date</Label>
+					<Label htmlFor="endDate">End date</Label>
 					<Input id="endDate" type="month" {...register("endDate")} />
 				</div>
 			</div>
 			<div className="grid grid-cols-2 gap-4">
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="gpa">GPA</Label>
-					<Input id="gpa" {...register("gpa")} placeholder="3.8/4.0" />
+					<Input id="gpa" {...register("gpa")} placeholder="e.g. 3.8/4.0" />
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="honors">Honors</Label>
-					<Input id="honors" {...register("honors")} placeholder="Magna Cum Laude" />
+					<Input id="honors" {...register("honors")} />
 				</div>
 			</div>
 			<div className="flex flex-col gap-2">
-				<Label htmlFor="relevantCoursework">Relevant Coursework</Label>
-				<Textarea id="relevantCoursework" {...register("relevantCoursework")} placeholder="Data Structures, Algorithms..." rows={2} />
+				<Label htmlFor="relevantCoursework">Relevant coursework</Label>
+				<Textarea id="relevantCoursework" {...register("relevantCoursework")} rows={2} />
 			</div>
-			<div className="flex justify-end gap-3 pt-4 border-t">
-				<Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-				<Button type="submit" disabled={isSubmitting}>
-					<Save className="mr-2 h-4 w-4" />
-					{isSubmitting ? "Saving..." : education ? "Update" : "Add"}
-				</Button>
-			</div>
+			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
 		</form>
 	);
 }

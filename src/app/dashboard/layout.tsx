@@ -5,33 +5,100 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { FolderTab } from "@/components/ui/folder-tab";
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Wordmark } from "@/components/wordmark";
 import { authClient } from "@/app/utils/authClient";
 import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
-import {
-	LayoutDashboard,
-	FileText,
-	Briefcase,
-	PenTool,
-	User,
-	LogOut,
-	Menu,
-	X,
-	MessageSquareText,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LogOut, Menu } from "lucide-react";
 
 const navigation = [
-	{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-	{ name: "Profile", href: "/dashboard/profile", icon: User },
-	{ name: "Resumes", href: "/dashboard/resumes", icon: FileText },
-	{ name: "Applications", href: "/dashboard/applications", icon: Briefcase },
-	{ name: "Cover Letters", href: "/dashboard/cover-letters", icon: PenTool },
-	{
-		name: "Conversation Starters",
-		href: "/dashboard/conversation-starters",
-		icon: MessageSquareText,
-	},
+	{ name: "Dashboard", href: "/dashboard" },
+	{ name: "Profile", href: "/dashboard/profile" },
+	{ name: "Applications", href: "/dashboard/applications" },
+	{ name: "Resumes", href: "/dashboard/resumes" },
+	{ name: "Cover letters", href: "/dashboard/cover-letters" },
+	{ name: "Conversation starters", href: "/dashboard/conversation-starters" },
 ];
+
+// The dashboard root would otherwise match every nested route.
+function isActiveRoute(pathname: string, href: string) {
+	if (href === "/dashboard") return pathname === href;
+	return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+// Wide screens: one index tab per section, rising from the open folder.
+function TabRow({ pathname }: { pathname: string }) {
+	return (
+		<nav
+			aria-label="Main"
+			className="mx-auto hidden w-full max-w-6xl px-5 sm:px-8 lg:block"
+		>
+			<ul className="flex items-end pt-4">
+				{navigation.map((item) => {
+					const isActive = isActiveRoute(pathname, item.href);
+					return (
+						<li key={item.href} className="-ml-1 flex first:ml-0">
+							<FolderTab asChild open={isActive}>
+								<Link
+									href={item.href}
+									aria-current={isActive ? "page" : undefined}
+								>
+									{item.name}
+								</Link>
+							</FolderTab>
+						</li>
+					);
+				})}
+			</ul>
+		</nav>
+	);
+}
+
+// Narrow screens: the same sections as a list in the menu sheet.
+function NavLinks({
+	pathname,
+	onNavigate,
+}: {
+	pathname: string;
+	onNavigate: () => void;
+}) {
+	return (
+		<nav aria-label="Main">
+			<ul className="flex flex-col gap-1">
+				{navigation.map((item) => {
+					const isActive = isActiveRoute(pathname, item.href);
+					return (
+						<li key={item.href}>
+							<Link
+								href={item.href}
+								aria-current={isActive ? "page" : undefined}
+								onClick={onNavigate}
+								className={cn(
+									"flex min-h-11 items-center rounded-md px-3 text-sm transition-colors",
+									isActive
+										? "bg-card shadow-sheet font-semibold"
+										: "hover:bg-accent",
+								)}
+							>
+								{item.name}
+							</Link>
+						</li>
+					);
+				})}
+			</ul>
+		</nav>
+	);
+}
 
 export default function DashboardLayout({
 	children,
@@ -44,7 +111,6 @@ export default function DashboardLayout({
 
 	const setUser = useDashboardStore((state) => state.setUser);
 	const setLoading = useDashboardStore((state) => state.setLoading);
-	const toggleSidebar = useDashboardStore((state) => state.toggleSidebar);
 	const setSidebarOpen = useDashboardStore((state) => state.setSidebarOpen);
 
 	const pathname = usePathname();
@@ -79,97 +145,106 @@ export default function DashboardLayout({
 		}
 	};
 
-	if (isLoading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-lg">Loading...</div>
-			</div>
-		);
-	}
+	const currentSection =
+		navigation.find((item) => isActiveRoute(pathname, item.href))?.name ??
+		"Dashboard";
 
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="md:hidden fixed top-4 left-4 z-50">
-				<Button
-					variant="outline"
-					size="icon"
-					className="h-12 w-12"
-					onClick={toggleSidebar}
-				>
-					{sidebarOpen ? (
-						<X className="h-5 w-5" />
-					) : (
-						<Menu className="h-5 w-5" />
-					)}
-				</Button>
-			</div>
-
-			<div
-				className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r transform ${
-					sidebarOpen ? "translate-x-0" : "-translate-x-full"
-				} transition-transform duration-200 ease-in-out md:translate-x-0`}
+		<div className="flex min-h-screen flex-col">
+			<a
+				href="#main"
+				className="bg-primary text-primary-foreground sr-only z-50 rounded-md px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
 			>
-				<div className="flex flex-col h-full">
-					<div className="flex items-center justify-between px-6 py-5 border-b border-border/60">
-						<h1 className="text-xl font-bold tracking-tight">
-							Job <span className="text-primary">Assistant</span>
-						</h1>
-						<ThemeToggle />
-					</div>
+				Skip to content
+			</a>
 
-					<nav className="flex-1 flex flex-col px-3 py-6 gap-1">
-						{navigation.map((item) => {
-							const isActive = pathname === item.href;
-							return (
-								<Link
-									key={item.name}
-									href={item.href}
-									className={`flex items-center min-h-12 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-										isActive
-											? "bg-primary/10 text-primary border-l-2 border-primary"
-											: "text-muted-foreground hover:text-foreground hover:bg-muted"
-									}`}
-									onClick={() => setSidebarOpen(false)}
-								>
-									<item.icon className={`mr-3 h-4 w-4 ${isActive ? "text-primary" : ""}`} />
-									{item.name}
-								</Link>
-							);
-						})}
-					</nav>
-
-					<div className="p-4 border-t">
-						<div className="flex items-center mb-3">
-							<div className="flex-1">
-								<p className="text-sm font-medium">{user?.name}</p>
-								<p className="text-xs text-muted-foreground">{user?.email}</p>
+			<header className="band z-30 max-lg:sticky max-lg:top-0">
+				<div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 py-2 pr-2 pl-5 sm:pr-5 sm:pl-8 lg:pt-4 lg:pr-8 lg:pb-0">
+					<Link href="/dashboard" className="rounded-sm">
+						<Wordmark />
+					</Link>
+					<div className="flex items-center gap-1">
+						{user && (
+							<div className="max-w-64 min-w-0 px-2 text-right leading-tight max-lg:hidden">
+								<p className="truncate text-sm font-semibold">{user.name}</p>
+								<p className="text-muted-foreground truncate text-xs">
+									{user.email}
+								</p>
 							</div>
-						</div>
+						)}
+						<ThemeToggle />
 						<Button
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={withAsyncHandler(handleSignOut)}
-							className="w-full"
+							className="max-lg:hidden"
 						>
-							<LogOut className="mr-2 h-4 w-4" />
-							Sign Out
+							<LogOut />
+							Sign out
 						</Button>
+						<Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+							<SheetTrigger asChild>
+								<Button variant="ghost" size="icon" className="lg:hidden">
+									<Menu className="size-5" />
+									<span className="sr-only">Open navigation</span>
+								</Button>
+							</SheetTrigger>
+							<SheetContent side="left" className="w-72 gap-0 px-3 pb-4">
+								<SheetHeader className="px-3">
+									<SheetTitle>Navigation</SheetTitle>
+								</SheetHeader>
+								<div className="flex flex-1 flex-col justify-between gap-6">
+									<NavLinks
+										pathname={pathname}
+										onNavigate={() => setSidebarOpen(false)}
+									/>
+									<div className="border-kraft/50 flex flex-col gap-3 border-t pt-4">
+										<div className="min-w-0 px-3">
+											<p className="truncate text-sm font-semibold">
+												{user?.name}
+											</p>
+											<p className="text-muted-foreground truncate text-sm">
+												{user?.email}
+											</p>
+										</div>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={withAsyncHandler(handleSignOut)}
+											className="justify-start"
+										>
+											<LogOut />
+											Sign out
+										</Button>
+									</div>
+								</div>
+							</SheetContent>
+						</Sheet>
 					</div>
+				</div>
+			</header>
+
+			{/* The tabs scroll away with the page; on narrow screens one tab names the open folder. */}
+			<div className="band">
+				<TabRow pathname={pathname} />
+				<div className="flex px-5 pt-3 sm:px-8 lg:hidden">
+					<FolderTab open>{currentSection}</FolderTab>
 				</div>
 			</div>
 
-			<div className="md:ml-64">
-				<main className="p-6">{children}</main>
-			</div>
-
-			{sidebarOpen && (
-				<button
-					type="button"
-					aria-label="Close navigation"
-					className="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden"
-					onClick={() => setSidebarOpen(false)}
-				/>
-			)}
+			<main id="main" className="border-kraft flex-1 border-t">
+				<div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:py-10">
+					{isLoading ? (
+						<div className="flex flex-col gap-6">
+							<Skeleton className="h-9 w-56" />
+							<Skeleton className="h-5 w-80 max-w-full" />
+							<Skeleton className="h-64" />
+						</div>
+					) : (
+						children
+					)}
+				</div>
+			</main>
 		</div>
 	);
 }

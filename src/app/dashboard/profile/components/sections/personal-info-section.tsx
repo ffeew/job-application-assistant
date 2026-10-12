@@ -8,27 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import {
-	Loader2,
-	Save,
-	Upload,
-	User,
-	Mail,
-	Phone,
-	MapPin,
-	Globe,
-	Code,
-	Briefcase,
-	Edit,
-} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import { Loader2, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateUserProfile } from "@/app/dashboard/profile/mutations/use-create-user-profile";
 import { useUpdateUserProfile } from "@/app/dashboard/profile/mutations/use-update-user-profile";
@@ -39,6 +21,12 @@ import type { ResumeImportResponse } from "@/app/api/profile/resume-import/valid
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
+import {
+	EntrySheet,
+	FormActions,
+	SectionEmpty,
+	SectionHeader,
+} from "../section-parts";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
@@ -117,12 +105,12 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 
 		mutation.mutate(validatedData, {
 			onSuccess: () => {
-				toast.success(profile ? "Profile updated successfully!" : "Profile created successfully!");
+				toast.success(profile ? "Changes saved" : "Profile saved");
 				cancelEditing();
 			},
 			onError: (error) => {
 				console.error("Error saving profile:", error);
-				toast.error("Error saving profile. Please try again.");
+				toast.error("Couldn't save your profile. Try again.");
 			},
 		});
 	};
@@ -136,7 +124,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 		if (!file) return;
 
 		if (file.size > MAX_FILE_SIZE_BYTES) {
-			toast.error("Resume is too large. Please upload a file under 8 MB.");
+			toast.error("That file is over 8 MB. Choose a smaller one.");
 			event.target.value = "";
 			return;
 		}
@@ -146,11 +134,11 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 				// Keep field refs registered when React Compiler memoizes registration props.
 				reset(payload.profile, { keepFieldsRef: true });
 				onImportPreview(payload);
-				toast.success("Resume imported. Review the pending details before saving.");
+				toast.success("Resume imported. Review each section before saving.");
 			},
 			onError: (error) => {
 				console.error("Resume import failed:", error);
-				toast.error(error.message || "Failed to import resume. Please try again.");
+				toast.error(error.message || "Couldn't import that resume. Try again.");
 			},
 			onSettled: () => {
 				event.target.value = "";
@@ -166,23 +154,38 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 		}
 	};
 
+	const profileSheet = (
+		<EntrySheet
+			open={isEditing}
+			onClose={cancelEditing}
+			title={profile ? "Edit profile" : "Add your details"}
+			description="Your name and contact details head every resume."
+		>
+			<ProfileForm
+				register={register as unknown as UseFormRegister<FieldValues>}
+				errors={errors}
+				isSubmitting={isSubmitting}
+				handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
+				onSubmit={onSubmit}
+				onCancel={cancelEditing}
+				submitLabel={profile ? "Save changes" : "Save profile"}
+			/>
+		</EntrySheet>
+	);
+
 	if (!profile) {
 		return (
 			<>
 				<div className="flex flex-col gap-6">
-					<div>
-						<h1 className="text-2xl font-bold">Personal Information</h1>
-						<p className="text-muted-foreground">Your basic contact and professional information</p>
-					</div>
+					<SectionHeader
+						title="Personal information"
+						description="Your name, contact details and summary."
+					/>
 
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
-							<User className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No profile created yet</h3>
-							<p className="text-muted-foreground mb-6 max-w-md">
-								Add your personal information to get started building your professional profile.
-							</p>
-							<div className="flex gap-3">
+					<SectionEmpty
+						title="No details yet"
+						action={
+							<>
 								<input
 									ref={fileInputRef}
 									type="file"
@@ -190,168 +193,109 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 									className="hidden"
 									onChange={handleResumeFileChange}
 								/>
+								<Button onClick={handleEditClick}>Add your details</Button>
 								<Button variant="outline" onClick={handleResumeImportClick} disabled={importResumeMutation.isPending}>
 									{importResumeMutation.isPending ? (
-										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										<Loader2 className="animate-spin" />
 									) : (
-										<Upload className="mr-2 h-4 w-4" />
+										<Upload />
 									)}
-									Import from Resume
+									{importResumeMutation.isPending ? "Importing…" : "Import a resume"}
 								</Button>
-								<Button onClick={handleEditClick}>
-									<User className="mr-2 h-4 w-4" />
-									Add Profile
-								</Button>
-							</div>
-						</CardContent>
-					</Card>
+							</>
+						}
+					>
+						Type your details in, or import an existing resume (PDF, Word
+						or text, up to 8 MB) and review what it finds.
+					</SectionEmpty>
 				</div>
 
-				<Sheet open={isEditing} onOpenChange={(open) => !open && cancelEditing()}>
-					<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-						<SheetHeader>
-							<SheetTitle>Create Profile</SheetTitle>
-							<SheetDescription>Add your personal and professional information</SheetDescription>
-						</SheetHeader>
-						<ProfileForm
-							register={register as unknown as UseFormRegister<FieldValues>}
-							errors={errors}
-							isSubmitting={isSubmitting}
-							handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
-							onSubmit={onSubmit}
-							onCancel={cancelEditing}
-							submitLabel="Create Profile"
-						/>
-					</SheetContent>
-				</Sheet>
+				{profileSheet}
 			</>
 		);
 	}
 
 	const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
 	const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ");
+	const links = [
+		{ label: "LinkedIn", href: profile.linkedinUrl },
+		{ label: "GitHub", href: profile.githubUrl },
+		{ label: "Portfolio", href: profile.portfolioUrl },
+	].filter((link) => link.href);
 
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-bold">Personal Information</h1>
-						<p className="text-muted-foreground">Your basic contact and professional information</p>
-					</div>
-					<Button variant="outline" size="sm" onClick={handleEditClick}>
-						<Edit className="mr-2 h-4 w-4" />
-						Edit
-					</Button>
-				</div>
+				<SectionHeader
+					title="Personal information"
+					description="Your name, contact details and summary."
+					action={
+						<Button variant="outline" onClick={handleEditClick}>
+							<Pencil />
+							Edit
+						</Button>
+					}
+				/>
 
 				{profileDraft.warnings.length > 0 && (
-					<Card className="border-yellow-300 bg-yellow-50 dark:border-yellow-500/60 dark:bg-yellow-950/70">
-						<CardContent className="pt-4">
-							<p className="font-semibold text-yellow-900 dark:text-yellow-100">
-								Check the imported details:
-							</p>
-							<ul className="mt-2 flex list-disc flex-col gap-1 pl-4 text-sm text-yellow-800 dark:text-yellow-200">
-								{profileDraft.warnings.map((warning) => (
-									<li key={warning}>{warning}</li>
-								))}
-							</ul>
-						</CardContent>
-					</Card>
+					<Notice tone="warning" title="Check the imported details">
+						<ul className="flex list-disc flex-col gap-1 pl-4">
+							{profileDraft.warnings.map((warning) => (
+								<li key={warning}>{warning}</li>
+							))}
+						</ul>
+					</Notice>
 				)}
 
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<User className="h-5 w-5" />
-							{fullName || "Your Name"}
-						</CardTitle>
+				<Card layout="flush" className="flex flex-col gap-5 p-6">
+					<div className="flex flex-col gap-2">
+						<h3 className="text-xl font-semibold">{fullName || "No name yet"}</h3>
 						{profile.professionalSummary && (
-							<CardDescription className="text-base whitespace-pre-wrap">
+							<p className="text-muted-foreground max-w-[65ch] whitespace-pre-wrap">
 								{profile.professionalSummary}
-							</CardDescription>
+							</p>
 						)}
-					</CardHeader>
-					<CardContent className="flex flex-col gap-4">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							{profile.email && (
-								<div className="flex items-center gap-2 text-sm">
-									<Mail className="h-4 w-4 text-muted-foreground" />
-									<span>{profile.email}</span>
-								</div>
-							)}
-							{profile.phone && (
-								<div className="flex items-center gap-2 text-sm">
-									<Phone className="h-4 w-4 text-muted-foreground" />
-									<span>{profile.phone}</span>
-								</div>
-							)}
-							{location && (
-								<div className="flex items-center gap-2 text-sm">
-									<MapPin className="h-4 w-4 text-muted-foreground" />
-									<span>{location}</span>
-								</div>
-							)}
-						</div>
+					</div>
 
-						{(profile.linkedinUrl || profile.githubUrl || profile.portfolioUrl) && (
-							<div className="flex flex-wrap gap-3 pt-2 border-t">
-								{profile.linkedinUrl && (
-									<a
-										href={profile.linkedinUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-									>
-								<Briefcase className="h-4 w-4" />
-										<span>LinkedIn</span>
-									</a>
-								)}
-								{profile.githubUrl && (
-									<a
-										href={profile.githubUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-									>
-								<Code className="h-4 w-4" />
-										<span>GitHub</span>
-									</a>
-								)}
-								{profile.portfolioUrl && (
-									<a
-										href={profile.portfolioUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-									>
-										<Globe className="h-4 w-4" />
-										<span>Portfolio</span>
-									</a>
-								)}
+					<dl className="grid gap-x-8 gap-y-3 border-t pt-5 text-sm sm:grid-cols-2">
+						{profile.email && (
+							<div>
+								<dt className="text-muted-foreground">Email</dt>
+								<dd>{profile.email}</dd>
 							</div>
 						)}
-					</CardContent>
+						{profile.phone && (
+							<div>
+								<dt className="text-muted-foreground">Phone</dt>
+								<dd>{profile.phone}</dd>
+							</div>
+						)}
+						{location && (
+							<div>
+								<dt className="text-muted-foreground">Location</dt>
+								<dd>{location}</dd>
+							</div>
+						)}
+						{links.map((link) => (
+							<div key={link.label}>
+								<dt className="text-muted-foreground">{link.label}</dt>
+								<dd className="truncate">
+									<a
+										href={link.href ?? undefined}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-link underline underline-offset-4 hover:no-underline"
+									>
+										{link.href}
+									</a>
+								</dd>
+							</div>
+						))}
+					</dl>
 				</Card>
 			</div>
 
-			<Sheet open={isEditing} onOpenChange={(open) => !open && cancelEditing()}>
-				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-					<SheetHeader>
-						<SheetTitle>Edit Profile</SheetTitle>
-						<SheetDescription>Update your personal and professional information</SheetDescription>
-					</SheetHeader>
-					<ProfileForm
-						register={register as unknown as UseFormRegister<FieldValues>}
-						errors={errors}
-						isSubmitting={isSubmitting}
-						handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
-						onSubmit={onSubmit}
-						onCancel={cancelEditing}
-						submitLabel="Save Changes"
-					/>
-				</SheetContent>
-			</Sheet>
+			{profileSheet}
 		</>
 	);
 }
@@ -383,20 +327,20 @@ function ProfileForm({
 	return (
 		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-4">
-				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-					Basic Information
+				<h3 className="font-semibold">
+					Basics
 				</h3>
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="firstName">First Name</Label>
-						<Input id="firstName" {...register("firstName")} placeholder="John" />
+						<Label htmlFor="firstName">First name</Label>
+						<Input id="firstName" {...register("firstName")} />
 						{getErrorMessage("firstName") && (
 							<FormFieldError message={getErrorMessage("firstName") ?? undefined} />
 						)}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="lastName">Last Name</Label>
-						<Input id="lastName" {...register("lastName")} placeholder="Doe" />
+						<Label htmlFor="lastName">Last name</Label>
+						<Input id="lastName" {...register("lastName")} />
 						{getErrorMessage("lastName") && (
 							<FormFieldError message={getErrorMessage("lastName") ?? undefined} />
 						)}
@@ -405,53 +349,53 @@ function ProfileForm({
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="email">Email</Label>
-						<Input id="email" type="email" {...register("email")} placeholder="john@example.com" />
+						<Input id="email" type="email" {...register("email")} />
 						{getErrorMessage("email") && <FormFieldError message={getErrorMessage("email") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="phone">Phone</Label>
-						<Input id="phone" {...register("phone")} placeholder="+1 (555) 123-4567" />
+						<Input id="phone" {...register("phone")} />
 						{getErrorMessage("phone") && <FormFieldError message={getErrorMessage("phone") ?? undefined} />}
 					</div>
 				</div>
 			</div>
 
 			<div className="flex flex-col gap-4">
-				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+				<h3 className="font-semibold">
 					Location
 				</h3>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="address">Address</Label>
-					<Input id="address" {...register("address")} placeholder="123 Main Street" />
+					<Input id="address" {...register("address")} />
 					{getErrorMessage("address") && <FormFieldError message={getErrorMessage("address") ?? undefined} />}
 				</div>
-				<div className="grid grid-cols-3 gap-4">
+				<div className="grid gap-4 sm:grid-cols-3">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="city">City</Label>
-						<Input id="city" {...register("city")} placeholder="New York" />
+						<Input id="city" {...register("city")} />
 						{getErrorMessage("city") && <FormFieldError message={getErrorMessage("city") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="state">State</Label>
-						<Input id="state" {...register("state")} placeholder="NY" />
+						<Label htmlFor="state">State or region</Label>
+						<Input id="state" {...register("state")} />
 						{getErrorMessage("state") && <FormFieldError message={getErrorMessage("state") ?? undefined} />}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="zipCode">ZIP</Label>
-						<Input id="zipCode" {...register("zipCode")} placeholder="10001" />
+						<Label htmlFor="zipCode">Postcode</Label>
+						<Input id="zipCode" {...register("zipCode")} />
 						{getErrorMessage("zipCode") && <FormFieldError message={getErrorMessage("zipCode") ?? undefined} />}
 					</div>
 				</div>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="country">Country</Label>
-					<Input id="country" {...register("country")} placeholder="United States" />
+					<Input id="country" {...register("country")} />
 					{getErrorMessage("country") && <FormFieldError message={getErrorMessage("country") ?? undefined} />}
 				</div>
 			</div>
 
 			<div className="flex flex-col gap-4">
-				<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-					Professional Links
+				<h3 className="font-semibold">
+					Links
 				</h3>
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="linkedinUrl">LinkedIn URL</Label>
@@ -459,7 +403,7 @@ function ProfileForm({
 						id="linkedinUrl"
 						type="url"
 						{...register("linkedinUrl")}
-						placeholder="https://linkedin.com/in/johndoe"
+						placeholder="https://"
 					/>
 					{getErrorMessage("linkedinUrl") && (
 						<FormFieldError message={getErrorMessage("linkedinUrl") ?? undefined} />
@@ -471,7 +415,7 @@ function ProfileForm({
 						id="githubUrl"
 						type="url"
 						{...register("githubUrl")}
-						placeholder="https://github.com/johndoe"
+						placeholder="https://"
 					/>
 					{getErrorMessage("githubUrl") && <FormFieldError message={getErrorMessage("githubUrl") ?? undefined} />}
 				</div>
@@ -481,7 +425,7 @@ function ProfileForm({
 						id="portfolioUrl"
 						type="url"
 						{...register("portfolioUrl")}
-						placeholder="https://johndoe.com"
+						placeholder="https://"
 					/>
 					{getErrorMessage("portfolioUrl") && (
 						<FormFieldError message={getErrorMessage("portfolioUrl") ?? undefined} />
@@ -490,34 +434,26 @@ function ProfileForm({
 			</div>
 
 			<div className="flex flex-col gap-4">
-				<Label
-					htmlFor="professionalSummary"
-					className="text-sm font-medium text-muted-foreground uppercase tracking-wide"
-				>
-					Professional Summary
+				<Label htmlFor="professionalSummary" className="text-base font-semibold">
+					Professional summary
 				</Label>
 				<div className="flex flex-col gap-2">
 					<Textarea
 						id="professionalSummary"
 						{...register("professionalSummary")}
-						placeholder="Brief overview of your professional background..."
-						rows={4}
+						aria-describedby="professionalSummary-hint"
+						rows={5}
 					/>
+					<p id="professionalSummary-hint" className="text-muted-foreground text-sm">
+						Two or three sentences. Fitting a page may shorten the wording.
+					</p>
 					{getErrorMessage("professionalSummary") && (
 						<FormFieldError message={getErrorMessage("professionalSummary") ?? undefined} />
 					)}
 				</div>
 			</div>
 
-			<div className="flex justify-end gap-3 pt-4 border-t">
-				<Button type="button" variant="outline" onClick={onCancel}>
-					Cancel
-				</Button>
-				<Button type="submit" disabled={isSubmitting}>
-					<Save className="mr-2 h-4 w-4" />
-					{isSubmitting ? "Saving..." : submitLabel}
-				</Button>
-			</div>
+			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} submitLabel={submitLabel} />
 		</form>
 	);
 }

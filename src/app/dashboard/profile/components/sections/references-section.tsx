@@ -3,13 +3,8 @@
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Users, Mail, Phone, Building, Save, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create-reference";
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
@@ -20,6 +15,19 @@ import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
+import {
+	AddButton,
+	DeleteEntryDialog,
+	EntryMeta,
+	EntryPanel,
+	EntryRow,
+	EntrySheet,
+	FormActions,
+	PendingPanel,
+	PendingRow,
+	SectionEmpty,
+	SectionHeader,
+} from "../section-parts";
 
 interface ReferencesSectionProps {
 	references: ReferenceJsonResponse[];
@@ -48,100 +56,102 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 	const handleDelete = () => {
 		if (!deleteConfirmation || deleteConfirmation.section !== "references") return;
 		deleteMutation.mutate(deleteConfirmation.itemId, {
-			onSuccess: () => { toast.success("Reference deleted!"); closeDeleteConfirmation(); },
-			onError: () => toast.error("Error deleting reference."),
+			onSuccess: () => { toast.success("Reference deleted"); closeDeleteConfirmation(); },
+			onError: () => toast.error("Couldn't delete the reference. Try again."),
 		});
 	};
 
 	const handleSavePending = async (id: string, data: CreateReferenceRequest) => {
 		setSavingItemId(id);
-		try { await createMutation.mutateAsync(data); removePendingItem(id); toast.success("Reference saved!"); }
-		catch { toast.error("Failed to save reference."); }
+		try { await createMutation.mutateAsync(data); removePendingItem(id); toast.success("Reference saved"); }
+		catch { toast.error("Couldn't save the reference. Try again."); }
 		finally { setSavingItemId(null); }
 	};
 
-	if (isLoading) return <div className="flex flex-col gap-4">{Array.from({ length: 2 }).map((_, i) => <ProfileItemSkeleton key={i} />)}</div>;
+	if (isLoading) return <ProfileItemSkeleton />;
+
+	// An empty section offers its one action in the empty state instead.
+	const isEmpty = references.length === 0 && pendingItems.length === 0;
+
+	const addButton = (
+		<AddButton onClick={() => startAdding("references")}>Add reference</AddButton>
+	);
 
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" />References</h1>
-						<p className="text-muted-foreground">Your professional references</p>
-					</div>
-					<Button onClick={() => startAdding("references")}><Plus className="mr-2 h-4 w-4" />Add Reference</Button>
-				</div>
+				<SectionHeader
+					title="References"
+					description="People who have agreed to vouch for your work."
+					action={isEmpty ? undefined : addButton}
+				/>
 
 				{pendingItems.length > 0 && (
-					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 flex flex-col gap-3">
-							<p className="text-sm font-semibold text-primary">{pendingItems.length} pending reference{pendingItems.length !== 1 ? "s" : ""}</p>
-							{pendingItems.map((item) => (
-								<div key={item.id} className="flex items-center justify-between rounded-md border border-primary/20 bg-background p-3">
-									<div><p className="font-medium">{item.request.name}</p><p className="text-sm text-muted-foreground">{item.request.company}</p></div>
-									<div className="flex gap-2">
-										<Button variant="ghost" size="sm" onClick={() => removePendingItem(item.id)} disabled={savingItemId === item.id}><X className="h-4 w-4" /></Button>
-										<Button size="sm" onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))} disabled={savingItemId === item.id}>
-											{savingItemId === item.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Save
-										</Button>
-									</div>
-								</div>
-							))}
-						</CardContent>
-					</Card>
+					<PendingPanel count={pendingItems.length} singular="reference" plural="references">
+						{pendingItems.map((item) => (
+							<PendingRow
+								key={item.id}
+								name={item.request.name}
+								isSaving={savingItemId === item.id}
+								onDiscard={() => removePendingItem(item.id)}
+								onSave={withAsyncHandler(() => handleSavePending(item.id, item.request))}
+							>
+								<p className="font-medium">{item.request.name}</p>
+								<p className="text-muted-foreground text-sm">{item.request.company}</p>
+							</PendingRow>
+						))}
+					</PendingPanel>
 				)}
 
-				{references.length === 0 && pendingItems.length === 0 && (
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
-							<Users className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No references added</h3>
-							<p className="text-muted-foreground mb-6">Add your professional references.</p>
-							<Button onClick={() => startAdding("references")}><Plus className="mr-2 h-4 w-4" />Add Reference</Button>
-						</CardContent>
-					</Card>
+				{isEmpty && (
+					<SectionEmpty title="No references yet" action={addButton}>
+						Add someone a hiring team can contact about you.
+					</SectionEmpty>
 				)}
 
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{references.map((reference) => (
-						<Card key={reference.id} className="group hover:shadow-md transition-shadow">
-							<CardContent className="p-4">
-								<div className="flex items-start justify-between">
-									<div className="flex-1 flex flex-col gap-2">
-										<h3 className="font-semibold">{reference.name}</h3>
-										{reference.title && <p className="text-sm text-muted-foreground">{reference.title}</p>}
-										<div className="flex flex-col gap-1 text-sm text-muted-foreground">
-											{reference.company && <div className="flex items-center gap-1"><Building className="h-3 w-3" />{reference.company}</div>}
-											{reference.email && <div className="flex items-center gap-1"><Mail className="h-3 w-3" />{reference.email}</div>}
-											{reference.phone && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{reference.phone}</div>}
-										</div>
-										{reference.relationship && <p className="text-xs text-muted-foreground italic">{reference.relationship}</p>}
-									</div>
-									<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-										<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditing("references", reference.id)}><Edit className="h-4 w-4" /></Button>
-										<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDeleteConfirmation("references", reference.id)}><Trash2 className="h-4 w-4" /></Button>
-									</div>
+				{references.length > 0 && (
+					<EntryPanel>
+						{references.map((reference) => (
+							<EntryRow
+								key={reference.id}
+								name={reference.name}
+								onEdit={() => startEditing("references", reference.id)}
+								onDelete={() => openDeleteConfirmation("references", reference.id)}
+							>
+								<div>
+									<h3 className="font-semibold">{reference.name}</h3>
+									{(reference.title || reference.company) && (
+										<p className="text-muted-foreground">
+											{[reference.title, reference.company].filter(Boolean).join(", ")}
+										</p>
+									)}
 								</div>
-							</CardContent>
-						</Card>
-					))}
-				</div>
+								<EntryMeta>
+									{reference.email && <span>{reference.email}</span>}
+									{reference.phone && <span>{reference.phone}</span>}
+									{reference.relationship && <span>{reference.relationship}</span>}
+								</EntryMeta>
+							</EntryRow>
+						))}
+					</EntryPanel>
+				)}
 			</div>
 
-			<Sheet open={isEditingReference} onOpenChange={(open) => !open && cancelEditing()}>
-				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-					<SheetHeader><SheetTitle>{editingReference ? "Edit Reference" : "Add Reference"}</SheetTitle><SheetDescription>{editingReference ? "Update reference details" : "Add a new reference"}</SheetDescription></SheetHeader>
-					<ReferenceForm reference={editingReference} onSuccess={cancelEditing} onCancel={cancelEditing} />
-				</SheetContent>
-			</Sheet>
+			<EntrySheet
+				open={isEditingReference}
+				onClose={cancelEditing}
+				title={editingReference ? "Edit reference" : "Add reference"}
+				description="Kept with your profile for when an employer asks."
+			>
+				<ReferenceForm reference={editingReference} onSuccess={cancelEditing} onCancel={cancelEditing} />
+			</EntrySheet>
 
-			<AlertDialog open={deleteConfirmation?.section === "references"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
-				<AlertDialogContent>
-					<AlertDialogHeader><AlertDialogTitle>Delete reference?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-					<AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction></AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteEntryDialog
+				open={deleteConfirmation?.section === "references"}
+				onClose={closeDeleteConfirmation}
+				onConfirm={handleDelete}
+				title="Delete this reference?"
+			/>
 		</>
 	);
 }
@@ -167,28 +177,28 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 		const validatedData = data as CreateReferenceRequest;
 		if (reference) {
 			updateMutation.mutate({ id: reference.id, data: validatedData }, {
-				onSuccess: () => { toast.success("Reference updated!"); onSuccess(); },
-				onError: () => toast.error("Error updating reference."),
+				onSuccess: () => { toast.success("Changes saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the changes. Try again."),
 			});
 		} else {
 			createMutation.mutate(validatedData, {
-				onSuccess: () => { toast.success("Reference added!"); onSuccess(); },
-				onError: () => toast.error("Error adding reference."),
+				onSuccess: () => { toast.success("Reference saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the reference. Try again."),
 			});
 		}
 	};
 
 	return (
 		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
-			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} placeholder="John Smith" /><FormFieldError message={errors.name?.message} /></div>
-			<div className="flex flex-col gap-2"><Label htmlFor="title">Title</Label><Input id="title" {...register("title")} placeholder="Senior Manager" /></div>
-			<div className="flex flex-col gap-2"><Label htmlFor="company">Company</Label><Input id="company" {...register("company")} placeholder="Tech Corp" /></div>
+			<div className="flex flex-col gap-2"><Label htmlFor="name">Name *</Label><Input id="name" {...register("name")} /><FormFieldError message={errors.name?.message} /></div>
+			<div className="flex flex-col gap-2"><Label htmlFor="title">Job title</Label><Input id="title" {...register("title")} /></div>
+			<div className="flex flex-col gap-2"><Label htmlFor="company">Company</Label><Input id="company" {...register("company")} /></div>
 			<div className="grid grid-cols-2 gap-4">
-				<div className="flex flex-col gap-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" {...register("email")} placeholder="john@example.com" /></div>
-				<div className="flex flex-col gap-2"><Label htmlFor="phone">Phone</Label><Input id="phone" {...register("phone")} placeholder="+1 (555) 123-4567" /></div>
+				<div className="flex flex-col gap-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" {...register("email")} /></div>
+				<div className="flex flex-col gap-2"><Label htmlFor="phone">Phone</Label><Input id="phone" {...register("phone")} /></div>
 			</div>
-			<div className="flex flex-col gap-2"><Label htmlFor="relationship">Relationship</Label><Input id="relationship" {...register("relationship")} placeholder="Former Manager" /></div>
-			<div className="flex justify-end gap-3 pt-4 border-t"><Button type="button" variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4" />{isSubmitting ? "Saving..." : reference ? "Update" : "Add"}</Button></div>
+			<div className="flex flex-col gap-2"><Label htmlFor="relationship">Relationship</Label><Input id="relationship" {...register("relationship")} placeholder="e.g. former manager" /></div>
+			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
 		</form>
 	);
 }

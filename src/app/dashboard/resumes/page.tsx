@@ -1,14 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { withAsyncHandler } from "@/lib/async-action";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResponsiveList } from "@/components/ui/responsive-list";
-import { Plus, FileText, Edit, Trash2, Star, Wand2, Target, ChevronRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { FileText, PenLine, Star, Trash2, Wand2 } from "lucide-react";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
+import type { ResumeJsonResponse } from "@/app/api/resumes/validators";
+import { EmptyState } from "@/app/dashboard/components/empty-state";
+import { PageHeader } from "@/app/dashboard/components/page-header";
+import { formatShortDate } from "@/lib/format-date";
 import { toast } from "sonner";
 import { ResumesListSkeleton } from "./components/resumes-list-skeleton";
 
@@ -16,18 +22,17 @@ export default function ResumesPage() {
   const { data: resumes = [], isLoading } = useResumes();
   const deleteResumeMutation = useDeleteResume();
   const updateResumeMutation = useUpdateResume();
+  const [pendingDelete, setPendingDelete] = useState<ResumeJsonResponse | null>(
+    null,
+  );
 
   const handleDeleteResume = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resume?")) {
-      return;
-    }
-
     try {
       await deleteResumeMutation.mutateAsync(id);
-      toast.success("Resume deleted successfully!");
+      toast.success("Resume deleted");
     } catch (error) {
       console.error("Error deleting resume:", error);
-      toast.error("Failed to delete resume. Please try again.");
+      toast.error("Couldn't delete the resume. Try again.");
     }
   };
 
@@ -44,10 +49,10 @@ export default function ResumesPage() {
           isDefault: !resume.isDefault,
         }
       });
-      toast.success(resume.isDefault ? "Default resume removed" : "Set as default resume");
+      toast.success(resume.isDefault ? "Default removed" : "Set as default");
     } catch (error) {
       console.error("Error updating resume:", error);
-      toast.error("Failed to update resume. Please try again.");
+      toast.error("Couldn't update the resume. Try again.");
     }
   };
 
@@ -55,173 +60,115 @@ export default function ResumesPage() {
     return <ResumesListSkeleton />;
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Resumes</h1>
-          <p className="text-muted-foreground">
-            Manage your resumes and create tailored versions for different applications.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/resumes/generate">
-              <Wand2 className="mr-2 h-4 w-4" />
-              Generate from Profile
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/resumes/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Manual
-            </Link>
-          </Button>
-        </div>
-      </div>
+  const actions = (
+    <>
+      <Button variant="outline" asChild>
+        <Link href="/dashboard/resumes/new">
+          <PenLine />
+          Write manually
+        </Link>
+      </Button>
+      <Button asChild>
+        <Link href="/dashboard/resumes/generate">
+          <Wand2 />
+          Generate from profile
+        </Link>
+      </Button>
+    </>
+  );
 
-      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-        <CardContent className="py-4">
-          <div className="flex items-start gap-3">
-            <Target className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium text-blue-800 dark:text-blue-200">
-                Looking to create a tailored resume for a job application?
-              </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                Visit the{" "}
-                <Link
-                  href="/dashboard/applications"
-                  className="underline font-medium hover:text-blue-900 dark:hover:text-blue-100"
-                >
-                  Applications
-                </Link>{" "}
-                page to generate an AI-optimized resume based on a specific job description.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Resumes"
+        description={
+          <>
+            Saved resumes. To aim one at a specific job,{" "}
+            <Link
+              href="/dashboard/applications"
+              className="text-link underline underline-offset-4 hover:no-underline"
+            >
+              open the application
+            </Link>{" "}
+            and tailor it there.
+          </>
+        }
+        actions={actions}
+      />
 
       {resumes.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No resumes yet</h3>
-            <p className="text-muted-foreground mb-6 text-center max-w-sm">
-              Create your first resume to get started with your job applications.
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" asChild>
-                <Link href="/dashboard/resumes/generate">
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Generate from Profile
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link href="/dashboard/resumes/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Manual Resume
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState title="No resumes yet" actions={actions}>
+          Generate one from your profile, or tailor one to a job from its
+          application.
+        </EmptyState>
       ) : (
-        <ResponsiveList
-          items={resumes}
-          getItemId={(resume) => resume.id}
-          renderMobileHeader={(resume) => (
-            <div className="flex flex-1 items-center gap-3 min-w-0">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate flex items-center gap-2">
-                  {resume.title}
-                  {resume.isDefault && (
-                    <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
-                  )}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Updated {new Date(resume.updatedAt).toLocaleDateString()}
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </div>
-          )}
-          renderMobileContent={(resume) => (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild className="flex-1">
-                <Link href={`/dashboard/resumes/${resume.id}`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Link>
-              </Button>
-              <Button
-                variant={resume.isDefault ? "default" : "outline"}
-                size="sm"
-                onClick={withAsyncHandler(() => toggleDefault(resume.id))}
-                disabled={updateResumeMutation.isPending}
+        <Card layout="flush">
+          <ul>
+            {resumes.map((resume) => (
+              <li
+                key={resume.id}
+                className="flex flex-col gap-3 border-b px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
               >
-                <Star className="mr-2 h-4 w-4" />
-                {resume.isDefault ? "Default" : "Set Default"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={withAsyncHandler(() => handleDeleteResume(resume.id))}
-                disabled={deleteResumeMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          renderDesktopCard={(resume) => (
-            <Card className="relative">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center">
-                      {resume.title}
-                      {resume.isDefault && (
-                        <Star className="ml-2 h-4 w-4 text-yellow-500 fill-current" />
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      Updated {new Date(resume.updatedAt).toLocaleDateString()}
-                    </CardDescription>
-                  </div>
+                <div className="min-w-0">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{resume.title}</span>
+                    {resume.isDefault && <Badge variant="secondary">Default</Badge>}
+                    {resume.isTailored && <Badge variant="outline">Tailored</Badge>}
+                  </p>
+                  <p className="text-muted-foreground text-sm tabular-nums">
+                    Updated {formatShortDate(resume.updatedAt)}
+                  </p>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1">
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/resumes/${resume.id}`}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
+                      <FileText />
+                      Open
                     </Link>
                   </Button>
                   <Button
-                    variant={resume.isDefault ? "default" : "outline"}
+                    variant="ghost"
                     size="sm"
+                    aria-pressed={resume.isDefault}
                     onClick={withAsyncHandler(() => toggleDefault(resume.id))}
                     disabled={updateResumeMutation.isPending}
                   >
-                    <Star className="mr-2 h-4 w-4" />
-                    {resume.isDefault ? "Default" : "Set Default"}
+                    <Star className={resume.isDefault ? "fill-current" : undefined} />
+                    {resume.isDefault ? "Default" : "Set as default"}
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={withAsyncHandler(() => handleDeleteResume(resume.id))}
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Delete ${resume.title}`}
+                    onClick={() => setPendingDelete(resume)}
                     disabled={deleteResumeMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        />
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Delete this resume?"
+        description={
+          pendingDelete &&
+          `"${pendingDelete.title}" will be removed. This can't be undone.`
+        }
+        onConfirm={withAsyncHandler(async () => {
+          if (!pendingDelete) return;
+          const { id } = pendingDelete;
+          setPendingDelete(null);
+          await handleDeleteResume(id);
+        })}
+      />
     </div>
   );
 }

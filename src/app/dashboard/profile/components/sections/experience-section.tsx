@@ -9,38 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-	Plus,
-	Edit,
-	Trash2,
-	Briefcase,
-	Calendar,
-	MapPin,
-	Save,
-	Loader2,
-	Check,
-	X,
-} from "lucide-react";
 import { toast } from "sonner";
 import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
 import { useUpdateWorkExperience } from "@/app/dashboard/profile/mutations/use-update-work-experience";
@@ -54,6 +23,20 @@ import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
+import {
+	AddButton,
+	DeleteEntryDialog,
+	EntryMeta,
+	EntryPanel,
+	EntryRow,
+	EntrySheet,
+	FormActions,
+	PendingPanel,
+	PendingRow,
+	SectionEmpty,
+	SectionHeader,
+	TagList,
+} from "../section-parts";
 
 interface ExperienceSectionProps {
 	experiences: WorkExperienceJsonResponse[];
@@ -93,12 +76,12 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 		if (!deleteConfirmation || deleteConfirmation.section !== "experience") return;
 		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
-				toast.success("Work experience deleted successfully!");
+				toast.success("Work experience deleted");
 				closeDeleteConfirmation();
 			},
 			onError: (error) => {
 				console.error("Error deleting work experience:", error);
-				toast.error("Error deleting work experience. Please try again.");
+				toast.error("Couldn't delete the work experience. Try again.");
 			},
 		});
 	};
@@ -108,10 +91,10 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 		try {
 			await createMutation.mutateAsync(data);
 			removePendingItem(id);
-			toast.success("Work experience saved to your profile.");
+			toast.success("Work experience saved");
 		} catch (error) {
 			console.error("Failed to save work experience:", error);
-			toast.error("Failed to save work experience. Please try again.");
+			toast.error("Couldn't save the work experience. Try again.");
 		} finally {
 			setSavingItemId(null);
 		}
@@ -120,232 +103,138 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 	const formatDate = formatMonthYear;
 
 	if (isLoading) {
-		return (
-			<div className="flex flex-col gap-4">
-				{Array.from({ length: 3 }).map((_, i) => (
-					<ProfileItemSkeleton key={i} />
-				))}
-			</div>
-		);
+		return <ProfileItemSkeleton />;
 	}
+
+	// An empty section offers its one action in the empty state instead.
+	const isEmpty = experiences.length === 0 && pendingItems.length === 0;
+
+	const addButton = (
+		<AddButton onClick={() => startAdding("experience")}>Add experience</AddButton>
+	);
 
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-bold flex items-center gap-2">
-							<Briefcase className="h-6 w-6" />
-							Work Experience
-						</h1>
-						<p className="text-muted-foreground">Your professional work history</p>
-					</div>
-					<Button onClick={() => startAdding("experience")}>
-						<Plus className="mr-2 h-4 w-4" />
-						Add Experience
-					</Button>
-				</div>
+				<SectionHeader
+					title="Work experience"
+					description="Every role you might want on a resume. Tailoring picks from these."
+					action={isEmpty ? undefined : addButton}
+				/>
 
 				{pendingItems.length > 0 && (
-					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6 flex flex-col gap-4">
-							<div>
-								<p className="text-sm font-semibold text-primary">
-									{pendingItems.length} pending work experience{pendingItems.length !== 1 ? "s" : ""} from import
-								</p>
-								<p className="text-xs text-primary/80">
-									Review, edit, or save these entries individually.
-								</p>
-							</div>
-							<div className="flex flex-col gap-3">
-								{pendingItems.map((item) => (
-									<div
-										key={item.id}
-										className="rounded-md border border-primary/20 bg-background p-4"
-									>
-										{editingPendingId === item.id ? (
-											<PendingEditForm
-												initialValues={item.request}
-												onSave={(data) => {
-													updatePendingItem(item.id, data);
-													cancelEditingPending();
-													toast.success("Draft updated.");
-												}}
-												onCancel={cancelEditingPending}
-											/>
-										) : (
-											<div className="flex items-start justify-between">
-												<div className="flex flex-col gap-1">
-													<p className="font-medium">
-														{item.request.jobTitle} at {item.request.company}
-													</p>
-													{item.request.location && (
-														<p className="text-sm text-muted-foreground">
-															{item.request.location}
-														</p>
-													)}
-													{item.warnings.length > 0 && (
-														<ul className="list-disc flex flex-col gap-1 pl-4 text-xs text-amber-600">
-															{item.warnings.map((warning, idx) => (
-																<li key={idx}>{warning}</li>
-															))}
-														</ul>
-													)}
-												</div>
-												<div className="flex gap-2">
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => startEditingPending(item.id)}
-														disabled={savingItemId === item.id}
-													>
-														<Edit className="h-4 w-4" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => removePendingItem(item.id)}
-														disabled={savingItemId === item.id}
-													>
-														<X className="h-4 w-4" />
-													</Button>
-													<Button
-														size="sm"
-														onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))}
-														disabled={savingItemId === item.id}
-													>
-														{savingItemId === item.id ? (
-															<Loader2 className="mr-1 h-4 w-4 animate-spin" />
-														) : (
-															<Check className="mr-1 h-4 w-4" />
-														)}
-														Save
-													</Button>
-												</div>
-											</div>
-										)}
-									</div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
-				)}
-
-				{experiences.length === 0 && pendingItems.length === 0 && (
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
-							<Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No work experience added</h3>
-							<p className="text-muted-foreground mb-6 max-w-md">
-								Add your professional experience to showcase your career history.
-							</p>
-							<Button onClick={() => startAdding("experience")}>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Your First Experience
-							</Button>
-						</CardContent>
-					</Card>
-				)}
-
-				<div className="flex flex-col gap-3">
-					{experiences.map((experience) => (
-						<Card key={experience.id} className="group hover:shadow-md transition-shadow">
-							<CardContent className="p-4">
-								<div className="flex items-start justify-between">
-									<div className="flex-1 flex flex-col gap-2">
-										<div>
-											<h3 className="font-semibold text-lg">{experience.jobTitle}</h3>
-											<p className="text-muted-foreground">{experience.company}</p>
-										</div>
-										<div className="flex items-center gap-4 text-sm text-muted-foreground">
-											<div className="flex items-center gap-1">
-												<Calendar className="h-4 w-4" />
-												<span>
-													{formatDate(experience.startDate)} -{" "}
-													{experience.isCurrent
-														? "Present"
-														: formatDate(experience.endDate || "")}
-												</span>
-											</div>
-											{experience.location && (
-												<div className="flex items-center gap-1">
-													<MapPin className="h-4 w-4" />
-													<span>{experience.location}</span>
-												</div>
-											)}
-										</div>
-										{experience.description && (
-											<p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
-												{experience.description}
-											</p>
-										)}
-										{experience.technologies && (
-											<div className="flex flex-wrap gap-1.5 pt-1">
-												{experience.technologies.split(",").map((tech, idx) => (
-													<Badge key={idx} variant="secondary" className="text-xs">
-														{tech.trim()}
-													</Badge>
-												))}
-											</div>
-										)}
-									</div>
-									<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
-										<Button
-											variant="ghost"
-											size="icon"
-											onClick={() => startEditing("experience", experience.id)}
-										>
-											<Edit className="h-4 w-4" />
-										</Button>
-										<Button
-											variant="ghost"
-											size="icon"
-											onClick={() => openDeleteConfirmation("experience", experience.id)}
-										>
-											<Trash2 className="h-4 w-4" />
-										</Button>
-									</div>
+					<PendingPanel
+						count={pendingItems.length}
+						singular="work experience"
+						plural="work experiences"
+					>
+						{pendingItems.map((item) =>
+							editingPendingId === item.id ? (
+								<div key={item.id} className="bg-card rounded-md border p-3">
+									<PendingEditForm
+										initialValues={item.request}
+										onSave={(data) => {
+											updatePendingItem(item.id, data);
+											cancelEditingPending();
+											toast.success("Draft updated");
+										}}
+										onCancel={cancelEditingPending}
+									/>
 								</div>
-							</CardContent>
-						</Card>
-					))}
-				</div>
+							) : (
+								<PendingRow
+									key={item.id}
+									name={`${item.request.jobTitle} at ${item.request.company}`}
+									isSaving={savingItemId === item.id}
+									onEdit={() => startEditingPending(item.id)}
+									onDiscard={() => removePendingItem(item.id)}
+									onSave={withAsyncHandler(() =>
+										handleSavePending(item.id, item.request),
+									)}
+								>
+									<p className="font-medium">
+										{item.request.jobTitle} at {item.request.company}
+									</p>
+									{item.request.location && (
+										<p className="text-muted-foreground text-sm">
+											{item.request.location}
+										</p>
+									)}
+									{item.warnings.length > 0 && (
+										<ul className="text-warning flex list-disc flex-col gap-1 pl-4 text-sm">
+											{item.warnings.map((warning, idx) => (
+												<li key={idx}>{warning}</li>
+											))}
+										</ul>
+									)}
+								</PendingRow>
+							),
+						)}
+					</PendingPanel>
+				)}
+
+				{isEmpty && (
+					<SectionEmpty title="No work experience yet" action={addButton}>
+						Add each role with what you did and achieved. More detail here
+						gives tailoring more to choose from.
+					</SectionEmpty>
+				)}
+
+				{experiences.length > 0 && (
+					<EntryPanel>
+						{experiences.map((experience) => (
+							<EntryRow
+								key={experience.id}
+								name={`${experience.jobTitle} at ${experience.company}`}
+								onEdit={() => startEditing("experience", experience.id)}
+								onDelete={() => openDeleteConfirmation("experience", experience.id)}
+							>
+								<div>
+									<h3 className="font-semibold">{experience.jobTitle}</h3>
+									<p className="text-muted-foreground">{experience.company}</p>
+								</div>
+								<EntryMeta>
+									<span>
+										{formatDate(experience.startDate)} to{" "}
+										{experience.isCurrent
+											? "present"
+											: formatDate(experience.endDate || "")}
+									</span>
+									{experience.location && <span>{experience.location}</span>}
+								</EntryMeta>
+								{experience.description && (
+									<p className="text-muted-foreground line-clamp-3 text-sm whitespace-pre-wrap">
+										{experience.description}
+									</p>
+								)}
+								{experience.technologies && (
+									<TagList value={experience.technologies} />
+								)}
+							</EntryRow>
+						))}
+					</EntryPanel>
+				)}
 			</div>
 
-			<Sheet open={isEditingExperience} onOpenChange={(open) => !open && cancelEditing()}>
-				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-					<SheetHeader>
-						<SheetTitle>
-							{editingExperience ? "Edit Work Experience" : "Add Work Experience"}
-						</SheetTitle>
-						<SheetDescription>
-							{editingExperience
-								? "Update your work experience details"
-								: "Add a new work experience to your profile"}
-						</SheetDescription>
-					</SheetHeader>
-					<ExperienceForm
-						experience={editingExperience}
-						onSuccess={cancelEditing}
-						onCancel={cancelEditing}
-					/>
-				</SheetContent>
-			</Sheet>
+			<EntrySheet
+				open={isEditingExperience}
+				onClose={cancelEditing}
+				title={editingExperience ? "Edit work experience" : "Add work experience"}
+				description="Appears in the Work Experiences section of your resumes."
+			>
+				<ExperienceForm
+					experience={editingExperience}
+					onSuccess={cancelEditing}
+					onCancel={cancelEditing}
+				/>
+			</EntrySheet>
 
-			<AlertDialog open={deleteConfirmation?.section === "experience"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete work experience?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This action cannot be undone. This will permanently delete this work experience from your profile.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteEntryDialog
+				open={deleteConfirmation?.section === "experience"}
+				onClose={closeDeleteConfirmation}
+				onConfirm={handleDelete}
+				title="Delete this work experience?"
+			/>
 		</>
 	);
 }
@@ -392,24 +281,24 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 				{ id: experience.id, data: validatedData },
 				{
 					onSuccess: () => {
-						toast.success("Work experience updated successfully!");
+						toast.success("Changes saved");
 						onSuccess();
 					},
 					onError: (error) => {
 						console.error("Error updating work experience:", error);
-						toast.error("Error updating work experience. Please try again.");
+						toast.error("Couldn't save the changes. Try again.");
 					},
 				}
 			);
 		} else {
 			createMutation.mutate(validatedData, {
 				onSuccess: () => {
-					toast.success("Work experience created successfully!");
+					toast.success("Work experience saved");
 					onSuccess();
 				},
 				onError: (error) => {
 					console.error("Error creating work experience:", error);
-					toast.error("Error creating work experience. Please try again.");
+					toast.error("Couldn't save the work experience. Try again.");
 				},
 			});
 		}
@@ -420,31 +309,31 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 			<div className="flex flex-col gap-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="jobTitle">Job Title *</Label>
-						<Input id="jobTitle" {...register("jobTitle")} placeholder="Software Engineer" />
+						<Label htmlFor="jobTitle">Job title *</Label>
+						<Input id="jobTitle" {...register("jobTitle")} />
 						<FormFieldError message={errors.jobTitle?.message} />
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="company">Company *</Label>
-						<Input id="company" {...register("company")} placeholder="Tech Corp" />
+						<Input id="company" {...register("company")} />
 						<FormFieldError message={errors.company?.message} />
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="location">Location</Label>
-					<Input id="location" {...register("location")} placeholder="San Francisco, CA" />
+					<Input id="location" {...register("location")} />
 					<FormFieldError message={errors.location?.message} />
 				</div>
 
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="startDate">Start Date *</Label>
+						<Label htmlFor="startDate">Start date *</Label>
 						<Input id="startDate" type="month" {...register("startDate")} />
 						<FormFieldError message={errors.startDate?.message} />
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="endDate">End Date</Label>
+						<Label htmlFor="endDate">End date</Label>
 						<Input
 							id="endDate"
 							type="month"
@@ -472,13 +361,16 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 				</div>
 
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="description">Description</Label>
+					<Label htmlFor="description">What you did</Label>
 					<Textarea
 						id="description"
 						{...register("description")}
-						placeholder="Describe your responsibilities and achievements..."
-						rows={4}
+						aria-describedby="description-hint"
+						rows={6}
 					/>
+					<p id="description-hint" className="text-muted-foreground text-sm">
+						One achievement per line. Each line becomes a bullet.
+					</p>
 					<FormFieldError message={errors.description?.message} />
 				</div>
 
@@ -489,24 +381,12 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 						{...register("technologies")}
 						placeholder="React, Node.js, Python, AWS"
 					/>
-					<p className="text-xs text-muted-foreground">Separate with commas</p>
+					<p className="text-muted-foreground text-sm">Separate with commas.</p>
 					<FormFieldError message={errors.technologies?.message} />
 				</div>
 			</div>
 
-			<div className="flex justify-end gap-3 pt-4 border-t">
-				<Button type="button" variant="outline" onClick={onCancel}>
-					Cancel
-				</Button>
-				<Button type="submit" disabled={isSubmitting}>
-					<Save className="mr-2 h-4 w-4" />
-					{isSubmitting
-						? "Saving..."
-						: experience
-							? "Update Experience"
-							: "Add Experience"}
-				</Button>
-			</div>
+			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
 		</form>
 	);
 }
@@ -531,15 +411,15 @@ function PendingEditForm({ initialValues, onSave, onCancel }: PendingEditFormPro
 
 	return (
 		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-4">
-			<div className="grid grid-cols-2 gap-3">
+			<div className="grid gap-3 sm:grid-cols-2">
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="pendingJobTitle" className="text-xs">Job Title</Label>
-					<Input id="pendingJobTitle" {...register("jobTitle")} className="h-8" />
+					<Label htmlFor="pendingJobTitle">Job title</Label>
+					<Input id="pendingJobTitle" {...register("jobTitle")} />
 					<FormFieldError message={errors.jobTitle?.message} />
 				</div>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="pendingCompany" className="text-xs">Company</Label>
-					<Input id="pendingCompany" {...register("company")} className="h-8" />
+					<Label htmlFor="pendingCompany">Company</Label>
+					<Input id="pendingCompany" {...register("company")} />
 					<FormFieldError message={errors.company?.message} />
 				</div>
 			</div>
@@ -548,7 +428,7 @@ function PendingEditForm({ initialValues, onSave, onCancel }: PendingEditFormPro
 					Cancel
 				</Button>
 				<Button type="submit" size="sm">
-					Update Draft
+					Update draft
 				</Button>
 			</div>
 		</form>

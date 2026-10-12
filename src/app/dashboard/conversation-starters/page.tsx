@@ -3,18 +3,15 @@
 import { withAsyncHandler } from "@/lib/async-action";
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import Link from "next/link";
+import { Notice } from "@/components/ui/notice";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/app/dashboard/components/page-header";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useGenerateConversationStarter } from "./mutations/use-generate-conversation-starter";
 import { toast } from "sonner";
-import { Sparkles, ClipboardCopy, Check, RotateCcw } from "lucide-react";
+import { Check, ClipboardCopy, Loader2, PenLine, RotateCcw } from "lucide-react";
 import { useUserProfile } from "@/app/dashboard/profile/queries/use-user-profile";
 
 type FormState = {
@@ -54,7 +51,7 @@ export default function ConversationStartersPage() {
 			!formState.prospectDetails ||
 			formState.prospectDetails.trim().length < 20
 		) {
-			toast.error("Share a bit more detail about who you're reaching out to.");
+			toast.error("Add a little more about who you're writing to.");
 			return;
 		}
 
@@ -65,14 +62,14 @@ export default function ConversationStartersPage() {
 			{
 				onSuccess: (data) => {
 					setGeneratedMessage(data.message);
-					toast.success("Conversation starter ready!");
+					toast.success("Message ready");
 				},
 				onError: (error) => {
 					console.error("Conversation starter generation failed:", error);
 					toast.error(
 						error instanceof Error
 							? error.message
-							: "Failed to generate a conversation starter."
+							: "Couldn't write the message. Try again."
 					);
 				},
 			}
@@ -84,138 +81,133 @@ export default function ConversationStartersPage() {
 		try {
 			await navigator.clipboard.writeText(generatedMessage);
 			setCopied(true);
-			toast.success("Copied to clipboard");
+			toast.success("Message copied");
 			setTimeout(() => setCopied(false), 2000);
 		} catch (error) {
 			console.error("Failed to copy conversation starter:", error);
-			toast.error("Unable to copy. Please copy it manually.");
+			toast.error("Couldn't copy. Select the text and copy it by hand.");
 		}
 	};
 
+	const profileName = [userProfile?.firstName, userProfile?.lastName]
+		.filter(Boolean)
+		.join(" ");
+
 	return (
-		<div className="flex flex-col gap-6">
-			<div className="flex flex-col gap-1">
-				<h1 className="text-3xl font-bold">Conversation Starters</h1>
-				<p className="text-muted-foreground">
-					Provide a few details about your contact and goal to generate a
-					tailored opener you can send on LinkedIn.
-				</p>
-			</div>
+		<div className="flex flex-col gap-8">
+			<PageHeader
+				title="Conversation starters"
+				description="A short first message to someone at a company, written from what you know about them and your profile."
+			/>
 
-			<div className="rounded-lg border border-dashed bg-muted/50 p-4 text-sm text-muted-foreground">
-				{profileLoading && <span>Loading your profile details…</span>}
-				{!profileLoading && userProfile && (
-					<span>
-						We&apos;ll automatically weave in your saved profile details
-						{userProfile.firstName || userProfile.lastName
-							? ` (e.g., ${[userProfile.firstName, userProfile.lastName]
-									.filter(Boolean)
-									.join(" ")})`
-							: ""}{" "}
-						to personalize the outreach. Update them in your profile if
-						something looks off.
-					</span>
-				)}
-				{!profileLoading && !userProfile && (
-					<span>
-						No profile information yet. Add your background in the Profile tab
-						so the AI can introduce you accurately.
-					</span>
-				)}
-			</div>
+			{profileLoading ? (
+				<Skeleton className="h-12" />
+			) : userProfile ? (
+				<Notice>
+					Your saved profile{profileName ? ` (${profileName})` : ""} is used
+					to introduce you.{" "}
+					<Link href="/dashboard/profile">Update your profile</Link> if
+					something looks off.
+				</Notice>
+			) : (
+				<Notice tone="warning" title="No profile yet">
+					Without it the message can&apos;t say who you are.{" "}
+					<Link href="/dashboard/profile">Add your background</Link> first.
+				</Notice>
+			)}
 
-			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr),minmax(0,1fr)]">
-				<Card>
-					<CardHeader>
-						<CardTitle>Contact Details</CardTitle>
-						<CardDescription>
-							Paste what you know about the person. The AI will figure out the
-							structure for you.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="prospectDetails">
-									Who are you reaching out to? *
-								</Label>
-								<Textarea
-									id="prospectDetails"
-									placeholder="Example: Met Priya at the AI for Good meetup—she leads Responsible AI at Lumos Labs and recently published a piece on bias mitigation. She teaches at Stanford and mentors women in ML."
-									value={formState.prospectDetails}
-									onChange={handleChange("prospectDetails")}
-									rows={12}
-								/>
-							</div>
-
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="additionalContext">
-									Anything else the AI should know? (Optional)
-								</Label>
-								<Textarea
-									id="additionalContext"
-									placeholder="Optional: Mention if you've chatted before, mutual connections, topics you want to learn about, etc."
-									value={formState.additionalContext}
-									onChange={handleChange("additionalContext")}
-									rows={5}
-								/>
-							</div>
-
-							<div className="flex flex-wrap items-center gap-3 pt-2">
-								<Button
-									type="submit"
-									disabled={generateConversationStarter.isPending}
-								>
-									<Sparkles className="mr-2 h-4 w-4" />
-									{generateConversationStarter.isPending
-										? "Generating..."
-										: "Generate message"}
-								</Button>
-								<Button
-									type="button"
-									variant="outline"
-									onClick={handleReset}
-									disabled={generateConversationStarter.isPending}
-								>
-									<RotateCcw className="mr-2 h-4 w-4" />
-									Reset
-								</Button>
-							</div>
-						</form>
-					</CardContent>
-				</Card>
-
-				<Card className="flex flex-col">
-					<CardHeader>
-						<CardTitle>AI Conversation Starter</CardTitle>
-						<CardDescription>
-							Fine-tune the note before sending. Copy it into LinkedIn or email.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="flex flex-1 flex-col gap-4">
+			<div className="grid items-start gap-x-12 gap-y-8 lg:grid-cols-2">
+				<form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+					<div className="flex flex-col gap-2">
+						<Label htmlFor="prospectDetails">Who are you writing to? *</Label>
 						<Textarea
-							className="flex-1 min-h-[260px]"
-							placeholder="Your AI-crafted message will appear here."
-							value={generatedMessage}
-							onChange={(event) => setGeneratedMessage(event.target.value)}
+							id="prospectDetails"
+							aria-required="true"
+							aria-describedby="prospectDetails-hint"
+							value={formState.prospectDetails}
+							onChange={handleChange("prospectDetails")}
+							rows={10}
+							className="min-h-56"
 						/>
-						<div className="flex justify-end">
-							<Button
-								type="button"
-								variant="outline"
-								onClick={withAsyncHandler(handleCopy)}
-								disabled={!generatedMessage}
-							>
-								{copied ? (
-									<Check className="mr-2 h-4 w-4" />
-								) : (
-									<ClipboardCopy className="mr-2 h-4 w-4" />
-								)}
-								{copied ? "Copied" : "Copy message"}
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
+						<p
+							id="prospectDetails-hint"
+							className="text-muted-foreground text-sm"
+						>
+							Paste what you know: their role and company, where you met,
+							something they wrote or built.
+						</p>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<Label htmlFor="additionalContext">Anything else to mention</Label>
+						<Textarea
+							id="additionalContext"
+							aria-describedby="additionalContext-hint"
+							value={formState.additionalContext}
+							onChange={handleChange("additionalContext")}
+							rows={4}
+						/>
+						<p
+							id="additionalContext-hint"
+							className="text-muted-foreground text-sm"
+						>
+							Optional. Mutual contacts, earlier conversations, what you want
+							to ask.
+						</p>
+					</div>
+
+					<div className="flex flex-wrap items-center gap-2">
+						<Button
+							type="submit"
+							disabled={generateConversationStarter.isPending}
+						>
+							{generateConversationStarter.isPending ? (
+								<Loader2 className="animate-spin" />
+							) : (
+								<PenLine />
+							)}
+							{generateConversationStarter.isPending
+								? "Writing…"
+								: "Write message"}
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={handleReset}
+							disabled={generateConversationStarter.isPending}
+						>
+							<RotateCcw />
+							Clear
+						</Button>
+					</div>
+				</form>
+
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="generatedMessage">Message</Label>
+					<Textarea
+						id="generatedMessage"
+						aria-describedby="generatedMessage-hint"
+						className="min-h-72"
+						value={generatedMessage}
+						onChange={(event) => setGeneratedMessage(event.target.value)}
+					/>
+					<p
+						id="generatedMessage-hint"
+						className="text-muted-foreground text-sm"
+					>
+						The message appears here. Edit it before you send it.
+					</p>
+					<Button
+						type="button"
+						variant="outline"
+						className="mt-2 w-fit self-end"
+						onClick={withAsyncHandler(handleCopy)}
+						disabled={!generatedMessage}
+					>
+						{copied ? <Check /> : <ClipboardCopy />}
+						{copied ? "Copied" : "Copy message"}
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

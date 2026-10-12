@@ -6,15 +6,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
 import { authClient } from "@/app/utils/authClient";
 import { useRouter } from "next/navigation";
+import { AuthPanel } from "../components/auth-panel";
 
 export default function SignUpPage() {
 	const [name, setName] = useState("");
@@ -31,13 +26,13 @@ export default function SignUpPage() {
 		setError("");
 
 		if (password !== confirmPassword) {
-			setError("Passwords don't match");
+			setError("The two passwords don't match.");
 			setIsLoading(false);
 			return;
 		}
 
 		if (password.length < 6) {
-			setError("Password must be at least 6 characters long");
+			setError("Use at least 6 characters for the password.");
 			setIsLoading(false);
 			return;
 		}
@@ -48,95 +43,89 @@ export default function SignUpPage() {
 				password,
 				name,
 			});
-			
+
 			// Allow the client session state to settle before checking it.
 			await new Promise(resolve => setTimeout(resolve, 100));
-			
+
 			const session = await authClient.getSession();
 			if (session.data?.user) {
 				router.push("/dashboard");
 			} else {
-				setError("Account creation failed. Please try again.");
+				setError(
+					"Couldn't create the account. That email may already be registered.",
+				);
 				setIsLoading(false);
 			}
 		} catch {
-			setError("Failed to create account. Email might already be in use.");
+			setError("Couldn't reach the server. Check your connection and try again.");
 			setIsLoading(false);
 		}
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
-					<CardDescription>
-						Create your account to start managing your job applications
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
-						{error && (
-							<div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-								{error}
-							</div>
-						)}
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="name">Full Name</Label>
-							<Input
-								id="name"
-								type="text"
-								placeholder="Enter your full name"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="email">Email</Label>
-							<Input
-								id="email"
-								type="email"
-								placeholder="Enter your email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="password">Password</Label>
-							<Input
-								id="password"
-								type="password"
-								placeholder="Enter your password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="confirmPassword">Confirm Password</Label>
-							<Input
-								id="confirmPassword"
-								type="password"
-								placeholder="Confirm your password"
-								value={confirmPassword}
-								onChange={(e) => setConfirmPassword(e.target.value)}
-								required
-							/>
-						</div>
-						<Button type="submit" className="w-full" disabled={isLoading}>
-							{isLoading ? "Creating Account..." : "Sign Up"}
-						</Button>
-					</form>
-					<div className="mt-4 text-center text-sm">
-						Already have an account?{" "}
-						<Link href="/sign-in" className="text-primary hover:underline">
-							Sign in
-						</Link>
-					</div>
-				</CardContent>
-			</Card>
-		</div>
+		<AuthPanel
+			title="Create account"
+			description="Add your experience once. Every resume is built from it."
+			footer={
+				<p>
+					Already have an account? <Link href="/sign-in">Sign in</Link>
+				</p>
+			}
+		>
+			<form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
+				{error && <Notice tone="error">{error}</Notice>}
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="name">Full name</Label>
+					<Input
+						id="name"
+						type="text"
+						autoComplete="name"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						required
+					/>
+				</div>
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="email">Email</Label>
+					<Input
+						id="email"
+						type="email"
+						autoComplete="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						required
+					/>
+				</div>
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="password">Password</Label>
+					<Input
+						id="password"
+						type="password"
+						autoComplete="new-password"
+						aria-describedby="password-hint"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						required
+					/>
+					<p id="password-hint" className="text-muted-foreground text-sm">
+						At least 6 characters.
+					</p>
+				</div>
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="confirmPassword">Confirm password</Label>
+					<Input
+						id="confirmPassword"
+						type="password"
+						autoComplete="new-password"
+						value={confirmPassword}
+						onChange={(e) => setConfirmPassword(e.target.value)}
+						required
+					/>
+				</div>
+				<Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+					{isLoading ? "Creating account…" : "Create account"}
+				</Button>
+			</form>
+		</AuthPanel>
 	);
 }

@@ -9,7 +9,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Resume import using Mistral OCR and structured parsing. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction.
 - A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable.
 - Profile-based and job-specific resume generation with manual content selection or Groq-assisted tailoring, using the A4 `professional` LaTeX template. Both flows support a one- or two-page target with up to three AI fitting revisions while keeping fonts and margins fixed. An unmet target returns the best compiled draft with a warning.
-- Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Generate & Save PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
+- Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Save and download PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
 - AI cover letters and conversation starters based on saved profile and resume data.
 - Application tracking with status, notes, job descriptions, and recruiter information, plus dashboard counts, offer rate, and recent activity.
 

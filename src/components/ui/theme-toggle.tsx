@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Check, Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,12 @@ const subscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+const themes = [
+  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+] as const;
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   // Keep the server and initial hydration render consistent before reading the theme.
@@ -24,44 +30,34 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" disabled>
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Toggle theme</span>
+        <Sun className="size-[1.2rem]" />
+        <span className="sr-only">Change theme</span>
       </Button>
     );
   }
+
+  const ActiveIcon =
+    themes.find((option) => option.value === theme)?.icon ?? Monitor;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          {theme === "system" && (
-            <Monitor className="h-[1.2rem] w-[1.2rem]" />
-          )}
-          {theme === "light" && (
-            <Sun className="h-[1.2rem] w-[1.2rem]" />
-          )}
-          {theme === "dark" && (
-            <Moon className="h-[1.2rem] w-[1.2rem]" />
-          )}
-          <span className="sr-only">Toggle theme</span>
+          <ActiveIcon className="size-[1.2rem]" />
+          <span className="sr-only">Change theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          <Monitor className="mr-2 h-4 w-4" />
-          <span>System</span>
-          {theme === "system" && <span className="ml-auto text-xs">✓</span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
-          {theme === "light" && <span className="ml-auto text-xs">✓</span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
-          {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
-        </DropdownMenuItem>
+        {themes.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            onClick={() => setTheme(option.value)}
+          >
+            <option.icon />
+            <span>{option.label}</span>
+            {theme === option.value && <Check className="ml-auto" />}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

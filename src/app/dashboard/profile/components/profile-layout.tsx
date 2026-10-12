@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, X } from "lucide-react";
-import { ProfileSidebar } from "./profile-sidebar";
+import { useCallback, useMemo } from "react";
+import { PageHeader } from "@/app/dashboard/components/page-header";
+import { ProfileActions, SectionIndex } from "./section-index";
 import { ProfilePageSkeleton } from "./profile-page-skeleton";
 import { PersonalInfoSection } from "./sections/personal-info-section";
 import { ExperienceSection } from "./sections/experience-section";
@@ -33,7 +31,6 @@ import { useAchievements } from "@/app/dashboard/profile/queries/use-achievement
 import { useReferences } from "@/app/dashboard/profile/queries/use-references";
 
 export function ProfileLayout() {
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const activeSection = useProfileUIStore((state) => state.activeSection);
 
 	const { data: userProfile, isLoading: profileLoading } = useUserProfile();
@@ -158,41 +155,22 @@ export function ProfileLayout() {
 	};
 
 	return (
-		<div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-			<Button
-				variant="ghost"
-				size="icon"
-				className="fixed left-4 top-20 z-50 lg:hidden"
-				onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-			>
-				{isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-			</Button>
+		<div className="flex flex-col gap-8">
+			<PageHeader
+				title="Profile"
+				description="Everything you might put on a resume, kept in one place. Each resume draws from it."
+				actions={<ProfileActions onImportPreview={handleImportPreview} />}
+			/>
 
-			<div
-				className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 lg:relative lg:translate-x-0 ${
-					isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-				}`}
-			>
-				<ProfileSidebar counts={counts} onImportPreview={handleImportPreview} />
+			<div className="grid items-start gap-x-10 gap-y-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
+				{/* min-w-0 lets the scrolling index shrink instead of widening the page. */}
+				<div className="min-w-0 lg:sticky lg:top-6">
+					<SectionIndex counts={counts} />
+				</div>
+				<div className="min-w-0 max-w-3xl">{renderSection()}</div>
 			</div>
 
-			{isSidebarOpen && (
-				<button
-					type="button"
-					aria-label="Close profile navigation"
-					className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm lg:hidden"
-					onClick={() => setIsSidebarOpen(false)}
-				/>
-			)}
-
-			<div className="flex-1 flex flex-col overflow-hidden">
-				<ScrollArea className="flex-1">
-					<div className="p-6 lg:p-8 max-w-4xl mx-auto">
-						{renderSection()}
-					</div>
-				</ScrollArea>
-				<PendingImportBanner />
-			</div>
+			<PendingImportBanner />
 		</div>
 	);
 }

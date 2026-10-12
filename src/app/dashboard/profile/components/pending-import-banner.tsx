@@ -197,7 +197,7 @@ export function PendingImportBanner() {
 			}
 		} catch (error) {
 			console.error("Failed to save imported resume data:", error);
-			toast.error("Failed to save imported data. Please try again.");
+			toast.error("Couldn't save everything. Check each section and try again.");
 		} finally {
 			setIsSaving(false);
 		}
@@ -208,36 +208,31 @@ export function PendingImportBanner() {
 	}
 
 	return (
-		<div className="sticky bottom-0 left-0 right-0 z-20 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-			<div className="flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-				<div className="flex flex-col gap-1">
-					<p className="text-sm font-medium">
-						{totalPendingItems} imported item{totalPendingItems !== 1 ? "s" : ""} pending
-					</p>
-					<p className="text-xs text-muted-foreground">
-						{pendingSummary.join(", ")}
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleDiscard}
-						disabled={isSaving}
-					>
-						Discard All
-					</Button>
-					<Button size="sm" onClick={withAsyncHandler(handleSaveAll)} disabled={isSaving}>
-						{isSaving ? (
-							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Saving...
-							</>
-						) : (
-							"Save All"
-						)}
-					</Button>
-				</div>
+		<div
+			role="status"
+			className="folder sticky bottom-0 z-20 -mx-5 flex flex-col gap-3 border-t px-5 py-3 sm:-mx-8 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+		>
+			<div className="flex flex-col gap-0.5">
+				<p className="text-sm font-semibold">
+					{totalPendingItems} imported item{totalPendingItems !== 1 ? "s" : ""} waiting for review
+				</p>
+				<p className="text-muted-foreground text-sm">
+					{pendingSummary.join(", ")}
+				</p>
+			</div>
+			<div className="flex items-center gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					onClick={handleDiscard}
+					disabled={isSaving}
+				>
+					Discard all
+				</Button>
+				<Button size="sm" onClick={withAsyncHandler(handleSaveAll)} disabled={isSaving}>
+					{isSaving && <Loader2 className="animate-spin" />}
+					{isSaving ? "Saving…" : "Save all"}
+				</Button>
 			</div>
 		</div>
 	);

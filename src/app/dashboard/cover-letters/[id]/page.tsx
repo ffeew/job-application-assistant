@@ -3,21 +3,131 @@
 import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Pencil, Trash2, Sparkles, Calendar } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Copy, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import type { CoverLetterJsonResponse } from "@/app/api/cover-letters/validators";
 import { useCoverLetter } from "@/app/dashboard/cover-letters/queries/use-cover-letters";
 import { useDeleteCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-delete-cover-letter";
+import { useUpdateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-update-cover-letter";
+import { PageHeader } from "@/app/dashboard/components/page-header";
+import { formatShortDate } from "@/lib/format-date";
 import { CoverLetterDetailSkeleton } from "../components/cover-letter-detail-skeleton";
+import { LetterPage } from "../components/letter-page";
+
+function CoverLetterEditor({
+	coverLetter,
+}: {
+	coverLetter: CoverLetterJsonResponse;
+}) {
+	const router = useRouter();
+	const updateCoverLetterMutation = useUpdateCoverLetter();
+	const deleteCoverLetterMutation = useDeleteCoverLetter();
+	const [title, setTitle] = useState(coverLetter.title);
+	const [content, setContent] = useState(coverLetter.content);
+	const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+	const hasChanges =
+		title !== coverLetter.title || content !== coverLetter.content;
+	const canSave = hasChanges && title.trim() !== "" && content.trim() !== "";
+
+	const handleCopyContent = async () => {
+		try {
+			await navigator.clipboard.writeText(content);
+			toast.success("Letter copied");
+		} catch {
+			toast.error("Couldn't copy. Select the text and copy it by hand.");
+		}
+	};
+
+	const handleSave = () => {
+		updateCoverLetterMutation.mutate(
+			{ id: coverLetter.id, data: { title, content } },
+			{
+				onSuccess: () => toast.success("Changes saved"),
+				onError: () => toast.error("Couldn't save the changes. Try again."),
+			},
+		);
+	};
+
+	const handleDelete = () => {
+		deleteCoverLetterMutation.mutate(coverLetter.id, {
+			onSuccess: () => {
+				toast.success("Cover letter deleted");
+				router.push("/dashboard/cover-letters");
+			},
+			onError: () => {
+				toast.error("Couldn't delete the cover letter. Try again.");
+			},
+		});
+	};
+
+	return (
+		<div className="flex max-w-3xl flex-col gap-8">
+			<PageHeader
+				title={coverLetter.title}
+				description={`Created ${formatShortDate(coverLetter.createdAt)}${
+					coverLetter.isAiGenerated ? ", drafted with AI" : ""
+				}`}
+				back={{ href: "/dashboard/cover-letters", label: "Cover letters" }}
+				actions={
+					<>
+						<Button
+							variant="outline"
+							onClick={withAsyncHandler(handleCopyContent)}
+						>
+							<Copy />
+							Copy letter
+						</Button>
+						<Button
+							variant="outline"
+							onClick={() => setConfirmingDelete(true)}
+							disabled={deleteCoverLetterMutation.isPending}
+						>
+							<Trash2 />
+							Delete
+						</Button>
+					</>
+				}
+			/>
+
+			<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="title">Title</Label>
+					<Input
+						id="title"
+						value={title}
+						onChange={(event) => setTitle(event.target.value)}
+					/>
+				</div>
+				<LetterPage
+					aria-label="Cover letter text"
+					value={content}
+					onChange={(event) => setContent(event.target.value)}
+				/>
+				<Button
+					className="w-fit self-end"
+					onClick={handleSave}
+					disabled={!canSave || updateCoverLetterMutation.isPending}
+				>
+					<Save />
+					{updateCoverLetterMutation.isPending ? "Saving…" : "Save changes"}
+				</Button>
+			</div>
+
+			<ConfirmDeleteDialog
+				open={confirmingDelete}
+				onOpenChange={setConfirmingDelete}
+				title="Delete this cover letter?"
+				description={`"${coverLetter.title}" will be removed. This can't be undone.`}
+				onConfirm={handleDelete}
+			/>
+		</div>
+	);
+}
 
 export default function ViewCoverLetterPage({
 	params,
@@ -34,7 +144,6 @@ export default function ViewCoverLetterPage({
 		isLoading,
 		error,
 	} = useCoverLetter(resolvedParams?.id || "");
-	const deleteCoverLetterMutation = useDeleteCoverLetter();
 
 	useEffect(() => {
 		const resolveParams = async () => {
@@ -50,35 +159,6 @@ export default function ViewCoverLetterPage({
 		}
 	}, [error, router]);
 
-	const handleCopyContent = async () => {
-		if (!coverLetter) return;
-
-		try {
-			await navigator.clipboard.writeText(coverLetter.content);
-			toast.success("Cover letter copied to clipboard");
-		} catch {
-			toast.error("Failed to copy to clipboard");
-		}
-	};
-
-	const handleDelete = () => {
-		if (!resolvedParams?.id) return;
-
-		if (!confirm("Are you sure you want to delete this cover letter?")) {
-			return;
-		}
-
-		deleteCoverLetterMutation.mutate(resolvedParams.id, {
-			onSuccess: () => {
-				toast.success("Cover letter deleted");
-				router.push("/dashboard/cover-letters");
-			},
-			onError: () => {
-				toast.error("Failed to delete cover letter");
-			},
-		});
-	};
-
 	if (!resolvedParams || isLoading) {
 		return <CoverLetterDetailSkeleton />;
 	}
@@ -87,83 +167,6 @@ export default function ViewCoverLetterPage({
 		return null;
 	}
 
-	const formattedDate = new Date(coverLetter.createdAt).toLocaleDateString(
-		"en-US",
-		{
-			year: "numeric",
-			month: "long",
-			day: "numeric",
-		}
-	);
-
-	return (
-		<div className="flex flex-col gap-6">
-			<div className="flex items-center gap-4">
-				<Button variant="outline" size="sm" asChild>
-					<Link href="/dashboard/cover-letters">
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Back to Cover Letters
-					</Link>
-				</Button>
-				<div>
-					<h1 className="text-3xl font-bold">{coverLetter.title}</h1>
-					<p className="text-muted-foreground">
-						View your cover letter details
-					</p>
-				</div>
-			</div>
-
-			<Card>
-				<CardHeader>
-					<CardTitle>Details</CardTitle>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-3">
-					<div className="flex items-center gap-2 text-sm">
-						<Calendar className="h-4 w-4 text-muted-foreground" />
-						<span className="text-muted-foreground">Created:</span>
-						<span>{formattedDate}</span>
-					</div>
-					{coverLetter.isAiGenerated && (
-						<div className="flex items-center gap-2">
-							<Sparkles className="h-4 w-4 text-muted-foreground" />
-							<Badge variant="secondary">AI Generated</Badge>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			<Card>
-				<CardHeader>
-					<CardTitle>Content</CardTitle>
-					<CardDescription>Your cover letter text</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="whitespace-pre-wrap rounded-md bg-muted p-4 text-sm leading-relaxed">
-						{coverLetter.content}
-					</div>
-				</CardContent>
-			</Card>
-
-			<div className="flex justify-end gap-4">
-				<Button variant="outline" onClick={withAsyncHandler(handleCopyContent)}>
-					<Copy className="mr-2 h-4 w-4" />
-					Copy
-				</Button>
-				<Button variant="outline" asChild>
-					<Link href={`/dashboard/cover-letters/${resolvedParams.id}/edit`}>
-						<Pencil className="mr-2 h-4 w-4" />
-						Edit
-					</Link>
-				</Button>
-				<Button
-					variant="destructive"
-					onClick={handleDelete}
-					disabled={deleteCoverLetterMutation.isPending}
-				>
-					<Trash2 className="mr-2 h-4 w-4" />
-					{deleteCoverLetterMutation.isPending ? "Deleting..." : "Delete"}
-				</Button>
-			</div>
-		</div>
-	);
+	// Keyed so the draft starts from the saved text of whichever letter is open.
+	return <CoverLetterEditor key={coverLetter.id} coverLetter={coverLetter} />;
 }

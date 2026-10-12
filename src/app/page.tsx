@@ -1,44 +1,23 @@
-"use client";
-
-import { runAsyncAction } from "@/lib/async-action";
-import { useEffect, useState } from "react";
-import { authClient } from "@/app/utils/authClient";
 import { Header } from "@/app/components/landing/header";
 import { HeroSection } from "@/app/components/landing/hero-section";
-import { TrustBar } from "@/app/components/landing/trust-bar";
-import { FeaturesSection } from "@/app/components/landing/features-section";
 import { HowItWorksSection } from "@/app/components/landing/how-it-works-section";
-import { CTASection } from "@/app/components/landing/cta-section";
-import { ForDevelopersSection } from "@/app/components/landing/for-developers-section";
+import { DeskSection } from "@/app/components/landing/desk-section";
+import { SelfHostingSection } from "@/app/components/landing/self-hosting-section";
 import { Footer } from "@/app/components/landing/footer";
 
 export default function Home() {
-	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-	useEffect(() => {
-		const checkAuth = async () => {
-			try {
-				const session = await authClient.getSession();
-				setIsAuthenticated(!!session);
-			} catch {
-				setIsAuthenticated(false);
-			}
-		};
-
-		runAsyncAction(checkAuth());
-	}, []);
-
 	return (
-		<div className="min-h-screen bg-background">
-			<Header isAuthenticated={isAuthenticated} />
+		<div className="min-h-screen">
+			{/* On wide screens the strip leaves room for the hero's tabs to rise into it. */}
+			<div className="band lg:pb-10">
+				<Header />
+			</div>
 
 			<main>
 				<HeroSection />
-				<TrustBar />
-				<FeaturesSection />
 				<HowItWorksSection />
-				<CTASection />
-				<ForDevelopersSection />
+				<DeskSection />
+				<SelfHostingSection />
 			</main>
 
 			<Footer />

@@ -16,15 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Save } from "lucide-react";
+import { Paper } from "@/components/ui/paper";
+import { Loader2, PenLine, Save } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/app/dashboard/components/page-header";
+import { LetterPage } from "../components/letter-page";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useApplications } from "@/app/dashboard/applications/queries/use-applications";
 import { useCreateCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-create-cover-letter";
@@ -95,7 +91,7 @@ export default function NewCoverLetterPage() {
 
   const handleGenerateCoverLetter = () => {
     if (!manualCompany || !manualPosition) {
-      toast.error("Please provide company and position information");
+      toast.error("Enter the company and position first.");
       return;
     }
 
@@ -123,12 +119,12 @@ export default function NewCoverLetterPage() {
       {
         onSuccess: (data) => {
           setGeneratedContent(data.coverLetter);
-          setTitle(`Cover Letter - ${manualCompany} ${manualPosition}`);
+          setTitle(`Cover letter for ${manualPosition} at ${manualCompany}`);
         },
         onError: (error: Error) => {
           console.error("Error generating cover letter:", error);
           toast.error(
-            error.message || "Error generating cover letter. Please try again.",
+            error.message || "Couldn't write the cover letter. Try again.",
           );
         },
       },
@@ -137,7 +133,7 @@ export default function NewCoverLetterPage() {
 
   const handleSaveCoverLetter = () => {
     if (!title || !generatedContent) {
-      toast.error("Please generate a cover letter first");
+      toast.error("Write the cover letter and give it a title first.");
       return;
     }
 
@@ -151,238 +147,190 @@ export default function NewCoverLetterPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Cover letter saved successfully!");
+          toast.success("Cover letter saved");
           reset();
           router.push("/dashboard/cover-letters");
         },
         onError: (error) => {
           console.error("Error saving cover letter:", error);
-          toast.error("Error saving cover letter. Please try again.");
+          toast.error("Couldn't save the cover letter. Try again.");
         },
       },
     );
   };
 
+  const canWrite = Boolean(manualCompany && manualPosition);
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard/cover-letters">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Cover Letters
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Generate Cover Letter</h1>
-          <p className="text-muted-foreground">
-            Create a personalized cover letter using AI.
-          </p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Write cover letter"
+        description="Drafted from the job and one of your resumes. Edit the wording before you save it."
+        back={{ href: "/dashboard/cover-letters", label: "Cover letters" }}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Job Information</CardTitle>
-              <CardDescription>
-                Select an existing application or enter job details manually
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {applications.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="application">
-                    Select Application (Optional)
-                  </Label>
-                  <Select
-                    value={selectedApplication}
-                    onValueChange={handleApplicationChange}
-                  >
-                    <SelectTrigger id="application">
-                      <SelectValue placeholder="Choose an existing application..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        None - Enter manually
-                      </SelectItem>
-                      {applications.map((app) => (
-                        <SelectItem key={app.id} value={app.id}>
-                          {app.position} at {app.company}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+      <div className="grid items-start gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {applications.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="application">Application</Label>
+              <Select
+                value={selectedApplication}
+                onValueChange={handleApplicationChange}
+              >
+                <SelectTrigger id="application" aria-describedby="application-hint">
+                  <SelectValue placeholder="Choose an application" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None, I will type the job in</SelectItem>
+                  {applications.map((app) => (
+                    <SelectItem key={app.id} value={app.id}>
+                      {app.position} at {app.company}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p id="application-hint" className="text-muted-foreground text-sm">
+                Optional. Fills in the job below and links the letter to it.
+              </p>
+            </div>
+          )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="company">Company *</Label>
-                  <Input
-                    id="company"
-                    placeholder="Company name"
-                    value={manualCompany}
-                    onChange={(e) =>
-                      setManualFields(
-                        e.target.value,
-                        manualPosition,
-                        jobDescription,
-                      )
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="position">Position *</Label>
-                  <Input
-                    id="position"
-                    placeholder="Job position"
-                    value={manualPosition}
-                    onChange={(e) =>
-                      setManualFields(
-                        manualCompany,
-                        e.target.value,
-                        jobDescription,
-                      )
-                    }
-                  />
-                </div>
-              </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="company">Company *</Label>
+            <Input
+              id="company"
+              aria-required="true"
+              value={manualCompany}
+              onChange={(e) =>
+                setManualFields(e.target.value, manualPosition, jobDescription)
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="position">Position *</Label>
+            <Input
+              id="position"
+              aria-required="true"
+              value={manualPosition}
+              onChange={(e) =>
+                setManualFields(manualCompany, e.target.value, jobDescription)
+              }
+            />
+          </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="applicantName">Your Name (Optional)</Label>
-                <Input
-                  id="applicantName"
-                  placeholder="Your full name"
-                  value={applicantName}
-                  onChange={(e) => setApplicantName(e.target.value)}
-                />
-              </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="jobDescription">Job description</Label>
+            <Textarea
+              id="jobDescription"
+              aria-describedby="jobDescription-hint"
+              value={jobDescription}
+              onChange={(e) =>
+                setManualFields(manualCompany, manualPosition, e.target.value)
+              }
+              rows={6}
+              className="max-h-72"
+            />
+            <p id="jobDescription-hint" className="text-muted-foreground text-sm">
+              Paste the listing so the letter can answer it.
+            </p>
+          </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="jobDescription">Job Description</Label>
-                <Textarea
-                  id="jobDescription"
-                  placeholder="Paste the job description here for better personalization..."
-                  value={jobDescription}
-                  onChange={(e) =>
-                    setManualFields(
-                      manualCompany,
-                      manualPosition,
-                      e.target.value,
-                    )
-                  }
-                  rows={6}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="applicantName">Your name</Label>
+            <Input
+              id="applicantName"
+              autoComplete="name"
+              value={applicantName}
+              onChange={(e) => setApplicantName(e.target.value)}
+            />
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Resume Selection</CardTitle>
-              <CardDescription>
-                Choose which resume to base the cover letter on
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {resumes.length > 0 ? (
-                <Select
-                  value={selectedResume}
-                  onValueChange={setSelectedResume}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="resume">Resume to draw on</Label>
+            {resumes.length > 0 ? (
+              <Select value={selectedResume} onValueChange={setSelectedResume}>
+                <SelectTrigger id="resume">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {resumes.map((resume) => (
+                    <SelectItem key={resume.id} value={resume.id}>
+                      {resume.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                You have no resumes yet, so the letter will be written from the
+                job alone.{" "}
+                <Link
+                  href="/dashboard/resumes/generate"
+                  className="text-link underline underline-offset-4 hover:no-underline"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resumes.map((resume) => (
-                      <SelectItem key={resume.id} value={resume.id}>
-                        {resume.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No resumes found.{" "}
-                  <Link
-                    href="/dashboard/resumes/new"
-                    className="text-primary hover:underline"
-                  >
-                    Create one first
-                  </Link>
-                  .
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  Generate a resume
+                </Link>
+              </p>
+            )}
+          </div>
 
           <Button
             onClick={handleGenerateCoverLetter}
-            disabled={
-              generateCoverLetterMutation.isPending ||
-              !manualCompany ||
-              !manualPosition
-            }
+            disabled={generateCoverLetterMutation.isPending || !canWrite}
             size="lg"
-            className="w-full"
+            className="mt-2 w-full"
           >
-            <Sparkles className="mr-2 h-4 w-4" />
+            {generateCoverLetterMutation.isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <PenLine />
+            )}
             {generateCoverLetterMutation.isPending
-              ? "Generating..."
-              : "Generate Cover Letter"}
+              ? "Writing…"
+              : "Write cover letter"}
           </Button>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generated Cover Letter</CardTitle>
-              <CardDescription>
-                Review and edit your AI-generated cover letter
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {generatedContent ? (
-                <>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Cover letter title"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="content">Content</Label>
-                    <Textarea
-                      id="content"
-                      value={generatedContent}
-                      onChange={(e) => setGeneratedContent(e.target.value)}
-                      rows={16}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleSaveCoverLetter}
-                    disabled={createCoverLetterMutation.isPending}
-                    className="w-full"
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {createCoverLetterMutation.isPending
-                      ? "Saving..."
-                      : "Save Cover Letter"}
-                  </Button>
-                </>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Generate a cover letter to see it here</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="flex min-w-0 flex-col gap-4">
+          {generatedContent ? (
+            <>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+              <LetterPage
+                aria-label="Cover letter text"
+                value={generatedContent}
+                onChange={(e) => setGeneratedContent(e.target.value)}
+              />
+              <Button
+                onClick={handleSaveCoverLetter}
+                disabled={createCoverLetterMutation.isPending}
+                className="w-fit self-end"
+              >
+                <Save />
+                {createCoverLetterMutation.isPending
+                  ? "Saving…"
+                  : "Save cover letter"}
+              </Button>
+            </>
+          ) : (
+            <Paper className="flex min-h-[26rem] items-center justify-center p-10 text-center font-sans">
+              <p
+                role={generateCoverLetterMutation.isPending ? "status" : undefined}
+                className="text-paper-foreground/70 max-w-[34ch] text-sm"
+              >
+                {generateCoverLetterMutation.isPending
+                  ? "Writing your letter. This usually takes a few seconds."
+                  : "Your letter appears here. Enter the company and position, then select Write cover letter."}
+              </p>
+            </Paper>
+          )}
         </div>
       </div>
     </div>

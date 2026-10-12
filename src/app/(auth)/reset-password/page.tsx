@@ -7,8 +7,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/app/utils/authClient";
+import { AuthPanel } from "../components/auth-panel";
+
+const RESET_FAILED =
+  "Couldn't reset the password. The link may have expired; request a new one.";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -25,19 +30,19 @@ function ResetPasswordForm() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords don't match");
+      setError("The two passwords don't match.");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError("Use at least 6 characters for the password.");
       setIsLoading(false);
       return;
     }
 
     if (!token) {
-      setError("Invalid or missing reset token");
+      setError(RESET_FAILED);
       setIsLoading(false);
       return;
     }
@@ -47,14 +52,14 @@ function ResetPasswordForm() {
         newPassword: password,
         token,
       });
-      
+
       if (result.error) {
-        setError("Failed to reset password. The link may have expired.");
+        setError(RESET_FAILED);
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("Failed to reset password. The link may have expired.");
+      setError(RESET_FAILED);
     } finally {
       setIsLoading(false);
     }
@@ -62,120 +67,87 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Password Reset Successful</CardTitle>
-            <CardDescription>
-              Your password has been successfully updated
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md mb-4">
-              Your password has been reset successfully!
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              You can now sign in with your new password.
-            </p>
-            <Button asChild className="w-full">
-              <Link href="/sign-in">Go to Sign In</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthPanel
+        title="Password updated"
+        description="Sign in with your new password."
+      >
+        <Button asChild size="lg" className="w-full">
+          <Link href="/sign-in">Sign in</Link>
+        </Button>
+      </AuthPanel>
     );
   }
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Invalid Reset Link</CardTitle>
-            <CardDescription>
-              This password reset link is invalid or has expired
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md mb-4">
-              The password reset link is invalid or has expired.
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Please request a new password reset link.
-            </p>
-            <Button asChild className="w-full">
-              <Link href="/forgot-password">Request New Reset Link</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthPanel
+        title="This reset link doesn't work"
+        description="It is incomplete or has expired. Request a new one to continue."
+      >
+        <Button asChild size="lg" className="w-full">
+          <Link href="/forgot-password">Request a new link</Link>
+        </Button>
+      </AuthPanel>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-          <CardDescription>
-            Enter your new password below
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                {error}
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">New Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Resetting..." : "Reset Password"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <Link href="/sign-in" className="text-primary hover:underline">
-              Back to Sign In
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthPanel
+      title="Choose a new password"
+      footer={
+        <p>
+          <Link href="/sign-in">Back to sign in</Link>
+        </p>
+      }
+    >
+      <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
+        {error && <Notice tone="error">{error}</Notice>}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">New password</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            aria-describedby="password-hint"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <p id="password-hint" className="text-muted-foreground text-sm">
+            At least 6 characters.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="confirmPassword">Confirm new password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+          {isLoading ? "Saving…" : "Save new password"}
+        </Button>
+      </form>
+    </AuthPanel>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">Loading...</div>
-          </CardContent>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-9 w-2/3" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-12" />
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

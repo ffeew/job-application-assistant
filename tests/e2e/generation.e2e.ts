@@ -47,8 +47,8 @@ async function openApplicationGenerator(
   title: string,
 ) {
   await page.goto(`/dashboard/applications/${applicationId}/resume`);
-  await page.getByLabel("Resume Title", { exact: true }).fill(title);
-  await page.getByLabel("AI Content Optimization", { exact: true }).uncheck();
+  await page.getByLabel("Resume title", { exact: true }).fill(title);
+  await page.getByLabel("Match content to the job description", { exact: true }).uncheck();
 }
 
 test("profile preview downloads the same real PDF without a second generation", async ({
@@ -60,19 +60,19 @@ test("profile preview downloads the same real PDF without a second generation", 
   await worker.start();
   await page.goto("/dashboard/resumes/generate");
   await page
-    .getByLabel("Resume Title", { exact: true })
+    .getByLabel("Resume title", { exact: true })
     .fill("Profile E2E Resume");
   await page.getByRole("button", { name: "Preview", exact: true }).click();
   const job = await expectCompleted(request);
-  await expect(
-    page.getByText("1 page · Target: 1 · 0 revisions", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Page fit")).toHaveText(
+    /Pages\s*1\s*Target\s*1\s*Revisions\s*0/,
+  );
   await expect(page.getByTitle("Resume PDF preview")).toHaveAttribute(
     "src",
     /^blob:/,
   );
   const downloadPromise = page.waitForEvent("download", { timeout: 60_000 });
-  await page.getByRole("button", { name: "Generate PDF", exact: true }).click();
+  await page.getByRole("button", { name: "Download PDF", exact: true }).click();
   const inspected = await inspectPDF(await downloadPromise);
   expect(
     inspected.bytes.equals(Buffer.from(job.result?.pdfBase64 ?? "", "base64")),
@@ -98,7 +98,7 @@ test("generate, save, and reopen a linked application resume", async ({
   );
   const downloadPromise = page.waitForEvent("download", { timeout: 60_000 });
   await page
-    .getByRole("button", { name: "Generate & Save PDF", exact: true })
+    .getByRole("button", { name: "Save and download PDF", exact: true })
     .click();
   await inspectPDF(await downloadPromise);
   const job = await expectCompleted(request, candidate.applicationId);
@@ -122,7 +122,7 @@ test("generate, save, and reopen a linked application resume", async ({
       .getByText("Tailored E2E Resume", { exact: true })
       .filter({ visible: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Edit", exact: true }).click();
+  await page.getByRole("link", { name: "Open", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Tailored E2E Resume", exact: true }),
   ).toBeVisible();
@@ -131,9 +131,9 @@ test("generate, save, and reopen a linked application resume", async ({
     /^blob:/,
     { timeout: 30_000 },
   );
-  await expect(
-    page.getByText("1 page · Target: 1 · 0 revisions", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Page fit")).toHaveText(
+    /Pages\s*1\s*Target\s*1\s*Revisions\s*0/,
+  );
 
   const other = await createCandidate();
   const context = await browser.newContext({
@@ -183,7 +183,7 @@ test("queued generation saves after leaving the page and restores on return", as
     "Background E2E Resume",
   );
   await page
-    .getByRole("button", { name: "Generate & Save PDF", exact: true })
+    .getByRole("button", { name: "Save and download PDF", exact: true })
     .click();
   await expect
     .poll(
@@ -199,7 +199,7 @@ test("queued generation saves after leaving the page and restores on return", as
   expect(completed.id).toBe(queued.id);
   expect(completed.savedResumeId).toBeTruthy();
   await page.goto(`/dashboard/applications/${candidate.applicationId}/resume`);
-  await expect(page.getByLabel("Resume Title", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Resume title", { exact: true })).toHaveValue(
     "Background E2E Resume",
   );
   await expect(page.getByTitle("Resume PDF preview")).toHaveAttribute(
@@ -226,13 +226,13 @@ test("real compiler failure surfaces an error and a corrected profile can retry"
   await page.goto("/dashboard/profile");
   await page.getByRole("button", { name: "Edit", exact: true }).click();
   await page
-    .getByLabel("Professional Summary", { exact: true })
+    .getByLabel("Professional summary", { exact: true })
     .fill("Unsupported resume character: 🦄");
-  await page.getByRole("button", { name: "Save Changes", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.goto("/dashboard/resumes/generate");
   await page
-    .getByLabel("Resume Title", { exact: true })
+    .getByLabel("Resume title", { exact: true })
     .fill("Retry E2E Resume");
   await page.getByRole("button", { name: "Preview", exact: true }).click();
   await expect
@@ -249,9 +249,9 @@ test("real compiler failure surfaces an error and a corrected profile can retry"
   await page.goto("/dashboard/profile");
   await page.getByRole("button", { name: "Edit", exact: true }).click();
   await page
-    .getByLabel("Professional Summary", { exact: true })
+    .getByLabel("Professional summary", { exact: true })
     .fill("Software engineer building reliable applications.");
-  await page.getByRole("button", { name: "Save Changes", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.goto("/dashboard/resumes/generate");
   await page.getByRole("button", { name: "Preview", exact: true }).click();

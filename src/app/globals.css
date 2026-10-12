@@ -6,194 +6,398 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-link: var(--link);
+  --color-kraft: var(--kraft);
+  --color-tab: var(--tab);
+  --color-scrim: var(--scrim);
+  --color-paper: var(--paper);
+  --color-paper-foreground: var(--paper-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-status-applied: var(--status-applied);
+  --color-status-interviewing: var(--status-interviewing);
+  --color-status-offer: var(--status-offer);
+  --color-status-rejected: var(--status-rejected);
+  --color-status-withdrawn: var(--status-withdrawn);
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-document: var(--font-stix), "Times New Roman", Times, serif;
+  --font-stencil: var(--font-big-shoulders-stencil), var(--font-archivo),
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* 21px keeps the scale on 12/14/16/18/21/24/36/48/60/72. */
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.35;
+
+  /* Paper and card stock have near-square corners. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
+  --shadow-sheet: var(--sheet-shadow);
+  --shadow-page: var(--page-shadow);
 }
 
-:root {
-  --radius: 0.75rem;
-  --background: #FAFAFA;
-  --foreground: #1A1A1A;
-  --card: #FFFFFF;
-  --card-foreground: #1A1A1A;
-  --popover: #FFFFFF;
-  --popover-foreground: #1A1A1A;
-  --primary: #8B5CF6;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F0F0F0;
-  --secondary-foreground: #1A1A1A;
-  --muted: #F0F0F0;
-  --muted-foreground: #666666;
-  --accent: #8B5CF620;
-  --accent-foreground: #8B5CF6;
-  --destructive: #EF4444;
-  --border: #E5E5E5;
-  --input: #E5E5E5;
-  --ring: #8B5CF6;
-  --chart-1: #8B5CF6;
-  --chart-2: #3B82F6;
-  --chart-3: #22C55E;
-  --chart-4: #F59E0B;
-  --chart-5: #EF4444;
-  --sidebar: #F5F5F5;
-  --sidebar-foreground: #1A1A1A;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #8B5CF620;
-  --sidebar-accent-foreground: #8B5CF6;
-  --sidebar-border: #E5E5E5;
-  --sidebar-ring: #8B5CF6;
+:root,
+html:not(.dark)
+  .band
+  :is(
+    [data-slot="card"],
+    [data-slot="paper"],
+    [data-slot="folder"],
+    [data-slot="folder-tab"]
+  ) {
+  /* Light theme: a file drawer. Manila folders are the ground, white sheets
+     lie in them, and ballpoint blue is for actions. The second selector
+     restores these inside surfaces that sit on the ink strip. */
+  --background: #efd8a1;
+  --foreground: #1c2030;
+  --card: #ffffff;
+  --card-foreground: #1c2030;
+  --popover: #ffffff;
+  --popover-foreground: #1c2030;
+  --primary: #2a44f0;
+  --primary-foreground: #ffffff;
+  /* Deep manila: tags and secondary buttons, on folders and on sheets. */
+  --secondary: #e3c684;
+  --secondary-foreground: #1c2030;
+  /* Translucent so washes and hover states read on both manila and paper. */
+  --muted: rgb(185 138 62 / 0.16);
+  --muted-foreground: #5a4f33;
+  --accent: rgb(28 32 48 / 0.07);
+  --accent-foreground: #1c2030;
+  /* Darker than stamp red so error text passes 4.5:1 on manila. */
+  --destructive: #b31b2c;
+  --destructive-foreground: #ffffff;
+  --border: rgb(150 108 40 / 0.38);
+  /* Field borders need 3:1 against the white fill and against manila. */
+  --input: #857449;
+  --ring: #2a44f0;
+  --link: #2a44f0;
 
-  --status-applied: #3B82F6;
-  --status-applied-bg: #3B82F615;
-  --status-interviewing: #F59E0B;
-  --status-interviewing-bg: #F59E0B15;
-  --status-offer: #22C55E;
-  --status-offer-bg: #22C55E15;
-  --status-rejected: #EF4444;
-  --status-rejected-bg: #EF444415;
-  --status-withdrawn: #6B7280;
-  --status-withdrawn-bg: #6B728015;
+  /* Folder furniture: edges, and the folders standing behind the open one. */
+  --kraft: #b98a3e;
+  --tab: #e3c684;
+  --scrim: rgb(28 32 48 / 0.55);
+
+  /* Documents stay paper-white in both themes, as the compiled PDF does. */
+  --paper: #ffffff;
+  --paper-foreground: #1c2030;
+  /* Sheets cast a shadow; folders do not. The ring keeps an edge on manila. */
+  --sheet-shadow: 0 0 0 1px rgb(150 108 40 / 0.2), 0 1px 2px rgb(74 52 12 / 0.14),
+    0 10px 18px -14px rgb(74 52 12 / 0.55);
+  --page-shadow: 0 0 0 1px rgb(150 108 40 / 0.2), 0 2px 5px rgb(74 52 12 / 0.16),
+    0 24px 40px -24px rgb(74 52 12 / 0.65);
+
+  /* Highlighter means "matched to the job" and nothing else. Paper only:
+     it disappears on manila. */
+  --highlight: #ffe330;
+  --highlight-foreground: #1c2030;
+
+  --warning: #9a5200;
+  --success: #1a7f4b;
+
+  /* Stamp inks. Each passes 4.5:1 as text on paper; the label is always the
+     stamp itself, so colour is never the only cue. Re-run the colour-blind
+     check before changing them. */
+  --status-applied: #2a44f0;
+  --status-interviewing: #a86400;
+  --status-offer: #0a8060;
+  --status-rejected: #d2283c;
+  --status-withdrawn: #5b6675;
+
+  /* Fibres in the folder stock. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35 0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.29 0 0 0 0 0.06 0.5 0 0 0 -0.17'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.dark {
-  --background: #121212;
-  --foreground: #F5F5F5;
-  --card: #1E1E1E;
-  --card-foreground: #F5F5F5;
-  --popover: #1E1E1E;
-  --popover-foreground: #F5F5F5;
-  --primary: #A78BFA;
-  --primary-foreground: #FFFFFF;
-  --secondary: #2A2A2A;
-  --secondary-foreground: #F5F5F5;
-  --muted: #2A2A2A;
-  --muted-foreground: #A0A0A0;
-  --accent: #A78BFA20;
-  --accent-foreground: #A78BFA;
-  --destructive: #F87171;
-  --border: #333333;
-  --input: #333333;
-  --ring: #A78BFA;
-  --chart-1: #A78BFA;
-  --chart-2: #60A5FA;
-  --chart-3: #4ADE80;
-  --chart-4: #FBBF24;
-  --chart-5: #F87171;
-  --sidebar: #1A1A1A;
-  --sidebar-foreground: #F5F5F5;
-  --sidebar-primary: #A78BFA;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #A78BFA20;
-  --sidebar-accent-foreground: #A78BFA;
-  --sidebar-border: #333333;
-  --sidebar-ring: #A78BFA;
+/* The drawer behind the folders: the strip that holds the tabs, the sign-in
+   backdrop and the landing footer. Content tokens flip to light-on-ink so
+   shared components need no variants. */
+html:not(.dark) .band {
+  --background: #1c2030;
+  --foreground: #ffffff;
+  --muted: rgb(255 255 255 / 0.08);
+  --muted-foreground: rgb(255 255 255 / 0.78);
+  --primary: #efd8a1;
+  --primary-foreground: #1c2030;
+  --secondary: rgb(255 255 255 / 0.14);
+  --secondary-foreground: #ffffff;
+  --border: rgb(255 255 255 / 0.2);
+  --input: rgb(255 255 255 / 0.55);
+  --accent: rgb(255 255 255 / 0.12);
+  --accent-foreground: #ffffff;
+  --destructive: #ff9a92;
+  --ring: #efd8a1;
+  --link: #efd8a1;
+}
 
-  --status-applied: #60A5FA;
-  --status-applied-bg: #60A5FA20;
-  --status-interviewing: #FBBF24;
-  --status-interviewing-bg: #FBBF2420;
-  --status-offer: #4ADE80;
-  --status-offer-bg: #4ADE8020;
-  --status-rejected: #F87171;
-  --status-rejected-bg: #F8717120;
-  --status-withdrawn: #6B7280;
-  --status-withdrawn-bg: #6B728020;
+.band {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.dark,
+.dark
+  .band
+  :is(
+    [data-slot="card"],
+    [data-slot="paper"],
+    [data-slot="folder"],
+    [data-slot="folder-tab"]
+  ) {
+  /* The drawer at night: the folder stock goes dark and manila becomes the
+     colour of actions. */
+  --background: #2b2518;
+  --foreground: #f3ead3;
+  --card: #383020;
+  --card-foreground: #f3ead3;
+  --popover: #403726;
+  --popover-foreground: #f3ead3;
+  --primary: #efd8a1;
+  --primary-foreground: #1c2030;
+  --secondary: #4a3f29;
+  --secondary-foreground: #f3ead3;
+  --muted: rgb(239 216 161 / 0.08);
+  --muted-foreground: #bcaf8f;
+  --accent: rgb(239 216 161 / 0.1);
+  --accent-foreground: #f3ead3;
+  --destructive: #ff8a80;
+  --destructive-foreground: #1c2030;
+  --border: rgb(239 216 161 / 0.16);
+  --input: #8f8160;
+  --ring: #a9bbff;
+  --link: #a9bbff;
+
+  --kraft: #6f5f3c;
+  --tab: #211c12;
+  --scrim: rgb(10 8 4 / 0.65);
+
+  --paper: #f1ecdd;
+  --paper-foreground: #1c2030;
+  --sheet-shadow: 0 0 0 1px rgb(239 216 161 / 0.1),
+    0 10px 18px -14px rgb(0 0 0 / 0.8);
+  --page-shadow: 0 1px 1px rgb(0 0 0 / 0.5), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+
+  --warning: #f2b45c;
+  --success: #5fd39a;
+
+  --status-applied: #8eaaff;
+  --status-interviewing: #e5a640;
+  --status-offer: #3cc7a4;
+  --status-rejected: #ff8078;
+  --status-withdrawn: #a8b2c4;
+
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35 0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.85 0 0 0 0 0.63 0.2 0 0 0 -0.08'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.dark .band {
+  --background: #17130b;
+}
+
+/* Paper stays light at night, so anything stamped or marked on it uses
+   daytime inks, a shade darker because this paper is dimmer than white. */
+.dark [data-slot="paper"],
+.dark .band [data-slot="paper"] {
+  --link: #2a44f0;
+  --destructive: #b31b2c;
+  --warning: #8a4a00;
+  --success: #17703f;
+  --status-applied: #2a44f0;
+  --status-interviewing: #955800;
+  --status-offer: #087356;
+  --status-rejected: #c4203a;
+  --status-withdrawn: #556070;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
+    background-image: var(--grain);
+  }
+  input[type="range"],
+  input[type="checkbox"] {
+    accent-color: var(--primary);
   }
 }
 
-@keyframes fadeInUp {
+/* Condensed cut of Archivo for page titles and the wordmark. Set the size and
+   leading where it is used so this never competes with text-* utilities. */
+@utility title {
+  font-stretch: 78%;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Folder stock: the manila ground with its fibres. For folders that sit on
+   the ink strip; the body already has it. */
+@utility folder {
+  background-color: var(--background);
+  background-image: var(--grain);
+  color: var(--foreground);
+}
+
+/* An index tab. Each half is skewed away from the middle so the slope stays
+   the same whatever the label's width, and the label itself is not distorted. */
+@utility folder-tab {
+  --tab-fill: var(--tab);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    background-color: var(--tab-fill);
+    border-top: 1px solid var(--kraft);
+    transition: background-color 0.15s;
+  }
+  &::before {
+    left: 0;
+    right: 50%;
+    border-left: 1px solid var(--kraft);
+    border-top-left-radius: 7px;
+    transform: skewX(-13deg);
+    transform-origin: bottom left;
+  }
+  &::after {
+    left: 50%;
+    right: 0;
+    border-right: 1px solid var(--kraft);
+    border-top-right-radius: 7px;
+    transform: skewX(13deg);
+    transform-origin: bottom right;
+  }
+  /* Drawn inside the tab: outside it the ring would sit on the ink strip,
+     where ballpoint blue does not reach 3:1. */
+  &:focus-visible {
+    outline-offset: -7px;
+    border-radius: 9px;
+  }
+}
+
+/* The open folder's tab takes the folder's own stock. */
+@utility folder-tab-open {
+  --tab-fill: var(--background);
+  z-index: 1;
+  /* Covers the folder's top edge so tab and folder read as one piece. */
+  margin-bottom: -1px;
+
+  &::before,
+  &::after {
+    background-image: var(--grain);
+  }
+}
+
+/* A rubber stamp: the one place uppercase appears. Colour comes from the
+   text colour, so the frame and the word are always the same ink. */
+@utility stamp {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  padding: 0.3em 0.5em 0.24em;
+  font-family: var(--font-stencil);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* Rotated text is otherwise snapped to whole pixels, which opens gaps. */
+  text-rendering: geometricPrecision;
+  rotate: var(--stamp-tilt, -1.5deg);
+}
+
+/* A second rule marks a final decision. */
+@utility stamp-double {
+  outline: 1.5px solid currentColor;
+  outline-offset: 1.5px;
+}
+
+/* No two impressions land at the same angle. */
+:is(li, tr):nth-child(even) {
+  --stamp-tilt: 1deg;
+}
+
+@keyframes stamp-press {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    scale: 1.4;
+  }
+  60% {
+    opacity: 1;
+    scale: 0.96;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    scale: 1;
   }
 }
 
-@keyframes fadeIn {
+@utility stamp-press {
+  animation: stamp-press 0.24s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  animation-delay: var(--stamp-delay, 0ms);
+}
+
+/* A highlighter stroke: shorter than the line and uneven at the ends. */
+@utility highlight-stroke {
+  /* Ink in both themes: light text on yellow is unreadable on dark panels. */
+  color: var(--highlight-foreground);
+  background: linear-gradient(var(--highlight), var(--highlight)) 0 62% / 100%
+    84% no-repeat;
+  padding-inline: 0.14em;
+  margin-inline: -0.14em;
+  border-radius: 0.2em 0.4em 0.25em 0.35em / 0.6em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@keyframes highlight-draw {
   from {
-    opacity: 0;
+    background-size: 0% 84%;
   }
   to {
-    opacity: 1;
+    background-size: 100% 84%;
   }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.8s ease-out forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
-}
-
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
-.stagger-6 { animation-delay: 0.6s; }
-
-.before-animate {
-  opacity: 0;
+@utility highlight-draw {
+  animation: highlight-draw 0.45s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  animation-delay: var(--highlight-delay, 0ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -201,11 +405,8 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-
-  .before-animate {
-    opacity: 1;
   }
 }

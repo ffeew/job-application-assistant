@@ -1,151 +1,33 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Sparkles, FileText, BarChart3, PenTool } from "lucide-react";
-import { useScrollAnimation } from "@/app/hooks/use-scroll-animation";
-
-function ResumePreviewCard() {
-	return (
-		<div className="relative">
-			<div className="absolute inset-0 -z-10 rounded-[32px] bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
-			<div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 p-8 shadow-2xl shadow-primary/10 backdrop-blur-sm">
-				<div className="flex flex-col gap-5 w-[300px]">
-					<div className="flex items-center justify-between text-xs font-medium uppercase tracking-widest text-muted-foreground">
-						<span>Resume preview</span>
-						<span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-							92% match
-						</span>
-					</div>
-					<div className="flex flex-col gap-4">
-						{[
-							{
-								icon: FileText,
-								label: "Experience",
-								detail: "5 items selected",
-							},
-							{
-								icon: PenTool,
-								label: "Skills",
-								detail: "12 matched",
-							},
-							{
-								icon: BarChart3,
-								label: "AI Score",
-								detail: "Excellent",
-							},
-						].map((item) => (
-							<div
-								key={item.label}
-								className="flex items-center gap-3 rounded-xl border border-border/50 bg-background/50 p-3"
-							>
-								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-									<item.icon className="h-4 w-4 text-primary" />
-								</div>
-								<div className="flex-1">
-									<p className="text-sm font-medium">{item.label}</p>
-									<p className="text-xs text-muted-foreground">
-										{item.detail}
-									</p>
-								</div>
-							</div>
-						))}
-					</div>
-					<div className="flex gap-2">
-						<div className="h-2 flex-1 rounded-full bg-muted">
-							<div className="h-full w-[92%] rounded-full bg-primary" />
-						</div>
-					</div>
-					<p className="text-center text-xs text-muted-foreground">
-						Tailored for Senior Product Designer at Figma
-					</p>
-				</div>
-			</div>
-		</div>
-	);
-}
+import { ResumeDemo } from "./resume-demo";
 
 export function HeroSection() {
-	const { ref, isVisible } = useScrollAnimation({ threshold: 0.05 });
-
 	return (
-		<section
-			id="hero"
-			ref={ref}
-			className="relative overflow-hidden bg-gradient-to-b from-background via-background to-accent/5 py-16 sm:py-24 lg:py-32"
-		>
-			<div className="absolute inset-x-0 top-[-150px] -z-10 flex justify-center opacity-40">
-				<div className="h-[500px] w-[500px] rounded-full bg-primary/30 blur-[180px]" />
-			</div>
-
-			<div className="container relative mx-auto px-4">
-				<div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
-					<div
-						className={`flex flex-col justify-center gap-8 ${isVisible ? "animate-fade-in-up" : "before-animate"}`}
-					>
-						<Badge
-							variant="outline"
-							className="inline-flex w-fit items-center gap-2 rounded-full border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
-						>
-							<Sparkles className="h-3.5 w-3.5" />
-							AI-Powered Job Search
-						</Badge>
-
-						<div className="flex flex-col gap-6">
-							<h1 className="font-bold text-balance text-6xl leading-[1.05] tracking-tight md:text-7xl lg:text-8xl">
-								Land your dream role with intelligent resumes
-							</h1>
-							<p className="max-w-xl text-balance text-lg leading-relaxed text-muted-foreground md:text-xl">
-								Tailor every application with AI-powered resume optimization.
-								Track your pipeline, generate cover letters, and apply with
-								confidence.
-							</p>
-						</div>
-
-						<div className="flex flex-wrap items-center gap-4">
-							<Button
-								size="lg"
-								className="h-14 rounded-full px-10 text-lg shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40"
-								asChild
-							>
-								<Link href="/sign-up">
-									Get started
-									<ArrowRight className="ml-2 h-5 w-5" />
-								</Link>
-							</Button>
-							<Button
-								size="lg"
-								variant="outline"
-								className="h-14 rounded-full border-2 border-primary/30 px-10 text-lg hover:border-primary/50 hover:bg-primary/5"
-								asChild
-							>
-								<Link href="#how-it-works">See how it works</Link>
-							</Button>
-						</div>
-
-						<div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
-								<span>Source on GitHub</span>
-							</div>
-							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
-								<span>Self-hosted</span>
-							</div>
-							<div className="flex items-center gap-2">
-								<div className="h-2.5 w-2.5 rounded-full bg-primary" />
-								<span>Profile and application tools</span>
-							</div>
-						</div>
-					</div>
-
-					<div
-						className={`relative hidden lg:flex lg:items-center lg:justify-center ${isVisible ? "animate-fade-in stagger-3" : "before-animate"}`}
-					>
-						<ResumePreviewCard />
+		// The hero is an open folder: the example listings are its tabs.
+		<section className="border-kraft border-t">
+			<div className="mx-auto grid w-full max-w-7xl items-start gap-x-10 gap-y-12 px-5 pb-20 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:pb-28">
+				<div className="flex flex-col gap-7 pt-10 lg:pt-24">
+					<h1 className="title text-5xl leading-[0.98] text-balance sm:text-6xl xl:text-7xl">
+						<span className="block">Paste the job listing.</span>
+						<span className="block">Get the one page that answers it.</span>
+					</h1>
+					<p className="max-w-[46ch] text-lg">
+						Keep your whole career in one profile. For each job, the entries
+						that fit are selected, typeset, and checked until the resume fits
+						on one page.
+					</p>
+					<div className="flex flex-wrap gap-3">
+						<Button size="lg" asChild>
+							<Link href="/sign-up">Create account</Link>
+						</Button>
+						<Button size="lg" variant="outline" asChild>
+							<a href="#how-it-works">See how it works</a>
+						</Button>
 					</div>
 				</div>
+
+				<ResumeDemo />
 			</div>
 		</section>
 	);

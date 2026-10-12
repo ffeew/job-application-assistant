@@ -104,7 +104,7 @@ export function useGenerationJob(applicationId: string | null | undefined) {
       return;
     if (job.status === "failed") {
       delivered.current = job.id;
-      toast.error(job.error ?? "Generation failed. Please retry.");
+      toast.error(job.error ?? "The resume couldn't be generated. Try again.");
     } else if (job.status === "completed" && job.result) {
       delivered.current = job.id;
       if (job.payload.intent !== "preview")
@@ -114,8 +114,10 @@ export function useGenerationJob(applicationId: string | null | undefined) {
         );
       toast.success(
         job.savedResumeId
-          ? "Resume saved and PDF generated!"
-          : "Resume generation complete.",
+          ? "Resume saved and PDF downloaded"
+          : job.payload.intent === "preview"
+            ? "Preview ready"
+            : "PDF downloaded",
       );
     }
   }, [job, submittedHere, submit.data?.jobId, queryClient]);

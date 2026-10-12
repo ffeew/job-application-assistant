@@ -4,23 +4,10 @@ import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, Save } from "lucide-react";
-import Link from "next/link";
-import { FormFieldError } from "@/components/ui/form-field-error";
 import { useResume } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
+import { PageHeader } from "@/app/dashboard/components/page-header";
 import { toast } from "sonner";
 import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
 import {
@@ -29,24 +16,14 @@ import {
 } from "@/lib/validators/resume-content";
 import { parseGeneratedResume } from "@/lib/resume-document";
 import {
+  emptyResumeForm,
+  ManualResumeForm,
+  type ResumeFormData,
+} from "../components/manual-resume-form";
+import {
   StoredResumeView,
   legacyResumeHTML,
 } from "../components/stored-resume-view";
-
-interface ResumeFormData {
-  title: string;
-  isDefault: boolean;
-  personalInfo: {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  summary: string;
-  experience: string;
-  education: string;
-  skills: string;
-}
 
 export default function EditResumePage({
   params,
@@ -65,22 +42,7 @@ export default function EditResumePage({
   } = useResume(resolvedParams?.id || "");
   const updateResumeMutation = useUpdateResume();
 
-  const form = useForm<ResumeFormData>({
-    defaultValues: {
-      title: "",
-      isDefault: false,
-      personalInfo: {
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-      },
-      summary: "",
-      experience: "",
-      education: "",
-      skills: "",
-    },
-  });
+  const form = useForm<ResumeFormData>({ defaultValues: emptyResumeForm });
 
   const {
     register,
@@ -137,7 +99,7 @@ export default function EditResumePage({
 
   const onSubmit = (data: ResumeFormData) => {
     if (!data.title.trim()) {
-      toast.error("Please enter a title for your resume");
+      toast.error("Give the resume a title before saving.");
       return;
     }
 
@@ -164,12 +126,12 @@ export default function EditResumePage({
       },
       {
         onSuccess: () => {
-          toast.success("Resume updated successfully!");
+          toast.success("Changes saved");
           router.push("/dashboard/resumes");
         },
         onError: (error) => {
           console.error("Error updating resume:", error);
-          toast.error("Error updating resume. Please try again.");
+          toast.error("Couldn't save the changes. Try again.");
         },
       },
     );
@@ -187,162 +149,19 @@ export default function EditResumePage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard/resumes">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Resumes
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Edit Resume</h1>
-          <p className="text-muted-foreground">
-            Update your resume information.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resume Details</CardTitle>
-              <CardDescription>
-                Basic information about this resume
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="title">Resume Title</Label>
-                <Input
-                  id="title"
-                  placeholder="e.g., Software Engineer Resume"
-                  {...register("title", { required: "Title is required" })}
-                />
-                <FormFieldError message={errors.title?.message} />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isDefault"
-                  {...register("isDefault")}
-                />
-                <Label htmlFor="isDefault">Set as default resume</Label>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" {...register("personalInfo.name")} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("personalInfo.email")}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" {...register("personalInfo.phone")} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" {...register("personalInfo.address")} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Professional Summary</CardTitle>
-              <CardDescription>
-                Brief overview of your background and career objectives
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Write a brief summary of your professional background..."
-                {...register("summary")}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Work Experience</CardTitle>
-              <CardDescription>
-                List your work experience, starting with the most recent
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Job Title - Company Name (Start Date - End Date)&#10;• Responsibility or achievement&#10;• Another responsibility or achievement&#10;&#10;Previous Job Title - Previous Company..."
-                {...register("experience")}
-                rows={8}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Education</CardTitle>
-              <CardDescription>Your educational background</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Degree - School Name (Graduation Year)&#10;Relevant coursework, honors, or achievements..."
-                {...register("education")}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Skills</CardTitle>
-              <CardDescription>
-                Technical and soft skills relevant to your career
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="• Programming Languages: Python, JavaScript, Java&#10;• Frameworks: React, Node.js, Django&#10;• Tools: Git, Docker, AWS&#10;• Soft Skills: Team Leadership, Communication, Problem Solving"
-                {...register("skills")}
-                rows={6}
-              />
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/resumes">Cancel</Link>
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || updateResumeMutation.isPending}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSubmitting || updateResumeMutation.isPending
-                ? "Saving..."
-                : "Save Changes"}
-            </Button>
-          </div>
-        </div>
-      </form>
+    <div className="flex max-w-4xl flex-col gap-8">
+      <PageHeader
+        title="Edit resume"
+        description="A resume written by hand. It is kept as text for cover letters and is not compiled into a PDF."
+        back={{ href: "/dashboard/resumes", label: "Resumes" }}
+      />
+      <ManualResumeForm
+        register={register}
+        errors={errors}
+        onSubmit={withAsyncHandler(handleSubmit(onSubmit))}
+        isPending={isSubmitting || updateResumeMutation.isPending}
+        submitLabel="Save changes"
+      />
     </div>
   );
 }

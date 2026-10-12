@@ -6,8 +6,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
 import { authClient } from "@/app/utils/authClient";
+import { AuthPanel } from "../components/auth-panel";
+
+const SEND_FAILED = "Couldn't send the reset email. Check the address and try again.";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,14 +28,14 @@ export default function ForgotPasswordPage() {
         email,
         redirectTo: `${window.location.origin}/reset-password`, // Password-reset emails need an absolute URL.
       });
-      
+
       if (result.error) {
-        setError("Failed to send reset email. Please check your email address.");
+        setError(SEND_FAILED);
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("Failed to send reset email. Please check your email address.");
+      setError(SEND_FAILED);
     } finally {
       setIsLoading(false);
     }
@@ -40,72 +43,49 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
-            <CardDescription>
-              We&apos;ve sent a password reset link to your email address
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md mb-4">
-              Password reset email sent successfully!
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Please check your email and click the link to reset your password. 
-              If you don&apos;t see the email, check your spam folder.
-            </p>
-            <div className="text-center">
-              <Link href="/sign-in" className="text-primary hover:underline text-sm">
-                Back to Sign In
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthPanel
+        title="Check your email"
+        footer={
+          <p>
+            <Link href="/sign-in">Back to sign in</Link>
+          </p>
+        }
+      >
+        <Notice tone="success" role="status">
+          We sent a reset link to {email}. Open it to choose a new password. If
+          it doesn&apos;t arrive, check your spam folder.
+        </Notice>
+      </AuthPanel>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email address and we&apos;ll send you a link to reset your password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                {error}
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Sending..." : "Send Reset Link"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Remember your password?{" "}
-            <Link href="/sign-in" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthPanel
+      title="Reset your password"
+      description="Enter the email you signed up with and we'll send you a reset link."
+      footer={
+        <p>
+          Remembered it? <Link href="/sign-in">Sign in</Link>
+        </p>
+      }
+    >
+      <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
+        {error && <Notice tone="error">{error}</Notice>}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+          {isLoading ? "Sending…" : "Send reset link"}
+        </Button>
+      </form>
+    </AuthPanel>
   );
 }

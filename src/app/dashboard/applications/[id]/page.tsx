@@ -1,37 +1,17 @@
 "use client";
 
-import { runAsyncAction, withAsyncHandler } from "@/lib/async-action";
+import { runAsyncAction } from "@/lib/async-action";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, Save, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { FormFieldError } from "@/components/ui/form-field-error";
 import { useApplication } from "@/app/dashboard/applications/queries/use-applications";
 import { useUpdateApplication } from "@/app/dashboard/applications/mutations/use-update-application";
-import { updateApplicationSchema } from "@/app/api/applications/validators";
-import type { UpdateApplicationRequest } from "@/app/api/applications/validators";
+import { PageHeader } from "@/app/dashboard/components/page-header";
 import { ApplicationDetailSkeleton } from "../components/application-detail-skeleton";
+import { ApplicationForm } from "../components/application-form";
 
 export default function EditApplicationPage({
 	params,
@@ -49,32 +29,6 @@ export default function EditApplicationPage({
 	} = useApplication(resolvedParams?.id || "");
 	const updateApplicationMutation = useUpdateApplication();
 
-	const form = useForm({
-		resolver: zodResolver(updateApplicationSchema),
-		defaultValues: {
-			company: "",
-			position: "",
-			jobDescription: "",
-			location: "",
-			jobUrl: "",
-			salaryRange: "",
-			status: "applied" as const,
-			appliedAt: "",
-			notes: "",
-			contactEmail: "",
-			contactName: "",
-			recruiterId: "",
-		},
-	});
-
-	const {
-		register,
-		handleSubmit,
-		control,
-		reset,
-		formState: { errors, isSubmitting },
-	} = form;
-
 	useEffect(() => {
 		const resolveParams = async () => {
 			const resolved = await params;
@@ -84,202 +38,55 @@ export default function EditApplicationPage({
 	}, [params]);
 
 	useEffect(() => {
-		if (application) {
-			// Compiler memoization can reuse register() props; retain refs to update mounted inputs.
-			reset({
-				company: application.company || "",
-				position: application.position || "",
-				jobDescription: application.jobDescription || "",
-				location: application.location || "",
-				jobUrl: application.jobUrl || "",
-				salaryRange: application.salaryRange || "",
-				status: application.status,
-				appliedAt: application.appliedAt
-					? new Date(application.appliedAt).toISOString().split("T")[0]
-					: "",
-				notes: application.notes || "",
-				contactEmail: application.contactEmail || "",
-				contactName: application.contactName || "",
-				recruiterId: application.recruiterId || "",
-			}, { keepFieldsRef: true });
-		}
-	}, [application, reset]);
-
-	useEffect(() => {
 		if (error) {
 			router.push("/dashboard/applications");
 		}
 	}, [error, router]);
-
-	const onSubmit = (data: unknown) => {
-		// Data is validated by Zod resolver, safe to cast
-		const validatedData = data as UpdateApplicationRequest;
-
-		updateApplicationMutation.mutate(
-			{ id: resolvedParams?.id || "", data: validatedData },
-			{
-				onSuccess: () => {
-					toast.success("Application updated successfully!");
-					router.push("/dashboard/applications");
-				},
-				onError: (error) => {
-					console.error("Error updating application:", error);
-					toast.error("Error updating application. Please try again.");
-				},
-			}
-		);
-	};
 
 	if (!resolvedParams || isLoading) {
 		return <ApplicationDetailSkeleton />;
 	}
 
 	return (
-		<div className="flex flex-col gap-6">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-4">
-					<Button variant="outline" size="sm" asChild>
-						<Link href="/dashboard/applications">
-							<ArrowLeft className="mr-2 h-4 w-4" />
-							Back to Applications
-						</Link>
-					</Button>
-					<div>
-						<h1 className="text-3xl font-bold">Edit Application</h1>
-						<p className="text-muted-foreground">
-							Update your job application details.
-						</p>
-					</div>
-				</div>
-
-				{application && (
-					<Button asChild className="shrink-0">
-						<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
-							<FileText className="mr-2 h-4 w-4" />
-							<span className="hidden sm:inline">Generate Tailored Resume</span>
-							<span className="sm:hidden">Resume</span>
-						</Link>
-					</Button>
-				)}
-			</div>
-
-			<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))}>
-				<div className="grid gap-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Job Details</CardTitle>
-							<CardDescription>
-								Basic information about the job opportunity
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="flex flex-col gap-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div className="flex flex-col gap-2">
-									<Label htmlFor="company">Company *</Label>
-									<Input
-										id="company"
-										placeholder="e.g., Google"
-										{...register("company")}
-									/>
-									<FormFieldError message={errors.company?.message} />
-								</div>
-								<div className="flex flex-col gap-2">
-									<Label htmlFor="position">Position *</Label>
-									<Input
-										id="position"
-										placeholder="e.g., Software Engineer"
-										{...register("position")}
-									/>
-									<FormFieldError message={errors.position?.message} />
-								</div>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div className="flex flex-col gap-2">
-									<Label htmlFor="status">Status</Label>
-									<Controller
-										name="status"
-										control={control}
-										render={({ field }) => (
-											<Select
-												value={field.value}
-												onValueChange={(value) => {
-													// Radix's native select can emit an empty value while reset synchronizes options.
-													if (value !== "") field.onChange(value);
-												}}
-											>
-												<SelectTrigger id="status">
-													<SelectValue />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="applied">Applied</SelectItem>
-													<SelectItem value="interviewing">
-														Interviewing
-													</SelectItem>
-													<SelectItem value="offer">Offer</SelectItem>
-													<SelectItem value="rejected">Rejected</SelectItem>
-													<SelectItem value="withdrawn">Withdrawn</SelectItem>
-												</SelectContent>
-											</Select>
-										)}
-									/>
-									<FormFieldError message={errors.status?.message} />
-								</div>
-								<div className="flex flex-col gap-2">
-									<Label htmlFor="appliedAt">Application Date</Label>
-									<Input
-										id="appliedAt"
-										type="date"
-										{...register("appliedAt")}
-									/>
-									<FormFieldError message={errors.appliedAt?.message} />
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>Additional Details</CardTitle>
-						</CardHeader>
-						<CardContent className="flex flex-col gap-4">
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="location">Location</Label>
-								<Input
-									id="location"
-									placeholder="e.g., San Francisco, CA"
-									{...register("location")}
-								/>
-								<FormFieldError message={errors.location?.message} />
-							</div>
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="notes">Notes</Label>
-								<Textarea
-									id="notes"
-									placeholder="Add any notes about this application..."
-									{...register("notes")}
-									rows={4}
-								/>
-								<FormFieldError message={errors.notes?.message} />
-							</div>
-						</CardContent>
-					</Card>
-
-					<div className="flex justify-end gap-4">
+		<div className="flex max-w-4xl flex-col gap-8">
+			<PageHeader
+				title="Edit application"
+				description={
+					application && `${application.position} at ${application.company}`
+				}
+				back={{ href: "/dashboard/applications", label: "Applications" }}
+				actions={
+					application && (
 						<Button variant="outline" asChild>
-							<Link href="/dashboard/applications">Cancel</Link>
+							<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
+								<FileText />
+								Tailor resume
+							</Link>
 						</Button>
-						<Button
-							type="submit"
-							disabled={isSubmitting || updateApplicationMutation.isPending}
-						>
-							<Save className="mr-2 h-4 w-4" />
-							{isSubmitting || updateApplicationMutation.isPending
-								? "Saving..."
-								: "Save Changes"}
-						</Button>
-					</div>
-				</div>
-			</form>
+					)
+				}
+			/>
+
+			<ApplicationForm
+				application={application}
+				submitLabel="Save changes"
+				isPending={updateApplicationMutation.isPending}
+				onSubmit={(data) => {
+					updateApplicationMutation.mutate(
+						{ id: resolvedParams.id, data },
+						{
+							onSuccess: () => {
+								toast.success("Changes saved");
+								router.push("/dashboard/applications");
+							},
+							onError: (error) => {
+								console.error("Error updating application:", error);
+								toast.error("Couldn't save the changes. Try again.");
+							},
+						}
+					);
+				}}
+			/>
 		</div>
 	);
 }

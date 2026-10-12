@@ -5,7 +5,7 @@
 - **Framework**: Next.js 16 App Router with React 19.3, React Compiler, and TypeScript 6.
 - **Data**: Drizzle ORM targeting PostgreSQL with node-postgres; migrations generated via Drizzle Kit.
 - **Auth**: BetterAuth with proxy-backed dashboard session-cookie checks and API session validation (see `src/lib/auth.ts`, `src/proxy.ts`).
-- **UI**: Tailwind CSS v4 + shadcn/ui primitives; Lucide icons; Sonner for notifications.
+- **UI**: Tailwind CSS v4 + shadcn/ui primitives; Lucide icons; Sonner for notifications. See [Design System](#design-system) for tokens, surfaces and copy rules.
 - **State**: Zustand for shared and workflow state; TanStack Query for server state.
 - **Forms & Validation**: React Hook Form + Zod resolvers; shared schemas live with API validators.
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
@@ -52,6 +52,18 @@ For schema changes, generate and commit SQL with `pnpm run db:generate`, then ap
 - Keep data fetching in feature Query and mutation hooks rather than calling `fetch` directly in components; invalidate related caches on mutation success.
 - Use flexbox with `gap` utilities instead of `space-*`, and skeleton components for loading states.
 - Keep comments that explain reasons, constraints, tradeoffs, compatibility, or non-obvious invariants. Remove comments that repeat names, narrate operations, or label obvious sections. Preserve tool directives, required annotations, and license notices.
+
+## Design System
+
+The interface is built on one idea: a job hunt is a filing job, so the app is a file drawer. Sections are manila folders with index tabs, documents are white sheets lying in them, and verdicts are rubber-stamped. The dark theme is the drawer at night. Tokens live in `src/app/globals.css`; use them rather than raw palette classes such as `bg-blue-50`.
+
+- **Surfaces**: three depths only. The ink strip (`band`) is the drawer behind the folders: app and landing headers, the sign-in backdrop, the self-hosting section and the footer. It flips the content tokens to light-on-ink, so components inside need no variants; cards, pages, folders and tabs inside a band restore the normal tokens. The folder (`bg-background`, manila with a faint grain) is the ground, and forms and page headers sit directly on it; use the `folder` utility for a folder on the strip or a sticky bar. A sheet (`Card`) is white with a paper shadow and no border, for tables, lists and grouped settings. A page (`Paper`) is reserved for documents: resume previews and letters. Sheets cast a shadow; folders do not.
+- **Tabs and stamps**: the two devices that carry the identity. A `FolderTab` says which folder is open: use it for sections that own the folder below (dashboard navigation, the landing demo's example listings), and plain links for everything else. Tabs are text labels with no icons. A `Stamp` states a verdict: `StatusMark` stamps an application's status (single frame while in progress, double once decided) and the resume preview stamps the page fit. Stamps sit on sheets or pages, never on the folder, because their inks are only checked against paper.
+- **Colour**: ink for text; ballpoint blue (`primary`, `text-link`, `ring`) for actions, links and focus; kraft (`border-kraft`, `--border`) for folder edges and rules; red for rejected, over target and delete. Highlighter (`Highlight`, `bg-highlight`) means "matched to the job" and nothing else, and only appears on paper: it disappears on manila. Status colours are stamp inks and strip fills; each passes 4.5:1 as text on paper in both themes and was checked for colour-blind separation, so re-run both checks before changing them. Text on manila needs the darker cuts already in the tokens (`muted-foreground`, `destructive`).
+- **Type**: Archivo for the tool, with the `title` utility (condensed, bold) for page titles and the wordmark. STIX Two Text (`font-document`) only inside documents. Big Shoulders Stencil (`font-stencil`) only inside stamps. Sizes stay on 12, 14, 16, 18, 21, 24, 36, 48, 60, 72 (`text-3xl` is unused).
+- **Copy**: sentence case, no exclamation marks. Uppercase appears in stamps and nowhere else. A button names its outcome and its toast repeats that name ("Save application", then "Application saved"). Errors say what happened and what to do next.
+- **Shared pieces**: `PageHeader`, `EmptyState`, `FormSection` and `RowListSkeleton` in `src/app/dashboard/components`; `FolderTab`, `Stamp`, `Notice`, `ConfirmDeleteDialog` and `SegmentedControl` in `src/components/ui`; `section-parts.tsx` for profile sections; `ResumeWorkbench` for pages that pair settings with a page preview.
+- **Motion**: only in response to an action: a stamp presses in when a verdict arrives. The one exception is the landing page, where the highlighter strokes draw and a single stamp lands after them. `prefers-reduced-motion` is honoured globally.
 
 ## Testing Guidance
 

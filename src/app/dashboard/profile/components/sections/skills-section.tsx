@@ -7,8 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
 	Select,
 	SelectContent,
@@ -16,24 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Plus, Code, Save, Loader2, Check, X, Edit, Trash2 } from "lucide-react";
+import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-skill";
 import { useUpdateSkill } from "@/app/dashboard/profile/mutations/use-update-skill";
@@ -44,10 +25,19 @@ import { FormFieldError } from "@/components/ui/form-field-error";
 import { useProfileUIStore } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { ProfileItemSkeleton } from "../profile-item-skeleton";
+import {
+	AddButton,
+	DeleteEntryDialog,
+	EntrySheet,
+	FormActions,
+	PendingPanel,
+	SectionEmpty,
+	SectionHeader,
+} from "../section-parts";
 
 const skillCategories = [
 	{ value: "technical", label: "Technical" },
-	{ value: "soft", label: "Soft Skills" },
+	{ value: "soft", label: "Soft skills" },
 	{ value: "language", label: "Languages" },
 	{ value: "tool", label: "Tools" },
 	{ value: "framework", label: "Frameworks" },
@@ -103,10 +93,10 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 		if (!deleteConfirmation || deleteConfirmation.section !== "skills") return;
 		deleteMutation.mutate(deleteConfirmation.itemId, {
 			onSuccess: () => {
-				toast.success("Skill deleted!");
+				toast.success("Skill deleted");
 				closeDeleteConfirmation();
 			},
-			onError: () => toast.error("Error deleting skill."),
+			onError: () => toast.error("Couldn't delete the skill. Try again."),
 		});
 	};
 
@@ -115,9 +105,9 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 		try {
 			await createMutation.mutateAsync(data);
 			removePendingItem(id);
-			toast.success("Skill saved!");
+			toast.success("Skill saved");
 		} catch {
-			toast.error("Failed to save skill.");
+			toast.error("Couldn't save the skill. Try again.");
 		} finally {
 			setSavingItemId(null);
 		}
@@ -127,125 +117,108 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 		return <ProfileItemSkeleton />;
 	}
 
+	// An empty section offers its one action in the empty state instead.
+	const isEmpty = skills.length === 0 && pendingItems.length === 0;
+
+	const addButton = (
+		<AddButton onClick={() => startAdding("skills")}>Add skill</AddButton>
+	);
+
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-bold flex items-center gap-2">
-							<Code className="h-6 w-6" />
-							Skills
-						</h1>
-						<p className="text-muted-foreground">Your technical and professional skills</p>
-					</div>
-					<Button onClick={() => startAdding("skills")}>
-						<Plus className="mr-2 h-4 w-4" />
-						Add Skill
-					</Button>
-				</div>
+				<SectionHeader
+					title="Skills"
+					description="Grouped by category, as they appear on a resume. Select a skill to edit it."
+					action={isEmpty ? undefined : addButton}
+				/>
 
 				{pendingItems.length > 0 && (
-					<Card className="border-dashed border-primary/40 bg-primary/5">
-						<CardContent className="pt-6">
-							<p className="text-sm font-semibold text-primary mb-3">
-								{pendingItems.length} pending skill{pendingItems.length !== 1 ? "s" : ""} from import
-							</p>
-							<div className="flex flex-wrap gap-2">
-								{pendingItems.map((item) => (
-									<div key={item.id} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-background px-3 py-1">
-										<span className="text-sm">{item.request.name}</span>
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-5 w-5"
-											onClick={() => removePendingItem(item.id)}
-											disabled={savingItemId === item.id}
-										>
-											<X className="h-3 w-3" />
-										</Button>
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-5 w-5"
-											onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))}
-											disabled={savingItemId === item.id}
-										>
-											{savingItemId === item.id ? (
-												<Loader2 className="h-3 w-3 animate-spin" />
-											) : (
-												<Check className="h-3 w-3" />
-											)}
-										</Button>
-									</div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
+					<PendingPanel count={pendingItems.length} singular="skill" plural="skills">
+						<ul className="flex flex-wrap gap-2">
+							{pendingItems.map((item) => (
+								<li
+									key={item.id}
+									className="bg-card flex h-9 items-center gap-0.5 rounded-md border pr-0.5 pl-3"
+								>
+									<span className="mr-1 text-sm font-medium">{item.request.name}</span>
+									<Button
+										variant="ghost"
+										size="icon-xs"
+										aria-label={`Discard ${item.request.name}`}
+										onClick={() => removePendingItem(item.id)}
+										disabled={savingItemId === item.id}
+									>
+										<X />
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon-xs"
+										aria-label={`Save ${item.request.name}`}
+										onClick={withAsyncHandler(() => handleSavePending(item.id, item.request))}
+										disabled={savingItemId === item.id}
+									>
+										{savingItemId === item.id ? (
+											<Loader2 className="animate-spin" />
+										) : (
+											<Check />
+										)}
+									</Button>
+								</li>
+							))}
+						</ul>
+					</PendingPanel>
 				)}
 
-				{skills.length === 0 && pendingItems.length === 0 && (
-					<Card className="border-dashed">
-						<CardContent className="flex flex-col items-center justify-center py-12 text-center">
-							<Code className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No skills added</h3>
-							<p className="text-muted-foreground mb-6">Add your skills to showcase your expertise.</p>
-							<Button onClick={() => startAdding("skills")}>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Skill
-							</Button>
-						</CardContent>
-					</Card>
+				{isEmpty && (
+					<SectionEmpty title="No skills yet" action={addButton}>
+						Add the tools, languages and strengths a listing might ask for.
+					</SectionEmpty>
 				)}
 
 				{Object.keys(skillsByCategory).length > 0 && (
-					<div className="flex flex-col gap-6">
+					<div className="flex flex-col gap-5">
 						{Object.entries(skillsByCategory).map(([category, categorySkills]) => {
 							const categoryLabel = skillCategories.find((c) => c.value === category)?.label || category;
 							return (
-								<div key={category}>
-									<h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-										{categoryLabel}
-									</h3>
-									<div className="flex flex-wrap gap-2">
+								<div key={category} className="flex flex-col gap-2">
+									<h3 className="text-sm font-semibold">{categoryLabel}</h3>
+									<ul className="flex flex-wrap gap-2">
 										{categorySkills.map((skill) => (
-											<div
+											<li
 												key={skill.id}
-												className="group relative inline-flex items-center gap-2 rounded-full border bg-background px-4 py-2 hover:border-primary/50 transition-colors"
+												className="bg-card flex h-9 items-center rounded-md border"
 											>
-												<span className="font-medium">{skill.name}</span>
-												{skill.proficiencyLevel && (
-													<Badge variant="secondary" className="text-xs">
-														{skill.proficiencyLevel}
-													</Badge>
-												)}
-												{skill.yearsOfExperience && (
-													<span className="text-xs text-muted-foreground">
-														{skill.yearsOfExperience}y
-													</span>
-												)}
-												<div className="hidden group-hover:flex items-center gap-1 ml-1">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-6 w-6"
-														aria-label={`Edit ${skill.name}`}
-														onClick={() => startEditing("skills", skill.id)}
-													>
-														<Edit className="h-3 w-3" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-6 w-6"
-														aria-label={`Delete ${skill.name}`}
-														onClick={() => openDeleteConfirmation("skills", skill.id)}
-													>
-														<Trash2 className="h-3 w-3" />
-													</Button>
-												</div>
-											</div>
+												<button
+													type="button"
+													aria-label={`Edit ${skill.name}`}
+													onClick={() => startEditing("skills", skill.id)}
+													className="hover:bg-accent flex h-full items-baseline gap-2 rounded-l-md py-2 pr-2 pl-3 text-sm transition-colors"
+												>
+													<span className="font-medium">{skill.name}</span>
+													{(skill.proficiencyLevel || skill.yearsOfExperience) && (
+														<span className="text-muted-foreground">
+															{[
+																proficiencyLevels.find((level) => level.value === skill.proficiencyLevel)?.label,
+																skill.yearsOfExperience ? `${skill.yearsOfExperience} yr` : null,
+															]
+																.filter(Boolean)
+																.join(", ")}
+														</span>
+													)}
+												</button>
+												<Button
+													variant="ghost"
+													size="icon-xs"
+													className="text-muted-foreground mr-0.5"
+													aria-label={`Delete ${skill.name}`}
+													onClick={() => openDeleteConfirmation("skills", skill.id)}
+												>
+													<X />
+												</Button>
+											</li>
 										))}
-									</div>
+									</ul>
 								</div>
 							);
 						})}
@@ -253,30 +226,21 @@ export function SkillsSection({ skills, isLoading }: SkillsSectionProps) {
 				)}
 			</div>
 
-			<Sheet open={isEditingSkill} onOpenChange={(open) => !open && cancelEditing()}>
-				<SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-					<SheetHeader>
-						<SheetTitle>{editingSkill ? "Edit Skill" : "Add Skill"}</SheetTitle>
-						<SheetDescription>
-							{editingSkill ? "Update skill details" : "Add a new skill"}
-						</SheetDescription>
-					</SheetHeader>
-					<SkillForm skill={editingSkill} onSuccess={cancelEditing} onCancel={cancelEditing} />
-				</SheetContent>
-			</Sheet>
+			<EntrySheet
+				open={isEditingSkill}
+				onClose={cancelEditing}
+				title={editingSkill ? "Edit skill" : "Add skill"}
+				description="Appears in the Skills section of your resumes."
+			>
+				<SkillForm skill={editingSkill} onSuccess={cancelEditing} onCancel={cancelEditing} />
+			</EntrySheet>
 
-			<AlertDialog open={deleteConfirmation?.section === "skills"} onOpenChange={(open) => !open && closeDeleteConfirmation()}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete skill?</AlertDialogTitle>
-						<AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteEntryDialog
+				open={deleteConfirmation?.section === "skills"}
+				onClose={closeDeleteConfirmation}
+				onConfirm={handleDelete}
+				title="Delete this skill?"
+			/>
 		</>
 	);
 }
@@ -306,13 +270,13 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 		const validatedData = data as CreateSkillRequest;
 		if (skill) {
 			updateMutation.mutate({ id: skill.id, data: validatedData }, {
-				onSuccess: () => { toast.success("Skill updated!"); onSuccess(); },
-				onError: () => toast.error("Error updating skill."),
+				onSuccess: () => { toast.success("Changes saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the changes. Try again."),
 			});
 		} else {
 			createMutation.mutate(validatedData, {
-				onSuccess: () => { toast.success("Skill added!"); onSuccess(); },
-				onError: () => toast.error("Error adding skill."),
+				onSuccess: () => { toast.success("Skill saved"); onSuccess(); },
+				onError: () => toast.error("Couldn't save the skill. Try again."),
 			});
 		}
 	};
@@ -320,8 +284,8 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 	return (
 		<form onSubmit={withAsyncHandler(handleSubmit(onSubmit))} className="flex flex-col gap-6 p-4 pt-2">
 			<div className="flex flex-col gap-2">
-				<Label htmlFor="name">Skill Name *</Label>
-				<Input id="name" {...register("name")} placeholder="React" />
+				<Label htmlFor="name">Skill name *</Label>
+				<Input id="name" {...register("name")} />
 				<FormFieldError message={errors.name?.message} />
 			</div>
 
@@ -329,7 +293,7 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 				<Label htmlFor="category">Category *</Label>
 				<Select value={category} onValueChange={(value) => setValue("category", value as "technical" | "soft" | "language" | "tool" | "framework" | "other")}>
 					<SelectTrigger id="category">
-						<SelectValue placeholder="Select category" />
+						<SelectValue placeholder="Choose a category" />
 					</SelectTrigger>
 					<SelectContent>
 						{skillCategories.map((cat) => (
@@ -340,10 +304,10 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 			</div>
 
 			<div className="flex flex-col gap-2">
-				<Label htmlFor="proficiencyLevel">Proficiency Level</Label>
+				<Label htmlFor="proficiencyLevel">Proficiency</Label>
 				<Select value={proficiencyLevel || ""} onValueChange={(value) => setValue("proficiencyLevel", (value || null) as "beginner" | "intermediate" | "advanced" | "expert" | null)}>
 					<SelectTrigger id="proficiencyLevel">
-						<SelectValue placeholder="Select level" />
+						<SelectValue placeholder="Choose a level" />
 					</SelectTrigger>
 					<SelectContent>
 						{proficiencyLevels.map((level) => (
@@ -354,23 +318,16 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 			</div>
 
 			<div className="flex flex-col gap-2">
-				<Label htmlFor="yearsOfExperience">Years of Experience</Label>
+				<Label htmlFor="yearsOfExperience">Years of experience</Label>
 				<Input
 					id="yearsOfExperience"
 					type="number"
 					min="0"
 					{...register("yearsOfExperience", { valueAsNumber: true })}
-					placeholder="3"
 				/>
 			</div>
 
-			<div className="flex justify-end gap-3 pt-4 border-t">
-				<Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-				<Button type="submit" disabled={isSubmitting}>
-					<Save className="mr-2 h-4 w-4" />
-					{isSubmitting ? "Saving..." : skill ? "Update" : "Add"}
-				</Button>
-			</div>
+			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
 		</form>
 	);
 }

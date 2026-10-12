@@ -1,172 +1,139 @@
 "use client";
 
+import { useState } from "react";
 import { withAsyncHandler } from "@/lib/async-action";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { ResponsiveList } from "@/components/ui/responsive-list";
-import { Plus, PenTool, Eye, Trash2, Sparkles, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { Notice } from "@/components/ui/notice";
+import { FileText, PenLine, Trash2 } from "lucide-react";
+import type { CoverLetterJsonResponse } from "@/app/api/cover-letters/validators";
 import { useCoverLetters } from "@/app/dashboard/cover-letters/queries/use-cover-letters";
 import { useDeleteCoverLetter } from "@/app/dashboard/cover-letters/mutations/use-delete-cover-letter";
-import { CardSkeleton } from "@/components/skeletons/card-skeleton";
+import { EmptyState } from "@/app/dashboard/components/empty-state";
+import { PageHeader } from "@/app/dashboard/components/page-header";
+import { RowListSkeleton } from "@/app/dashboard/components/row-list-skeleton";
+import { formatShortDate } from "@/lib/format-date";
 
 export default function CoverLettersPage() {
   const { data: coverLetters = [], isLoading, error, refetch } = useCoverLetters();
   const deleteCoverLetterMutation = useDeleteCoverLetter();
-
-  const handleDeleteCoverLetter = (id: string) => {
-    if (!confirm("Are you sure you want to delete this cover letter?")) {
-      return;
-    }
-    deleteCoverLetterMutation.mutate(id);
-  };
+  const [pendingDelete, setPendingDelete] =
+    useState<CoverLetterJsonResponse | null>(null);
 
   if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <CardSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <RowListSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 gap-4">
-        <div className="text-lg text-red-600">Error loading cover letters</div>
-        <Button onClick={withAsyncHandler(() => refetch())}>Try Again</Button>
+      <div className="flex flex-col gap-8">
+        <PageHeader title="Cover letters" />
+        <Notice tone="error" title="Your cover letters didn't load">
+          <p>{error.message}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={withAsyncHandler(() => refetch())}
+          >
+            Try again
+          </Button>
+        </Notice>
       </div>
     );
   }
 
+  const writeButton = (
+    <Button asChild>
+      <Link href="/dashboard/cover-letters/new">
+        <PenLine />
+        Write cover letter
+      </Link>
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Cover Letters</h1>
-          <p className="text-muted-foreground">
-            Create and manage your cover letters. Use AI to generate personalized letters for your applications.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/cover-letters/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Generate Cover Letter
-          </Link>
-        </Button>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Cover letters"
+        description="Letters drafted from a job and one of your resumes. Open one to edit or copy it."
+        actions={writeButton}
+      />
 
       {coverLetters.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <PenTool className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No cover letters yet</h3>
-            <p className="text-muted-foreground mb-6 text-center max-w-sm">
-              Generate your first AI-powered cover letter to make your job applications stand out.
-            </p>
-            <Button asChild>
-              <Link href="/dashboard/cover-letters/new">
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate Your First Cover Letter
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState title="No cover letters yet" actions={writeButton}>
+          Write one from a job listing. It works best once you have a resume
+          and an application saved.
+        </EmptyState>
       ) : (
-        <ResponsiveList
-          items={coverLetters}
-          getItemId={(letter) => letter.id}
-          renderMobileHeader={(letter) => (
-            <div className="flex flex-1 items-center gap-3 min-w-0">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate flex items-center gap-2">
-                  {letter.title}
-                  {letter.isAiGenerated && (
-                    <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-                  )}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Created {new Date(letter.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </div>
-          )}
-          renderMobileContent={(letter) => (
-            <div className="flex flex-col gap-4">
-              {letter.isAiGenerated && (
-                <Badge variant="secondary">AI Generated</Badge>
-              )}
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {letter.content.substring(0, 150)}...
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild className="flex-1">
-                  <Link href={`/dashboard/cover-letters/${letter.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteCoverLetter(letter.id)}
-                  disabled={deleteCoverLetterMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-          renderDesktopCard={(letter) => (
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center">
-                      {letter.title}
-                      {letter.isAiGenerated && (
-                        <Sparkles className="ml-2 h-4 w-4 text-primary" />
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      {letter.isAiGenerated && (
-                        <Badge variant="secondary" className="mr-2 mt-1">
-                          AI Generated
-                        </Badge>
-                      )}
-                      Created {new Date(letter.createdAt).toLocaleDateString()}
-                    </CardDescription>
-                  </div>
+        <Card layout="flush">
+          <ul>
+            {coverLetters.map((letter) => (
+              <li
+                key={letter.id}
+                className="flex flex-col gap-3 border-b px-5 py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-8"
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{letter.title}</span>
+                    {letter.isAiGenerated && (
+                      <Badge variant="outline">Drafted with AI</Badge>
+                    )}
+                  </p>
+                  <p className="text-muted-foreground text-sm tabular-nums">
+                    Created {formatShortDate(letter.createdAt)}
+                  </p>
+                  <p className="text-muted-foreground line-clamp-2 max-w-[75ch] text-sm">
+                    {letter.content}
+                  </p>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                  {letter.content.substring(0, 150)}...
-                </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/cover-letters/${letter.id}`}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View
+                      <FileText />
+                      Open
                     </Link>
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteCoverLetter(letter.id)}
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Delete ${letter.title}`}
+                    onClick={() => setPendingDelete(letter)}
                     disabled={deleteCoverLetterMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        />
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Delete this cover letter?"
+        description={
+          pendingDelete &&
+          `"${pendingDelete.title}" will be removed. This can't be undone.`
+        }
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          deleteCoverLetterMutation.mutate(pendingDelete.id, {
+            onSuccess: () => toast.success("Cover letter deleted"),
+            onError: () =>
+              toast.error("Couldn't delete the cover letter. Try again."),
+          });
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

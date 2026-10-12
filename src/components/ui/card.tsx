@@ -3,21 +3,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-const cardVariants = cva(
-  "bg-card text-card-foreground rounded-xl border shadow-sm transition-all duration-200 hover:shadow-md",
-  {
-    variants: {
-      layout: {
-        default: "flex flex-col gap-6 py-8",
-        flush: "",
-        compact: "flex flex-col gap-4 py-4",
-      },
+// A plain sheet in the folder, for tables, lists and grouped settings. The
+// shadow carries the edge, so there is no border. Documents use Paper.
+const cardVariants = cva("bg-card text-card-foreground rounded-lg shadow-sheet", {
+  variants: {
+    layout: {
+      default: "flex flex-col gap-5 py-6",
+      flush: "",
+      compact: "flex flex-col gap-4 py-4",
     },
-    defaultVariants: {
-      layout: "default",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    layout: "default",
+  },
+})
 
 interface CardProps
   extends React.ComponentProps<"div">,
@@ -38,7 +37,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
         className
       )}
       {...props}
@@ -50,7 +49,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-tight font-semibold tracking-tight", className)}
+      className={cn("text-base leading-snug font-semibold", className)}
       {...props}
     />
   )
