@@ -42,11 +42,11 @@ cp .env.example .env
 Fill in `.env` before continuing. Generate the database password, BetterAuth secret, and compiler token independently with `openssl rand -hex 32`. Match `DATABASE_URL` to the Compose database credentials, URL-encoding special characters. For host development, use `BETTER_AUTH_URL=http://localhost:3000`, a database URL at `localhost:5432`, and `LATEX_COMPILER_URL=http://localhost:8080`.
 
 ```sh
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db latex-compiler
+docker compose -f docker-compose.dev.yml up -d
 pnpm run db:migrate
 ```
 
-The development override exposes the database and compiler on loopback. Use it only for local development. Start the worker in a separate terminal:
+The development file runs only the database and compiler, published on loopback. Run it on its own and use it only for local development. Start the worker in a separate terminal:
 
 ```sh
 pnpm run worker

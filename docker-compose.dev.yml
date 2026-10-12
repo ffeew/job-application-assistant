@@ -1,7 +1,20 @@
+# Host development: the database and compiler from docker-compose.yml, published
+# on loopback. Run this file on its own; it is not an override for the full stack.
+name: job-application-assistant
+
 services:
   db:
+    extends:
+      file: docker-compose.yml
+      service: db
     ports:
       - "127.0.0.1:5432:5432"
   latex-compiler:
+    extends:
+      file: docker-compose.yml
+      service: latex-compiler
     ports:
       - "127.0.0.1:8080:8080"
+
+volumes:
+  postgres-data:

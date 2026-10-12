@@ -33,6 +33,9 @@ const bigShouldersStencil = Big_Shoulders_Stencil({
 	subsets: ["latin"],
 	display: "swap",
 	// Next has no metrics for this face; stamps are short, so a shift on swap is harmless.
+	// Turbopack still looks the metrics up unless a fallback is named, and warns when it
+	// finds none. `--font-stencil` in globals.css continues the chain after Archivo.
+	fallback: ["Archivo"],
 	adjustFontFallback: false,
 });
 
