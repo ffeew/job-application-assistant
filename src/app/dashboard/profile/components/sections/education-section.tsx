@@ -88,8 +88,6 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 		}
 	};
 
-	const formatDate = formatMonthYear;
-
 	if (isLoading) {
 		return <ProfileItemSkeleton />;
 	}
@@ -126,10 +124,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 									handleSavePending(item.id, item.request),
 								)}
 							>
-								<p className="font-medium">{item.request.degree}</p>
-								<p className="text-muted-foreground text-sm">
-									{item.request.institution}
-								</p>
+								<EducationSummary education={item.request} pending />
 							</PendingRow>
 						))}
 					</PendingPanel>
@@ -150,23 +145,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 								onEdit={() => startEditing("education", edu.id)}
 								onDelete={() => openDeleteConfirmation("education", edu.id)}
 							>
-								<div>
-									<h3 className="font-semibold">
-										{edu.degree}
-										{edu.fieldOfStudy && `, ${edu.fieldOfStudy}`}
-									</h3>
-									<p className="text-muted-foreground">{edu.institution}</p>
-								</div>
-								<EntryMeta>
-									{(edu.startDate || edu.endDate) && (
-										<span>
-											{formatDate(edu.startDate)} to {formatDate(edu.endDate)}
-										</span>
-									)}
-									{edu.location && <span>{edu.location}</span>}
-									{edu.gpa && <span>GPA {edu.gpa}</span>}
-									{edu.honors && <span>{edu.honors}</span>}
-								</EntryMeta>
+								<EducationSummary education={edu} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -188,6 +167,46 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 				onConfirm={handleDelete}
 				title="Delete this education entry?"
 			/>
+		</>
+	);
+}
+
+function EducationSummary({
+	education,
+	pending = false,
+}: {
+	education: CreateEducationRequest;
+	/** Pending rows sit under the panel heading and show everything that was read. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+	const dates = [
+		formatMonthYear(education.startDate),
+		formatMonthYear(education.endDate),
+	]
+		.filter(Boolean)
+		.join(" to ");
+
+	return (
+		<>
+			<div>
+				<Heading className="font-semibold">
+					{education.degree}
+					{education.fieldOfStudy && `, ${education.fieldOfStudy}`}
+				</Heading>
+				<p className="text-muted-foreground">{education.institution}</p>
+			</div>
+			<EntryMeta>
+				{dates && <span>{dates}</span>}
+				{education.location && <span>{education.location}</span>}
+				{education.gpa && <span>GPA {education.gpa}</span>}
+				{education.honors && <span>{education.honors}</span>}
+			</EntryMeta>
+			{pending && education.relevantCoursework && (
+				<p className="text-muted-foreground text-sm">
+					Coursework: {education.relevantCoursework}
+				</p>
+			)}
 		</>
 	);
 }

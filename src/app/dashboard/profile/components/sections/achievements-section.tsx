@@ -1,6 +1,7 @@
 "use client";
 
 import { formatMonthYear } from "@/lib/format-month-year";
+import { cn } from "@/lib/utils";
 
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
@@ -71,8 +72,6 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = formatMonthYear;
-
 	if (isLoading) return <ProfileItemSkeleton />;
 
 	// An empty section offers its one action in the empty state instead.
@@ -101,7 +100,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 								onDiscard={() => removePendingItem(item.id)}
 								onSave={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 							>
-								<p className="font-medium">{item.request.title}</p>
+								<AchievementSummary achievement={item.request} pending />
 							</PendingRow>
 						))}
 					</PendingPanel>
@@ -122,12 +121,7 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 								onEdit={() => startEditing("achievements", achievement.id)}
 								onDelete={() => openDeleteConfirmation("achievements", achievement.id)}
 							>
-								<div>
-									<h3 className="font-semibold">{achievement.title}</h3>
-									{achievement.organization && <p className="text-muted-foreground">{achievement.organization}</p>}
-								</div>
-								{achievement.description && <p className="text-muted-foreground line-clamp-2 text-sm">{achievement.description}</p>}
-								{achievement.date && <EntryMeta><span>{formatDate(achievement.date)}</span></EntryMeta>}
+								<AchievementSummary achievement={achievement} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -149,6 +143,32 @@ export function AchievementsSection({ achievements, isLoading }: AchievementsSec
 				onConfirm={handleDelete}
 				title="Delete this achievement?"
 			/>
+		</>
+	);
+}
+
+function AchievementSummary({
+	achievement,
+	pending = false,
+}: {
+	achievement: CreateAchievementRequest;
+	/** Pending rows sit under the panel heading and show everything that was read. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+
+	return (
+		<>
+			<div>
+				<Heading className="font-semibold">{achievement.title}</Heading>
+				{achievement.organization && <p className="text-muted-foreground">{achievement.organization}</p>}
+			</div>
+			{achievement.description && (
+				<p className={cn("text-muted-foreground text-sm", pending ? "whitespace-pre-wrap" : "line-clamp-2")}>
+					{achievement.description}
+				</p>
+			)}
+			{achievement.date && <EntryMeta><span>{formatMonthYear(achievement.date)}</span></EntryMeta>}
 		</>
 	);
 }

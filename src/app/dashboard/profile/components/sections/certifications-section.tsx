@@ -70,8 +70,6 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = formatMonthYear;
-
 	if (isLoading) return <ProfileItemSkeleton />;
 
 	// An empty section offers its one action in the empty state instead.
@@ -100,8 +98,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 								onDiscard={() => removePendingItem(item.id)}
 								onSave={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 							>
-								<p className="font-medium">{item.request.name}</p>
-								<p className="text-muted-foreground text-sm">{item.request.issuingOrganization}</p>
+								<CertificationSummary certification={item.request} pending />
 							</PendingRow>
 						))}
 					</PendingPanel>
@@ -122,15 +119,7 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 								onEdit={() => startEditing("certifications", cert.id)}
 								onDelete={() => openDeleteConfirmation("certifications", cert.id)}
 							>
-								<div>
-									<h3 className="font-semibold">{cert.name}</h3>
-									<p className="text-muted-foreground">{cert.issuingOrganization}</p>
-								</div>
-								<EntryMeta>
-									{cert.issueDate && <span>Issued {formatDate(cert.issueDate)}</span>}
-									{cert.expirationDate && <span>Expires {formatDate(cert.expirationDate)}</span>}
-									{cert.credentialUrl && <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="text-link underline underline-offset-4 hover:no-underline">Open credential</a>}
-								</EntryMeta>
+								<CertificationSummary certification={cert} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -152,6 +141,31 @@ export function CertificationsSection({ certifications, isLoading }: Certificati
 				onConfirm={handleDelete}
 				title="Delete this certification?"
 			/>
+		</>
+	);
+}
+
+function CertificationSummary({
+	certification,
+	pending = false,
+}: {
+	certification: CreateCertificationRequest;
+	/** Pending rows sit under the panel heading. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+
+	return (
+		<>
+			<div>
+				<Heading className="font-semibold">{certification.name}</Heading>
+				<p className="text-muted-foreground">{certification.issuingOrganization}</p>
+			</div>
+			<EntryMeta>
+				{certification.issueDate && <span>Issued {formatMonthYear(certification.issueDate)}</span>}
+				{certification.expirationDate && <span>Expires {formatMonthYear(certification.expirationDate)}</span>}
+				{certification.credentialUrl && <a href={certification.credentialUrl} target="_blank" rel="noopener noreferrer" className="text-link underline underline-offset-4 hover:no-underline">Open credential</a>}
+			</EntryMeta>
 		</>
 	);
 }

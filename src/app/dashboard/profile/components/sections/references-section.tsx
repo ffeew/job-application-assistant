@@ -96,8 +96,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 								onDiscard={() => removePendingItem(item.id)}
 								onSave={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 							>
-								<p className="font-medium">{item.request.name}</p>
-								<p className="text-muted-foreground text-sm">{item.request.company}</p>
+								<ReferenceSummary reference={item.request} pending />
 							</PendingRow>
 						))}
 					</PendingPanel>
@@ -118,19 +117,7 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 								onEdit={() => startEditing("references", reference.id)}
 								onDelete={() => openDeleteConfirmation("references", reference.id)}
 							>
-								<div>
-									<h3 className="font-semibold">{reference.name}</h3>
-									{(reference.title || reference.company) && (
-										<p className="text-muted-foreground">
-											{[reference.title, reference.company].filter(Boolean).join(", ")}
-										</p>
-									)}
-								</div>
-								<EntryMeta>
-									{reference.email && <span>{reference.email}</span>}
-									{reference.phone && <span>{reference.phone}</span>}
-									{reference.relationship && <span>{reference.relationship}</span>}
-								</EntryMeta>
+								<ReferenceSummary reference={reference} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -152,6 +139,35 @@ export function ReferencesSection({ references, isLoading }: ReferencesSectionPr
 				onConfirm={handleDelete}
 				title="Delete this reference?"
 			/>
+		</>
+	);
+}
+
+function ReferenceSummary({
+	reference,
+	pending = false,
+}: {
+	reference: CreateReferenceRequest;
+	/** Pending rows sit under the panel heading. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+
+	return (
+		<>
+			<div>
+				<Heading className="font-semibold">{reference.name}</Heading>
+				{(reference.title || reference.company) && (
+					<p className="text-muted-foreground">
+						{[reference.title, reference.company].filter(Boolean).join(", ")}
+					</p>
+				)}
+			</div>
+			<EntryMeta>
+				{reference.email && <span>{reference.email}</span>}
+				{reference.phone && <span>{reference.phone}</span>}
+				{reference.relationship && <span>{reference.relationship}</span>}
+			</EntryMeta>
 		</>
 	);
 }

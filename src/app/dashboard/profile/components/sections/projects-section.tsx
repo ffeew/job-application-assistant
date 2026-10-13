@@ -1,6 +1,7 @@
 "use client";
 
 import { formatMonthYear } from "@/lib/format-month-year";
+import { cn } from "@/lib/utils";
 
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm } from "react-hook-form";
@@ -75,8 +76,6 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 		finally { setSavingItemId(null); }
 	};
 
-	const formatDate = formatMonthYear;
-
 	if (isLoading) return <ProfileItemSkeleton />;
 
 	// An empty section offers its one action in the empty state instead.
@@ -105,7 +104,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 								onDiscard={() => removePendingItem(item.id)}
 								onSave={withAsyncHandler(() => handleSavePending(item.id, item.request))}
 							>
-								<p className="font-medium">{item.request.title}</p>
+								<ProjectSummary project={item.request} pending />
 							</PendingRow>
 						))}
 					</PendingPanel>
@@ -126,17 +125,7 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 								onEdit={() => startEditing("projects", project.id)}
 								onDelete={() => openDeleteConfirmation("projects", project.id)}
 							>
-								<h3 className="font-semibold">{project.title}</h3>
-								{project.description && <p className="text-muted-foreground line-clamp-2 text-sm">{project.description}</p>}
-								<EntryMeta>
-									{(project.startDate || project.endDate) && (
-										<span>{formatDate(project.startDate)} to {formatDate(project.endDate)}</span>
-									)}
-									{project.projectUrl && (
-										<a href={project.projectUrl} target="_blank" rel="noopener noreferrer" className="text-link underline underline-offset-4 hover:no-underline">Open project</a>
-									)}
-								</EntryMeta>
-								{project.technologies && <TagList value={project.technologies} />}
+								<ProjectSummary project={project} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -158,6 +147,39 @@ export function ProjectsSection({ projects, isLoading }: ProjectsSectionProps) {
 				onConfirm={handleDelete}
 				title="Delete this project?"
 			/>
+		</>
+	);
+}
+
+function ProjectSummary({
+	project,
+	pending = false,
+}: {
+	project: CreateProjectRequest;
+	/** Pending rows sit under the panel heading and show everything that was read. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+	const start = formatMonthYear(project.startDate);
+	// "present" only reads as a range after a start date.
+	const end = project.isOngoing && start ? "present" : formatMonthYear(project.endDate);
+	const dates = [start, end].filter(Boolean).join(" to ");
+
+	return (
+		<>
+			<Heading className="font-semibold">{project.title}</Heading>
+			{project.description && (
+				<p className={cn("text-muted-foreground text-sm", pending ? "whitespace-pre-wrap" : "line-clamp-2")}>
+					{project.description}
+				</p>
+			)}
+			<EntryMeta>
+				{dates && <span>{dates}</span>}
+				{project.projectUrl && (
+					<a href={project.projectUrl} target="_blank" rel="noopener noreferrer" className="text-link underline underline-offset-4 hover:no-underline">Open project</a>
+				)}
+			</EntryMeta>
+			{project.technologies && <TagList value={project.technologies} />}
 		</>
 	);
 }

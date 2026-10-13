@@ -1,6 +1,7 @@
 "use client";
 
 import { formatMonthYear } from "@/lib/format-month-year";
+import { cn } from "@/lib/utils";
 
 import { withAsyncHandler } from "@/lib/async-action";
 import { useForm, useWatch } from "react-hook-form";
@@ -100,8 +101,6 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 		}
 	};
 
-	const formatDate = formatMonthYear;
-
 	if (isLoading) {
 		return <ProfileItemSkeleton />;
 	}
@@ -152,14 +151,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 										handleSavePending(item.id, item.request),
 									)}
 								>
-									<p className="font-medium">
-										{item.request.jobTitle} at {item.request.company}
-									</p>
-									{item.request.location && (
-										<p className="text-muted-foreground text-sm">
-											{item.request.location}
-										</p>
-									)}
+									<ExperienceSummary experience={item.request} pending />
 									{item.warnings.length > 0 && (
 										<ul className="text-warning flex list-disc flex-col gap-1 pl-4 text-sm">
 											{item.warnings.map((warning, idx) => (
@@ -189,27 +181,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 								onEdit={() => startEditing("experience", experience.id)}
 								onDelete={() => openDeleteConfirmation("experience", experience.id)}
 							>
-								<div>
-									<h3 className="font-semibold">{experience.jobTitle}</h3>
-									<p className="text-muted-foreground">{experience.company}</p>
-								</div>
-								<EntryMeta>
-									<span>
-										{formatDate(experience.startDate)} to{" "}
-										{experience.isCurrent
-											? "present"
-											: formatDate(experience.endDate || "")}
-									</span>
-									{experience.location && <span>{experience.location}</span>}
-								</EntryMeta>
-								{experience.description && (
-									<p className="text-muted-foreground line-clamp-3 text-sm whitespace-pre-wrap">
-										{experience.description}
-									</p>
-								)}
-								{experience.technologies && (
-									<TagList value={experience.technologies} />
-								)}
+								<ExperienceSummary experience={experience} />
 							</EntryRow>
 						))}
 					</EntryPanel>
@@ -235,6 +207,47 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				onConfirm={handleDelete}
 				title="Delete this work experience?"
 			/>
+		</>
+	);
+}
+
+function ExperienceSummary({
+	experience,
+	pending = false,
+}: {
+	experience: CreateWorkExperienceRequest;
+	/** Pending rows sit under the panel heading and show everything that was read. */
+	pending?: boolean;
+}) {
+	const Heading = pending ? "h4" : "h3";
+	const dates = [
+		formatMonthYear(experience.startDate),
+		experience.isCurrent ? "present" : formatMonthYear(experience.endDate),
+	]
+		.filter(Boolean)
+		.join(" to ");
+
+	return (
+		<>
+			<div>
+				<Heading className="font-semibold">{experience.jobTitle}</Heading>
+				<p className="text-muted-foreground">{experience.company}</p>
+			</div>
+			<EntryMeta>
+				{dates && <span>{dates}</span>}
+				{experience.location && <span>{experience.location}</span>}
+			</EntryMeta>
+			{experience.description && (
+				<p
+					className={cn(
+						"text-muted-foreground text-sm whitespace-pre-wrap",
+						!pending && "line-clamp-3",
+					)}
+				>
+					{experience.description}
+				</p>
+			)}
+			{experience.technologies && <TagList value={experience.technologies} />}
 		</>
 	);
 }

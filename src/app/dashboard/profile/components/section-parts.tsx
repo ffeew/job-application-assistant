@@ -112,7 +112,8 @@ export function PendingRow({
 }) {
 	return (
 		<div className="bg-card flex flex-wrap items-start justify-between gap-3 rounded-md border p-3">
-			<div className="flex min-w-0 flex-col gap-1">{children}</div>
+			{/* The basis lets the actions wrap below on narrow screens instead of squeezing the text. */}
+			<div className="flex min-w-0 grow basis-64 flex-col gap-1.5">{children}</div>
 			<div className="flex items-center gap-1">
 				{onEdit && (
 					<Button
