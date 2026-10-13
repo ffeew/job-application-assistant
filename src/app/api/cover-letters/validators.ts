@@ -60,8 +60,8 @@ export const coverLettersQuerySchema = z.object({
   isAiGenerated: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
   jobApplicationId: z.string().optional(),
   resumeId: z.string().optional(),
-  limit: z.string().transform(Number).pipe(z.number().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().nonnegative()).optional(),
+  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
+  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
 });
 
 export type CoverLettersQuery = z.infer<typeof coverLettersQuerySchema>;

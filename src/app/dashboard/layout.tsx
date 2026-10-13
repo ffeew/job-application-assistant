@@ -16,7 +16,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Wordmark } from "@/components/wordmark";
+import { useQueryClient } from "@tanstack/react-query";
+import { clearAccountState } from "@/app/utils/account-state";
 import { authClient } from "@/app/utils/authClient";
+import { useCoverLetterStore } from "@/app/dashboard/cover-letters/store/use-cover-letter-store";
 import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu } from "lucide-react";
@@ -115,15 +118,19 @@ export default function DashboardLayout({
 
 	const pathname = usePathname();
 	const router = useRouter();
+	const queryClient = useQueryClient();
 
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
 				const session = await authClient.getSession();
 				if (!session.data?.user) {
+					// The session ended without a sign-out, so nothing was cleared yet.
+					clearAccountState(queryClient);
 					router.push("/sign-in");
 					return;
 				}
+				useCoverLetterStore.getState().claimFor(session.data.user.id);
 				setUser({ name: session.data.user.name, email: session.data.user.email });
 			} catch {
 				router.push("/sign-in");
@@ -133,16 +140,18 @@ export default function DashboardLayout({
 		};
 
 		runAsyncAction(checkAuth());
-	}, [router, setUser, setLoading]);
+	}, [router, queryClient, setUser, setLoading]);
 
 	const handleSignOut = async () => {
 		try {
 			await authClient.signOut();
-			router.push("/sign-in");
 		} catch (error) {
 			console.error("Error signing out:", error);
-			router.push("/sign-in");
 		}
+		clearAccountState(queryClient);
+		// The draft is persisted, so it would otherwise stay readable in this browser.
+		useCoverLetterStore.getState().reset();
+		router.push("/sign-in");
 	};
 
 	const currentSection =

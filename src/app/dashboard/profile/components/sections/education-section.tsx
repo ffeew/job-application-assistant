@@ -296,7 +296,12 @@ function EducationForm({ education, onSuccess, onCancel }: { education?: Educati
 				<Label htmlFor="relevantCoursework">Relevant coursework</Label>
 				<Textarea id="relevantCoursework" {...register("relevantCoursework")} rows={2} />
 			</div>
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

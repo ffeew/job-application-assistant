@@ -28,7 +28,8 @@ export async function runGenerationJob(
     const result = await generate(job.userId, payload, controller.signal);
     await completeGenerationJob(job, result);
   } catch (error) {
-    console.error(`Generation job ${job.id} failed.`);
+    // The stored job keeps only a user-facing message, so the cause is logged here.
+    console.error(`Generation job ${job.id} failed:`, error);
     await failGenerationJob(job, error);
   } finally {
     clearInterval(heartbeat);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
 import {
   createEducationSchema,
@@ -22,11 +23,7 @@ export async function GET(request: NextRequest) {
     const education = await profileService.getEducation(userId, query);
     return NextResponse.json(education);
   } catch (error) {
-    console.error("Error fetching education:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch education" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch education");
   }
 }
 
@@ -47,10 +44,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(education, { status: 201 });
   } catch (error) {
-    console.error("Error creating education:", error);
-    return NextResponse.json(
-      { error: "Failed to create education" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create education");
   }
 }

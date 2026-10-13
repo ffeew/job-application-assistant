@@ -12,6 +12,10 @@ interface CoverLetterState {
 
 	generatedContent: string;
 
+	/** The account the persisted draft belongs to; empty until one claims it. */
+	ownerId: string;
+	claimFor: (userId: string) => void;
+
 	setSelectedResume: (id: string) => void;
 	setSelectedApplication: (id: string) => void;
 	setManualFields: (
@@ -34,6 +38,7 @@ const initialState = {
 	applicantName: "",
 	title: "",
 	generatedContent: "",
+	ownerId: "",
 };
 
 export const useCoverLetterStore = create<CoverLetterState>()(
@@ -58,7 +63,16 @@ export const useCoverLetterStore = create<CoverLetterState>()(
 
 			setGeneratedContent: (content) => set({ generatedContent: content }),
 
-			reset: () => set(initialState),
+			// localStorage is shared by every account on this browser, so a draft
+			// left by someone else is discarded instead of being shown.
+			claimFor: (userId) =>
+				set((state) =>
+					state.ownerId && state.ownerId !== userId
+						? { ...initialState, ownerId: userId }
+						: { ownerId: userId }
+				),
+
+			reset: () => set((state) => ({ ...initialState, ownerId: state.ownerId })),
 		}),
 		{
 			name: "cover-letter-draft",
@@ -70,6 +84,7 @@ export const useCoverLetterStore = create<CoverLetterState>()(
 				applicantName: state.applicantName,
 				title: state.title,
 				generatedContent: state.generatedContent,
+				ownerId: state.ownerId,
 			}),
 		}
 	)

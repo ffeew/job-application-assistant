@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "./service";
 import {
   createUserProfileSchema,
@@ -18,11 +19,7 @@ export async function GET(request: NextRequest) {
     const profile = await profileService.getUserProfile(userId);
     return NextResponse.json(profile);
   } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch user profile" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch user profile");
   }
 }
 
@@ -43,11 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(profile, { status: 201 });
   } catch (error) {
-    console.error("Error creating user profile:", error);
-    return NextResponse.json(
-      { error: "Failed to create user profile" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create user profile");
   }
 }
 
@@ -72,10 +65,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error("Error updating user profile:", error);
-    return NextResponse.json(
-      { error: "Failed to update user profile" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update user profile");
   }
 }

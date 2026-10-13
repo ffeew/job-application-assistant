@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Notice } from "@/components/ui/notice";
+import { useQueryClient } from "@tanstack/react-query";
+import { clearAccountState } from "@/app/utils/account-state";
 import { authClient } from "@/app/utils/authClient";
 import { useRouter } from "next/navigation";
 import { AuthPanel } from "../components/auth-panel";
@@ -19,6 +21,7 @@ export default function SignUpPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 	const router = useRouter();
+	const queryClient = useQueryClient();
 
 	const handleSubmit = async (e: React.SubmitEvent) => {
 		e.preventDefault();
@@ -38,24 +41,27 @@ export default function SignUpPage() {
 		}
 
 		try {
-			await authClient.signUp.email({
+			const { error: signUpError } = await authClient.signUp.email({
 				email,
 				password,
 				name,
 			});
 
-			// Allow the client session state to settle before checking it.
-			await new Promise(resolve => setTimeout(resolve, 100));
-
-			const session = await authClient.getSession();
-			if (session.data?.user) {
-				router.push("/dashboard");
-			} else {
+			if (signUpError) {
 				setError(
-					"Couldn't create the account. That email may already be registered.",
+					signUpError.status === 422
+						? "Couldn't create the account. That email may already be registered."
+						: signUpError.status === 429
+							? "Too many attempts. Wait a minute, then try again."
+							: "Couldn't create the account. Try again in a moment.",
 				);
 				setIsLoading(false);
+				return;
 			}
+
+			// Another account may have used this browser tab before this one.
+			clearAccountState(queryClient);
+			router.push("/dashboard");
 		} catch {
 			setError("Couldn't reach the server. Check your connection and try again.");
 			setIsLoading(false);

@@ -212,7 +212,12 @@ function CertificationForm({ certification, onSuccess, onCancel }: { certificati
 			</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="credentialId">Credential ID</Label><Input id="credentialId" {...register("credentialId")} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="credentialUrl">Credential URL</Label><Input id="credentialUrl" type="url" {...register("credentialUrl")} placeholder="https://" /></div>
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

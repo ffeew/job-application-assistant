@@ -228,7 +228,12 @@ function ProjectForm({ project, onSuccess, onCancel }: { project?: ProjectJsonRe
 			</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="projectUrl">Project URL</Label><Input id="projectUrl" type="url" {...register("projectUrl")} placeholder="https://myproject.com" /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="githubUrl">Repository URL</Label><Input id="githubUrl" type="url" {...register("githubUrl")} placeholder="https://github.com/user/project" /></div>
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

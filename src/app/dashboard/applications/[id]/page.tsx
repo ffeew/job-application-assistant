@@ -4,6 +4,7 @@ import { runAsyncAction } from "@/lib/async-action";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
 import { FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -37,33 +38,38 @@ export default function EditApplicationPage({
 		runAsyncAction(resolveParams());
 	}, [params]);
 
-	useEffect(() => {
-		if (error) {
-			router.push("/dashboard/applications");
-		}
-	}, [error, router]);
-
 	if (!resolvedParams || isLoading) {
 		return <ApplicationDetailSkeleton />;
+	}
+
+	if (error || !application) {
+		return (
+			<div className="flex max-w-4xl flex-col gap-8">
+				<PageHeader
+					title="Edit application"
+					back={{ href: "/dashboard/applications", label: "Applications" }}
+				/>
+				<Notice tone="error" title="This application didn't load">
+					It may have been deleted, or the server could not be reached. Go
+					back to your applications and open it again.
+				</Notice>
+			</div>
+		);
 	}
 
 	return (
 		<div className="flex max-w-4xl flex-col gap-8">
 			<PageHeader
 				title="Edit application"
-				description={
-					application && `${application.position} at ${application.company}`
-				}
+				description={`${application.position} at ${application.company}`}
 				back={{ href: "/dashboard/applications", label: "Applications" }}
 				actions={
-					application && (
-						<Button variant="outline" asChild>
-							<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
-								<FileText />
-								Tailor resume
-							</Link>
-						</Button>
-					)
+					<Button variant="outline" asChild>
+						<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
+							<FileText />
+							Tailor resume
+						</Link>
+					</Button>
 				}
 			/>
 

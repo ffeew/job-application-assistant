@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
 import { PageHeader } from "@/app/dashboard/components/page-header";
 import { ProfileActions, SectionIndex } from "./section-index";
 import { ProfilePageSkeleton } from "./profile-page-skeleton";
@@ -18,8 +20,6 @@ import {
 	type ProfileSection,
 } from "@/app/dashboard/profile/store/profile-ui-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
-import type { ImportContextCounts } from "@/app/dashboard/profile/store/import-review-store";
-import type { ResumeImportResponse } from "@/app/api/profile/resume-import/validators";
 
 import { useUserProfile } from "@/app/dashboard/profile/queries/use-user-profile";
 import { useWorkExperiences } from "@/app/dashboard/profile/queries/use-work-experiences";
@@ -30,38 +30,28 @@ import { useCertifications } from "@/app/dashboard/profile/queries/use-certifica
 import { useAchievements } from "@/app/dashboard/profile/queries/use-achievements";
 import { useReferences } from "@/app/dashboard/profile/queries/use-references";
 
+const listOrder = { orderBy: "displayOrder", order: "asc" } as const;
+
 export function ProfileLayout() {
 	const activeSection = useProfileUIStore((state) => state.activeSection);
 
-	const { data: userProfile, isLoading: profileLoading } = useUserProfile();
-	const { data: workExperiences = [], isLoading: workLoading } = useWorkExperiences({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: education = [], isLoading: educationLoading } = useEducation({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: skills = [], isLoading: skillsLoading } = useSkills({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: projects = [], isLoading: projectsLoading } = useProjects({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: certifications = [], isLoading: certificationsLoading } = useCertifications({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: achievements = [], isLoading: achievementsLoading } = useAchievements({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
-	const { data: references = [], isLoading: referencesLoading } = useReferences({
-		orderBy: "displayOrder",
-		order: "asc",
-	});
+	const profileQuery = useUserProfile();
+	const workQuery = useWorkExperiences(listOrder);
+	const educationQuery = useEducation(listOrder);
+	const skillsQuery = useSkills(listOrder);
+	const projectsQuery = useProjects(listOrder);
+	const certificationsQuery = useCertifications(listOrder);
+	const achievementsQuery = useAchievements(listOrder);
+	const referencesQuery = useReferences(listOrder);
+
+	const userProfile = profileQuery.data;
+	const workExperiences = workQuery.data ?? [];
+	const education = educationQuery.data ?? [];
+	const skills = skillsQuery.data ?? [];
+	const projects = projectsQuery.data ?? [];
+	const certifications = certificationsQuery.data ?? [];
+	const achievements = achievementsQuery.data ?? [];
+	const references = referencesQuery.data ?? [];
 
 	const initializeImport = useImportReviewStore((state) => state.initialize);
 
@@ -88,33 +78,43 @@ export function ProfileLayout() {
 		]
 	);
 
-	const handleImportPreview = useCallback(
-		(payload: ResumeImportResponse) => {
-			const context: ImportContextCounts = {
-				workExperiences: workExperiences.length,
-				education: education.length,
-				skills: skills.length,
-				projects: projects.length,
-				certifications: certifications.length,
-				achievements: achievements.length,
-				references: references.length,
-			};
-			initializeImport(payload, context);
-		},
-		[
-			initializeImport,
-			workExperiences.length,
-			education.length,
-			skills.length,
-			projects.length,
-			certifications.length,
-			achievements.length,
-			references.length,
-		]
-	);
-
-	if (profileLoading) {
+	if (profileQuery.isLoading) {
 		return <ProfilePageSkeleton />;
+	}
+
+	// A section that failed to load must not look like an empty one: someone who
+	// sees "No work experience yet" may type everything in again.
+	const failedQueries = [
+		profileQuery,
+		workQuery,
+		educationQuery,
+		skillsQuery,
+		projectsQuery,
+		certificationsQuery,
+		achievementsQuery,
+		referencesQuery,
+	].filter((query) => query.error);
+	const loadError = failedQueries[0]?.error;
+
+	if (loadError) {
+		return (
+			<div className="flex flex-col gap-8">
+				<PageHeader title="Profile" />
+				<Notice tone="error" title="Your profile didn't load">
+					<p>{loadError.message}</p>
+					<Button
+						variant="outline"
+						size="sm"
+						className="mt-3"
+						onClick={() => {
+							for (const query of failedQueries) void query.refetch();
+						}}
+					>
+						Try again
+					</Button>
+				</Notice>
+			</div>
+		);
 	}
 
 	const renderSection = () => {
@@ -123,32 +123,50 @@ export function ProfileLayout() {
 				return (
 					<PersonalInfoSection
 						profile={userProfile || null}
-						onImportPreview={handleImportPreview}
+						onImportPreview={initializeImport}
 					/>
 				);
 			case "experience":
 				return (
-					<ExperienceSection experiences={workExperiences} isLoading={workLoading} />
+					<ExperienceSection
+						experiences={workExperiences}
+						isLoading={workQuery.isLoading}
+					/>
 				);
 			case "education":
-				return <EducationSection education={education} isLoading={educationLoading} />;
+				return (
+					<EducationSection
+						education={education}
+						isLoading={educationQuery.isLoading}
+					/>
+				);
 			case "skills":
-				return <SkillsSection skills={skills} isLoading={skillsLoading} />;
+				return <SkillsSection skills={skills} isLoading={skillsQuery.isLoading} />;
 			case "projects":
-				return <ProjectsSection projects={projects} isLoading={projectsLoading} />;
+				return (
+					<ProjectsSection projects={projects} isLoading={projectsQuery.isLoading} />
+				);
 			case "certifications":
 				return (
 					<CertificationsSection
 						certifications={certifications}
-						isLoading={certificationsLoading}
+						isLoading={certificationsQuery.isLoading}
 					/>
 				);
 			case "achievements":
 				return (
-					<AchievementsSection achievements={achievements} isLoading={achievementsLoading} />
+					<AchievementsSection
+						achievements={achievements}
+						isLoading={achievementsQuery.isLoading}
+					/>
 				);
 			case "references":
-				return <ReferencesSection references={references} isLoading={referencesLoading} />;
+				return (
+					<ReferencesSection
+						references={references}
+						isLoading={referencesQuery.isLoading}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -159,7 +177,7 @@ export function ProfileLayout() {
 			<PageHeader
 				title="Profile"
 				description="Everything you might put on a resume, kept in one place. Each resume draws from it."
-				actions={<ProfileActions onImportPreview={handleImportPreview} />}
+				actions={<ProfileActions onImportPreview={initializeImport} />}
 			/>
 
 			<div className="grid items-start gap-x-10 gap-y-6 lg:grid-cols-[15rem_minmax(0,1fr)]">

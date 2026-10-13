@@ -36,12 +36,23 @@ export class JobRequestError extends Error {
   }
 }
 
+// A row written by an earlier release may not match the current schemas. It is
+// reported as absent, which lets the screen start a new generation, rather than
+// as a malformed request from the client.
 function response(job: Job) {
-  return generationJobResponseSchema.parse({
+  const parsed = generationJobResponseSchema.safeParse({
     ...job,
     createdAt: job.createdAt.toISOString(),
     updatedAt: job.updatedAt.toISOString(),
   });
+  if (!parsed.success) {
+    console.error(
+      `Generation job ${job.id} does not match the current schema:`,
+      parsed.error,
+    );
+    return null;
+  }
+  return parsed.data;
 }
 
 export async function enqueueGenerationJob(userId: string, input: unknown) {
@@ -250,6 +261,8 @@ export async function completeGenerationJob(
             eq(resumes.isTailored, true),
           ),
         )
+        // The same row the application page reads as the saved resume.
+        .orderBy(desc(resumes.updatedAt))
         .limit(1);
       const values = {
         title: payload.request.title,

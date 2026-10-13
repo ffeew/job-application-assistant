@@ -16,9 +16,14 @@ export function generationErrorResponse(error: unknown) {
       { status: 400 },
     );
   }
-  const message =
-    error instanceof ResumeGenerationError
-      ? error.message
-      : "Failed to generate the resume. Please retry.";
-  return NextResponse.json({ error: message }, { status: 503 });
+  if (error instanceof ResumeGenerationError) {
+    // The message is written for the user; the cause is only useful here.
+    console.warn("Resume generation is unavailable:", error);
+    return NextResponse.json({ error: error.message }, { status: 503 });
+  }
+  console.error("Resume generation request failed:", error);
+  return NextResponse.json(
+    { error: "The resume service hit an unexpected error. Please retry." },
+    { status: 500 },
+  );
 }

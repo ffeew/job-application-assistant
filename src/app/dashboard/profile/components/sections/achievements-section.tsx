@@ -209,7 +209,12 @@ function AchievementForm({ achievement, onSuccess, onCancel }: { achievement?: A
 			<div className="flex flex-col gap-2"><Label htmlFor="organization">Organization</Label><Input id="organization" {...register("organization")} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="date">Date</Label><Input id="date" type="month" {...register("date")} /></div>
 			<div className="flex flex-col gap-2"><Label htmlFor="description">Description</Label><Textarea id="description" {...register("description")} rows={3} /></div>
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

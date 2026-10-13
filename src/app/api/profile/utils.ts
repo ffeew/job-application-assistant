@@ -6,7 +6,10 @@ export async function getUserId(request: NextRequest): Promise<string | null> {
   return session?.user.id ?? null;
 }
 
+// parseInt would accept "12abc" as 12. The upper bound is PostgreSQL's integer
+// range, beyond which the query itself would fail.
 export function parseNumericId(id: string): number | null {
-  const numericId = parseInt(id, 10);
-  return Number.isNaN(numericId) ? null : numericId;
+  if (!/^\d{1,10}$/.test(id)) return null;
+  const numericId = Number(id);
+  return numericId <= 2_147_483_647 ? numericId : null;
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
 import {
   createWorkExperienceSchema,
@@ -26,11 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(experiences);
   } catch (error) {
-    console.error("Error fetching work experiences:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch work experiences" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch work experiences");
   }
 }
 
@@ -51,10 +48,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(experience, { status: 201 });
   } catch (error) {
-    console.error("Error creating work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to create work experience" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create work experience");
   }
 }

@@ -10,7 +10,7 @@ import {
   latestGenerationJobSchema,
   type GenerationJobPayload,
 } from "@/app/api/resume-generation/jobs/validators";
-import { parseJsonResponse } from "@/lib/api-response";
+import { isRetryableError, parseJsonResponse } from "@/lib/api-response";
 import { pdfBase64ToBlob } from "@/lib/resume-preview";
 import { downloadPDF } from "@/lib/utils";
 
@@ -74,6 +74,8 @@ export function useGenerationJob(applicationId: string | null | undefined) {
     staleTime: 0,
     gcTime: 0,
     refetchInterval: (query) => {
+      // A job the server no longer has will not reappear; only outages are waited out.
+      if (query.state.error && !isRetryableError(query.state.error)) return false;
       const status = query.state.data?.status;
       return status === "completed" || status === "failed" ? false : 2000;
     },

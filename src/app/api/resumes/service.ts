@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/db";
 import { resumes } from "@/lib/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type {
   CreateResumeRequest,
@@ -8,6 +8,29 @@ import type {
   ResumesQuery,
   UpdateResumeRequest,
 } from "./validators";
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Locks the user's resumes in ID order and returns their IDs. Two concurrent
+ * default changes then queue up instead of deadlocking or leaving two defaults.
+ */
+async function lockResumes(tx: Transaction, userId: string) {
+  const owned = await tx
+    .select({ id: resumes.id })
+    .from(resumes)
+    .where(eq(resumes.userId, userId))
+    .orderBy(asc(resumes.id))
+    .for("update");
+  return owned.map((resume) => resume.id);
+}
+
+async function clearDefault(tx: Transaction, userId: string) {
+  await tx
+    .update(resumes)
+    .set({ isDefault: false })
+    .where(and(eq(resumes.userId, userId), eq(resumes.isDefault, true)));
+}
 
 export class ResumesService {
   async getResumes(
@@ -70,24 +93,27 @@ export class ResumesService {
     const id = randomUUID();
     const now = new Date();
 
-    if (data.isDefault) {
-      await this.unsetAllDefaults(userId);
-    }
-
-    const [resume] = await db
-      .insert(resumes)
-      .values({
-        id,
-        userId,
-        title: data.title,
-        content: data.content,
-        isDefault: data.isDefault || false,
-        jobApplicationId: data.jobApplicationId || null,
-        isTailored: data.isTailored || false,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+    const resume = await db.transaction(async (tx) => {
+      if (data.isDefault) {
+        await lockResumes(tx, userId);
+        await clearDefault(tx, userId);
+      }
+      const [created] = await tx
+        .insert(resumes)
+        .values({
+          id,
+          userId,
+          title: data.title,
+          content: data.content,
+          isDefault: data.isDefault || false,
+          jobApplicationId: data.jobApplicationId || null,
+          isTailored: data.isTailored || false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+      return created;
+    });
 
     if (!resume) {
       throw new Error("Failed to create resume");
@@ -107,18 +133,24 @@ export class ResumesService {
   ): Promise<ResumeResponse | null> {
     const now = new Date();
 
-    if (data.isDefault) {
-      await this.unsetAllDefaults(userId);
-    }
-
-    const [resume] = await db
-      .update(resumes)
-      .set({
-        ...data,
-        updatedAt: now,
-      })
-      .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
-      .returning();
+    const resume = await db.transaction(async (tx) => {
+      if (data.isDefault) {
+        // Only a resume this user owns may displace the current default; an
+        // unknown ID must leave it in place.
+        const owned = await lockResumes(tx, userId);
+        if (!owned.includes(id)) return undefined;
+        await clearDefault(tx, userId);
+      }
+      const [updated] = await tx
+        .update(resumes)
+        .set({
+          ...data,
+          updatedAt: now,
+        })
+        .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+        .returning();
+      return updated;
+    });
 
     return resume
       ? {
@@ -191,10 +223,4 @@ export class ResumesService {
       : null;
   }
 
-  private async unsetAllDefaults(userId: string): Promise<void> {
-    await db
-      .update(resumes)
-      .set({ isDefault: false })
-      .where(eq(resumes.userId, userId));
-  }
 }

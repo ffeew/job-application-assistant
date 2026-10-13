@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
 import {
   createProjectSchema,
@@ -22,11 +23,7 @@ export async function GET(request: NextRequest) {
     const projects = await profileService.getProjects(userId, query);
     return NextResponse.json(projects);
   } catch (error) {
-    console.error("Error fetching projects:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch projects" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch projects");
   }
 }
 
@@ -43,10 +40,6 @@ export async function POST(request: NextRequest) {
     const project = await profileService.createProject(userId, validatedData);
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    console.error("Error creating project:", error);
-    return NextResponse.json(
-      { error: "Failed to create project" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create project");
   }
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import { withAsyncHandler } from "@/lib/async-action";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
+import type { PendingReviewItem } from "@/app/dashboard/profile/utils/import-normalizers";
 import { useCreateWorkExperience } from "@/app/dashboard/profile/mutations/use-create-work-experience";
 import { useCreateEducation } from "@/app/dashboard/profile/mutations/use-create-education";
 import { useCreateSkill } from "@/app/dashboard/profile/mutations/use-create-skill";
@@ -13,6 +14,23 @@ import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-p
 import { useCreateCertification } from "@/app/dashboard/profile/mutations/use-create-certification";
 import { useCreateAchievement } from "@/app/dashboard/profile/mutations/use-create-achievement";
 import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create-reference";
+
+const count = (total: number, singular: string, plural = `${singular}s`) =>
+	`${total} ${total === 1 ? singular : plural}`;
+
+// Each entry leaves the review list as soon as it is stored. If a later entry
+// fails, saving again continues from there instead of storing the first ones twice.
+async function saveEach<T>(
+	items: PendingReviewItem<T>[],
+	save: (request: T) => Promise<unknown>,
+	remove: (id: string) => void,
+): Promise<number> {
+	for (const item of items) {
+		await save(item.request);
+		remove(item.id);
+	}
+	return items.length;
+}
 
 export function PendingImportBanner() {
 	const [isSaving, setIsSaving] = useState(false);
@@ -27,6 +45,14 @@ export function PendingImportBanner() {
 	const pendingReferences = useImportReviewStore((state) => state.references);
 	const globalWarnings = useImportReviewStore((state) => state.warnings);
 
+	const removeWorkExperience = useImportReviewStore((state) => state.removeWorkExperienceDraft);
+	const removeEducation = useImportReviewStore((state) => state.removeEducationDraft);
+	const removeSkill = useImportReviewStore((state) => state.removeSkillDraft);
+	const removeProject = useImportReviewStore((state) => state.removeProjectDraft);
+	const removeCertification = useImportReviewStore((state) => state.removeCertificationDraft);
+	const removeAchievement = useImportReviewStore((state) => state.removeAchievementDraft);
+	const removeReference = useImportReviewStore((state) => state.removeReferenceDraft);
+
 	const createWorkExperienceMutation = useCreateWorkExperience();
 	const createEducationMutation = useCreateEducation();
 	const createSkillMutation = useCreateSkill();
@@ -35,71 +61,27 @@ export function PendingImportBanner() {
 	const createAchievementMutation = useCreateAchievement();
 	const createReferenceMutation = useCreateReference();
 
-	const pendingCounts = useMemo(
-		() => ({
-			workExperiences: pendingWorkExperiences.length,
-			education: pendingEducation.length,
-			skills: pendingSkills.length,
-			projects: pendingProjects.length,
-			certifications: pendingCertifications.length,
-			achievements: pendingAchievements.length,
-			references: pendingReferences.length,
-		}),
-		[
-			pendingWorkExperiences.length,
-			pendingEducation.length,
-			pendingSkills.length,
-			pendingProjects.length,
-			pendingCertifications.length,
-			pendingAchievements.length,
-			pendingReferences.length,
-		]
-	);
+	const pendingSummary = [
+		pendingWorkExperiences.length > 0 &&
+			count(pendingWorkExperiences.length, "experience"),
+		pendingEducation.length > 0 && `${pendingEducation.length} education`,
+		pendingSkills.length > 0 && count(pendingSkills.length, "skill"),
+		pendingProjects.length > 0 && count(pendingProjects.length, "project"),
+		pendingCertifications.length > 0 &&
+			count(pendingCertifications.length, "certification"),
+		pendingAchievements.length > 0 &&
+			count(pendingAchievements.length, "achievement"),
+		pendingReferences.length > 0 && count(pendingReferences.length, "reference"),
+	].filter((part): part is string => Boolean(part));
 
-	const totalPendingItems = Object.values(pendingCounts).reduce(
-		(sum, count) => sum + count,
-		0
-	);
-
-	const pendingSummary = useMemo(() => {
-		const summary: string[] = [];
-		if (pendingCounts.workExperiences) {
-			summary.push(
-				`${pendingCounts.workExperiences} experience${pendingCounts.workExperiences === 1 ? "" : "s"}`
-			);
-		}
-		if (pendingCounts.education) {
-			summary.push(
-				`${pendingCounts.education} education`
-			);
-		}
-		if (pendingCounts.skills) {
-			summary.push(
-				`${pendingCounts.skills} skill${pendingCounts.skills === 1 ? "" : "s"}`
-			);
-		}
-		if (pendingCounts.projects) {
-			summary.push(
-				`${pendingCounts.projects} project${pendingCounts.projects === 1 ? "" : "s"}`
-			);
-		}
-		if (pendingCounts.certifications) {
-			summary.push(
-				`${pendingCounts.certifications} certification${pendingCounts.certifications === 1 ? "" : "s"}`
-			);
-		}
-		if (pendingCounts.achievements) {
-			summary.push(
-				`${pendingCounts.achievements} achievement${pendingCounts.achievements === 1 ? "" : "s"}`
-			);
-		}
-		if (pendingCounts.references) {
-			summary.push(
-				`${pendingCounts.references} reference${pendingCounts.references === 1 ? "" : "s"}`
-			);
-		}
-		return summary;
-	}, [pendingCounts]);
+	const totalPendingItems =
+		pendingWorkExperiences.length +
+		pendingEducation.length +
+		pendingSkills.length +
+		pendingProjects.length +
+		pendingCertifications.length +
+		pendingAchievements.length +
+		pendingReferences.length;
 
 	const handleDiscard = () => {
 		clearImport();
@@ -113,91 +95,86 @@ export function PendingImportBanner() {
 		}
 
 		setIsSaving(true);
+		const warningMessages = [...globalWarnings];
+		const saved: string[] = [];
+		const record = (total: number, singular: string, plural?: string) => {
+			if (total > 0) saved.push(count(total, singular, plural));
+		};
 
 		try {
-			const summaryMessages: string[] = [];
-			const warningMessages = [...globalWarnings];
-
-			for (const item of pendingWorkExperiences) {
-				await createWorkExperienceMutation.mutateAsync(item.request);
-			}
-			if (pendingWorkExperiences.length > 0) {
-				summaryMessages.push(
-					`${pendingWorkExperiences.length} work experience${pendingWorkExperiences.length === 1 ? "" : "s"}`
-				);
-			}
-
-			for (const item of pendingEducation) {
-				await createEducationMutation.mutateAsync(item.request);
-			}
-			if (pendingEducation.length > 0) {
-				summaryMessages.push(
-					`${pendingEducation.length} education entr${pendingEducation.length === 1 ? "y" : "ies"}`
-				);
-			}
-
-			for (const item of pendingSkills) {
-				await createSkillMutation.mutateAsync(item.request);
-			}
-			if (pendingSkills.length > 0) {
-				summaryMessages.push(
-					`${pendingSkills.length} skill${pendingSkills.length === 1 ? "" : "s"}`
-				);
-			}
-
-			for (const item of pendingProjects) {
-				await createProjectMutation.mutateAsync(item.request);
-			}
-			if (pendingProjects.length > 0) {
-				summaryMessages.push(
-					`${pendingProjects.length} project${pendingProjects.length === 1 ? "" : "s"}`
-				);
-			}
-
-			for (const item of pendingCertifications) {
-				await createCertificationMutation.mutateAsync(item.request);
-			}
-			if (pendingCertifications.length > 0) {
-				summaryMessages.push(
-					`${pendingCertifications.length} certification${pendingCertifications.length === 1 ? "" : "s"}`
-				);
-			}
-
-			for (const item of pendingAchievements) {
-				await createAchievementMutation.mutateAsync(item.request);
-			}
-			if (pendingAchievements.length > 0) {
-				summaryMessages.push(
-					`${pendingAchievements.length} achievement${pendingAchievements.length === 1 ? "" : "s"}`
-				);
-			}
-
-			for (const item of pendingReferences) {
-				await createReferenceMutation.mutateAsync(item.request);
-			}
-			if (pendingReferences.length > 0) {
-				summaryMessages.push(
-					`${pendingReferences.length} reference${pendingReferences.length === 1 ? "" : "s"}`
-				);
-			}
+			record(
+				await saveEach(
+					pendingWorkExperiences,
+					createWorkExperienceMutation.mutateAsync,
+					removeWorkExperience,
+				),
+				"work experience",
+			);
+			record(
+				await saveEach(
+					pendingEducation,
+					createEducationMutation.mutateAsync,
+					removeEducation,
+				),
+				"education entry",
+				"education entries",
+			);
+			record(
+				await saveEach(pendingSkills, createSkillMutation.mutateAsync, removeSkill),
+				"skill",
+			);
+			record(
+				await saveEach(
+					pendingProjects,
+					createProjectMutation.mutateAsync,
+					removeProject,
+				),
+				"project",
+			);
+			record(
+				await saveEach(
+					pendingCertifications,
+					createCertificationMutation.mutateAsync,
+					removeCertification,
+				),
+				"certification",
+			);
+			record(
+				await saveEach(
+					pendingAchievements,
+					createAchievementMutation.mutateAsync,
+					removeAchievement,
+				),
+				"achievement",
+			);
+			record(
+				await saveEach(
+					pendingReferences,
+					createReferenceMutation.mutateAsync,
+					removeReference,
+				),
+				"reference",
+			);
 
 			clearImport();
 
-			if (summaryMessages.length > 0) {
-				toast.success(`Saved ${summaryMessages.join(", ")}.`);
+			if (saved.length > 0) {
+				toast.success(`Saved ${saved.join(", ")}.`);
 			}
 			if (warningMessages.length > 0) {
 				const [firstWarning, ...restWarnings] = warningMessages;
 				toast.warning(firstWarning, {
 					description:
 						restWarnings.length > 0
-							? `+${restWarnings.length} additional warning${restWarnings.length === 1 ? "" : "s"}.`
+							? `+${count(restWarnings.length, "additional warning")}.`
 							: undefined,
 				});
 			}
 		} catch (error) {
 			console.error("Failed to save imported resume data:", error);
-			toast.error("Couldn't save everything. Check each section and try again.");
+			toast.error(
+				"Couldn't save everything. The entries still listed were not saved; try again.",
+			);
 		} finally {
 			setIsSaving(false);
 		}
@@ -214,7 +191,7 @@ export function PendingImportBanner() {
 		>
 			<div className="flex flex-col gap-0.5">
 				<p className="text-sm font-semibold">
-					{totalPendingItems} imported item{totalPendingItems !== 1 ? "s" : ""} waiting for review
+					{count(totalPendingItems, "imported item")} waiting for review
 				</p>
 				<p className="text-muted-foreground text-sm">
 					{pendingSummary.join(", ")}

@@ -118,8 +118,7 @@ Focus on technical skills, qualifications, experience requirements, and key resp
 
       return output;
     } catch (error) {
-      console.error("Error analyzing job description:", error);
-      throw new Error("Failed to analyze job description");
+      throw new Error("Failed to analyze job description", { cause: error });
     }
   }
 
@@ -174,27 +173,15 @@ Focus on technical skills, qualifications, experience requirements, and key resp
         validated.selectedSkills.length > 0 ||
         validated.selectedProjects.length > 0;
 
+      // The caller owns the one fallback, so a failed match is never
+      // presented to the user as a real selection.
       if (!hasContent) {
-        console.warn(
-          "[AI Selection] All IDs filtered out — AI likely returned invalid IDs. Using fallback.",
-        );
-        return this.getFallbackSelection(
-          profileData,
-          maxWorkExperiences,
-          maxProjects,
-          maxSkills,
-        );
+        throw new Error("AI selection returned no usable profile IDs");
       }
 
       return validated;
     } catch (error) {
-      console.error("Error selecting optimal content:", error);
-      return this.getFallbackSelection(
-        profileData,
-        maxWorkExperiences,
-        maxProjects,
-        maxSkills,
-      );
+      throw new Error("Failed to select resume content", { cause: error });
     }
   }
 
@@ -376,35 +363,6 @@ Be selective - quality over quantity. Choose items that directly support the app
       relevanceScores: selection.relevanceScores,
       overallStrategy: selection.overallStrategy,
       keyMatchingPoints: selection.keyMatchingPoints,
-    };
-  }
-
-  private getFallbackSelection(
-    profileData: ProfileData,
-    maxWorkExperiences: number,
-    maxProjects: number,
-    maxSkills: number,
-  ): IntelligentContentSelection {
-    return {
-      selectedWorkExperiences: profileData.workExperiences
-        .slice(0, maxWorkExperiences)
-        .map((exp) => exp.id),
-      selectedEducation: profileData.education.map((edu) => edu.id),
-      selectedSkills: profileData.skills
-        .slice(0, maxSkills)
-        .map((skill) => skill.id),
-      selectedProjects: profileData.projects
-        .slice(0, maxProjects)
-        .map((project) => project.id),
-      selectedCertifications: profileData.certifications.map((cert) => cert.id),
-      selectedAchievements: profileData.achievements.map((ach) => ach.id),
-      relevanceScores: [],
-      overallStrategy: "Fallback selection - most recent content",
-      keyMatchingPoints: [
-        "Recent work experience",
-        "All educational background",
-        "Core skills",
-      ],
     };
   }
 }

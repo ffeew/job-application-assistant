@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateSkillSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -28,11 +29,7 @@ export async function GET(
 
     return NextResponse.json(skill);
   } catch (error) {
-    console.error("Error fetching skill:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch skill" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch skill");
   }
 }
 
@@ -67,11 +64,7 @@ export async function PUT(
 
     return NextResponse.json(skill);
   } catch (error) {
-    console.error("Error updating skill:", error);
-    return NextResponse.json(
-      { error: "Failed to update skill" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update skill");
   }
 }
 
@@ -98,10 +91,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting skill:", error);
-    return NextResponse.json(
-      { error: "Failed to delete skill" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete skill");
   }
 }

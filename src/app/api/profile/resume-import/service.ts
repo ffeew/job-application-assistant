@@ -6,6 +6,7 @@ import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { normalizeMonth } from "@/lib/month";
 import { recognizeScannedPdf } from "@/lib/ocr-service";
 import { extractResumeText, type ScannedPdfReader } from "./document-text";
 import {
@@ -229,7 +230,7 @@ export class ResumeImportService {
     const prompt = `You are assisting with resume onboarding for a job-application tool.
 The resume content was extracted as plain text, so the layout may be imperfect. A trailing "Links:" list holds link targets that were not visible in the text.
 
-Populate the provided schema using only facts that appear in the resume. Use null for fields that are missing, keep URLs complete, and limit the professional summary to 600 characters or fewer. Do not invent information.`;
+Populate the provided schema using only facts that appear in the resume. Use null for fields that are missing, keep URLs complete with their https:// scheme, and limit the professional summary to 600 characters or fewer. Write every date as YYYY-MM, using 01 for the month when only the year is given, and use null with isCurrent or isOngoing set to true for a role or project that has not ended. Do not invent information.`;
 
     const result = await generateText({
       model: groq(env.GROQ_MODEL),
@@ -304,26 +305,26 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       }
     }
 
-    const email = this.stringOrNull(this.matchPattern(text, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i));
+    const email = this.normalizeEmail(this.matchPattern(text, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i));
     const phone = this.stringOrNull(
       this.matchPattern(
         text,
         /(\+?\d[\d\s().-]{7,}\d)/,
       ),
     );
-    const linkedinUrl = this.stringOrNull(
+    const linkedinUrl = this.normalizeUrl(
       this.matchPattern(
         text,
         /https?:\/\/(?:www\.)?linkedin\.com\/[^\s)]+/i,
       ),
     );
-    const githubUrl = this.stringOrNull(
+    const githubUrl = this.normalizeUrl(
       this.matchPattern(
         text,
         /https?:\/\/(?:www\.)?github\.com\/[^\s)]+/i,
       ),
     );
-    const websiteUrl = this.stringOrNull(
+    const websiteUrl = this.normalizeUrl(
       this.matchPattern(
         text,
         /https?:\/\/(?!.*(?:linkedin|github)\.com)[^\s)]+/i,
@@ -389,18 +390,16 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return {
       firstName,
       lastName,
-      email: this.stringOrNull(data.email),
+      email: this.normalizeEmail(data.email),
       phone: this.sanitizePhone(this.stringOrNull(data.phone)),
       address: this.stringOrNull(data.address),
       city: this.stringOrNull(data.city),
       state: this.stringOrNull(data.state),
       zipCode: this.stringOrNull(data.zipCode),
       country: this.stringOrNull(data.country),
-      linkedinUrl: this.stringOrNull(data.linkedinUrl),
-      githubUrl: this.stringOrNull(data.githubUrl),
-      portfolioUrl: this.stringOrNull(
-        data.portfolioUrl,
-      ),
+      linkedinUrl: this.normalizeUrl(data.linkedinUrl),
+      githubUrl: this.normalizeUrl(data.githubUrl),
+      portfolioUrl: this.normalizeUrl(data.portfolioUrl),
       professionalSummary: this.truncateSummary(
         this.stringOrNull(
           data.professionalSummary,
@@ -418,8 +417,8 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       const company = this.stringOrNull(experience.company);
       const location = this.stringOrNull(experience.location);
       const description = this.stringOrNull(experience.description);
-      const startDate = this.normalizeResumeDate(this.stringOrNull(experience.startDate));
-      let endDate = this.normalizeResumeDate(this.stringOrNull(experience.endDate));
+      const startDate = normalizeMonth(this.stringOrNull(experience.startDate));
+      let endDate = normalizeMonth(this.stringOrNull(experience.endDate));
       let isCurrent: boolean | null =
         typeof experience.isCurrent === "boolean" ? experience.isCurrent : null;
 
@@ -463,8 +462,8 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       const location = this.stringOrNull(education.location);
       const gpa = this.stringOrNull(education.gpa);
       const honors = this.stringOrNull(education.honors);
-      const startDate = this.normalizeResumeDate(this.stringOrNull(education.startDate));
-      const endDate = this.normalizeResumeDate(this.stringOrNull(education.endDate));
+      const startDate = normalizeMonth(this.stringOrNull(education.startDate));
+      const endDate = normalizeMonth(this.stringOrNull(education.endDate));
       const relevantCoursework = this.normalizeStringArray(education.relevantCoursework);
 
       if (!degree || !institution) {
@@ -532,9 +531,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
         return;
       }
 
-      const startDate = this.normalizeResumeDate(this.stringOrNull(project.startDate));
+      const startDate = normalizeMonth(this.stringOrNull(project.startDate));
       const endDateRaw = this.stringOrNull(project.endDate);
-      const endDate = this.normalizeResumeDate(endDateRaw);
+      const endDate = normalizeMonth(endDateRaw);
       const derivedOngoing =
         endDate === null && typeof endDateRaw === "string" && /present|current/i.test(endDateRaw)
           ? true
@@ -574,8 +573,8 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       items.push({
         name,
         issuingOrganization,
-        issueDate: this.normalizeResumeDate(this.stringOrNull(certification.issueDate)),
-        expirationDate: this.normalizeResumeDate(this.stringOrNull(certification.expirationDate)),
+        issueDate: normalizeMonth(this.stringOrNull(certification.issueDate)),
+        expirationDate: normalizeMonth(this.stringOrNull(certification.expirationDate)),
         credentialId: this.stringOrNull(certification.credentialId),
         credentialUrl: this.normalizeUrl(certification.credentialUrl),
       });
@@ -599,7 +598,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
         title,
         description: this.stringOrNull(achievement.description),
         organization: this.stringOrNull(achievement.organization),
-        date: this.normalizeResumeDate(this.stringOrNull(achievement.date)),
+        date: normalizeMonth(this.stringOrNull(achievement.date)),
         url: this.normalizeUrl(achievement.url),
       });
     });
@@ -674,36 +673,11 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return [];
   }
 
-  private normalizeResumeDate(value: string | null): string | null {
-    if (!value) {
-      return null;
-    }
-
-    const trimmed = value.trim();
-    if (trimmed.length === 0) {
-      return null;
-    }
-
-    if (/^\d{4}-(0[1-9]|1[0-2])$/.test(trimmed)) {
-      return trimmed;
-    }
-
-    if (/^\d{4}$/.test(trimmed)) {
-      return `${trimmed}-01`;
-    }
-
-    if (/present|current/i.test(trimmed)) {
-      return null;
-    }
-
-    const parsed = new Date(trimmed);
-    if (Number.isNaN(parsed.getTime())) {
-      return null;
-    }
-
-    const year = parsed.getUTCFullYear();
-    const month = (parsed.getUTCMonth() + 1).toString().padStart(2, "0");
-    return `${year}-${month}`;
+  // The profile schema rejects a malformed address, which would fail the whole
+  // import. An unreadable address is dropped and reported as not detected.
+  private normalizeEmail(value: string | null): string | null {
+    const email = this.stringOrNull(value)?.replace(/^mailto:/i, "") ?? null;
+    return z.email().safeParse(email).success ? email : null;
   }
 
   private normalizeUrl(value: string | null): string | null {

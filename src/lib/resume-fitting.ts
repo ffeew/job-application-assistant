@@ -129,7 +129,6 @@ export async function fitResume(
     attempt < 3 && !fits(best) && !signal.aborted;
     attempt++
   ) {
-    revisions++;
     try {
       const revision = await dependencies.revise(
         original,
@@ -140,6 +139,8 @@ export async function fitResume(
       const document = applyResumeRevision(original, revision);
       const compilation = await dependencies.compile(document, signal);
       current = { document, compilation, changes: revision.changes };
+      // Counted once the draft compiles, so a rejected revision is not reported.
+      revisions++;
       if (
         (fits(current) && !fits(best)) ||
         (fits(current) === fits(best) &&

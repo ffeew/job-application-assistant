@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateReferenceSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -31,11 +32,7 @@ export async function GET(
 
     return NextResponse.json(reference);
   } catch (error) {
-    console.error("Error fetching reference:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch reference" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch reference");
   }
 }
 
@@ -73,11 +70,7 @@ export async function PUT(
 
     return NextResponse.json(reference);
   } catch (error) {
-    console.error("Error updating reference:", error);
-    return NextResponse.json(
-      { error: "Failed to update reference" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update reference");
   }
 }
 
@@ -107,10 +100,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting reference:", error);
-    return NextResponse.json(
-      { error: "Failed to delete reference" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete reference");
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { auth } from "@/lib/auth";
 import { ResumeGenerationService } from "./service";
 import { generateResumeSchema } from "../profile/validators";
@@ -18,11 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(resumeData);
   } catch (error) {
-    console.error("Error fetching resume data:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch resume data" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch resume data");
   }
 }
 
@@ -43,10 +40,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(validation);
   } catch (error) {
-    console.error("Error validating resume generation:", error);
-    return NextResponse.json(
-      { error: "Failed to validate resume generation" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to validate resume generation");
   }
 }

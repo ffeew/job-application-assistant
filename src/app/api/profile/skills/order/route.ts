@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { bulkUpdateOrderSchema } from "../../validators";
 import { getUserId } from "../../utils";
@@ -18,10 +19,6 @@ export async function PUT(request: NextRequest) {
     await profileService.bulkUpdateSkillsOrder(userId, validatedData);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating skills order:", error);
-    return NextResponse.json(
-      { error: "Failed to update skills order" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update skills order");
   }
 }

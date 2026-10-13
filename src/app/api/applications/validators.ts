@@ -9,7 +9,12 @@ export const applicationSchema = z.object({
   jobUrl: z.url("Invalid job URL").optional().or(z.literal("")),
   salaryRange: z.string().optional(),
   status: z.enum(["applied", "interviewing", "offer", "rejected", "withdrawn"]).default("applied"),
-  appliedAt: z.string().optional(),
+  // A date input submits YYYY-MM-DD, or "" once it has been cleared.
+  appliedAt: z
+    .union([z.literal(""), z.iso.date(), z.iso.datetime()], {
+      error: "Enter a valid date",
+    })
+    .optional(),
   notes: z.string().optional(),
   contactEmail: z.email("Invalid email").optional().or(z.literal("")),
   contactName: z.string().optional(),
@@ -60,8 +65,8 @@ export type ApplicationJsonResponse = z.infer<typeof applicationJsonResponseSche
 export const applicationsQuerySchema = z.object({
   status: z.enum(["applied", "interviewing", "offer", "rejected", "withdrawn"]).optional(),
   company: z.string().optional(),
-  limit: z.string().transform(Number).pipe(z.number().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().nonnegative()).optional(),
+  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
+  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
 });
 
 export type ApplicationsQuery = z.infer<typeof applicationsQuerySchema>;

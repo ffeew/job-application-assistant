@@ -112,16 +112,21 @@ export default function JobApplicationResumePage({
     runAsyncAction(resolveParams());
   }, [params]);
 
+  // The suggested title is offered once. Refilling it whenever the field is
+  // empty would stop anyone from clearing it to type their own.
+  const titleSuggested = useRef(false);
   useEffect(() => {
-    if (applicationInfo && !applicationInfo.hasJobDescription)
-      setValue("useAISelection", false);
-    if (applicationInfo && !watchedValues.title) {
+    if (!applicationInfo) return;
+    if (!applicationInfo.hasJobDescription) setValue("useAISelection", false);
+    if (titleSuggested.current) return;
+    titleSuggested.current = true;
+    if (!form.getValues("title")) {
       setValue(
         "title",
         `${applicationInfo.position} Resume - ${applicationInfo.company}`,
       );
     }
-  }, [applicationInfo, setValue, watchedValues.title]);
+  }, [applicationInfo, setValue, form]);
 
   const onSubmit = async (data: unknown) => {
     if (!resolvedParams?.id) return;

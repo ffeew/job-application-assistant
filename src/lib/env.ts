@@ -51,11 +51,7 @@ function validateEnv(): Env {
 
       error.issues.forEach((err) => {
         const path = err.path.join(".");
-        if (
-          err.code === "invalid_type" &&
-          "received" in err &&
-          err.received === "undefined"
-        ) {
+        if (err.code === "invalid_type" && process.env[path] === undefined) {
           missingVars.push(path);
         } else {
           invalidVars.push(`${path}: ${err.message}`);

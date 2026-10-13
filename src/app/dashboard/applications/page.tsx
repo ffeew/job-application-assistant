@@ -14,7 +14,7 @@ import { useDeleteApplication } from "@/app/dashboard/applications/mutations/use
 import type { ApplicationJsonResponse } from "@/app/api/applications/validators";
 import { EmptyState } from "@/app/dashboard/components/empty-state";
 import { PageHeader } from "@/app/dashboard/components/page-header";
-import { formatShortDate } from "@/lib/format-date";
+import { formatCalendarDay, formatShortDate } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { ApplicationsListSkeleton } from "./components/applications-list-skeleton";
 import {
@@ -179,9 +179,9 @@ export default function ApplicationsPage() {
 											<StatusMark status={application.status} />
 											<p className="text-muted-foreground text-sm tabular-nums">
 												<span className="@4xl:sr-only">Applied </span>
-												{formatShortDate(
-													application.appliedAt ?? application.createdAt,
-												)}
+												{application.appliedAt
+													? formatCalendarDay(application.appliedAt)
+													: formatShortDate(application.createdAt)}
 											</p>
 										</div>
 										<div className="flex flex-wrap items-center gap-1">

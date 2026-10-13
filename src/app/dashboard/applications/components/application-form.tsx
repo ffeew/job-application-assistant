@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { withAsyncHandler } from "@/lib/async-action";
+import { localDateInputValue } from "@/lib/format-date";
 import { createApplicationSchema } from "@/app/api/applications/validators";
 import type {
   ApplicationJsonResponse,
@@ -34,8 +35,9 @@ interface ApplicationFormProps {
   onSubmit: (data: CreateApplicationRequest) => void;
 }
 
-const toDateInputValue = (value: string | Date) =>
-  new Date(value).toISOString().split("T")[0] ?? "";
+// The applied date is a calendar day stored at UTC midnight, so its ISO string
+// already starts with the day to show.
+const savedDateInputValue = (value: string) => value.slice(0, 10);
 
 export function ApplicationForm({
   application,
@@ -59,7 +61,7 @@ export function ApplicationForm({
       jobUrl: "",
       salaryRange: "",
       status: "applied" as const,
-      appliedAt: application ? "" : toDateInputValue(new Date()),
+      appliedAt: application ? "" : localDateInputValue(),
       notes: "",
       contactEmail: "",
       contactName: "",
@@ -80,7 +82,7 @@ export function ApplicationForm({
           salaryRange: application.salaryRange || "",
           status: application.status,
           appliedAt: application.appliedAt
-            ? toDateInputValue(application.appliedAt)
+            ? savedDateInputValue(application.appliedAt)
             : "",
           notes: application.notes || "",
           contactEmail: application.contactEmail || "",

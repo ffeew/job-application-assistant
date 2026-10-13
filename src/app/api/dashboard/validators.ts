@@ -26,8 +26,8 @@ export const dashboardActivitySchema = z.array(activityItemSchema);
 
 export const activityQuerySchema = z.object({
   type: z.enum(["application", "resume", "cover_letter"]).optional(),
-  limit: z.string().optional().default("10").transform(Number).pipe(z.number().positive().max(50)),
-  offset: z.string().transform(Number).pipe(z.number().nonnegative()).optional(),
+  limit: z.string().optional().default("10").transform(Number).pipe(z.number().int().positive().max(50)),
+  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
 });
 
 export type DashboardStats = z.infer<typeof dashboardStatsSchema>;

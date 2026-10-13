@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateCertificationSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -35,11 +36,7 @@ export async function GET(
 
     return NextResponse.json(certification);
   } catch (error) {
-    console.error("Error fetching certification:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch certification" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch certification");
   }
 }
 
@@ -77,11 +74,7 @@ export async function PUT(
 
     return NextResponse.json(certification);
   } catch (error) {
-    console.error("Error updating certification:", error);
-    return NextResponse.json(
-      { error: "Failed to update certification" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update certification");
   }
 }
 
@@ -115,10 +108,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting certification:", error);
-    return NextResponse.json(
-      { error: "Failed to delete certification" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete certification");
   }
 }

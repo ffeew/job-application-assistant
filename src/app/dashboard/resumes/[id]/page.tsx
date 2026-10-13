@@ -8,6 +8,7 @@ import { useResume } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useUpdateResume } from "@/app/dashboard/resumes/mutations/use-update-resume";
 import type { UpdateResumeRequest } from "@/app/api/resumes/validators";
 import { PageHeader } from "@/app/dashboard/components/page-header";
+import { Notice } from "@/components/ui/notice";
 import { toast } from "sonner";
 import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
 import {
@@ -91,12 +92,6 @@ export default function EditResumePage({
     }
   }, [resume, reset]);
 
-  useEffect(() => {
-    if (error) {
-      router.push("/dashboard/resumes");
-    }
-  }, [error, router]);
-
   const onSubmit = (data: ResumeFormData) => {
     if (!data.title.trim()) {
       toast.error("Give the resume a title before saving.");
@@ -137,8 +132,23 @@ export default function EditResumePage({
     );
   };
 
-  if (!resolvedParams || resumeLoading || !resume) {
+  if (!resolvedParams || resumeLoading) {
     return <ResumeDetailSkeleton />;
+  }
+
+  if (error || !resume) {
+    return (
+      <div className="flex max-w-4xl flex-col gap-8">
+        <PageHeader
+          title="Resume"
+          back={{ href: "/dashboard/resumes", label: "Resumes" }}
+        />
+        <Notice tone="error" title="This resume didn't load">
+          It may have been deleted, or the server could not be reached. Go back
+          to your resumes and open it again.
+        </Notice>
+      </div>
+    );
   }
 
   if (

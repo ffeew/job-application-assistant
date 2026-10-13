@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateEducationSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -35,11 +36,7 @@ export async function GET(
 
     return NextResponse.json(education);
   } catch (error) {
-    console.error("Error fetching education:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch education" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch education");
   }
 }
 
@@ -77,11 +74,7 @@ export async function PUT(
 
     return NextResponse.json(education);
   } catch (error) {
-    console.error("Error updating education:", error);
-    return NextResponse.json(
-      { error: "Failed to update education" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update education");
   }
 }
 
@@ -111,10 +104,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting education:", error);
-    return NextResponse.json(
-      { error: "Failed to delete education" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete education");
   }
 }

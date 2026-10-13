@@ -1,7 +1,12 @@
 import { rejects } from "node:assert/strict";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { parseJsonResponse, readApiError } from "./api-response";
+import {
+  ApiError,
+  isRetryableError,
+  parseJsonResponse,
+  readApiError,
+} from "./api-response";
 import {
   applicationJsonResponseSchema,
   applicationResponseSchema,
@@ -127,6 +132,44 @@ describe("JSON response validation", () => {
   test("uses the fallback for non-JSON PDF and text errors", async () => {
     const error = await readApiError(new Response("Bad gateway", { status: 502 }), fallback);
     expect(error.message).toBe(fallback);
+  });
+});
+
+describe("retrying failed requests", () => {
+  test("errors carry the HTTP status of the response", async () => {
+    const missing = await readApiError(
+      Response.json({ error: "Cover letter not found" }, { status: 404 }), fallback,
+    );
+    expect(missing).toBeInstanceOf(ApiError);
+    expect(missing.status).toBe(404);
+    expect(missing.message).toBe("Cover letter not found");
+  });
+
+  test("a request the server rejected is not repeated", async () => {
+    for (const status of [400, 401, 404, 409, 422]) {
+      const error = await readApiError(new Response(null, { status }), fallback);
+      expect(isRetryableError(error)).toBe(false);
+    }
+  });
+
+  // The message must not decide this: "under 4 MB" and "IDs not found: 4" contain a 4.
+  test("an outage is retried whatever its message says", async () => {
+    const outage = await readApiError(
+      Response.json({ error: "Upload a file under 4 MB" }, { status: 503 }), fallback,
+    );
+    expect(isRetryableError(outage)).toBe(true);
+    expect(isRetryableError(new TypeError("fetch failed"))).toBe(true);
+  });
+
+  test("a payload the client cannot read is not fetched again", async () => {
+    let failure: unknown;
+    try {
+      await parseJsonResponse(Response.json({}), z.object({ count: z.number() }), fallback);
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(isRetryableError(failure)).toBe(false);
   });
 });
 

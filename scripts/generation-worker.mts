@@ -38,8 +38,8 @@ try {
       } else {
         await delay(2000);
       }
-    } catch {
-      console.error("Generation worker could not access its queue; retrying.");
+    } catch (error) {
+      console.error("Generation worker iteration failed; retrying:", error);
       await delay(2000);
     }
   }

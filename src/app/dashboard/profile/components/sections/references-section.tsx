@@ -214,7 +214,12 @@ function ReferenceForm({ reference, onSuccess, onCancel }: { reference?: Referen
 				<div className="flex flex-col gap-2"><Label htmlFor="phone">Phone</Label><Input id="phone" {...register("phone")} /></div>
 			</div>
 			<div className="flex flex-col gap-2"><Label htmlFor="relationship">Relationship</Label><Input id="relationship" {...register("relationship")} placeholder="e.g. former manager" /></div>
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

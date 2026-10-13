@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateAchievementSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -31,11 +32,7 @@ export async function GET(
 
     return NextResponse.json(achievement);
   } catch (error) {
-    console.error("Error fetching achievement:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch achievement" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch achievement");
   }
 }
 
@@ -73,11 +70,7 @@ export async function PUT(
 
     return NextResponse.json(achievement);
   } catch (error) {
-    console.error("Error updating achievement:", error);
-    return NextResponse.json(
-      { error: "Failed to update achievement" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update achievement");
   }
 }
 
@@ -107,10 +100,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting achievement:", error);
-    return NextResponse.json(
-      { error: "Failed to delete achievement" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete achievement");
   }
 }

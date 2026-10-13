@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
 import {
   createSkillSchema,
@@ -22,11 +23,7 @@ export async function GET(request: NextRequest) {
     const skills = await profileService.getSkills(userId, query);
     return NextResponse.json(skills);
   } catch (error) {
-    console.error("Error fetching skills:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch skills" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch skills");
   }
 }
 
@@ -43,10 +40,6 @@ export async function POST(request: NextRequest) {
     const skill = await profileService.createSkill(userId, validatedData);
     return NextResponse.json(skill, { status: 201 });
   } catch (error) {
-    console.error("Error creating skill:", error);
-    return NextResponse.json(
-      { error: "Failed to create skill" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create skill");
   }
 }

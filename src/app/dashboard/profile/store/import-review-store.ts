@@ -21,17 +21,6 @@ import {
   type PendingReviewItem,
 } from "@/app/dashboard/profile/utils/import-normalizers";
 
-export type ImportSectionKey =
-  | "workExperiences"
-  | "education"
-  | "skills"
-  | "projects"
-  | "certifications"
-  | "achievements"
-  | "references";
-
-export type ImportContextCounts = Record<ImportSectionKey, number>;
-
 type SectionState<T> = PendingReviewItem<T>[];
 
 type ImportReviewState = {
@@ -48,7 +37,7 @@ type ImportReviewState = {
   references: SectionState<CreateReferenceRequest>;
   warnings: string[];
   lastImportedAt: number | null;
-  initialize: (payload: ResumeImportResponse, context: ImportContextCounts) => void;
+  initialize: (payload: ResumeImportResponse) => void;
   clear: () => void;
   updateProfileDraft: (data: CreateUserProfileRequest, warnings?: string[]) => void;
   updateWorkExperienceDraft: (id: string, request: CreateWorkExperienceRequest) => void;
@@ -103,23 +92,14 @@ const removeDraft = <T,>(items: SectionState<T>, id: string): SectionState<T> =>
 
 export const useImportReviewStore = create<ImportReviewState>((set) => ({
   ...initialState,
-  initialize: (payload, context) => {
-    const workExperiences = buildWorkExperienceItems(
-      payload.workExperiences,
-      context.workExperiences,
-    );
-    const education = buildEducationItems(payload.education, context.education);
-    const skills = buildSkillItems(payload.skills, context.skills);
-    const projects = buildProjectItems(payload.projects, context.projects);
-    const certifications = buildCertificationItems(
-      payload.certifications,
-      context.certifications,
-    );
-    const achievements = buildAchievementItems(
-      payload.achievements,
-      context.achievements,
-    );
-    const references = buildReferenceItems(payload.references, context.references);
+  initialize: (payload) => {
+    const workExperiences = buildWorkExperienceItems(payload.workExperiences);
+    const education = buildEducationItems(payload.education);
+    const skills = buildSkillItems(payload.skills);
+    const projects = buildProjectItems(payload.projects);
+    const certifications = buildCertificationItems(payload.certifications);
+    const achievements = buildAchievementItems(payload.achievements);
+    const references = buildReferenceItems(payload.references);
 
     const aggregatedWarnings = [
       ...payload.warnings,

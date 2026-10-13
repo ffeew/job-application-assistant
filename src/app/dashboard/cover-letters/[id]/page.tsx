@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Notice } from "@/components/ui/notice";
 import { Copy, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { CoverLetterJsonResponse } from "@/app/api/cover-letters/validators";
@@ -138,7 +139,6 @@ export default function ViewCoverLetterPage({
 		null
 	);
 
-	const router = useRouter();
 	const {
 		data: coverLetter,
 		isLoading,
@@ -153,18 +153,23 @@ export default function ViewCoverLetterPage({
 		runAsyncAction(resolveParams());
 	}, [params]);
 
-	useEffect(() => {
-		if (error) {
-			router.push("/dashboard/cover-letters");
-		}
-	}, [error, router]);
-
 	if (!resolvedParams || isLoading) {
 		return <CoverLetterDetailSkeleton />;
 	}
 
-	if (!coverLetter) {
-		return null;
+	if (error || !coverLetter) {
+		return (
+			<div className="flex max-w-3xl flex-col gap-8">
+				<PageHeader
+					title="Cover letter"
+					back={{ href: "/dashboard/cover-letters", label: "Cover letters" }}
+				/>
+				<Notice tone="error" title="This cover letter didn't load">
+					It may have been deleted, or the server could not be reached. Go
+					back to your cover letters and open it again.
+				</Notice>
+			</div>
+		);
 	}
 
 	// Keyed so the draft starts from the saved text of whichever letter is open.

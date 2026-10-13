@@ -164,7 +164,10 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 			<ProfileForm
 				register={register as unknown as UseFormRegister<FieldValues>}
 				errors={errors}
-				isSubmitting={isSubmitting}
+				// The mutation outlives handleSubmit, so both must hold the button.
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
 				handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
 				onSubmit={onSubmit}
 				onCancel={cancelEditing}

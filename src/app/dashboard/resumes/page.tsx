@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { Notice } from "@/components/ui/notice";
 import { FileText, PenLine, Star, Trash2, Wand2 } from "lucide-react";
 import { useResumes } from "@/app/dashboard/resumes/queries/use-resumes";
 import { useDeleteResume } from "@/app/dashboard/resumes/mutations/use-delete-resume";
@@ -19,7 +20,7 @@ import { toast } from "sonner";
 import { ResumesListSkeleton } from "./components/resumes-list-skeleton";
 
 export default function ResumesPage() {
-  const { data: resumes = [], isLoading } = useResumes();
+  const { data: resumes = [], isLoading, error, refetch } = useResumes();
   const deleteResumeMutation = useDeleteResume();
   const updateResumeMutation = useUpdateResume();
   const [pendingDelete, setPendingDelete] = useState<ResumeJsonResponse | null>(
@@ -43,11 +44,7 @@ export default function ResumesPage() {
 
       await updateResumeMutation.mutateAsync({
         id,
-        data: {
-          title: resume.title,
-          content: resume.content,
-          isDefault: !resume.isDefault,
-        }
+        data: { isDefault: !resume.isDefault },
       });
       toast.success(resume.isDefault ? "Default removed" : "Set as default");
     } catch (error) {
@@ -58,6 +55,25 @@ export default function ResumesPage() {
 
   if (isLoading) {
     return <ResumesListSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader title="Resumes" />
+        <Notice tone="error" title="Your resumes didn't load">
+          <p>{error.message}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={withAsyncHandler(() => refetch())}
+          >
+            Try again
+          </Button>
+        </Notice>
+      </div>
+    );
   }
 
   const actions = (

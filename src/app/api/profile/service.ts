@@ -9,7 +9,15 @@ import {
   userProfiles,
   workExperiences,
 } from "@/lib/db/schema";
-import { and, asc, desc, eq } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  sql,
+  type AnyColumn,
+  type SQL,
+} from "drizzle-orm";
 import type {
   AchievementResponse,
   BulkUpdateOrderRequest,
@@ -38,6 +46,11 @@ import type {
   UserProfileResponse,
   WorkExperienceResponse,
 } from "./validators";
+
+// Entries share a display order until one is moved, and PostgreSQL returns
+// ties in storage order, which changes when a row is edited. Ties fall back to
+// newest first and then to insertion order.
+const newestFirst = (value: AnyColumn | SQL) => sql`${value} desc nulls last`;
 
 export class ProfileService {
   async getUserProfile(userId: string): Promise<UserProfileResponse | null> {
@@ -107,7 +120,11 @@ export class ProfileService {
       .select()
       .from(workExperiences)
       .where(eq(workExperiences.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(
+        order(orderBy),
+        newestFirst(workExperiences.startDate),
+        asc(workExperiences.id),
+      )
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
@@ -200,7 +217,11 @@ export class ProfileService {
       .select()
       .from(education)
       .where(eq(education.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(
+        order(orderBy),
+        newestFirst(sql`coalesce(${education.startDate}, ${education.endDate})`),
+        asc(education.id),
+      )
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
@@ -304,7 +325,7 @@ export class ProfileService {
       .select()
       .from(skills)
       .where(and(...whereConditions))
-      .orderBy(order(orderBy))
+      .orderBy(order(orderBy), asc(skills.id))
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
 
@@ -388,7 +409,11 @@ export class ProfileService {
       .select()
       .from(projects)
       .where(eq(projects.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(
+        order(orderBy),
+        newestFirst(projects.startDate),
+        asc(projects.id),
+      )
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
   }
@@ -473,7 +498,11 @@ export class ProfileService {
       .select()
       .from(certifications)
       .where(eq(certifications.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(
+        order(orderBy),
+        newestFirst(certifications.issueDate),
+        asc(certifications.id),
+      )
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
   }
@@ -558,7 +587,11 @@ export class ProfileService {
       .select()
       .from(achievements)
       .where(eq(achievements.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(
+        order(orderBy),
+        newestFirst(achievements.date),
+        asc(achievements.id),
+      )
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
   }
@@ -643,7 +676,7 @@ export class ProfileService {
       .select()
       .from(references)
       .where(eq(references.userId, userId))
-      .orderBy(order(orderBy))
+      .orderBy(order(orderBy), asc(references.id))
       .limit(query?.limit || 100)
       .offset(query?.offset || 0);
   }

@@ -1,28 +1,25 @@
 import { z } from "zod";
 import { profileRecordFields } from "@/lib/validators/transport";
+import {
+  monthSchema,
+  optionalEmail,
+  optionalMonth,
+  optionalUrl,
+} from "@/lib/validators/fields";
 
 export const userProfileSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  email: z.email({ message: "Invalid email format" }).nullable(),
+  email: optionalEmail,
   phone: z.string().nullable(),
   address: z.string().nullable(),
   city: z.string().nullable(),
   state: z.string().nullable(),
   zipCode: z.string().nullable(),
   country: z.string().nullable(),
-  linkedinUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
-  githubUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
-  portfolioUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
+  linkedinUrl: optionalUrl,
+  githubUrl: optionalUrl,
+  portfolioUrl: optionalUrl,
   professionalSummary: z.string().nullable(),
 });
 
@@ -40,13 +37,8 @@ export const workExperienceSchema = z.object({
   jobTitle: z.string().min(1, "Job title is required"),
   company: z.string().min(1, "Company is required"),
   location: z.string().nullable(),
-  startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format"),
-  endDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
+  startDate: monthSchema,
+  endDate: optionalMonth,
   isCurrent: z.boolean().default(false),
   description: z.string().nullable(),
   technologies: z.string().nullable(),
@@ -73,14 +65,8 @@ export const educationSchema = z.object({
   fieldOfStudy: z.string().nullable(),
   institution: z.string().min(1, "Institution is required"),
   location: z.string().nullable(),
-  startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
-  endDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
+  startDate: optionalMonth,
+  endDate: optionalMonth,
   gpa: z.string().nullable(),
   honors: z.string().nullable(),
   relevantCoursework: z.string().nullable(),
@@ -132,22 +118,10 @@ export const projectSchema = z.object({
   title: z.string().min(1, "Project title is required"),
   description: z.string().nullable(),
   technologies: z.string().nullable(),
-  projectUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
-  githubUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
-  startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
-  endDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
+  projectUrl: optionalUrl,
+  githubUrl: optionalUrl,
+  startDate: optionalMonth,
+  endDate: optionalMonth,
   isOngoing: z.boolean().default(false),
   displayOrder: z.number().int().min(0).default(0),
 });
@@ -168,19 +142,10 @@ export const projectResponseSchema = projectSchema.extend({
 export const certificationSchema = z.object({
   name: z.string().min(1, "Certification name is required"),
   issuingOrganization: z.string().min(1, "Issuing organization is required"),
-  issueDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
-  expirationDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
+  issueDate: optionalMonth,
+  expirationDate: optionalMonth,
   credentialId: z.string().nullable(),
-  credentialUrl: z
-    .url({ message: "Invalid URL format" })
-    .nullable()
-    .or(z.literal("")),
+  credentialUrl: optionalUrl,
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -200,11 +165,8 @@ export const achievementSchema = z.object({
   title: z.string().min(1, "Achievement title is required"),
   description: z.string().nullable(),
   organization: z.string().nullable(),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, "Date must be in YYYY-MM format")
-    .nullable(),
-  url: z.url({ message: "Invalid URL format" }).nullable().or(z.literal("")),
+  date: optionalMonth,
+  url: optionalUrl,
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -224,7 +186,7 @@ export const referenceSchema = z.object({
   name: z.string().min(1, "Reference name is required"),
   title: z.string().nullable(),
   company: z.string().nullable(),
-  email: z.email({ message: "Invalid email format" }).nullable(),
+  email: optionalEmail,
   phone: z.string().nullable(),
   relationship: z
     .enum(["manager", "colleague", "client", "professor", "mentor", "other"])
@@ -364,12 +326,12 @@ export const profileQuerySchema = z.object({
   limit: z
     .string()
     .transform(Number)
-    .pipe(z.number().positive().max(100))
+    .pipe(z.number().int().positive().max(100))
     .optional(),
   offset: z
     .string()
     .transform(Number)
-    .pipe(z.number().nonnegative())
+    .pipe(z.number().int().nonnegative())
     .optional(),
   category: z.string().optional(),
   orderBy: z.enum(["displayOrder", "createdAt", "updatedAt"]).optional(),

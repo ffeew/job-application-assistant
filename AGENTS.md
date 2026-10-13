@@ -42,7 +42,7 @@ For schema changes, generate and commit SQL with `pnpm run db:generate`, then ap
 5. When touching AI features, ensure clear fallbacks if model calls fail.
 6. Lint uses TypeScript ESLint's strict type-aware preset, Next.js/React Compiler checks, TanStack Query, and JSX accessibility rules. Warnings fail the gate. TypeScript enables `noUncheckedIndexedAccess`; preserve defensive checks for missing array/dictionary entries.
 7. Use `withAsyncHandler` for promise-returning React events and `runAsyncAction` for rejectable background work. Explicit `void` is appropriate for default TanStack Query invalidations/refetches, whose errors are handled by the library. Do not ignore promises that can reject without an error handler.
-8. Treat JSON as `unknown` until Zod validation. Client hooks use `parseJsonResponse` and feature transport schemas with string timestamps; server/domain schemas keep `Date`. Use `readApiError` for text/PDF error responses.
+8. Treat JSON as `unknown` until Zod validation. Client hooks use `parseJsonResponse` and feature transport schemas with string timestamps; server/domain schemas keep `Date`. Use `readApiError` for text/PDF error responses. Both throw `ApiError`, whose `status` decides whether a query is retried; mutations are never retried automatically. Route handlers return failures through `routeErrorResponse`, which answers 400 for invalid input and logs everything else as a 500.
 
 ## TypeScript & Coding Standards
 

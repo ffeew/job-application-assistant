@@ -323,11 +323,23 @@ function SkillForm({ skill, onSuccess, onCancel }: { skill?: SkillJsonResponse |
 					id="yearsOfExperience"
 					type="number"
 					min="0"
-					{...register("yearsOfExperience", { valueAsNumber: true })}
+					{...register("yearsOfExperience", {
+						// valueAsNumber turns a cleared field into NaN, which fails validation.
+						setValueAs: (value: unknown) =>
+							value === "" || value === null || value === undefined
+								? null
+								: Number(value),
+					})}
 				/>
+				<FormFieldError message={errors.yearsOfExperience?.message} />
 			</div>
 
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

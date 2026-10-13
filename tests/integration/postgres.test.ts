@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { createHmac } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -20,6 +20,7 @@ import { syntheticResume } from "../../src/lib/resume-fixture.test-helper";
 import {
   generateResumeSchema,
   jobApplicationResumeRequestSchema,
+  workExperienceJsonResponseSchema,
 } from "../../src/app/api/profile/validators";
 import { acceptedGenerationJobSchema } from "../../src/app/api/resume-generation/jobs/validators";
 
@@ -438,6 +439,185 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     ).toBeNull();
     await enqueue();
     expect(await jobs.claimGenerationJob()).not.toBeNull();
+  });
+
+  test("profile requests the client got wrong return 400 and entries list newest first", async () => {
+    const collection = await import(
+      "../../src/app/api/profile/work-experiences/route"
+    );
+    const item = await import(
+      "../../src/app/api/profile/work-experiences/[id]/route"
+    );
+    const url = "http://localhost:3000/api/profile/work-experiences";
+    const post = (body: string) =>
+      collection.POST(
+        new NextRequest(url, {
+          method: "POST",
+          headers: { cookie, "Content-Type": "application/json" },
+          body,
+        }),
+      );
+    const experience = (company: string, startDate: string) =>
+      JSON.stringify({
+        jobTitle: "Engineer",
+        company,
+        location: null,
+        startDate,
+        endDate: "2024-01",
+        description: null,
+        technologies: null,
+      });
+
+    expect((await post(JSON.stringify({ jobTitle: "Engineer" }))).status).toBe(
+      400,
+    );
+    expect((await post("{not json")).status).toBe(400);
+    expect((await post(experience("Example", "2024-13"))).status).toBe(400);
+    expect(
+      (
+        await collection.GET(
+          new NextRequest(`${url}?limit=abc`, { headers: { cookie } }),
+        )
+      ).status,
+    ).toBe(400);
+
+    try {
+      // Created oldest, newest, middle; every entry has the default display order.
+      for (const [company, start] of [
+        ["Oldest", "2019-01"],
+        ["Newest", "2023-06"],
+        ["Middle", "2021-03"],
+      ] as const) {
+        expect((await post(experience(company, start))).status).toBe(201);
+      }
+      const list = async () => {
+        const response = await collection.GET(
+          new NextRequest(url, { headers: { cookie } }),
+        );
+        const raw: unknown = await response.json();
+        return workExperienceJsonResponseSchema.array().parse(raw);
+      };
+      expect((await list()).map((row) => row.company)).toEqual([
+        "Newest",
+        "Middle",
+        "Oldest",
+      ]);
+
+      // An edit rewrites the row; the order must not follow storage order.
+      const oldest = (await list()).find((row) => row.company === "Oldest");
+      if (!oldest) throw new Error("Missing fixture experience");
+      const cleared = await item.PUT(
+        new NextRequest(`${url}/${oldest.id}`, {
+          method: "PUT",
+          headers: { cookie, "Content-Type": "application/json" },
+          // A cleared date input submits an empty string.
+          body: JSON.stringify({ endDate: "", isCurrent: true }),
+        }),
+        { params: Promise.resolve({ id: String(oldest.id) }) },
+      );
+      expect(cleared.status).toBe(200);
+      const rows = await list();
+      expect(rows.map((row) => row.company)).toEqual([
+        "Newest",
+        "Middle",
+        "Oldest",
+      ]);
+      expect(rows[2]?.endDate).toBeNull();
+
+      const malformedId = await item.GET(
+        new NextRequest(`${url}/12abc`, { headers: { cookie } }),
+        { params: Promise.resolve({ id: "12abc" }) },
+      );
+      expect(malformedId.status).toBe(400);
+    } finally {
+      await database.db
+        .delete(workExperiences)
+        .where(eq(workExperiences.userId, userId));
+    }
+  });
+
+  test("the default resume changes atomically and an unknown ID leaves it alone", async () => {
+    const { ResumesService } = await import(
+      "../../src/app/api/resumes/service"
+    );
+    const service = new ResumesService();
+    const draft = { content: "{}", isTailored: false };
+    const first = await service.createResume(userId, {
+      ...draft,
+      title: "First",
+      isDefault: true,
+    });
+    const second = await service.createResume(userId, {
+      ...draft,
+      title: "Second",
+      isDefault: false,
+    });
+    const defaults = async () =>
+      (
+        await database.db
+          .select({ id: resumes.id })
+          .from(resumes)
+          .where(and(eq(resumes.userId, userId), eq(resumes.isDefault, true)))
+      ).map((row) => row.id);
+
+    try {
+      expect(
+        await service.updateResume(userId, crypto.randomUUID(), {
+          isDefault: true,
+        }),
+      ).toBeNull();
+      expect(
+        await service.updateResume(otherUserId, second.id, { isDefault: true }),
+      ).toBeNull();
+      expect(await defaults()).toEqual([first.id]);
+
+      await service.updateResume(userId, second.id, { isDefault: true });
+      expect(await defaults()).toEqual([second.id]);
+
+      await Promise.all([
+        service.updateResume(userId, first.id, { isDefault: true }),
+        service.updateResume(userId, second.id, { isDefault: true }),
+      ]);
+      expect(await defaults()).toHaveLength(1);
+
+      const third = await service.createResume(userId, {
+        ...draft,
+        title: "Third",
+        isDefault: true,
+      });
+      expect(await defaults()).toEqual([third.id]);
+      await service.deleteResume(userId, third.id);
+    } finally {
+      await service.deleteResume(userId, first.id);
+      await service.deleteResume(userId, second.id);
+    }
+  });
+
+  test("a stored job that no longer matches the schema reads as absent", async () => {
+    await clearJobs();
+    const [legacy] = await database.db
+      .insert(resumeGenerationJobs)
+      .values({ userId, payload: { kind: "retired-kind" }, status: "completed" })
+      .returning();
+    if (!legacy) throw new Error("Missing legacy job fixture");
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      expect(await jobs.getGenerationJob(userId, legacy.id)).toBeNull();
+      expect(await jobs.getLatestGenerationJob(userId, null)).toBeNull();
+      const response = await detailRoute.GET(
+        new NextRequest(
+          "http://localhost:3000/api/resume-generation/jobs/test",
+          { headers: { cookie } },
+        ),
+        { params: Promise.resolve({ id: legacy.id }) },
+      );
+      // Previously a 400 that blamed the request for the server's old data.
+      expect(response.status).toBe(404);
+      expect(log).toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+      await clearJobs();
+    }
   });
 
   test("retention removes old finished jobs and keeps active jobs and saved resumes", async () => {

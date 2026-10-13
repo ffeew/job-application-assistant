@@ -45,8 +45,9 @@ Keep all other entry fields and selected entries unchanged. Explain edits briefl
       const validated = resumeRevisionSchema.parse(output);
       applyResumeRevision(original, validated);
       return validated;
-    } catch {
+    } catch (error) {
       // A failed model must not prevent trying the fallback or alter the current draft.
+      console.warn(`AI fitting with ${model} failed:`, error);
     }
   }
   throw new Error(

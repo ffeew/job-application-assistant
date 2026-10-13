@@ -399,7 +399,12 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 				</div>
 			</div>
 
-			<FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+			<FormActions
+				onCancel={onCancel}
+				isSubmitting={
+					isSubmitting || createMutation.isPending || updateMutation.isPending
+				}
+			/>
 		</form>
 	);
 }

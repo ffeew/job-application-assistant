@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../../service";
 import { updateWorkExperienceSchema } from "../../validators";
 import { getUserId, parseNumericId } from "../../utils";
@@ -35,11 +36,7 @@ export async function GET(
 
     return NextResponse.json(experience);
   } catch (error) {
-    console.error("Error fetching work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch work experience" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch work experience");
   }
 }
 
@@ -77,11 +74,7 @@ export async function PUT(
 
     return NextResponse.json(experience);
   } catch (error) {
-    console.error("Error updating work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to update work experience" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to update work experience");
   }
 }
 
@@ -115,10 +108,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to delete work experience" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to delete work experience");
   }
 }

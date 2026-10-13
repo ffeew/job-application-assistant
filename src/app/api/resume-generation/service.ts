@@ -1,6 +1,7 @@
 import { ProfileService } from "../profile/service";
 import { AIContentSelectionService } from "./ai-content-selection.service";
 import { reviseResumeWithAI } from "./ai-resume-fitting.service";
+import { chooseApplicationContent } from "./application-selection";
 import { buildResumeDocument, type ResumeData } from "@/lib/resume-data";
 import { fitResume } from "@/lib/resume-fitting";
 import { compileResumeLatex } from "@/lib/latex-compiler";
@@ -146,37 +147,22 @@ export class ResumeGenerationService {
           request.maxSkills,
           signal,
         );
-      } catch {
+      } catch (error) {
+        // A lost claim must stop the job instead of compiling an unowned draft.
+        signal.throwIfAborted();
         // Original profile content remains usable when selection fails.
+        console.warn("AI content selection failed:", error);
       }
     }
-    const manual = request.manualOverrides;
-    const workIds =
-      manual?.workExperienceIds ??
-      aiSelection?.selectedWorkExperiences ??
-      data.workExperiences
-        .slice(0, request.maxWorkExperiences)
-        .map((item) => item.id);
-    const educationIds =
-      manual?.educationIds ??
-      aiSelection?.selectedEducation ??
-      data.education.map((item) => item.id);
-    const skillIds =
-      manual?.skillIds ??
-      aiSelection?.selectedSkills ??
-      data.skills.slice(0, request.maxSkills).map((item) => item.id);
-    const projectIds =
-      manual?.projectIds ??
-      aiSelection?.selectedProjects ??
-      data.projects.slice(0, request.maxProjects).map((item) => item.id);
-    const certificationIds =
-      manual?.certificationIds ??
-      aiSelection?.selectedCertifications ??
-      data.certifications.map((item) => item.id);
-    const achievementIds =
-      manual?.achievementIds ??
-      aiSelection?.selectedAchievements ??
-      data.achievements.map((item) => item.id);
+    // A manual choice in one section must not discard AI choices in other sections.
+    const {
+      workIds,
+      educationIds,
+      skillIds,
+      projectIds,
+      certificationIds,
+      achievementIds,
+    } = chooseApplicationContent(data, request, aiSelection);
     if (aiSelection) {
       aiSelection = {
         ...aiSelection,
@@ -188,7 +174,6 @@ export class ResumeGenerationService {
         selectedAchievements: achievementIds,
       };
     }
-    // A manual choice in one section must not discard AI choices in other sections.
     const filtered = {
       ...data,
       skills: data.skills.filter((item) => skillIds.includes(item.id)),

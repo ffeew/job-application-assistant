@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
 import {
   createReferenceSchema,
@@ -22,11 +23,7 @@ export async function GET(request: NextRequest) {
     const references = await profileService.getReferences(userId, query);
     return NextResponse.json(references);
   } catch (error) {
-    console.error("Error fetching references:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch references" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch references");
   }
 }
 
@@ -43,10 +40,6 @@ export async function POST(request: NextRequest) {
     const reference = await profileService.createReference(userId, validatedData);
     return NextResponse.json(reference, { status: 201 });
   } catch (error) {
-    console.error("Error creating reference:", error);
-    return NextResponse.json(
-      { error: "Failed to create reference" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to create reference");
   }
 }

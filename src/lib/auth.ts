@@ -26,15 +26,22 @@ Content: ${text}
   const resend = new Resend(env.RESEND_API_KEY);
   const fromEmail = env.RESEND_FROM_EMAIL || "noreply@example.com";
 
+  // The SDK reports a rejected request in its result instead of throwing, so
+  // both outcomes are checked; otherwise a failed send looks like a sent email.
+  let failure: unknown;
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: `Job Application Assistant <${fromEmail}>`,
       to,
       subject,
       text,
     });
+    failure = result.error;
   } catch (error) {
-    console.error("Failed to send email via Resend:", error);
+    failure = error;
+  }
+  if (failure) {
+    console.error("Failed to send email via Resend:", failure);
     throw new Error("Failed to send email. Please try again later.");
   }
 }

@@ -150,7 +150,13 @@ export class ApplicationsService {
       .update(jobApplications)
       .set({
         ...data,
-        appliedAt: data.appliedAt ? new Date(data.appliedAt) : undefined,
+        // Omitted leaves the stored date alone; a cleared field removes it.
+        appliedAt:
+          data.appliedAt === undefined
+            ? undefined
+            : data.appliedAt
+              ? new Date(data.appliedAt)
+              : null,
         updatedAt: now,
       })
       .where(
