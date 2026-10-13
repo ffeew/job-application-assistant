@@ -11,6 +11,7 @@ For host development, follow [local setup](../README.md#local-setup). Configurat
 3. Run `docker compose config --quiet`, then `docker compose up -d --build --wait`.
 4. Point your existing host-installed Cloudflare tunnel's published hostname to **`http://127.0.0.1:3000`** (or the configured `APP_PORT`). Retain the public Host header and forwarded HTTPS information. Use the public HTTPS hostname for sign-up and sign-in.
 5. Check `docker compose ps`, `docker compose logs migrate`, and `curl --fail http://127.0.0.1:3000/api/health`.
+6. Create your account, then set `DISABLE_SIGNUP=true` in `.env` and run `docker compose up -d`. Until then anyone who reaches the hostname can register and use the server's Groq key.
 
 Only the app publishes a loopback port. PostgreSQL and the compiler stay on the Compose network. The [OCR service](../services/ocr/README.md) sits on its own internal network, reachable only from the app and without internet access. Keep Cloudflare caching rules from caching authenticated dashboard/API responses; the app's job responses use `Cache-Control: no-store`.
 
@@ -63,6 +64,8 @@ The worker runs one job at a time. HTTP generation requests enqueue work and ret
 `POST /api/resume-generation/jobs` accepts `{ kind: "profile" | "application", intent, request }`, with the generation request schema for that kind. Profile intents are `preview` and `download`; application jobs also allow `save-and-download`. Application requests include `applicationId`. `POST /api/resume-generation/preview`, `POST /api/resume-generation/pdf`, and `POST /api/applications/{id}/resume` also enqueue jobs and return 202. The application endpoint's GET reads application and saved-resume information; its PUT explicitly saves or updates a tailored resume.
 
 `GET /api/resume-generation/jobs` restores the owner's latest profile job; provide `?applicationId=...` for an application's latest job. The generation screens restore inputs and completed results, show queue/running states, and permit retry after failure. Preview remains a draft, Download PDF downloads a profile resume, and Save and download PDF commits a tailored resume with job completion even when the browser closes. A restored result does not trigger another automatic download. Use the download and save actions to download or save the restored result.
+
+Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter and conversation-starter generation allow ten requests a minute per account and resume import five, counted in the app process's memory.
 
 Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Generation runs in the worker with a 180-second overall deadline, independently of Cloudflare's HTTP timeout. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain.
 

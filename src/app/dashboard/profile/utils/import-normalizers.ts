@@ -18,6 +18,7 @@ import type {
   ResumeImportWorkExperience,
 } from "@/app/api/profile/resume-import/validators";
 import { normalizeMonth } from "@/lib/month";
+import { normalizeHttpUrl } from "@/lib/validators/fields";
 
 const generateId = () => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -56,20 +57,6 @@ export const joinStringArray = (values: string[] | undefined): string | null => 
     .filter((value): value is string => Boolean(value));
 
   return parts.length > 0 ? parts.join(", ") : null;
-};
-
-export const sanitizeUrl = (value: string | null | undefined): string | null => {
-  const urlString = safeString(value);
-  if (!urlString) {
-    return null;
-  }
-
-  const candidate = /^[a-zA-Z]+:\/\//.test(urlString) ? urlString : `https://${urlString}`;
-  try {
-    return new URL(candidate).toString();
-  } catch {
-    return null;
-  }
 };
 
 export const normalizeYearsOfExperience = (
@@ -258,8 +245,8 @@ const normalizeProject = (
       title,
       description: safeString(item.description),
       technologies: joinStringArray(item.technologies),
-      projectUrl: sanitizeUrl(item.projectUrl),
-      githubUrl: sanitizeUrl(item.githubUrl),
+      projectUrl: normalizeHttpUrl(item.projectUrl),
+      githubUrl: normalizeHttpUrl(item.githubUrl),
       startDate: normalizeMonth(item.startDate),
       endDate,
       isOngoing,
@@ -294,7 +281,7 @@ const normalizeCertification = (
       issueDate: normalizeMonth(item.issueDate),
       expirationDate: normalizeMonth(item.expirationDate),
       credentialId: safeString(item.credentialId),
-      credentialUrl: sanitizeUrl(item.credentialUrl),
+      credentialUrl: normalizeHttpUrl(item.credentialUrl),
       displayOrder: 0,
     },
     warnings,
@@ -318,7 +305,7 @@ const normalizeAchievement = (
       description: safeString(item.description),
       organization: safeString(item.organization),
       date: normalizeMonth(item.date),
-      url: sanitizeUrl(item.url),
+      url: normalizeHttpUrl(item.url),
       displayOrder: 0,
     },
     warnings,

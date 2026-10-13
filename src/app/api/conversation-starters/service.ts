@@ -80,6 +80,9 @@ const buildProfileSummary = (
   return summaryLines.join("\n");
 };
 
+// The request is held open for the reply, so it must not wait indefinitely.
+const GENERATION_TIMEOUT_MS = 45_000;
+
 export class ConversationStartersService {
   private model = env.GROQ_MODEL;
 
@@ -123,6 +126,7 @@ Return only the message text and avoid placeholders or brackets.`;
         ...getGroqGenerationOptions(this.model, 600),
         prompt,
         temperature: 0.65,
+        abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
       });
 
       return {

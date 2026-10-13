@@ -1,5 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { z } from "zod";
+import { RequestError } from "@/lib/request-error";
 import { routeErrorResponse } from "./route-error";
 
 test("a body that fails validation is the client's error", async () => {
@@ -33,4 +34,18 @@ test("anything else is logged with its cause and reported generically", async ()
   expect(response.status).toBe(500);
   expect(await response.json()).toEqual({ error: "Failed to create skill" });
   expect(log).toHaveBeenCalledWith("Failed to create skill:", failure);
+});
+
+test("a refused request keeps its own status and message", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const response = routeErrorResponse(
+    new RequestError("The linked resume was not found."),
+    "Internal server error",
+  );
+
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
+    error: "The linked resume was not found.",
+  });
+  expect(log).not.toHaveBeenCalled();
 });

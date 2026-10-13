@@ -5,9 +5,11 @@ import {
 } from "./applications/validators";
 import {
   createCoverLetterSchema,
+  generateCoverLetterSchema,
   updateCoverLetterSchema,
 } from "./cover-letters/validators";
 import {
+  bulkUpdateOrderSchema,
   createWorkExperienceSchema,
   updateAchievementSchema,
   updateCertificationSchema,
@@ -67,4 +69,66 @@ test("create schemas keep their defaults", () => {
   expect(
     createWorkExperienceSchema.safeParse({ displayOrder: 0 }).success,
   ).toBe(false);
+});
+
+test("application dates and links are validated, and a cleared date is accepted", () => {
+  const application = { company: "Example", position: "Engineer" };
+  for (const appliedAt of ["", "2026-10-13", "2026-10-13T00:00:00Z"]) {
+    expect(
+      createApplicationSchema.safeParse({ ...application, appliedAt }).success,
+    ).toBe(true);
+  }
+  expect(
+    createApplicationSchema.safeParse({ ...application, appliedAt: "next week" })
+      .success,
+  ).toBe(false);
+  expect(updateApplicationSchema.parse({ appliedAt: "" })).toEqual({
+    appliedAt: "",
+  });
+  expect(
+    createApplicationSchema.safeParse({
+      ...application,
+      jobUrl: "javascript:alert(1)",
+    }).success,
+  ).toBe(false);
+  expect(
+    createApplicationSchema.safeParse({
+      ...application,
+      jobUrl: "https://example.test/jobs/1",
+    }).success,
+  ).toBe(true);
+  expect(
+    createApplicationSchema.safeParse({ ...application, jobUrl: "" }).success,
+  ).toBe(true);
+});
+
+test("requests that feed the model or fan out into queries are bounded", () => {
+  const letter = { company: "Example", position: "Engineer" };
+  expect(
+    generateCoverLetterSchema.safeParse({
+      ...letter,
+      resumeContent: { summary: "x".repeat(1_000) },
+    }).success,
+  ).toBe(true);
+  expect(
+    generateCoverLetterSchema.safeParse({
+      ...letter,
+      resumeContent: { summary: "x".repeat(200_000) },
+    }).success,
+  ).toBe(false);
+  expect(
+    generateCoverLetterSchema.safeParse({
+      ...letter,
+      jobDescription: "x".repeat(60_000),
+    }).success,
+  ).toBe(false);
+
+  const items = (count: number) =>
+    Array.from({ length: count }, (_, id) => ({ id, displayOrder: id }));
+  expect(bulkUpdateOrderSchema.safeParse({ items: items(500) }).success).toBe(
+    true,
+  );
+  expect(bulkUpdateOrderSchema.safeParse({ items: items(501) }).success).toBe(
+    false,
+  );
 });

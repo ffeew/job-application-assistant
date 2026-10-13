@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ResumesService } from "../service";
@@ -26,11 +27,7 @@ export async function GET(
 
     return NextResponse.json(resume);
   } catch (error) {
-    console.error("Error fetching resume:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }
 
@@ -70,11 +67,7 @@ export async function PUT(
 
     return NextResponse.json(resume);
   } catch (error) {
-    console.error("Error updating resume:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }
 
@@ -98,10 +91,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting resume:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }

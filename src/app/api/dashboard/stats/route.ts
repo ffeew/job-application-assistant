@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { DashboardService } from "../service";
@@ -15,10 +16,6 @@ export async function GET() {
     const stats = await dashboardService.getDashboardStats(session.user.id);
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ApplicationsService } from "../service";
@@ -32,11 +33,7 @@ export async function GET(
 
     return NextResponse.json(application);
   } catch (error) {
-    console.error("Error fetching application:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }
 
@@ -79,11 +76,7 @@ export async function PUT(
 
     return NextResponse.json(application);
   } catch (error) {
-    console.error("Error updating application:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }
 
@@ -113,10 +106,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting application:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }

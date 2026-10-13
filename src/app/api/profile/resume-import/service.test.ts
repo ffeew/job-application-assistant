@@ -80,6 +80,45 @@ describe("profile details read by the model", () => {
   });
 });
 
+describe("values the profile schema would reject", () => {
+  test("an over-long field is cut to fit instead of failing the import", async () => {
+    modelReturns({ address: "1 Example Street ".repeat(100) });
+    const result = await importText();
+    expect(result.profile.address).toHaveLength(300);
+  });
+
+  test("a link that is not a web address is dropped", async () => {
+    modelReturns({
+      portfolioUrl: "javascript:alert(1)",
+      projects: [
+        {
+          title: "Example Project", description: null, technologies: [],
+          projectUrl: "file:///etc/passwd", githubUrl: "github.com/alex/example",
+          startDate: null, endDate: null, isOngoing: null,
+        },
+      ],
+    });
+    const result = await importText();
+    expect(result.profile.portfolioUrl).toBeNull();
+    expect(result.projects[0]).toMatchObject({
+      projectUrl: null,
+      githubUrl: "https://github.com/alex/example",
+    });
+  });
+
+  test("a document far longer than a resume is read only in part", async () => {
+    modelReturns({});
+    const result = await new ResumeImportService().importProfileFromResume({
+      arrayBuffer: new TextEncoder().encode("resume text ".repeat(10_000)).buffer,
+      mimeType: "text/plain",
+    });
+    expect(result.markdown).toHaveLength(60_000);
+    expect(result.warnings.join(" ")).toMatch(/only its first part was read/);
+    const prompt = vi.mocked(generateText).mock.calls[0]?.[0].prompt;
+    expect(typeof prompt === "string" && prompt.length).toBeLessThan(62_000);
+  });
+});
+
 describe("dates read by the model", () => {
   test("month names are stored as YYYY-MM in every server time zone", async () => {
     modelReturns({

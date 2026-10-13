@@ -6,7 +6,15 @@ import {
   updateReferenceSchema,
   updateUserProfileSchema,
 } from "@/app/api/profile/validators";
-import { monthSchema, optionalEmail, optionalMonth, optionalUrl } from "./fields";
+import {
+  LONG_TEXT_MAX,
+  monthSchema,
+  normalizeHttpUrl,
+  optionalEmail,
+  optionalMonth,
+  optionalUrl,
+  SHORT_TEXT_MAX,
+} from "./fields";
 
 describe("optional form fields", () => {
   // An input the user emptied submits "", not null.
@@ -73,5 +81,70 @@ describe("profile schemas", () => {
       githubUrl: null, portfolioUrl: null, professionalSummary: null,
     };
     expect(createUserProfileSchema.parse(empty)).toEqual(empty);
+  });
+});
+
+describe("links", () => {
+  // Every one of these is a valid URL, and none belongs in an anchor or a PDF.
+  test.each([
+    "javascript:alert(1)",
+    "file:///etc/passwd",
+    "data:text/html,<script>alert(1)</script>",
+    "ftp://example.test/resume.pdf",
+    "mailto:alex@example.test",
+  ])("only web addresses are accepted: %s", (value) => {
+    expect(optionalUrl.safeParse(value).success).toBe(false);
+    expect(normalizeHttpUrl(value)).toBeNull();
+  });
+
+  test("a link written without its scheme is completed", () => {
+    expect(normalizeHttpUrl("linkedin.com/in/alex-example")).toBe(
+      "https://linkedin.com/in/alex-example",
+    );
+    expect(normalizeHttpUrl(" https://github.com/alex-example ")).toBe(
+      "https://github.com/alex-example",
+    );
+    expect(normalizeHttpUrl("http://localhost:3000/portfolio")).toBe(
+      "http://localhost:3000/portfolio",
+    );
+  });
+
+  test("text that is not a link is dropped", () => {
+    expect(normalizeHttpUrl("see my portfolio")).toBeNull();
+    expect(normalizeHttpUrl("")).toBeNull();
+    expect(normalizeHttpUrl(null)).toBeNull();
+  });
+});
+
+describe("length limits", () => {
+  const experience = {
+    jobTitle: "Engineer",
+    company: "Example Company",
+    location: null,
+    startDate: "2023-01",
+    endDate: null,
+    description: null,
+    technologies: null,
+  };
+
+  test("single-line and free-text fields have separate ceilings", () => {
+    expect(
+      createWorkExperienceSchema.safeParse({
+        ...experience,
+        description: "x".repeat(LONG_TEXT_MAX),
+      }).success,
+    ).toBe(true);
+    expect(
+      createWorkExperienceSchema.safeParse({
+        ...experience,
+        description: "x".repeat(LONG_TEXT_MAX + 1),
+      }).success,
+    ).toBe(false);
+    expect(
+      createWorkExperienceSchema.safeParse({
+        ...experience,
+        company: "x".repeat(SHORT_TEXT_MAX + 1),
+      }).success,
+    ).toBe(false);
   });
 });

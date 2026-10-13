@@ -1,26 +1,28 @@
 import { z } from "zod";
 import { profileRecordFields } from "@/lib/validators/transport";
 import {
+  longText,
   monthSchema,
   optionalEmail,
   optionalMonth,
   optionalUrl,
+  shortText,
 } from "@/lib/validators/fields";
 
 export const userProfileSchema = z.object({
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
+  firstName: shortText.nullable(),
+  lastName: shortText.nullable(),
   email: optionalEmail,
-  phone: z.string().nullable(),
-  address: z.string().nullable(),
-  city: z.string().nullable(),
-  state: z.string().nullable(),
-  zipCode: z.string().nullable(),
-  country: z.string().nullable(),
+  phone: shortText.nullable(),
+  address: shortText.nullable(),
+  city: shortText.nullable(),
+  state: shortText.nullable(),
+  zipCode: shortText.nullable(),
+  country: shortText.nullable(),
   linkedinUrl: optionalUrl,
   githubUrl: optionalUrl,
   portfolioUrl: optionalUrl,
-  professionalSummary: z.string().nullable(),
+  professionalSummary: longText.nullable(),
 });
 
 export const createUserProfileSchema = userProfileSchema;
@@ -34,14 +36,14 @@ export const userProfileResponseSchema = userProfileSchema.extend({
 });
 
 export const workExperienceSchema = z.object({
-  jobTitle: z.string().min(1, "Job title is required"),
-  company: z.string().min(1, "Company is required"),
-  location: z.string().nullable(),
+  jobTitle: shortText.min(1, "Job title is required"),
+  company: shortText.min(1, "Company is required"),
+  location: shortText.nullable(),
   startDate: monthSchema,
   endDate: optionalMonth,
   isCurrent: z.boolean().default(false),
-  description: z.string().nullable(),
-  technologies: z.string().nullable(),
+  description: longText.nullable(),
+  technologies: longText.nullable(),
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -61,15 +63,15 @@ export const workExperienceResponseSchema = workExperienceSchema.extend({
 });
 
 export const educationSchema = z.object({
-  degree: z.string().min(1, "Degree is required"),
-  fieldOfStudy: z.string().nullable(),
-  institution: z.string().min(1, "Institution is required"),
-  location: z.string().nullable(),
+  degree: shortText.min(1, "Degree is required"),
+  fieldOfStudy: shortText.nullable(),
+  institution: shortText.min(1, "Institution is required"),
+  location: shortText.nullable(),
   startDate: optionalMonth,
   endDate: optionalMonth,
-  gpa: z.string().nullable(),
-  honors: z.string().nullable(),
-  relevantCoursework: z.string().nullable(),
+  gpa: shortText.nullable(),
+  honors: longText.nullable(),
+  relevantCoursework: longText.nullable(),
   displayOrder: z.number().int().min(0).default(0),
 });
 
@@ -86,7 +88,7 @@ export const educationResponseSchema = educationSchema.extend({
 });
 
 export const skillSchema = z.object({
-  name: z.string().min(1, "Skill name is required"),
+  name: shortText.min(1, "Skill name is required"),
   category: z.enum([
     "technical",
     "soft",
@@ -115,9 +117,9 @@ export const skillResponseSchema = skillSchema.extend({
 });
 
 export const projectSchema = z.object({
-  title: z.string().min(1, "Project title is required"),
-  description: z.string().nullable(),
-  technologies: z.string().nullable(),
+  title: shortText.min(1, "Project title is required"),
+  description: longText.nullable(),
+  technologies: longText.nullable(),
   projectUrl: optionalUrl,
   githubUrl: optionalUrl,
   startDate: optionalMonth,
@@ -140,11 +142,11 @@ export const projectResponseSchema = projectSchema.extend({
 });
 
 export const certificationSchema = z.object({
-  name: z.string().min(1, "Certification name is required"),
-  issuingOrganization: z.string().min(1, "Issuing organization is required"),
+  name: shortText.min(1, "Certification name is required"),
+  issuingOrganization: shortText.min(1, "Issuing organization is required"),
   issueDate: optionalMonth,
   expirationDate: optionalMonth,
-  credentialId: z.string().nullable(),
+  credentialId: shortText.nullable(),
   credentialUrl: optionalUrl,
   displayOrder: z.number().int().min(0).default(0),
 });
@@ -162,9 +164,9 @@ export const certificationResponseSchema = certificationSchema.extend({
 });
 
 export const achievementSchema = z.object({
-  title: z.string().min(1, "Achievement title is required"),
-  description: z.string().nullable(),
-  organization: z.string().nullable(),
+  title: shortText.min(1, "Achievement title is required"),
+  description: longText.nullable(),
+  organization: shortText.nullable(),
   date: optionalMonth,
   url: optionalUrl,
   displayOrder: z.number().int().min(0).default(0),
@@ -183,11 +185,11 @@ export const achievementResponseSchema = achievementSchema.extend({
 });
 
 export const referenceSchema = z.object({
-  name: z.string().min(1, "Reference name is required"),
-  title: z.string().nullable(),
-  company: z.string().nullable(),
+  name: shortText.min(1, "Reference name is required"),
+  title: shortText.nullable(),
+  company: shortText.nullable(),
   email: optionalEmail,
-  phone: z.string().nullable(),
+  phone: shortText.nullable(),
   relationship: z
     .enum(["manager", "colleague", "client", "professor", "mentor", "other"])
     .nullable(),
@@ -338,38 +340,44 @@ export const profileQuerySchema = z.object({
   order: z.enum(["asc", "desc"]).default("asc"),
 });
 
+// A profile holds at most a few hundred entries, so a longer list is not a selection.
+const MAX_SELECTED_IDS = 500;
+
 export const bulkUpdateOrderSchema = z.object({
   items: z
     .array(
       z.object({
-        id: z.number(),
+        id: z.number().int(),
         displayOrder: z.number().int().min(0),
       }),
     )
-    .min(1),
+    .min(1)
+    .max(MAX_SELECTED_IDS),
 });
+
+const selectedIds = z.array(z.number().int()).max(MAX_SELECTED_IDS);
 
 export const resumeContentSelectionSchema = z.object({
   includePersonalInfo: z.boolean().default(true),
   includeSummary: z.boolean().default(true),
   includeWorkExperience: z.boolean().default(true),
-  workExperienceIds: z.array(z.number()).optional(),
+  workExperienceIds: selectedIds.optional(),
   includeEducation: z.boolean().default(true),
-  educationIds: z.array(z.number()).optional(),
+  educationIds: selectedIds.optional(),
   includeSkills: z.boolean().default(true),
-  skillCategories: z.array(z.string()).optional(),
+  skillCategories: z.array(shortText).max(20).optional(),
   includeProjects: z.boolean().default(false),
-  projectIds: z.array(z.number()).optional(),
+  projectIds: selectedIds.optional(),
   includeCertifications: z.boolean().default(false),
-  certificationIds: z.array(z.number()).optional(),
+  certificationIds: selectedIds.optional(),
   includeAchievements: z.boolean().default(false),
-  achievementIds: z.array(z.number()).optional(),
+  achievementIds: selectedIds.optional(),
   includeReferences: z.boolean().default(false),
-  referenceIds: z.array(z.number()).optional(),
+  referenceIds: selectedIds.optional(),
 });
 
 export const generateResumeSchema = z.object({
-  title: z.string().min(1, "Resume title is required"),
+  title: shortText.min(1, "Resume title is required"),
   targetPages: z.union([z.literal(1), z.literal(2)]).default(1),
   template: z
     .enum(["professional", "modern", "minimal", "creative"])
@@ -405,8 +413,8 @@ export const intelligentContentSelectionSchema = z.object({
 });
 
 export const jobApplicationResumeRequestSchema = z.object({
-  applicationId: z.string().min(1, "Application ID is required"),
-  title: z.string().min(1, "Resume title is required"),
+  applicationId: shortText.min(1, "Application ID is required"),
+  title: shortText.min(1, "Resume title is required"),
   targetPages: z.union([z.literal(1), z.literal(2)]).default(1),
   template: z
     .enum(["professional", "modern", "minimal", "creative"])
@@ -417,12 +425,12 @@ export const jobApplicationResumeRequestSchema = z.object({
   maxSkills: z.number().int().min(5).max(20).default(12),
   manualOverrides: z
     .object({
-      workExperienceIds: z.array(z.number()).optional(),
-      educationIds: z.array(z.number()).optional(),
-      skillIds: z.array(z.number()).optional(),
-      projectIds: z.array(z.number()).optional(),
-      certificationIds: z.array(z.number()).optional(),
-      achievementIds: z.array(z.number()).optional(),
+      workExperienceIds: selectedIds.optional(),
+      educationIds: selectedIds.optional(),
+      skillIds: selectedIds.optional(),
+      projectIds: selectedIds.optional(),
+      certificationIds: selectedIds.optional(),
+      achievementIds: selectedIds.optional(),
     })
     .optional(),
 });

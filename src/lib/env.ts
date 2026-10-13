@@ -10,6 +10,11 @@ const envSchema = z.object({
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
   BETTER_AUTH_URL: z.url(),
+  // Closes registration once the accounts this server is meant for exist.
+  DISABLE_SIGNUP: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
 
   DATABASE_URL: databaseUrlSchema,
 

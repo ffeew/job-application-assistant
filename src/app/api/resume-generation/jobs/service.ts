@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db/db";
 import {
   jobApplications,
@@ -19,6 +19,7 @@ import {
   type GenerationJobPayload,
 } from "./validators";
 
+export const MAX_ACTIVE_JOBS_PER_USER = 3;
 const LEASE_MS = 5 * 60 * 1000;
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 // A restored failure is only useful right after it happened; later it would
@@ -77,6 +78,21 @@ export async function enqueueGenerationJob(userId: string, input: unknown) {
       );
     if (!validation.valid)
       throw new JobRequestError(validation.errors.join("; "), 400);
+  }
+  // One worker serves every account in turn, so an account that could queue
+  // without limit would hold up everyone else's resumes.
+  const active = await db.$count(
+    resumeGenerationJobs,
+    and(
+      eq(resumeGenerationJobs.userId, userId),
+      inArray(resumeGenerationJobs.status, ["queued", "running"]),
+    ),
+  );
+  if (active >= MAX_ACTIVE_JOBS_PER_USER) {
+    throw new JobRequestError(
+      "You already have resumes being generated. Wait for one to finish, then try again.",
+      429,
+    );
   }
   const [job] = await db
     .insert(resumeGenerationJobs)

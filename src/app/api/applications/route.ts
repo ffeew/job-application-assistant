@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ApplicationsService } from "./service";
@@ -37,11 +38,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(applications);
   } catch (error) {
-    console.error("Error fetching applications:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }
 
@@ -72,10 +69,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(application, { status: 201 });
   } catch (error) {
-    console.error("Error creating application:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Internal server error");
   }
 }

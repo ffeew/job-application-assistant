@@ -2,6 +2,7 @@ import { db } from "@/lib/db/db";
 import { resumes } from "@/lib/db/schema";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { assertOwnsApplication } from "../linked-records";
 import type {
   CreateResumeRequest,
   ResumeResponse,
@@ -93,6 +94,8 @@ export class ResumesService {
     const id = randomUUID();
     const now = new Date();
 
+    await assertOwnsApplication(userId, data.jobApplicationId);
+
     const resume = await db.transaction(async (tx) => {
       if (data.isDefault) {
         await lockResumes(tx, userId);
@@ -132,6 +135,8 @@ export class ResumesService {
     data: UpdateResumeRequest,
   ): Promise<ResumeResponse | null> {
     const now = new Date();
+
+    await assertOwnsApplication(userId, data.jobApplicationId);
 
     const resume = await db.transaction(async (tx) => {
       if (data.isDefault) {

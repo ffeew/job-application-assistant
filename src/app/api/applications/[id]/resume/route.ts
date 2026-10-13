@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeErrorResponse } from "@/app/api/route-error";
 import { auth } from "@/lib/auth";
 import { ApplicationsService } from "@/app/api/applications/service";
 import { enqueueGenerationJob } from "@/app/api/resume-generation/jobs/service";
@@ -101,11 +102,7 @@ export async function GET(
         : null,
     });
   } catch (error) {
-    console.error("Error fetching application for resume generation:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch application" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to fetch application");
   }
 }
 
@@ -176,16 +173,6 @@ export async function PUT(
       isNew: !existingResume,
     });
   } catch (error) {
-    console.error("Error saving tailored resume:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request data", details: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { error: "Failed to save tailored resume" },
-      { status: 500 },
-    );
+    return routeErrorResponse(error, "Failed to save tailored resume");
   }
 }

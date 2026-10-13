@@ -47,6 +47,7 @@ For schema changes, generate and commit SQL with `pnpm run db:generate`, then ap
 ## TypeScript & Coding Standards
 
 - Lean on Zod schemas exported from `src/app/api/<feature>/validators` for runtime validation and type inference.
+- Build request schemas from `src/lib/validators/fields.ts`: `shortText`/`longText` cap every stored string, `optionalMonth`/`optionalEmail`/`optionalUrl` turn a cleared input into `null`, and `httpUrl` accepts only web addresses. A record that links to an application or resume must check ownership with `src/app/api/linked-records.ts`.
 - Forms should use React Hook Form with `zodResolver` (see existing dashboard profile forms for patterns). When a validated form value needs a type assertion, explain why the resolver makes the assertion safe.
 - Components in PascalCase, hooks in camelCase, server actions suffixed with `Action`.
 - Follow Prettier defaults (2-space indent, semicolons, double quotes). Respect Tailwind naming; prefer `@/` alias imports.
@@ -77,6 +78,7 @@ The interface is built on one idea: a job hunt is a filing job, so the app is a 
 - Groq interactions use `env.GROQ_API_KEY` and `env.GROQ_MODEL`; resume fitting also uses `env.GROQ_FALLBACK_MODEL`. The Groq key is required by startup validation. Surface provider failures with human-friendly errors and preserve feature fallbacks.
 - Keep prompts deterministic—low temperature (≈0.2–0.3) for resume content selection, slightly higher (≈0.6–0.7) for conversational outputs per existing services.
 - Validate AI outputs against Zod schemas before using them; provide fallbacks to manual selection when parsing fails.
+- Endpoints that call the model while a request waits pass through `limitAiRequest` (`src/app/api/ai-rate-limit.ts`) and give the call an `abortSignal` timeout. Background generation is capped per account in `enqueueGenerationJob`.
 
 ## Commit & PR Expectations
 

@@ -1,12 +1,18 @@
 import { z } from "zod";
+import {
+  jobDescriptionText,
+  longText,
+  recordId,
+  shortText,
+} from "@/lib/validators/fields";
 import { serializedTimestamps } from "@/lib/validators/transport";
 
 export const coverLetterSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
+  title: shortText.min(1, "Title is required"),
+  content: longText.min(1, "Content is required"),
   isAiGenerated: z.boolean().default(false),
-  jobApplicationId: z.string().optional(),
-  resumeId: z.string().optional(),
+  jobApplicationId: recordId.optional(),
+  resumeId: recordId.optional(),
 });
 
 export const createCoverLetterSchema = coverLetterSchema;
@@ -24,12 +30,23 @@ export const coverLetterResponseSchema = coverLetterSchema.extend({
   updatedAt: z.date(),
 });
 
+const MAX_RESUME_CONTEXT_CHARS = 100_000;
+
 export const generateCoverLetterSchema = z.object({
-  company: z.string().min(1, "Company is required"),
-  position: z.string().min(1, "Position is required"),
-  jobDescription: z.string().optional(),
-  resumeContent: z.unknown().optional(),
-  applicantName: z.string().optional(),
+  company: shortText.min(1, "Company is required"),
+  position: shortText.min(1, "Position is required"),
+  jobDescription: jobDescriptionText.optional(),
+  // Goes into the prompt as given, so its serialized size is what is bounded.
+  resumeContent: z
+    .unknown()
+    .refine(
+      (value) =>
+        value === undefined ||
+        JSON.stringify(value).length <= MAX_RESUME_CONTEXT_CHARS,
+      "Resume content is too long to use for a cover letter",
+    )
+    .optional(),
+  applicantName: shortText.optional(),
 });
 
 export const generateCoverLetterResponseSchema = z.object({
@@ -58,8 +75,8 @@ export type GenerateCoverLetterResponse = z.infer<typeof generateCoverLetterResp
 
 export const coverLettersQuerySchema = z.object({
   isAiGenerated: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
-  jobApplicationId: z.string().optional(),
-  resumeId: z.string().optional(),
+  jobApplicationId: recordId.optional(),
+  resumeId: recordId.optional(),
   limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
   offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
 });

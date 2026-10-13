@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/app/api/profile/utils";
+import { limitAiRequest } from "@/app/api/ai-rate-limit";
 import { ResumeImportError } from "./errors";
 import { ResumeImportService } from "./service";
 
@@ -13,12 +14,29 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/octet-stream",
 ]);
 
+const MULTIPART_OVERHEAD_BYTES = 64 * 1024;
+
+const tooLargeResponse = () =>
+  NextResponse.json(
+    { error: "Resume file is too large. Please upload a file under 8MB." },
+    { status: 413 },
+  );
+
 const resumeImportService = new ResumeImportService();
 
 export async function POST(request: NextRequest) {
   const userId = await getUserId(request);
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const limited = limitAiRequest("resumeImport", userId);
+  if (limited) return limited;
+
+  // Reject an oversized upload from its declared length, before the body is
+  // read into memory. A multipart body carries a little framing beyond the file.
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (declaredLength > MAX_FILE_SIZE_BYTES + MULTIPART_OVERHEAD_BYTES) {
+    return tooLargeResponse();
   }
 
   let formData: FormData;
@@ -41,9 +59,12 @@ export async function POST(request: NextRequest) {
   }
 
   const file = fileEntry;
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return tooLargeResponse();
+  }
   const mimeType = file.type || "application/octet-stream";
 
-  if (!ALLOWED_MIME_TYPES.has(mimeType) && mimeType !== "application/octet-stream") {
+  if (!ALLOWED_MIME_TYPES.has(mimeType)) {
     return NextResponse.json(
       { error: "Unsupported file type. Upload a PDF, DOCX or TXT file." },
       { status: 415 },
@@ -61,18 +82,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const fileSize = arrayBuffer.byteLength;
-  if (fileSize === 0) {
+  if (arrayBuffer.byteLength === 0) {
     return NextResponse.json(
       { error: "Uploaded file is empty. Please choose a valid resume." },
       { status: 400 },
-    );
-  }
-
-  if (fileSize > MAX_FILE_SIZE_BYTES) {
-    return NextResponse.json(
-      { error: "Resume file is too large. Please upload a file under 8MB." },
-      { status: 413 },
     );
   }
 

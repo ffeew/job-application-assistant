@@ -7,6 +7,7 @@ import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
 import { normalizeMonth } from "@/lib/month";
+import { normalizeHttpUrl, SHORT_TEXT_MAX } from "@/lib/validators/fields";
 import { recognizeScannedPdf } from "@/lib/ocr-service";
 import { extractResumeText, type ScannedPdfReader } from "./document-text";
 import {
@@ -28,6 +29,10 @@ const SUMMARY_SECTION_PATTERNS = [
   /^about me$/i,
   /^objective$/i,
 ];
+
+const MAX_RESUME_TEXT_CHARS = 60_000;
+// Structured extraction of a full resume takes far longer than a short reply.
+const EXTRACTION_TIMEOUT_MS = 90_000;
 
 type ImportParams = {
   arrayBuffer: ArrayBuffer;
@@ -161,11 +166,21 @@ type NormalizedResumeData = {
 
 export class ResumeImportService {
   async importProfileFromResume(params: ImportParams): Promise<ResumeImportResponse> {
-    const { markdown, warnings } = await extractResumeText({
+    const extracted = await extractResumeText({
       fileBuffer: Buffer.from(params.arrayBuffer),
       mimeType: params.mimeType,
       readScannedPdf,
     });
+    const warnings = [...extracted.warnings];
+    // A resume is a few thousand characters. Anything far beyond that is some
+    // other document, and the whole of it would be billed as model input.
+    let markdown = extracted.markdown;
+    if (markdown.length > MAX_RESUME_TEXT_CHARS) {
+      markdown = markdown.slice(0, MAX_RESUME_TEXT_CHARS);
+      warnings.push(
+        "This document is longer than a resume, so only its first part was read.",
+      );
+    }
     const extraction = await this.extractProfile(markdown);
 
     return resumeImportResponseSchema.parse({
@@ -238,6 +253,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       output: Output.object({ schema: aiProfileGenerationSchema }),
       prompt: `${prompt}\n\nResume Markdown:\n"""\n${markdown}\n"""`,
       temperature: 0.2,
+      abortSignal: AbortSignal.timeout(EXTRACTION_TIMEOUT_MS),
     });
 
     const aiData = aiProfileGenerationSchema.parse(result.output);
@@ -384,19 +400,21 @@ Populate the provided schema using only facts that appear in the resume. Use nul
   }
 
   private normalizeProfile(data: AiProfile): CreateUserProfileRequest {
-    const firstName = this.stringOrNull(data.firstName);
-    const lastName = this.stringOrNull(data.lastName);
+    // The profile schema limits each field. A value the model returned too long
+    // is cut to fit, because failing validation would lose the whole import.
+    const short = (value: string | null) =>
+      this.stringOrNull(value)?.slice(0, SHORT_TEXT_MAX) ?? null;
 
     return {
-      firstName,
-      lastName,
+      firstName: short(data.firstName),
+      lastName: short(data.lastName),
       email: this.normalizeEmail(data.email),
-      phone: this.sanitizePhone(this.stringOrNull(data.phone)),
-      address: this.stringOrNull(data.address),
-      city: this.stringOrNull(data.city),
-      state: this.stringOrNull(data.state),
-      zipCode: this.stringOrNull(data.zipCode),
-      country: this.stringOrNull(data.country),
+      phone: this.sanitizePhone(short(data.phone)),
+      address: short(data.address),
+      city: short(data.city),
+      state: short(data.state),
+      zipCode: short(data.zipCode),
+      country: short(data.country),
       linkedinUrl: this.normalizeUrl(data.linkedinUrl),
       githubUrl: this.normalizeUrl(data.githubUrl),
       portfolioUrl: this.normalizeUrl(data.portfolioUrl),
@@ -681,18 +699,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
   }
 
   private normalizeUrl(value: string | null): string | null {
-    const urlString = this.stringOrNull(value);
-    if (!urlString) {
-      return null;
-    }
-
-    const prefixed = /^[a-zA-Z]+:\/\//.test(urlString) ? urlString : `https://${urlString}`;
-    try {
-      const url = new URL(prefixed);
-      return url.toString();
-    } catch {
-      return null;
-    }
+    return normalizeHttpUrl(value);
   }
 
   private normalizeSkillCategory(value: string | null): string | null {

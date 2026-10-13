@@ -620,6 +620,181 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     }
   });
 
+  test("an account cannot queue more jobs than the worker should hold for it", async () => {
+    await clearJobs();
+    try {
+      for (let index = 0; index < jobs.MAX_ACTIVE_JOBS_PER_USER; index++) {
+        await enqueue();
+      }
+      await expect(enqueue()).rejects.toMatchObject({ status: 429 });
+      const refused = await routes.POST(
+        new NextRequest("http://localhost:3000/api/resume-generation/jobs", {
+          method: "POST",
+          headers: { cookie, "Content-Type": "application/json" },
+          body: JSON.stringify({ kind: "profile", request: manual }),
+        }),
+      );
+      expect(refused.status).toBe(429);
+
+      // A finished job frees its place.
+      await jobs.completeGenerationJob(await claimed(), result());
+      await expect(enqueue()).resolves.toMatchObject({ status: "queued" });
+    } finally {
+      await clearJobs();
+    }
+  });
+
+  test("links to another account's records are refused and removed with their target", async () => {
+    const { ApplicationsService } = await import(
+      "../../src/app/api/applications/service"
+    );
+    const { ResumesService } = await import(
+      "../../src/app/api/resumes/service"
+    );
+    const { CoverLettersService } = await import(
+      "../../src/app/api/cover-letters/service"
+    );
+    const applications = new ApplicationsService();
+    const resumeService = new ResumesService();
+    const letters = new CoverLettersService();
+    const draft = { content: "{}", isDefault: false, isTailored: true };
+
+    const foreignApplication = await applications.createApplication(otherUserId, {
+      company: "Other Co",
+      position: "Engineer",
+      status: "applied",
+    });
+    const foreignResume = await resumeService.createResume(otherUserId, {
+      ...draft,
+      title: "Other resume",
+    });
+    const ownApplication = await applications.createApplication(userId, {
+      company: "Own Co",
+      position: "Engineer",
+      status: "applied",
+    });
+    const ownResume = await resumeService.createResume(userId, {
+      ...draft,
+      title: "Tailored",
+      jobApplicationId: ownApplication.id,
+    });
+
+    try {
+      const refused = { status: 400 };
+      await expect(
+        resumeService.createResume(userId, {
+          ...draft,
+          title: "Linked elsewhere",
+          jobApplicationId: foreignApplication.id,
+        }),
+      ).rejects.toMatchObject(refused);
+      await expect(
+        resumeService.updateResume(userId, ownResume.id, {
+          jobApplicationId: foreignApplication.id,
+        }),
+      ).rejects.toMatchObject(refused);
+      const letter = { title: "Letter", content: "Text", isAiGenerated: false };
+      await expect(
+        letters.createCoverLetter(userId, {
+          ...letter,
+          jobApplicationId: foreignApplication.id,
+        }),
+      ).rejects.toMatchObject(refused);
+      await expect(
+        letters.createCoverLetter(userId, {
+          ...letter,
+          resumeId: foreignResume.id,
+        }),
+      ).rejects.toMatchObject(refused);
+      await expect(
+        letters.createCoverLetter(userId, {
+          ...letter,
+          jobApplicationId: crypto.randomUUID(),
+        }),
+      ).rejects.toMatchObject(refused);
+
+      const linked = await letters.createCoverLetter(userId, {
+        ...letter,
+        jobApplicationId: ownApplication.id,
+        resumeId: ownResume.id,
+      });
+      await expect(
+        letters.updateCoverLetter(userId, linked.id, {
+          resumeId: foreignResume.id,
+        }),
+      ).rejects.toMatchObject(refused);
+
+      // The letter goes with its application; the resume stays, unlinked.
+      expect(await applications.deleteApplication(userId, ownApplication.id)).toBe(
+        true,
+      );
+      expect(await letters.getCoverLetterById(userId, linked.id)).toBeNull();
+      const kept = await resumeService.getResumeById(userId, ownResume.id);
+      expect(kept?.jobApplicationId).toBeNull();
+    } finally {
+      await resumeService.deleteResume(userId, ownResume.id);
+      await applications.deleteApplication(userId, ownApplication.id);
+      await resumeService.deleteResume(otherUserId, foreignResume.id);
+      await applications.deleteApplication(otherUserId, foreignApplication.id);
+    }
+  });
+
+  test("dashboard figures are counted per account and status", async () => {
+    const { ApplicationsService } = await import(
+      "../../src/app/api/applications/service"
+    );
+    const { DashboardService } = await import(
+      "../../src/app/api/dashboard/service"
+    );
+    const applications = new ApplicationsService();
+    const dashboard = new DashboardService();
+    const before = await dashboard.getDashboardStats(userId);
+    const created = await Promise.all(
+      (["applied", "applied", "offer"] as const).map((status) =>
+        applications.createApplication(userId, {
+          company: `Counted ${status}`,
+          position: "Engineer",
+          status,
+        }),
+      ),
+    );
+    const foreign = await applications.createApplication(otherUserId, {
+      company: "Not counted",
+      position: "Engineer",
+      status: "offer",
+    });
+
+    try {
+      const stats = await dashboard.getDashboardStats(userId);
+      expect(stats.totalApplications).toBe(before.totalApplications + 3);
+      expect(stats.applicationsByStatus.applied).toBe(
+        before.applicationsByStatus.applied + 2,
+      );
+      expect(stats.applicationsByStatus.offer).toBe(
+        before.applicationsByStatus.offer + 1,
+      );
+      expect(stats.applicationsByStatus.rejected).toBe(
+        before.applicationsByStatus.rejected,
+      );
+      expect(stats.totalResumes).toBe(before.totalResumes);
+
+      const activity = await dashboard.getDashboardActivity(userId, {
+        type: "application",
+        limit: 2,
+      });
+      expect(activity).toHaveLength(2);
+      expect(activity.every((item) => item.type === "application")).toBe(true);
+      expect(activity.some((item) => item.title.includes("Not counted"))).toBe(
+        false,
+      );
+    } finally {
+      for (const application of created) {
+        await applications.deleteApplication(userId, application.id);
+      }
+      await applications.deleteApplication(otherUserId, foreign.id);
+    }
+  });
+
   test("retention removes old finished jobs and keeps active jobs and saved resumes", async () => {
     await clearJobs();
     await enqueue();

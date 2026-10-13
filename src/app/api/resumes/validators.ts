@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { documentText, recordId, shortText } from "@/lib/validators/fields";
 import { serializedTimestamps } from "@/lib/validators/transport";
 
 export const resumeSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
+  title: shortText.min(1, "Title is required"),
+  content: documentText.min(1, "Content is required"),
   isDefault: z.boolean().default(false),
-  jobApplicationId: z.string().optional(),
+  jobApplicationId: recordId.optional(),
   isTailored: z.boolean().default(false),
 });
 
@@ -47,7 +48,7 @@ export type ResumeJsonResponse = z.infer<typeof resumeJsonResponseSchema>;
 export const resumesQuerySchema = z.object({
   isDefault: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
   isTailored: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
-  jobApplicationId: z.string().optional(),
+  jobApplicationId: recordId.optional(),
   limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
   offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
 });

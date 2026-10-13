@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { limitAiRequest } from "@/app/api/ai-rate-limit";
 import { ConversationStartersService } from "../service";
 import { generateConversationStarterSchema } from "../validators";
 import { ProfileService } from "@/app/api/profile/service";
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = limitAiRequest("conversationStarter", session.user.id);
+    if (limited) return limited;
 
     const body: unknown = await request.json();
     const validatedData = generateConversationStarterSchema.safeParse(body);

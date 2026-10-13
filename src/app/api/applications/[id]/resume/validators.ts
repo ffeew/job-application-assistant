@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { documentText, shortText } from "@/lib/validators/fields";
 import {
   generatedResumeResultSchema,
   savedGeneratedResumeSchema,
@@ -31,9 +32,8 @@ export const jobApplicationResumeResponseSchema =
   });
 
 export const saveTailoredResumeRequestSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z
-    .string()
+  title: shortText.min(1, "Title is required"),
+  content: documentText
     .min(1, "Content is required")
     .refine((value) => {
       try {

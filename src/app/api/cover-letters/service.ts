@@ -6,6 +6,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { assertOwnsApplication, assertOwnsResume } from "../linked-records";
 import type {
   CoverLetterResponse,
   CoverLettersQuery,
@@ -14,6 +15,9 @@ import type {
   GenerateCoverLetterResponse,
   UpdateCoverLetterRequest,
 } from "./validators";
+
+// The request is held open for the reply, so it must not wait indefinitely.
+const GENERATION_TIMEOUT_MS = 45_000;
 
 export class CoverLettersService {
   async getCoverLetters(
@@ -78,6 +82,9 @@ export class CoverLettersService {
     const id = randomUUID();
     const now = new Date();
 
+    await assertOwnsApplication(userId, data.jobApplicationId);
+    await assertOwnsResume(userId, data.resumeId);
+
     const [coverLetter] = await db
       .insert(coverLetters)
       .values({
@@ -111,6 +118,9 @@ export class CoverLettersService {
     data: UpdateCoverLetterRequest,
   ): Promise<CoverLetterResponse | null> {
     const now = new Date();
+
+    await assertOwnsApplication(userId, data.jobApplicationId);
+    await assertOwnsResume(userId, data.resumeId);
 
     const [coverLetter] = await db
       .update(coverLetters)
@@ -189,6 +199,7 @@ Format the cover letter properly with appropriate salutations and structure. Do 
         ...getGroqGenerationOptions(env.GROQ_MODEL, 1000),
         prompt,
         temperature: 0.7,
+        abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
       });
 
       return {

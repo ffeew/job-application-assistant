@@ -1,9 +1,12 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
   integer,
   boolean,
   timestamp,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
@@ -17,7 +20,12 @@ export const resumes = pgTable("resumes", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   isDefault: boolean("is_default").default(false),
-  jobApplicationId: text("job_application_id"),
+  // A saved resume outlives the application it was tailored for; only the
+  // link is removed with the application.
+  jobApplicationId: text("job_application_id").references(
+    () => jobApplications.id,
+    { onDelete: "set null" },
+  ),
   isTailored: boolean("is_tailored").default(false),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
@@ -25,7 +33,13 @@ export const resumes = pgTable("resumes", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("resumes_user_idx").on(table.userId, table.updatedAt),
+  index("resumes_application_idx").on(table.jobApplicationId),
+  uniqueIndex("resumes_one_default_per_user")
+    .on(table.userId)
+    .where(sql`${table.isDefault}`),
+]);
 
 export const jobApplications = pgTable("job_applications", {
   id: text("id")
@@ -52,7 +66,9 @@ export const jobApplications = pgTable("job_applications", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("job_applications_user_idx").on(table.userId, table.createdAt),
+]);
 
 export const coverLetters = pgTable("cover_letters", {
   id: text("id")
@@ -77,7 +93,10 @@ export const coverLetters = pgTable("cover_letters", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("cover_letters_user_idx").on(table.userId, table.createdAt),
+  index("cover_letters_application_idx").on(table.jobApplicationId),
+]);
 
 export const applicationStatuses = pgTable("application_statuses", {
   id: text("id")
@@ -140,7 +159,9 @@ export const workExperiences = pgTable("work_experiences", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("work_experiences_user_idx").on(table.userId),
+]);
 
 export const education = pgTable("education", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -163,7 +184,9 @@ export const education = pgTable("education", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("education_user_idx").on(table.userId),
+]);
 
 export const skills = pgTable("skills", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -185,7 +208,9 @@ export const skills = pgTable("skills", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("skills_user_idx").on(table.userId),
+]);
 
 export const projects = pgTable("projects", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -207,7 +232,9 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("projects_user_idx").on(table.userId),
+]);
 
 export const certifications = pgTable("certifications", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -227,7 +254,9 @@ export const certifications = pgTable("certifications", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("certifications_user_idx").on(table.userId),
+]);
 
 export const achievements = pgTable("achievements", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -246,7 +275,9 @@ export const achievements = pgTable("achievements", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("achievements_user_idx").on(table.userId),
+]);
 
 export const references = pgTable("references", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -268,4 +299,6 @@ export const references = pgTable("references", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
-});
+}, (table) => [
+  index("references_user_idx").on(table.userId),
+]);
