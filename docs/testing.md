@@ -62,6 +62,6 @@ Stop the container after testing even if the test command fails. The `--rm` cont
 
 The [browser testing guide](../tests/e2e/README.md) covers Playwright commands, isolated PostgreSQL Testcontainers, production app builds, real compiler PDFs, UI mode, and failure artifacts. Docker and Chromium are required, but development services and provider keys are not.
 
-[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. All jobs use Node.js 24 and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, Chromium browser tests, and the OCR image build with its smoke test. The browser job caches the compiler image build and uploads reports and service logs for seven days.
+[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use Node.js 24 and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, Chromium browser tests, and the OCR image build with its smoke test. The browser job caches the compiler image build and uploads reports and service logs for seven days.
 
 Document relevant manual QA with the change. Public deployment checks, including live provider behavior and backup restoration, are covered in the [deployment guide](deployment.md#deployment-verification).

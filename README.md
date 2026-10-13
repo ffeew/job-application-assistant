@@ -91,7 +91,7 @@ Resume import reads text-based PDFs and DOCX files inside the app, including lin
 | Command | Purpose |
 | --- | --- |
 | `pnpm run dev` | Start the Turbopack development server |
-| `pnpm run build` / `pnpm run start` | Run lint and the production build; serve the build |
+| `pnpm run build` / `pnpm run start` | Run lint and the production build; serve the build. `next start` warns about the standalone output, which the containers run as `.next/standalone/server.js` |
 | `pnpm run lint` / `pnpm run lint:fix` | Run strict ESLint checks; optionally apply automatic fixes |
 | `pnpm run typecheck` | Generate Next.js route types, then run TypeScript checks |
 | `pnpm run test` | Run Vitest tests; database integration is opt-in |

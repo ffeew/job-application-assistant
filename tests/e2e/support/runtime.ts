@@ -66,7 +66,6 @@ export function runtimeEnvironment(
     LATEX_COMPILER_TOKEN: runtime.compilerToken,
     RESEND_API_KEY: "",
     RESEND_FROM_EMAIL: "",
-    NEXT_PUBLIC_APP_URL: BASE_URL,
     PORT: "3100",
     HOSTNAME: "127.0.0.1",
   };

@@ -132,8 +132,8 @@ html:not(.dark)
 }
 
 /* The drawer behind the folders: the strip that holds the tabs, the sign-in
-   backdrop and the landing footer. Content tokens flip to light-on-ink so
-   shared components need no variants. */
+   backdrop, and the landing's self-hosting section and footer. Content tokens
+   flip to light-on-ink so shared components need no variants. */
 html:not(.dark) .band {
   --background: #1c2030;
   --foreground: #ffffff;
@@ -322,7 +322,7 @@ html:not(.dark) .band {
   }
 }
 
-/* A rubber stamp: the one place uppercase appears. Colour comes from the
+/* A rubber stamp: the one place the tool sets uppercase. Colour comes from the
    text colour, so the frame and the word are always the same ink. */
 @utility stamp {
   display: inline-flex;

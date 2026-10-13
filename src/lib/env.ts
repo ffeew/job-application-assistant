@@ -30,8 +30,6 @@ const envSchema = z.object({
     z.email().optional(),
   ),
 
-  NEXT_PUBLIC_APP_URL: z.url().optional(),
-
   PORT: z
     .string()
     .default("3000")

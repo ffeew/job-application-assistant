@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -420,40 +421,41 @@ export default function JobApplicationResumePage({
             </form>
 
             {aiSelection && (
-              <section
-                aria-labelledby="matched-title"
-                className="flex flex-col gap-3 border-t pt-6"
-              >
-                <h2 id="matched-title" className="text-lg font-semibold">
-                  What was matched
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  {aiSelection.overallStrategy}
-                </p>
-                {aiSelection.keyMatchingPoints.length > 0 && (
-                  <ul className="flex flex-col gap-1.5 text-sm">
-                    {aiSelection.keyMatchingPoints.map((point, index) => (
-                      <li key={index}>
-                        <Highlight>{point}</Highlight>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-muted-foreground text-sm">
-                  Selected{" "}
-                  {plural(
-                    aiSelection.selectedWorkExperiences.length,
-                    "work experience",
+              <section aria-labelledby="matched-title">
+                {/* A sheet, because highlighter disappears on the folder's manila. */}
+                <Card layout="flush" className="flex flex-col gap-3 p-5">
+                  <h2 id="matched-title" className="text-lg font-semibold">
+                    What was matched
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {aiSelection.overallStrategy}
+                  </p>
+                  {aiSelection.keyMatchingPoints.length > 0 && (
+                    <ul className="flex flex-col gap-1.5 text-sm">
+                      {aiSelection.keyMatchingPoints.map((point, index) => (
+                        <li key={index}>
+                          <Highlight>{point}</Highlight>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                  , {plural(aiSelection.selectedSkills.length, "skill")},{" "}
-                  {plural(aiSelection.selectedProjects.length, "project")} and{" "}
-                  {plural(
-                    aiSelection.selectedEducation.length,
-                    "education entry",
-                    "education entries",
-                  )}
-                  .
-                </p>
+                  <p className="text-muted-foreground text-sm">
+                    Selected{" "}
+                    {plural(
+                      aiSelection.selectedWorkExperiences.length,
+                      "work experience",
+                    )}
+                    , {plural(aiSelection.selectedSkills.length, "skill")},{" "}
+                    {plural(aiSelection.selectedProjects.length, "project")}{" "}
+                    and{" "}
+                    {plural(
+                      aiSelection.selectedEducation.length,
+                      "education entry",
+                      "education entries",
+                    )}
+                    .
+                  </p>
+                </Card>
               </section>
             )}
           </>
