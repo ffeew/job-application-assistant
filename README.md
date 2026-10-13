@@ -34,6 +34,8 @@ fnm use
 
 pnpm is pinned to 12.10.1 in `package.json`. If it is unavailable after selecting Node.js 24, install it with `npm install --global pnpm@12.10.1`.
 
+`pnpm-workspace.yaml` sets `minimumReleaseAge`, so pnpm only installs package versions published at least 7 days ago. Adding or updating to a newer release fails until it is old enough.
+
 ```sh
 pnpm install
 cp .env.example .env
