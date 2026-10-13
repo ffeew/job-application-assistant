@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    # "/" covers the workflows; the composite action is listed separately.
+    directories:
+      - /
+      - /.github/actions/setup
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

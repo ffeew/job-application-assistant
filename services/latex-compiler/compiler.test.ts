@@ -83,6 +83,11 @@ test("compiler service authenticates and validates requests", async () => {
 const available =
   spawnSync("kpsewhich", ["newtxtext.sty"]).status === 0 &&
   spawnSync("pdfinfo", ["-v"]).status === 0;
+// CI runs this file inside the compiler image, where a skip would hide a
+// broken toolchain instead of reporting it.
+if (!available && process.env.REQUIRE_TEX === "1") {
+  throw new Error("REQUIRE_TEX is set, but newtxtext or Poppler is missing.");
+}
 function integrationTest(
   name: string,
   action: () => Promise<void>,

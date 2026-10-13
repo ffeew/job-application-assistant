@@ -18,7 +18,8 @@ pnpm run test:e2e:ui
 The first run builds the compiler's TeX/font packages. Later runs use Docker's
 build cache. To use an image already built from the current compiler sources,
 set `E2E_LATEX_IMAGE` to its local tag; the harness then skips the image build.
-CI builds this image using the GitHub Actions BuildKit cache.
+CI builds this image using the GitHub Actions BuildKit cache and also runs the
+compiler's unit tests inside it.
 
 The app runs at `http://127.0.0.1:3100`; the port must be free. Test-only
 `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup

@@ -1,4 +1,4 @@
-name: Node.js CI
+name: CI
 
 on:
   push:
@@ -7,30 +7,39 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes the run in progress. Runs on main
+# always finish, so every commit there keeps a result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   code-quality:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          persist-credentials: false
+      - name: Set up Node.js and pnpm
+        id: setup
+        uses: ./.github/actions/setup
       - name: Run lint
         run: pnpm run lint
+      # The later checks still run after a failure, so one push reports all three.
       - name: Run typecheck
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run typecheck
       - name: Run tests
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run test
 
   postgres-integration:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:18-bookworm
@@ -53,60 +62,99 @@ jobs:
       RESEND_API_KEY: ""
       RESEND_FROM_EMAIL: ""
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:integration
-
-  ocr-image:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build the OCR service and run its smoke test
-        uses: docker/build-push-action@v6
-        with:
-          context: services/ocr
-          cache-from: type=gha,scope=ocr
-          cache-to: type=gha,mode=max,scope=ocr
+          persist-credentials: false
+      - name: Set up Node.js and pnpm
+        uses: ./.github/actions/setup
+      - name: Run integration tests
+        run: pnpm run test:integration
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       E2E_LATEX_IMAGE: job-assistant-e2e-latex:ci
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          persist-credentials: false
+      - name: Set up Node.js and pnpm
+        uses: ./.github/actions/setup
       - name: Install Chromium and system dependencies
         run: pnpm exec playwright install --with-deps chromium
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build the real PDF compiler
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: services/latex-compiler/Dockerfile
           load: true
-          tags: job-assistant-e2e-latex:ci
-          cache-from: type=gha,scope=e2e-latex
-          cache-to: type=gha,mode=max,scope=e2e-latex
+          tags: ${{ env.E2E_LATEX_IMAGE }}
+          cache-from: type=gha,scope=latex
+          cache-to: type=gha,mode=max,scope=latex
+      # The runner has no TeX, so outside the image these tests would skip.
+      - name: Run compiler tests against real pdfLaTeX
+        run: >
+          docker run --rm --user "$(id -u):$(id -g)"
+          --env HOME=/tmp --env REQUIRE_TEX=1
+          --volume "$PWD:/work" --workdir /work "$E2E_LATEX_IMAGE"
+          node_modules/.bin/vitest run services/latex-compiler
       - name: Run browser tests
         run: pnpm run test:e2e
       - name: Upload browser reports and service logs
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-results
           path: artifacts/e2e/
           if-no-files-found: ignore
           retention-days: 7
+
+  compose-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      POSTGRES_PASSWORD: ci-only-database-password
+      BETTER_AUTH_SECRET: ci-only-secret-at-least-thirty-two-characters
+      BETTER_AUTH_URL: http://localhost:3000
+      GROQ_API_KEY: ci-only
+      LATEX_COMPILER_TOKEN: ci-only-compiler-token-at-least-thirty-two-characters
+      OCR_SERVICE_TOKEN: ci-only-ocr-token-at-least-thirty-two-characters
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # The two slow images are tagged with Compose's default names so the stack
+      # starts from them instead of rebuilding without the layer cache.
+      - name: Build the OCR service and run its smoke test
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: services/ocr
+          load: true
+          tags: job-application-assistant-ocr
+          cache-from: type=gha,scope=ocr
+          cache-to: type=gha,mode=max,scope=ocr
+      - name: Build the PDF compiler
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: services/latex-compiler/Dockerfile
+          load: true
+          tags: job-application-assistant-latex-compiler
+          cache-from: type=gha,scope=latex
+      - name: Build the app, worker, and migration images
+        env:
+          # The engine's own builder stores images where Compose looks for them.
+          BUILDX_BUILDER: default
+        run: docker compose build migrate worker app
+      - name: Start the stack and wait for every health check
+        run: docker compose up --no-build --wait --wait-timeout 180
+      - name: Check the published health endpoint
+        run: curl --fail --silent --show-error http://127.0.0.1:3000/api/health
+      - name: Show service state and logs
+        if: ${{ failure() }}
+        run: |
+          docker compose ps --all
+          docker compose logs --no-color

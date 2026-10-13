@@ -73,6 +73,6 @@ Read `docker compose logs -f app worker latex-compiler ocr` for operational stat
 
 ## Deployment verification
 
-Run the [quality and integration checks](testing.md) before deploying. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, and the OCR service for host development.
+Run the [quality and integration checks](testing.md) before deploying. CI builds the images and starts this Compose stack with synthetic credentials, which checks that the services become healthy but not your configuration. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, and the OCR service for host development.
 
 Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Import a text-based PDF and a scanned PDF into a profile; the scan should populate fields and show the OCR warning. Confirm records survive container recreation and a backup restores into a separate test database. Live AI and email checks require your configured provider credentials.
