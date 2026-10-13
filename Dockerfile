@@ -13,7 +13,7 @@ RUN pnpm run build:runtime
 # are needed to build. Runtime containers validate their actual configuration.
 RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
     BETTER_AUTH_SECRET=build-only-placeholder-secret-never-use-in-production \
-    BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=build-only MISTRAL_API_KEY=build-only \
+    BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=build-only \
     pnpm run build
 
 FROM base AS production-dependencies

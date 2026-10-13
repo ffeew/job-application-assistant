@@ -62,7 +62,6 @@ export function runtimeEnvironment(
     GROQ_API_KEY: "e2e-only-no-provider-access",
     GROQ_MODEL: "qwen/qwen3.8-27b",
     GROQ_FALLBACK_MODEL: "openai/gpt-oss-120b",
-    MISTRAL_API_KEY: "e2e-only-no-provider-access",
     LATEX_COMPILER_URL: runtime.compilerUrl,
     LATEX_COMPILER_TOKEN: runtime.compilerToken,
     RESEND_API_KEY: "",

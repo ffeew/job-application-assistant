@@ -18,10 +18,8 @@ const envSchema = z.object({
   GROQ_FALLBACK_MODEL: z.string().default("openai/gpt-oss-120b"),
   LATEX_COMPILER_URL: z.url().optional(),
   LATEX_COMPILER_TOKEN: z.string().min(32).optional(),
-
-  MISTRAL_API_KEY: z
-    .string()
-    .min(1, "MISTRAL_API_KEY is required for resume imports"),
+  OCR_SERVICE_URL: z.url().optional(),
+  OCR_SERVICE_TOKEN: z.string().min(32).optional(),
 
   RESEND_API_KEY: z.preprocess(
     (value) => (value === "" ? undefined : value),

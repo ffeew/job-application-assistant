@@ -3,7 +3,6 @@ import { REPOSITORY_URL } from "./links";
 const requirements = [
 	"Docker Engine with Compose v2 on Linux x86-64",
 	"A Groq API key, used to select and write content",
-	"A Mistral API key, used to read imported resumes",
 ];
 
 // Mirrors the first deployment steps in docs/deployment.md.
@@ -22,8 +21,9 @@ export function SelfHostingSection() {
 					</h2>
 					<p className="text-muted-foreground max-w-[60ch]">
 						Docker Compose starts the whole stack: the app, PostgreSQL, a
-						background worker and the LaTeX compiler. Your profile,
-						applications and documents stay in your own database.
+						background worker, the LaTeX compiler and an OCR reader for
+						scanned resumes. Your profile, applications and documents stay
+						in your own database.
 					</p>
 					<div className="flex flex-col gap-2">
 						<h3 className="font-semibold">What you need</h3>
@@ -40,7 +40,7 @@ export function SelfHostingSection() {
 						<code>{commands}</code>
 					</pre>
 					<p className="text-muted-foreground max-w-[60ch] text-sm">
-						Set the API keys and secrets in <code className="font-mono">.env</code>{" "}
+						Set the API key and secrets in <code className="font-mono">.env</code>{" "}
 						before you start the stack. The{" "}
 						<a
 							href={`${REPOSITORY_URL}/blob/main/docs/deployment.md`}

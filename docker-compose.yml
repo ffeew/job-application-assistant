@@ -14,7 +14,6 @@ x-runtime-environment: &runtime-environment
   GROQ_API_KEY: ${GROQ_API_KEY:?Set GROQ_API_KEY in .env}
   GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3.8-27b}
   GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-openai/gpt-oss-120b}
-  MISTRAL_API_KEY: ${MISTRAL_API_KEY:?Set MISTRAL_API_KEY in .env}
   LATEX_COMPILER_URL: http://latex-compiler:8080
   LATEX_COMPILER_TOKEN: ${LATEX_COMPILER_TOKEN:?Set LATEX_COMPILER_TOKEN in .env}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
@@ -63,18 +62,36 @@ services:
     cpus: 2
     stop_grace_period: 20s
 
+  ocr:
+    build: ./services/ocr
+    restart: unless-stopped
+    environment:
+      OCR_SERVICE_TOKEN: ${OCR_SERVICE_TOKEN:?Set OCR_SERVICE_TOKEN in .env}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 2
+    networks: [ocr]
+
   app:
     build:
       context: .
       target: app
     restart: unless-stopped
-    environment: *runtime-environment
+    environment:
+      <<: *runtime-environment
+      OCR_SERVICE_URL: http://ocr:8080
+      OCR_SERVICE_TOKEN: ${OCR_SERVICE_TOKEN:?Set OCR_SERVICE_TOKEN in .env}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
+    networks: [default, ocr]
     depends_on:
       migrate:
         condition: service_completed_successfully
       latex-compiler:
+        condition: service_healthy
+      ocr:
         condition: service_healthy
 
   worker:
@@ -89,6 +106,12 @@ services:
         condition: service_completed_successfully
       latex-compiler:
         condition: service_healthy
+
+networks:
+  # The OCR service parses uploaded files and needs no other connection, so
+  # its network reaches only the app: no internet, database, or compiler.
+  ocr:
+    internal: true
 
 volumes:
   postgres-data:

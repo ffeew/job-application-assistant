@@ -16,7 +16,7 @@ ESLint treats errors and warnings as failures. Its configuration includes Next.j
 
 Type checking generates Next.js route types before running `tsc --noEmit`. Generated route files and `next-env.d.ts` should not be edited. TypeScript enables `noUncheckedIndexedAccess`, so array and dictionary lookups must handle missing entries. `pnpm run build` runs the lint gate before the production Next.js build and its type checks.
 
-## Unit and compiler tests
+## Unit and service tests
 
 Vitest runs on Node.js and discovers `*.test.ts(x)` files in `src`, tests in `scripts` and `services`, and the opt-in PostgreSQL suite. Import test APIs explicitly from `vitest`. Add focused tests for changes to regression-prone transforms, validation, resume fitting, or generation helpers, using sanitized candidate fixtures.
 
@@ -28,6 +28,8 @@ pnpm run test services/latex-compiler
 ```
 
 Compiler protocol and diagnostic tests run without TeX. Real compilation tests run when local `newtxtext` and Poppler are available and skip otherwise. They cover page counts, overflow, accents, links, literal TeX, and unsupported characters. The [browser suite](../tests/e2e/README.md) uses the actual compiler Docker image to verify PDF generation without installing TeX on the host.
+
+Resume import tests build synthetic PDF and DOCX files in memory and cover file-type detection, text and link extraction, the scanned-PDF fallback, and the reading order rebuilt from OCR line positions. The OCR client is tested against a stubbed `fetch`. The OCR service itself is Python and outside Vitest; its image build runs an offline [smoke test](../services/ocr/README.md#tests) that must read a generated image-only PDF.
 
 ## PostgreSQL integration tests
 
@@ -48,7 +50,7 @@ done
 NODE_ENV=test RUN_DB_INTEGRATION=1 \
 DATABASE_URL=postgresql://test:test@localhost:5433/job_assistant_test \
 BETTER_AUTH_SECRET=test-only-secret-at-least-thirty-two-characters \
-BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=test-only MISTRAL_API_KEY=test-only \
+BETTER_AUTH_URL=http://localhost:3000 GROQ_API_KEY=test-only \
 RESEND_API_KEY= RESEND_FROM_EMAIL= pnpm run test:integration
 
 docker stop job-assistant-integration-db
@@ -60,6 +62,6 @@ Stop the container after testing even if the test command fails. The `--rm` cont
 
 The [browser testing guide](../tests/e2e/README.md) covers Playwright commands, isolated PostgreSQL Testcontainers, production app builds, real compiler PDFs, UI mode, and failure artifacts. Docker and Chromium are required, but development services and provider keys are not.
 
-[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. All jobs use Node.js 24 and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, and Chromium browser tests. The browser job caches the compiler image build and uploads reports and service logs for seven days.
+[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. All jobs use Node.js 24 and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, Chromium browser tests, and the OCR image build with its smoke test. The browser job caches the compiler image build and uploads reports and service logs for seven days.
 
 Document relevant manual QA with the change. Public deployment checks, including live provider behavior and backup restoration, are covered in the [deployment guide](deployment.md#deployment-verification).

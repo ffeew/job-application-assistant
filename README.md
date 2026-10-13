@@ -6,7 +6,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 
 - Email/password authentication, password reset, and a protected dashboard.
 - Profile management for personal details, work experience, education, skills, projects, certifications, achievements, and references.
-- Resume import using Mistral OCR and structured parsing. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction.
+- Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction.
 - A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable.
 - Profile-based and job-specific resume generation with manual content selection or Groq-assisted tailoring, using the A4 `professional` LaTeX template. Both flows support a one- or two-page target with up to three AI fitting revisions while keeping fonts and margins fixed. An unmet target returns the best compiled draft with a warning.
 - Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Save and download PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
@@ -18,12 +18,12 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Next.js 16 App Router, React 19 with React Compiler, and TypeScript 6.
 - PostgreSQL with Drizzle ORM, BetterAuth, and Zod.
 - Tailwind CSS v4, shadcn/ui, React Hook Form, TanStack Query, and Zustand.
-- Vercel AI SDK 7 with Groq, Mistral OCR, and a separate authenticated pdfLaTeX service.
+- Vercel AI SDK 7 with Groq, a separate authenticated pdfLaTeX service, and a local OCR service running PaddleOCR models on CPU.
 - Node.js 24, pnpm, Vitest, Playwright, and ESLint.
 
 ## Local setup
 
-Install Node.js 24 using fnm and the committed `.nvmrc`. Docker Engine with Compose v2 must be available for PostgreSQL and the PDF compiler. The app and worker require Groq and Mistral API keys at startup, even when you only use other features.
+Install Node.js 24 using fnm and the committed `.nvmrc`. Docker Engine with Compose v2 must be available for PostgreSQL, the PDF compiler, and the OCR service. The app and worker require a Groq API key at startup, even when you only use other features.
 
 ```sh
 git clone https://github.com/ffeew/job-application-assistant
@@ -39,14 +39,14 @@ pnpm install
 cp .env.example .env
 ```
 
-Fill in `.env` before continuing. Generate the database password, BetterAuth secret, and compiler token independently with `openssl rand -hex 32`. Match `DATABASE_URL` to the Compose database credentials, URL-encoding special characters. For host development, use `BETTER_AUTH_URL=http://localhost:3000`, a database URL at `localhost:5432`, and `LATEX_COMPILER_URL=http://localhost:8080`.
+Fill in `.env` before continuing. Generate the database password, BetterAuth secret, compiler token, and OCR token independently with `openssl rand -hex 32`. Match `DATABASE_URL` to the Compose database credentials, URL-encoding special characters. For host development, use `BETTER_AUTH_URL=http://localhost:3000`, a database URL at `localhost:5432`, `LATEX_COMPILER_URL=http://localhost:8080`, and `OCR_SERVICE_URL=http://localhost:8081`.
 
 ```sh
 docker compose -f docker-compose.dev.yml up -d
 pnpm run db:migrate
 ```
 
-The development file runs only the database and compiler, published on loopback. Run it on its own and use it only for local development. Start the worker in a separate terminal:
+The development file runs only the database, compiler, and OCR service, published on loopback. Run it on its own and use it only for local development. Start the worker in a separate terminal:
 
 ```sh
 pnpm run worker
@@ -72,16 +72,19 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 | `GROQ_API_KEY` | Yes | Content generation and resume parsing |
 | `GROQ_MODEL` | No | Primary model; defaults to `qwen/qwen3.8-27b` |
 | `GROQ_FALLBACK_MODEL` | No | Resume-fitting fallback; defaults to `openai/gpt-oss-120b` |
-| `MISTRAL_API_KEY` | Yes | Resume OCR imports |
 | `LATEX_COMPILER_URL` | PDFs; supplied by Compose | Compiler URL; Compose uses `http://latex-compiler:8080` |
 | `LATEX_COMPILER_TOKEN` | PDFs; required by Compose | Shared app/worker/compiler token, at least 32 characters |
+| `OCR_SERVICE_URL` | Scanned PDFs; supplied by Compose | OCR service URL; Compose uses `http://ocr:8080` |
+| `OCR_SERVICE_TOKEN` | Scanned PDFs; required by Compose | Shared app/OCR service token, at least 32 characters |
 | `RESEND_API_KEY` | No | Password reset email delivery; without it, email content is logged to the server console |
 | `RESEND_FROM_EMAIL` | No | Sender for Resend; defaults to `noreply@example.com` |
 | `NODE_ENV` | No | Defaults to `development`; runtime containers use `production` |
 | `PORT` | No | App port outside Compose; set in the process environment, not `.env`; defaults to `3000` |
 | `APP_PORT` | No | Compose host port published on loopback; defaults to `3000` |
 
-Qwen requests use non-thinking mode and cap explicit output budgets at 16,384 tokens. Resume fitting tries the fallback model if the primary fails. Model override changes require restarting the app and worker. Resume OCR uses the `mistral-ocr-latest` alias and keeps tables, headers, and footers inline for profile parsing.
+Qwen requests use non-thinking mode and cap explicit output budgets at 16,384 tokens. Resume fitting tries the fallback model if the primary fails. Model override changes require restarting the app and worker.
+
+Resume import reads text-based PDFs and DOCX files inside the app, including link targets and DOCX page headers. A PDF without a text layer is sent to the [OCR service](services/ocr/README.md); if that service is not configured, the import asks for a text-based file instead. Legacy `.doc` files are not supported.
 
 ## Commands
 
@@ -108,6 +111,7 @@ Commit generated SQL in `migrations/` alongside schema changes. Deploy committed
 - [Browser tests](tests/e2e/README.md): isolated Playwright setup, fixtures, and artifacts.
 - [Self-hosted deployment](docs/deployment.md): Docker Compose, Cloudflare Tunnel, queue operation, updates, and backups.
 - [Resume compiler](services/latex-compiler/README.md): compiler setup, protocol, resource limits, and compatibility.
+- [OCR service](services/ocr/README.md): scanned-PDF reading, protocol, resource limits, and models.
 - [Contributor guidelines](AGENTS.md): architecture, module ownership, coding standards, and review expectations.
 
 ## License

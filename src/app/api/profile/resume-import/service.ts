@@ -1,17 +1,13 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, Output } from "ai";
-import { Mistral } from "@mistralai/mistralai";
 import { Buffer } from "node:buffer";
 import { z } from "zod";
 import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
-import {
-  extractMarkdownFromOcrResponse,
-  processDocWithMistral,
-  processPdfWithMistral,
-} from "./mistral-ocr";
+import { recognizeScannedPdf } from "@/lib/ocr-service";
+import { extractResumeText, type ScannedPdfReader } from "./document-text";
 import {
   resumeImportResponseSchema,
   type ResumeImportAchievement,
@@ -37,23 +33,14 @@ type ImportParams = {
   mimeType: string;
 };
 
-export class ResumeImportError extends Error {
-  status: number;
-
-  constructor(message: string, status = 400, cause?: unknown) {
-    super(message);
-    this.name = "ResumeImportError";
-    this.status = status;
-    if (cause) {
-      this.cause = cause;
-    }
-  }
-}
-
-const mistralClient = new Mistral({
-  apiKey: env.MISTRAL_API_KEY,
-});
-
+const ocrService =
+  env.OCR_SERVICE_URL && env.OCR_SERVICE_TOKEN
+    ? { url: env.OCR_SERVICE_URL, token: env.OCR_SERVICE_TOKEN }
+    : null;
+// Scanned PDFs need the OCR service; every other import works without it.
+const readScannedPdf: ScannedPdfReader | null = ocrService
+  ? (pdf) => recognizeScannedPdf(ocrService, new Uint8Array(pdf))
+  : null;
 
 // Groq's strict structured output requires every property; nullable fields allow
 // missing source values without optional JSON Schema properties.
@@ -173,52 +160,18 @@ type NormalizedResumeData = {
 
 export class ResumeImportService {
   async importProfileFromResume(params: ImportParams): Promise<ResumeImportResponse> {
-    const markdown = await this.extractMarkdown(params);
+    const { markdown, warnings } = await extractResumeText({
+      fileBuffer: Buffer.from(params.arrayBuffer),
+      mimeType: params.mimeType,
+      readScannedPdf,
+    });
     const extraction = await this.extractProfile(markdown);
 
     return resumeImportResponseSchema.parse({
       ...extraction,
+      warnings: [...warnings, ...extraction.warnings],
       markdown,
     });
-  }
-
-  private async extractMarkdown({ arrayBuffer, mimeType }: ImportParams): Promise<string> {
-    const normalizedMimeType = mimeType || "application/octet-stream";
-    const fileBuffer = Buffer.from(arrayBuffer);
-
-    if (normalizedMimeType === "text/plain") {
-      const plainText = fileBuffer.toString("utf8");
-      if (plainText.trim().length === 0) {
-        throw new ResumeImportError("Uploaded text file did not contain readable content.", 400);
-      }
-      return plainText;
-    }
-
-    try {
-      const response = await this.runMistralOcr({
-        fileBuffer,
-        mimeType: normalizedMimeType,
-      });
-
-      const markdown = extractMarkdownFromOcrResponse(response);
-
-      if (!markdown) {
-        throw new ResumeImportError("Mistral OCR response did not include markdown content.", 502);
-      }
-
-      return markdown;
-    } catch (error) {
-      if (error instanceof ResumeImportError) {
-        throw error;
-      }
-
-      console.error("Mistral SDK OCR error:", error);
-      throw new ResumeImportError(
-        "Unable to process the resume with Mistral OCR. Please try again.",
-        502,
-        error,
-      );
-    }
   }
 
   private async extractProfile(
@@ -274,7 +227,7 @@ export class ResumeImportService {
     });
 
     const prompt = `You are assisting with resume onboarding for a job-application tool.
-The resume content has already been converted to GitHub-Flavored Markdown via OCR.
+The resume content was extracted as plain text, so the layout may be imperfect. A trailing "Links:" list holds link targets that were not visible in the text.
 
 Populate the provided schema using only facts that appear in the resume. Use null for fields that are missing, keep URLs complete, and limit the professional summary to 600 characters or fewer. Do not invent information.`;
 
@@ -885,33 +838,4 @@ Populate the provided schema using only facts that appear in the resume. Use nul
 
     return summary.length > 0 ? summary : null;
   }
-
-  private async runMistralOcr({
-    fileBuffer,
-    mimeType,
-  }: {
-    fileBuffer: Buffer;
-    mimeType: string;
-  }): Promise<unknown> {
-    const normalizedMime = mimeType.toLowerCase();
-
-    if (normalizedMime === "application/pdf") {
-      return processPdfWithMistral(mistralClient, fileBuffer);
-    }
-
-    if (
-      normalizedMime === "application/msword" ||
-      normalizedMime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      return processDocWithMistral(mistralClient, fileBuffer, normalizedMime);
-    }
-
-    if (normalizedMime === "application/octet-stream") {
-      // Generic upload MIME types may hide PDFs; let OCR attempt to read them.
-      return processPdfWithMistral(mistralClient, fileBuffer);
-    }
-
-    throw new ResumeImportError("Unsupported resume file type for OCR.", 415);
-  }
-
 }

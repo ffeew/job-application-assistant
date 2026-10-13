@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/app/api/profile/utils";
-import { ResumeImportService, ResumeImportError } from "./service";
+import { ResumeImportError } from "./errors";
+import { ResumeImportService } from "./service";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
-  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
   "application/octet-stream",
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   if (!ALLOWED_MIME_TYPES.has(mimeType) && mimeType !== "application/octet-stream") {
     return NextResponse.json(
-      { error: "Unsupported file type. Please upload a PDF, DOC, or DOCX file." },
+      { error: "Unsupported file type. Upload a PDF, DOCX or TXT file." },
       { status: 415 },
     );
   }

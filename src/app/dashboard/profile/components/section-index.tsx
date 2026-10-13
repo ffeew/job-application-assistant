@@ -134,7 +134,7 @@ export function ProfileActions({ onImportPreview }: ProfileActionsProps) {
 			<input
 				ref={fileInputRef}
 				type="file"
-				accept=".pdf,.doc,.docx,.txt"
+				accept=".pdf,.docx,.txt"
 				className="hidden"
 				onChange={handleResumeFileChange}
 			/>

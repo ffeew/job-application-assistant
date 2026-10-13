@@ -35,8 +35,8 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Use at least 6 characters for the password.");
+    if (password.length < 8) {
+      setError("Use at least 8 characters for the password.");
       setIsLoading(false);
       return;
     }
@@ -114,7 +114,7 @@ function ResetPasswordForm() {
             required
           />
           <p id="password-hint" className="text-muted-foreground text-sm">
-            At least 6 characters.
+            At least 8 characters.
           </p>
         </div>
         <div className="flex flex-col gap-2">

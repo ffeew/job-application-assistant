@@ -1,22 +1,22 @@
 # Local server deployment
 
-The stack targets Linux x86-64 with Docker Engine and Compose v2. It runs the Next.js app, PostgreSQL 18, a one-shot migrator, a background generation worker, and the LaTeX compiler. Migrations initialize a fresh PostgreSQL database; they do not import historical Turso data.
+The stack targets Linux x86-64 with Docker Engine and Compose v2. It runs the Next.js app, PostgreSQL 18, a one-shot migrator, a background generation worker, the LaTeX compiler, and the OCR service. Migrations initialize a fresh PostgreSQL database; they do not import historical Turso data.
 
 For host development, follow [local setup](../README.md#local-setup). Configuration variables are listed in the [README](../README.md#configuration), and automated checks are covered in the [testing guide](testing.md).
 
 ## First deployment
 
-1. Copy `.env.example` to `.env`. Set the AI keys and generate separate database, BetterAuth, and compiler secrets with `openssl rand -hex 32`.
+1. Copy `.env.example` to `.env`. Set the Groq key and generate separate database, BetterAuth, compiler, and OCR secrets with `openssl rand -hex 32`.
 2. Set `BETTER_AUTH_URL=https://your-public-hostname`. This is the canonical origin for authentication, secure cookies, password reset links, and dashboard redirects. The browser uses its current origin; there is no public auth URL to bake into the image.
 3. Run `docker compose config --quiet`, then `docker compose up -d --build --wait`.
 4. Point your existing host-installed Cloudflare tunnel's published hostname to **`http://127.0.0.1:3000`** (or the configured `APP_PORT`). Retain the public Host header and forwarded HTTPS information. Use the public HTTPS hostname for sign-up and sign-in.
 5. Check `docker compose ps`, `docker compose logs migrate`, and `curl --fail http://127.0.0.1:3000/api/health`.
 
-Only the app publishes a loopback port. PostgreSQL and the compiler stay on the Compose network. Keep Cloudflare caching rules from caching authenticated dashboard/API responses; the app's job responses use `Cache-Control: no-store`.
+Only the app publishes a loopback port. PostgreSQL and the compiler stay on the Compose network. The [OCR service](../services/ocr/README.md) sits on its own internal network, reachable only from the app and without internet access. Keep Cloudflare caching rules from caching authenticated dashboard/API responses; the app's job responses use `Cache-Control: no-store`.
 
 Compose constructs an internal PostgreSQL connection URL from `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`, safely URL-encoding credentials. The `.env` `DATABASE_URL` is for host-side tools and local development. Keep its credentials synchronized and URL-encode special characters when editing it. A PostgreSQL named volume persists at `/var/lib/postgresql` for the version 18 image.
 
-Migrations run after database readiness. The app and worker start after migration success and compiler readiness. A failed migration blocks their initial startup; inspect the migrator logs before retrying. A worker resumes queued jobs after process restarts and transient database failures.
+Migrations run after database readiness. The app and worker start after migration success and compiler readiness; the app also waits for the OCR service. A failed migration blocks their initial startup; inspect the migrator logs before retrying. A worker resumes queued jobs after process restarts and transient database failures.
 
 Production builds use non-secret placeholders and do not connect to a live database or AI service. Real secrets are passed only to runtime containers, and runtime validation rejects missing/invalid configuration. The migrator requires only database settings. Optional Resend settings control password reset emails; without Resend, the server logs email content instead.
 
@@ -33,6 +33,8 @@ docker compose up -d --wait
 ```
 
 Keep the preceding source revision/images. Rebuilding that revision is sufficient only when its schema is compatible with the migration. Otherwise stop the stack and restore the matching database backup before starting the older version. Changing PostgreSQL's major version requires an explicit upgrade/restore procedure; keep version 18 for this stack. `docker compose down` preserves data; adding `--volumes` deletes it.
+
+When updating from a release that used Mistral OCR, add a generated `OCR_SERVICE_TOKEN` to `.env` before starting the stack; `MISTRAL_API_KEY` is no longer read. The first build produces an OCR image of about 500 MB.
 
 Keep app and compiler releases compatible with saved document snapshots. See the [compiler guide](../services/latex-compiler/README.md#image-and-template-compatibility) for image and template compatibility requirements.
 
@@ -64,10 +66,10 @@ The worker runs one job at a time. HTTP generation requests enqueue work and ret
 
 Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Generation runs in the worker with a 180-second overall deadline, independently of Cloudflare's HTTP timeout. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain.
 
-Read `docker compose logs -f app worker latex-compiler` for operational status. App health checks database readiness; worker health checks its processing heartbeat; compiler health checks its HTTP service. A worker health failure is visible in `docker compose ps`; Docker's restart policy restarts exited processes, not merely unhealthy ones. A missing worker leaves jobs queued until it returns.
+Read `docker compose logs -f app worker latex-compiler ocr` for operational status. App health checks database readiness; worker health checks its processing heartbeat; compiler and OCR health check their HTTP services. A worker health failure is visible in `docker compose ps`; Docker's restart policy restarts exited processes, not merely unhealthy ones. A missing worker leaves jobs queued until it returns.
 
 ## Deployment verification
 
-Run the [quality and integration checks](testing.md) before deploying. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL and the compiler for host development.
+Run the [quality and integration checks](testing.md) before deploying. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, and the OCR service for host development.
 
-Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Confirm records survive container recreation and a backup restores into a separate test database. Live AI/OCR/email checks require your configured provider credentials.
+Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Import a text-based PDF and a scanned PDF into a profile; the scan should populate fields and show the OCR warning. Confirm records survive container recreation and a backup restores into a separate test database. Live AI and email checks require your configured provider credentials.

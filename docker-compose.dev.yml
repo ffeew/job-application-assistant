@@ -1,5 +1,6 @@
-# Host development: the database and compiler from docker-compose.yml, published
-# on loopback. Run this file on its own; it is not an override for the full stack.
+# Host development: the database, compiler, and OCR service from
+# docker-compose.yml, published on loopback. Run this file on its own; it is not
+# an override for the full stack.
 name: job-application-assistant
 
 services:
@@ -15,6 +16,18 @@ services:
       service: latex-compiler
     ports:
       - "127.0.0.1:8080:8080"
+  ocr:
+    extends:
+      file: docker-compose.yml
+      service: ocr
+    ports:
+      - "127.0.0.1:8081:8080"
+
+networks:
+  # A published port needs a routable network, so development does not reuse
+  # the full stack's internal one.
+  ocr:
+    name: job-application-assistant_ocr-dev
 
 volumes:
   postgres-data:

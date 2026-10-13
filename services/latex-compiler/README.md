@@ -31,4 +31,4 @@ The application uses these diagnostics for [resume fitting](../../README.md#feat
 
 The Dockerfile selects the Bookworm distribution but uses a floating Node.js image tag and unversioned apt packages. Keep the same built image digest across replicas so their fonts and TeX packages match. Template or font changes must preserve rendering of saved document snapshots; introduce a new template version and retain support for prior snapshots when changing their layout.
 
-See [compiler tests](../../docs/testing.md#unit-and-compiler-tests) for protocol and real-compilation checks, and the [deployment guide](../../docs/deployment.md#deployment-verification) for rollout verification. Monitor service health and compilation-failure/busy responses (422/503).
+See [compiler tests](../../docs/testing.md#unit-and-service-tests) for protocol and real-compilation checks, and the [deployment guide](../../docs/deployment.md#deployment-verification) for rollout verification. Monitor service health and compilation-failure/busy responses (422/503).
