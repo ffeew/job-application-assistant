@@ -35,9 +35,31 @@ docker compose run --rm migrate
 docker compose up -d --wait
 ```
 
+The [Jenkins pipeline](#automated-deployment-with-jenkins) runs this sequence for each change to `main` after the required checks pass.
+
 Keep the preceding source revision/images. Rebuilding that revision is sufficient only when its schema is compatible with the migration. Otherwise stop the stack and restore the matching database backup before starting the older version. Changing PostgreSQL's major version requires an explicit upgrade/restore procedure; keep version 18 for this stack. `docker compose down` preserves data; adding `--volumes` deletes it.
 
 Keep app and compiler releases compatible with saved document snapshots. See the [compiler guide](../services/latex-compiler/README.md#image-and-template-compatibility) for image and template compatibility requirements.
+
+## Automated deployment with Jenkins
+
+The `Jenkinsfile` tests each change to `main` and deploys it with the update sequence above. It runs on an existing Jenkins controller whose agent has the Docker CLI with the Buildx and Compose plugins and can reach the Docker daemon of the deployment host, typically a dockerized controller with `/var/run/docker.sock` mounted. That mount gives Jenkins root-equivalent control of the host, so run only trusted jobs on it. Check access from inside the controller with `docker buildx version`, `docker compose version`, and `docker ps`.
+
+Complete the [first deployment](#first-deployment) steps for `.env` and the tunnel first. Then create a Pipeline job named `job-application-assistant` that uses "Pipeline script from SCM" with this repository, branch `*/main`, and script path `Jenkinsfile`, triggered by Poll SCM (for example `H/5 * * * *`) or a GitHub webhook. It needs the Pipeline, Git, and Timestamper plugins.
+
+The pipeline reads the production `.env` from the job's workspace; Git ignores it and `.dockerignore` keeps it out of every image. Copy it in as the `jenkins` user, readable only by that user, replacing `jenkins` after `-i` with your controller's container name:
+
+```sh
+docker exec -i jenkins \
+  sh -c 'mkdir -p "$1" && umask 077 && cat > "$1/.env"' sh /var/jenkins_home/workspace/job-application-assistant \
+  < /path/to/production.env
+```
+
+The path ends with the job name. To change a setting, such as `DISABLE_SIGNUP=true` once your account exists, copy the file again and run the job. Do not enable "Wipe out repository & force clone", a clean before checkout, or `cleanWs()`: they delete the `.env`.
+
+Each run checks Docker access, the `.env`, and the Compose file; builds the Dockerfile's `builder` stage, which runs lint and the production build, then runs type checks and unit tests inside it; builds the images; and deploys. The site is unavailable while migrations run. If a migration fails, the pipeline starts the previous app and worker again: pending migrations are applied in one transaction, so the schema is unchanged. If the stack is not healthy within five minutes, the build fails after printing service state and the last 100 log lines of each service. Without Resend, those lines can include password reset emails, so restrict who can read build logs.
+
+The pipeline takes no backups; back up before merging a change that adds migrations. To roll back, push a revert to `main`, subject to the schema compatibility described above.
 
 ## Backups and restore
 

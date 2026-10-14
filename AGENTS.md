@@ -19,6 +19,7 @@ See the [stack overview](README.md#stack) for technologies and versions.
 - `src/components`: Shared presentation-only primitives (buttons, inputs, skeletons) built on shadcn/ui.
 - `src/lib`: Environment validation, Drizzle setup, BetterAuth server configuration, resume templates, utilities, and validator re-exports. The BetterAuth browser client is in `src/app/utils/authClient.ts`.
 - `scripts/`: Migration, generation-worker, runtime-bundling, and container entrypoints.
+- `Jenkinsfile`: Deployment pipeline for an existing Jenkins controller; see the [deployment guide](docs/deployment.md#automated-deployment-with-jenkins).
 - `services/latex-compiler/`: Authenticated PDF compiler and its container image.
 - `services/ocr/`: Authenticated OCR service for scanned PDFs (Python, RapidOCR on CPU) and its container image. Keep it a thin wrapper; reading-order and other testable logic stays in TypeScript.
 - File storage has no service directory: Compose runs the upstream SeaweedFS image, pinned in `docker-compose.yml`, and the browser tests read that tag.
