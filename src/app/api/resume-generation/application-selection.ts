@@ -5,7 +5,6 @@ import type {
 
 type Identified = { id: number }[];
 
-/** The profile sections a tailored resume chooses from; only their IDs are read. */
 export interface SelectableProfile {
   workExperiences: Identified;
   education: Identified;

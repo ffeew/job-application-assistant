@@ -37,7 +37,6 @@ interface SectionIndexProps {
 	counts: Record<ProfileSection, number>;
 }
 
-/** The profile's table of contents: a column on wide screens, a scrolling row otherwise. */
 export function SectionIndex({ counts }: SectionIndexProps) {
 	const activeSection = useProfileUIStore((state) => state.activeSection);
 	const setActiveSection = useProfileUIStore((state) => state.setActiveSection);
@@ -99,7 +98,6 @@ interface ProfileActionsProps {
 	onImportPreview: (data: ResumeImportResponse) => void;
 }
 
-/** Page-level actions: bring a resume in, or turn the profile into one. */
 export function ProfileActions({ onImportPreview }: ProfileActionsProps) {
 	const importResumeMutation = useImportResume();
 	const fileInputRef = useRef<HTMLInputElement | null>(null);

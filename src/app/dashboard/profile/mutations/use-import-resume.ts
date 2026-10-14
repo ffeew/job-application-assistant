@@ -26,7 +26,7 @@ export function useImportResume() {
 
   return useMutation({
     mutationFn: (file: File) => resumeImportApi.import(file),
-    // The server keeps the original of a file it could read.
+    // A successful import may add a stored-file entry when storage is available.
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: resumeUploadsKeys.all });
     },

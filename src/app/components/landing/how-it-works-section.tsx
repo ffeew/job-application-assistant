@@ -23,7 +23,6 @@ const steps = [
 
 export function HowItWorksSection() {
 	return (
-		// A sheet across the full width, between two stretches of folder.
 		<section
 			id="how-it-works"
 			className="bg-card text-card-foreground shadow-sheet relative"

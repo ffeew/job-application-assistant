@@ -67,7 +67,6 @@ export function SectionEmpty({
 	);
 }
 
-/** Entries read from an imported resume that are not saved yet. */
 export function PendingPanel({
 	count,
 	singular,
@@ -102,7 +101,6 @@ export function PendingRow({
 	onDiscard,
 	onSave,
 }: {
-	/** Names the entry in button labels. */
 	name: string;
 	children: React.ReactNode;
 	isSaving: boolean;
@@ -152,14 +150,13 @@ export function EntryPanel({ children }: { children: React.ReactNode }) {
 	);
 }
 
-/** One saved entry. Edit and delete stay visible so touch and keyboard users can reach them. */
+/** Edit and delete stay visible so touch and keyboard users can reach them. */
 export function EntryRow({
 	name,
 	children,
 	onEdit,
 	onDelete,
 }: {
-	/** Names the entry in button labels. */
 	name: string;
 	children: React.ReactNode;
 	onEdit: () => void;
@@ -212,7 +209,6 @@ export function EntryMeta({ children }: { children: React.ReactNode }) {
 	);
 }
 
-/** A comma-separated field shown as tags. */
 export function TagList({ value }: { value: string }) {
 	const tags = value
 		.split(",")

@@ -19,14 +19,10 @@ export interface DemoListing {
   title: string;
   company: string;
   body: string;
-  /** Requirement phrases marked in the listing body. */
   phrases: string[];
   summary: string;
-  /** Bullets kept on the page, in the order they appear within each role. */
   bulletIds: string[];
-  /** Skills kept on the page, most relevant first. */
   skills: string[];
-  /** Phrases marked on the page because they answer the listing. */
   matched: string[];
   revisions: number;
 }
@@ -302,7 +298,6 @@ export function splitByPhrases(text: string, phrases: string[]): TextSegment[] {
   return segments;
 }
 
-/** The roles and bullets a listing keeps, in profile order. */
 export function tailorRoles(listing: DemoListing): DemoRole[] {
   return demoProfile.roles.flatMap((role) => {
     const bullets = listing.bulletIds.flatMap((id) => {

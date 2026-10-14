@@ -6,8 +6,8 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 
 - Email/password authentication, password reset, and a protected dashboard.
 - Profile management for personal details, work experience, education, skills, projects, certifications, achievements, and references.
-- Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction. The original of each imported file is kept, and the profile lists the ten most recent for download or deletion.
-- A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable. A saved tailored resume also keeps the PDF that was generated, so the library shows that file rather than a later compilation.
+- Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction. When storage succeeds, originals are available for download or deletion, normally keeping the ten most recent. Failed cleanup leaves older files listed until a later import retries it.
+- A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable. When storage succeeds, saved tailored resumes reuse the generated PDF instead of compiling it again.
 - Profile-based and job-specific resume generation with manual content selection or Groq-assisted tailoring, using the A4 `professional` LaTeX template. Both flows support a one- or two-page target with up to three AI fitting revisions while keeping fonts and margins fixed. An unmet target returns the best compiled draft with a warning.
 - Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Save and download PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
 - AI cover letters and conversation starters based on saved profile and resume data.
@@ -18,7 +18,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Next.js 16 App Router, React 19 with React Compiler, and TypeScript 6.
 - PostgreSQL with Drizzle ORM, BetterAuth, and Zod.
 - Tailwind CSS v4, shadcn/ui, React Hook Form, TanStack Query, and Zustand.
-- Vercel AI SDK 7 with Groq, a separate authenticated pdfLaTeX service, and a local OCR service running PaddleOCR models on CPU.
+- Vercel AI SDK 7 with Groq, a separate authenticated pdfLaTeX service, and a local OCR service running RapidOCR with PaddleOCR models on CPU.
 - SeaweedFS for imported files and saved resume PDFs, used through its S3 API so another S3-compatible store can take its place.
 - Node.js 24, pnpm, Vitest, Playwright, and ESLint.
 
@@ -92,9 +92,9 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 
 Qwen requests use non-thinking mode and cap explicit output budgets at 16,384 tokens. Resume fitting tries the fallback model if the primary fails. Model override changes require restarting the app and worker.
 
-Resume import reads text-based PDFs and DOCX files inside the app, including link targets and DOCX page headers. A PDF without a text layer is sent to the [OCR service](services/ocr/README.md); if that service is not configured, the import asks for a text-based file instead. Legacy `.doc` files are not supported.
+Resume import reads text-based PDFs and DOCX files inside the app, including link targets and DOCX page headers. A PDF without a usable text layer is sent to the [OCR service](services/ocr/README.md); if that service is not configured, the import asks for a text-based file instead. Legacy `.doc` files are not supported.
 
-Imported files and saved resume PDFs are written to object storage. The Compose stack runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) for this; any store that speaks the S3 API with path-style addresses works if you point `OBJECT_STORAGE_URL` at it and create the bucket. Without these settings the app still runs: an import reads the file without keeping it, and a saved resume is compiled each time it is opened. If storage is configured but unreachable, imports and saves still succeed: the import warns that the original was not kept, and a saved resume's PDF is stored the next time the resume is opened.
+Imported files and saved resume PDFs are written to object storage. The Compose stack runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) for this; any store that speaks the S3 API with path-style addresses works if you point `OBJECT_STORAGE_URL` at it and create the bucket. Without these settings the app still runs: an import reads the file without keeping it, and a saved generated resume is compiled each time it is opened. If storage is configured but unreachable, imports and saves still succeed: the import warns that the original was not kept, and a resume saved without a PDF retries storage when it is opened. See the [deployment guide](docs/deployment.md#backups-and-restore) for missing-file recovery.
 
 ## Commands
 
@@ -117,8 +117,7 @@ Commit generated SQL in `migrations/` alongside schema changes. Deploy committed
 
 ## Guides
 
-- [Testing and quality checks](docs/testing.md): lint, type checking, unit/integration tests, and CI.
-- [Browser tests](tests/e2e/README.md): isolated Playwright setup, fixtures, and artifacts.
+- [Testing and quality checks](docs/testing.md): lint, type checking, unit/integration/browser tests, and CI.
 - [Self-hosted deployment](docs/deployment.md): Docker Compose, Cloudflare Tunnel, queue operation, updates, and backups.
 - [Resume compiler](services/latex-compiler/README.md): compiler setup, protocol, resource limits, and compatibility.
 - [OCR service](services/ocr/README.md): scanned-PDF reading, protocol, resource limits, and models.

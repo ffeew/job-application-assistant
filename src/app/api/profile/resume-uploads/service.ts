@@ -14,7 +14,6 @@ import {
 export const MAX_KEPT_UPLOADS = 10;
 const FILE_NAME_MAX = 200;
 
-/** A browser-supplied name made safe to store and to list. */
 export function cleanFileName(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? "";
   const cleaned = base.replace(/\p{Cc}/gu, "").trim().slice(0, FILE_NAME_MAX);

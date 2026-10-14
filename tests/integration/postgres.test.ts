@@ -727,7 +727,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       );
       expect(refused.status).toBe(429);
 
-      // A finished job frees its place.
       await jobs.completeGenerationJob(await claimed(), result());
       await expect(enqueue()).resolves.toMatchObject({ status: "queued" });
     } finally {
@@ -815,7 +814,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
         }),
       ).rejects.toMatchObject(refused);
 
-      // The letter goes with its application; the resume stays, unlinked.
       expect(await applications.deleteApplication(userId, ownApplication.id)).toBe(
         true,
       );
@@ -1195,7 +1193,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       });
       expect(uploadObjects()).toEqual([`users/${userId}/uploads/${first.id}`]);
 
-      // Always a download, with the user's own name quoted for the header.
       const download = await file(first.id, "GET");
       expect(download.status).toBe(200);
       expect(await download.text()).toBe("first");
@@ -1209,7 +1206,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       expect(await uploads.deleteUpload(otherUserId, first.id)).toBe(false);
       expect(uploadObjects()).toHaveLength(1);
 
-      // The oldest file makes room once the account holds its limit.
       await database.db
         .update(resumeUploads)
         .set({ createdAt: new Date(0) })
@@ -1228,7 +1224,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       const targetKey = `users/${userId}/uploads/${target.id}`;
       silenceErrors();
 
-      // A file that cannot be stored is not listed.
       objectStore.failing.add("put");
       expect(await keep("unstored.txt", "unstored")).toBe(false);
       objectStore.failing.clear();
@@ -1255,7 +1250,6 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       expect((await file(target.id, "DELETE")).status).toBe(404);
       expect((await list()).files).toHaveLength(uploads.MAX_KEPT_UPLOADS - 1);
 
-      // The record of a file that is gone says so instead of failing.
       const [lost] = (await list()).files;
       if (!lost) throw new Error("Expected a kept file");
       objectStore.objects.delete(`users/${userId}/uploads/${lost.id}`);

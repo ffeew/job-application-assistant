@@ -4,7 +4,6 @@ import { Slot } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 interface FolderTabProps extends React.ComponentProps<"span"> {
-  /** The tab of the folder whose contents are showing. */
   open?: boolean;
   asChild?: boolean;
 }

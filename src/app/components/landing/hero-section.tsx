@@ -4,7 +4,6 @@ import { ResumeDemo } from "./resume-demo";
 
 export function HeroSection() {
 	return (
-		// The hero is an open folder: the example listings are its tabs.
 		<section className="border-kraft border-t">
 			<div className="mx-auto grid w-full max-w-7xl items-start gap-x-10 gap-y-12 px-5 pb-20 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:pb-28">
 				<div className="flex flex-col gap-7 pt-10 lg:pt-24">

@@ -38,7 +38,7 @@ const blankProfile = {
 
 function modelReturns(output: Record<string, unknown>) {
   vi.mocked(generateText).mockResolvedValue(
-    // Only `output` is read by the service.
+    // The fixture omits SDK fields because extraction consumes only `output`.
     { output: { ...blankProfile, ...output } } as never,
   );
 }

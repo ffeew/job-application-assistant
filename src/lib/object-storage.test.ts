@@ -111,7 +111,6 @@ describe("object storage client", () => {
   test("releases the caller at its deadline when the request never settles", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const started = Promise.withResolvers<AbortSignal | null | undefined>();
-    // A storage server that accepts the request and then says nothing.
     const fetchImplementation: typeof fetch = (_input, init) => {
       started.resolve(init?.signal);
       return new Promise<Response>(() => undefined);

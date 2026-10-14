@@ -25,8 +25,8 @@ interface NoticeProps
 }
 
 /**
- * An inline message. Errors announce themselves; pass `role="status"` for
- * messages that appear in response to an action.
+ * Use `role="status"` for action results so assistive technology announces
+ * updates; errors already use the more urgent alert role.
  */
 function Notice({
   className,

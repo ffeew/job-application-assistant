@@ -10,8 +10,8 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request supersedes the run in progress. Runs on main
-# always finish, so every commit there keeps a result.
+# PR updates cancel stale checks to free runner capacity. Active main runs
+# are allowed to finish so their results remain available.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

@@ -3,8 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A document surface: resume previews and letters. Square corners, paper
- * shadow and the document serif set it apart from flat tool panels (Card).
+ * Documents use a serif and page shadow to distinguish them from tool sheets.
  */
 function Paper({ className, ...props }: React.ComponentProps<"div">) {
   return (

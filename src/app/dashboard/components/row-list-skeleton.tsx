@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Placeholder for a page that is a header above a panel of rows. */
 export function RowListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div className="flex flex-col gap-8">

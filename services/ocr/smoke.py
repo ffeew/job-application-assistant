@@ -1,5 +1,3 @@
-"""Build-time check: a synthetic image-only PDF must come back as text."""
-
 import io
 
 from PIL import Image, ImageDraw, ImageFont

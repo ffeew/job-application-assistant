@@ -2,7 +2,6 @@ import * as React from "react";
 import { Paper } from "@/components/ui/paper";
 import { cn } from "@/lib/utils";
 
-/** A cover letter set as a document: editable text on a page. */
 export function LetterPage({
   className,
   ...props

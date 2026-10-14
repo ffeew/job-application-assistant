@@ -152,7 +152,6 @@ function AchievementSummary({
 	pending = false,
 }: {
 	achievement: CreateAchievementRequest;
-	/** Pending rows sit under the panel heading and show everything that was read. */
 	pending?: boolean;
 }) {
 	const Heading = pending ? "h4" : "h3";

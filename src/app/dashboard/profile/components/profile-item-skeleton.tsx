@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Placeholder for one profile section: its heading and a panel of entries. */
 export function ProfileItemSkeleton() {
   return (
     <div className="flex flex-col gap-6">

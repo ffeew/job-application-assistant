@@ -39,7 +39,6 @@ function isActiveRoute(pathname: string, href: string) {
 	return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-// Wide screens: one index tab per section, rising from the open folder.
 function TabRow({ pathname }: { pathname: string }) {
 	return (
 		<nav
@@ -67,7 +66,6 @@ function TabRow({ pathname }: { pathname: string }) {
 	);
 }
 
-// Narrow screens: the same sections as a list in the menu sheet.
 function NavLinks({
 	pathname,
 	onNavigate,
@@ -233,7 +231,6 @@ export default function DashboardLayout({
 				</div>
 			</header>
 
-			{/* The tabs scroll away with the page; on narrow screens one tab names the open folder. */}
 			<div className="band">
 				<TabRow pathname={pathname} />
 				<div className="flex px-5 pt-3 sm:px-8 lg:hidden">

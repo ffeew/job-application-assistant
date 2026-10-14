@@ -27,7 +27,7 @@ pnpm run test src/lib/resume-fitting.test.ts
 pnpm run test services/latex-compiler
 ```
 
-Compiler protocol and diagnostic tests run without TeX. Real compilation tests run when local `newtxtext` and Poppler are available and skip otherwise. They cover page counts, overflow, accents, links, literal TeX, and unsupported characters. The [browser suite](../tests/e2e/README.md) uses the actual compiler Docker image to verify PDF generation without installing TeX on the host.
+Compiler protocol and diagnostic tests run without TeX. Real compilation tests run when local `newtxtext` and Poppler are available and skip otherwise. They cover page counts, overflow, accents, links, literal TeX, and unsupported characters. The [browser suite](#browser-tests) uses the actual compiler Docker image to verify PDF generation without installing TeX on the host.
 
 Resume import tests build synthetic PDF and DOCX files in memory and cover file-type detection, text and link extraction, the scanned-PDF fallback, and the reading order rebuilt from OCR line positions. The OCR client and the object storage client are tested against a stubbed `fetch`. The OCR service itself is Python and outside Vitest; its image build runs an offline [smoke test](../services/ocr/README.md#tests) that must read a generated image-only PDF.
 
@@ -58,10 +58,39 @@ docker stop job-assistant-integration-db
 
 Stop the container after testing even if the test command fails. The `--rm` container and its disposable database are removed when it stops. For another dedicated test database, adjust `DATABASE_URL` while retaining the `_test` suffix. Ordinary `pnpm run test` skips integration unless the opt-in environment variable is set.
 
-## Browser tests and CI
+## Browser tests
 
-The [browser testing guide](../tests/e2e/README.md) covers Playwright commands, isolated PostgreSQL and SeaweedFS Testcontainers, production app builds, real compiler PDFs, UI mode, and failure artifacts. Docker and Chromium are required, but development services and provider keys are not.
+The Playwright suite uses desktop Chromium, the production standalone Next.js application, PostgreSQL 18 in Testcontainers, the real LaTeX compiler image, and the SeaweedFS image named in `docker-compose.yml`. Docker must be running and its CLI available. The harness supplies isolated services and synthetic credentials, so development services and provider keys are not required.
 
-[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use the Node.js version in `.nvmrc` and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, Chromium browser tests, and a Compose smoke test. The browser job caches the compiler image build, runs the compiler tests inside that image with `REQUIRE_TEX=1` so the real compilation tests fail instead of skipping, and uploads reports and service logs for seven days. The smoke job builds every image, including the OCR image and its smoke test, starts `docker-compose.yml` with synthetic credentials, and waits for each health check. Actions are pinned to commit SHAs, which Dependabot updates monthly.
+```sh
+pnpm install
+pnpm exec playwright install --with-deps chromium
+pnpm run test:e2e
+pnpm run test:e2e:ui
+```
+
+The first run builds the compiler's TeX/font packages; later runs use Docker's build cache. To reuse an image built from the current compiler sources, set `E2E_LATEX_IMAGE` to its local tag; the harness then skips that build.
+
+The app runs at `http://127.0.0.1:3100`; the port must be free. Test-only `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup applies committed migrations to a fresh database ending in `_test`, overrides runtime credentials with synthetic values, and waits for healthy services. Each test gets a fresh BetterAuth account, seeded profile and application data, and browser context. Authentication tests also exercise the actual UI.
+
+Resume tests use manual content selection and a small one-page profile. The app and worker reject fetches outside their local app/compiler/storage origins to prevent live provider calls. Completed generation tests require zero fitting revisions and warnings, so an unexpected AI fitting attempt fails their assertions even when generation falls back to a draft. The imported-file test sends a real upload and checks the basic extraction used when structured parsing fails. Stored files use the real storage container, providing the suite's check of request signing against SeaweedFS. PDF checks use `pdfinfo` and `pdftotext` in the compiler container.
+
+The queued-job test starts the real worker only after navigation, avoiding timing-dependent sleeps. Workers stop before candidate cleanup; the app and disposable containers stop at suite teardown, including setup failures.
+
+Playwright discovers `.e2e.ts` files, which Vitest does not. To run a subset, disable CI retries, or open the report:
+
+```sh
+pnpm run test:e2e tests/e2e/profile.e2e.ts
+pnpm run test:e2e --retries=0
+pnpm exec playwright show-report artifacts/e2e/report
+```
+
+Reports, screenshots, retained failure traces, downloaded PDFs, per-test worker logs, and setup/application/compiler/storage/database logs live under `artifacts/e2e`. Build output and artifacts are ignored by Git, ESLint, and normal TypeScript source discovery. Core workflows and real generation are covered; live AI, OCR, email delivery, mobile layouts, and other browser engines are deferred.
+
+## CI
+
+[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use `.nvmrc` and frozen pnpm installs. The code-quality job runs the three required checks; separate jobs run PostgreSQL integration tests with synthetic credentials, Chromium browser tests, and a Compose smoke test.
+
+The browser job uses the GitHub Actions BuildKit cache for the compiler image, runs compiler tests inside that image with `REQUIRE_TEX=1` so real compilation tests fail instead of skipping, and uploads browser reports and service logs for seven days. The smoke job builds all project images, including the OCR image and its smoke test, starts `docker-compose.yml` with synthetic credentials, and waits for each health check. Actions are pinned to commit SHAs, which Dependabot updates monthly.
 
 Document relevant manual QA with the change. Public deployment checks, including live provider behavior and backup restoration, are covered in the [deployment guide](deployment.md#deployment-verification).

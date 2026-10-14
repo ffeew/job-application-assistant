@@ -4,7 +4,6 @@ import type { ApplicationJsonResponse } from "@/app/api/applications/validators"
 
 export type ApplicationStatus = ApplicationJsonResponse["status"];
 
-// Pipeline order: where an application is, then how it ended.
 export const applicationStatuses = [
   "applied",
   "interviewing",
@@ -37,10 +36,9 @@ export const statusInks: Record<ApplicationStatus, string> = {
   withdrawn: "text-status-withdrawn",
 };
 
-// The last three in pipeline order are how an application ended.
 const decided: readonly ApplicationStatus[] = ["offer", "rejected", "withdrawn"];
 
-/** An application's status, stamped. Place it on a sheet, not on the folder. */
+/** Status inks need a sheet beneath them to preserve contrast. */
 export function StatusMark({
   status,
   className,

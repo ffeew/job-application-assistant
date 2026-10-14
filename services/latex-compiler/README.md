@@ -25,7 +25,7 @@ For the full self-hosted stack, follow the [deployment guide](../../docs/deploym
 
 Each compilation uses a unique temporary directory, disabled shell escape, restricted file access, a subprocess environment without service secrets, and cleanup on success or failure. Source is limited to 256 KiB, PDF output to 2 MiB, and each subprocess to 15 seconds. Two compilations may run concurrently. The documented Docker command and Compose service use a read-only root filesystem, a 128 MiB temporary filesystem, a 1 GiB memory limit, and two CPUs. Packages and fonts are installed at build time; no TeX package download is required during requests. The endpoint accepts only application-generated source and must remain authenticated.
 
-The application uses these diagnostics for [resume fitting](../../README.md#features). Generation runs in the background worker with a [180-second overall deadline](../../docs/deployment.md#background-generation).
+The application uses these diagnostics for [resume fitting](../../README.md#features). See [background generation](../../docs/deployment.md#background-generation) for worker deadlines and recovery.
 
 ## Image and template compatibility
 

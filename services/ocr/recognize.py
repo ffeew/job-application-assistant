@@ -1,8 +1,5 @@
-"""Reads a scanned PDF on stdin and writes its text lines as JSON on stdout.
-
-Runs as a short-lived subprocess of server.py, so the models' memory returns to
-the system after every job and a crash in the PDF renderer cannot take the
-service down.
+"""Runs in a subprocess so model memory is released after each job and a
+PDF-renderer crash cannot take down the service.
 """
 
 import json
@@ -10,8 +7,7 @@ import os
 import sys
 
 MAX_PAGES = 5
-# About 155 DPI for A4. Recognition is no better on a degraded scan at higher
-# resolutions, while memory and time keep growing.
+# Cap rendering size to bound memory and processing time on CPU.
 PAGE_LONG_SIDE = 1800
 THREADS = int(os.environ.get("OCR_THREADS", "2"))
 
@@ -28,9 +24,9 @@ def recognize(pdf: bytes) -> dict:
             # The per-line 180-degree classifier occasionally flips an upright
             # line, which turns it into noise. Scans are assumed upright.
             "Global.use_cls": False,
-            # Pages are already rendered at the intended size.
+            # Avoid resizing pages already rendered at this size.
             "Global.max_side_len": PAGE_LONG_SIDE,
-            # Smaller recognition batches cut peak memory by about a quarter.
+            # Smaller recognition batches reduce peak memory.
             "Rec.rec_batch_num": 2,
             "EngineConfig.onnxruntime.intra_op_num_threads": THREADS,
             "EngineConfig.onnxruntime.inter_op_num_threads": 1,
@@ -49,7 +45,6 @@ def recognize(pdf: bytes) -> dict:
                     {
                         "text": text,
                         "score": round(float(score), 4),
-                        # Quadrilateral corners reduced to left, top, right, bottom.
                         "box": [
                             float(box[:, 0].min()),
                             float(box[:, 1].min()),

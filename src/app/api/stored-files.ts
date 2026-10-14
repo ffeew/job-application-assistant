@@ -4,10 +4,6 @@ import { logger } from "@/lib/logger";
 import { createObjectStorage } from "@/lib/object-storage";
 import { RequestError } from "@/lib/request-error";
 
-// Imported files and saved resume PDFs live in object storage; the database
-// keeps only their keys. Storage is optional: without it nothing is kept and
-// saved resumes are compiled each time they are opened.
-
 const storage =
   env.OBJECT_STORAGE_URL &&
   env.OBJECT_STORAGE_ACCESS_KEY &&
@@ -31,7 +27,6 @@ export const resumePdfKey = (userId: string) =>
 export const uploadKey = (userId: string, uploadId: string) =>
   `users/${userId}/uploads/${uploadId}`;
 
-/** False when storage is not configured or the write failed. */
 export async function storeFile(
   key: string,
   bytes: Uint8Array<ArrayBuffer>,
@@ -66,9 +61,9 @@ export async function readFile(key: string): Promise<StoredFile> {
 }
 
 /**
- * Removes an object nothing refers to any more: a replaced PDF, or a write
- * whose database row was never committed. A failure is logged, not raised,
- * because the caller's own work has already succeeded.
+ * Unreferenced files need cleanup after both replacements and failed saves.
+ * Cleanup failures are logged so they do not change the original operation's
+ * outcome or hide its error.
  */
 export async function discardFile(key: string | null | undefined) {
   if (!storage || !key) return;
@@ -99,7 +94,6 @@ export async function removeFile(key: string | null | undefined) {
   }
 }
 
-/** The stored PDF's key, or null when it could not be kept. */
 export async function storeResumePdf(
   userId: string,
   pdf: Uint8Array<ArrayBuffer>,

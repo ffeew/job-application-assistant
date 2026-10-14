@@ -174,7 +174,6 @@ export type ExtractedResumeText = { markdown: string; warnings: string[] };
 type ExtractParams = {
   fileBuffer: Buffer;
   mimeType: string;
-  /** Null when no OCR service is configured. */
   readScannedPdf: ScannedPdfReader | null;
 };
 

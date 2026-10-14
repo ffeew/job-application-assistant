@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 
-/** The product name with its folder glyph: one sheet, one highlighted line. */
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span

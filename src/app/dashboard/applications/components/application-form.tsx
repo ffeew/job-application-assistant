@@ -28,7 +28,6 @@ import { FormSection } from "@/app/dashboard/components/form-section";
 import { applicationStatuses, statusLabels } from "./status-mark";
 
 interface ApplicationFormProps {
-  /** The saved application when editing; omitted when adding a new one. */
   application?: ApplicationJsonResponse;
   submitLabel: string;
   isPending: boolean;

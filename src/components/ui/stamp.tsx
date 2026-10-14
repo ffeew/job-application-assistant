@@ -7,7 +7,6 @@ const stampVariants = cva("stamp", {
   variants: {
     frame: {
       single: "",
-      // A second rule marks a final decision.
       double: "stamp-double",
     },
     size: {
@@ -22,14 +21,12 @@ const stampVariants = cva("stamp", {
 interface StampProps
   extends React.ComponentProps<"span">,
     VariantProps<typeof stampVariants> {
-  /** Presses the stamp in. Use when it answers something the user just did. */
+  /** Animate verdicts in response to an action to avoid distracting idle motion. */
   pressed?: boolean;
 }
 
 /**
- * A verdict, rubber-stamped: an application's status or whether a resume fits
- * its page target. Set the ink with a text colour. Stamps belong on paper,
- * where every ink passes contrast.
+ * Stamps belong on paper, where every status ink passes contrast.
  */
 function Stamp({
   className,

@@ -10,7 +10,6 @@ const envSchema = z.object({
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
   BETTER_AUTH_URL: z.url(),
-  // Closes registration once the accounts this server is meant for exist.
   DISABLE_SIGNUP: z
     .enum(["true", "false"])
     .default("false")
@@ -25,7 +24,6 @@ const envSchema = z.object({
   LATEX_COMPILER_TOKEN: z.string().min(32).optional(),
   OCR_SERVICE_URL: z.url().optional(),
   OCR_SERVICE_TOKEN: z.string().min(32).optional(),
-  // Any S3-compatible store; the Compose stack runs SeaweedFS.
   OBJECT_STORAGE_URL: z.url().optional(),
   OBJECT_STORAGE_BUCKET: z.string().min(1).default("job-assistant"),
   OBJECT_STORAGE_ACCESS_KEY: z.string().min(1).optional(),

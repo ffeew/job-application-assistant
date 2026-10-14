@@ -21,15 +21,13 @@ export function normalizeMonth(value: string | null | undefined): string | null 
   const text = value?.trim();
   if (!text || /present|current|ongoing/i.test(text)) return null;
 
-  // 2020-03, 2020/03 and full ISO dates such as 2020-03-15.
   const yearFirst = /^(\d{4})[-/.](\d{1,2})(?:[-/.T]|$)/.exec(text);
   if (yearFirst) return toMonth(yearFirst[1], Number(yearFirst[2]));
 
-  // 03/2020.
   const monthFirst = /^(\d{1,2})[-/.](\d{4})$/.exec(text);
   if (monthFirst) return toMonth(monthFirst[2], Number(monthFirst[1]));
 
-  // 03/15/2020. When both leading parts could be a month the US order is assumed.
+  // When both leading parts could be a month the US order is assumed.
   const numeric = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(text);
   if (numeric) {
     const first = Number(numeric[1]);
@@ -37,7 +35,6 @@ export function normalizeMonth(value: string | null | undefined): string | null 
     return toMonth(numeric[3], first > 12 ? second : first);
   }
 
-  // Jan 2020, September 2019, 15 March 2021, Mar. 3, 2021.
   const name = MONTH_NAMES.exec(text)?.[1];
   const year = /\b(\d{4})\b/.exec(text)?.[1];
   if (name && year) {

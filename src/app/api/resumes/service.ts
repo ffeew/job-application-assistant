@@ -14,8 +14,7 @@ import type {
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type ResumeRow = typeof resumes.$inferSelect;
 
-// Lists every field a client receives. The storage key is left out: clients
-// ask for a PDF by resume ID.
+// Storage keys stay on the server because clients request PDFs by resume ID.
 function toResponse(resume: ResumeRow): ResumeResponse {
   return {
     id: resume.id,
@@ -230,7 +229,7 @@ export class ResumesService {
     return Boolean(deleted);
   }
 
-  /** What the PDF route needs, including the key no other response carries. */
+  /** Keep storage keys confined to the server's PDF lookup. */
   async getResumeForPdf(userId: string, id: string) {
     const [resume] = await db
       .select({

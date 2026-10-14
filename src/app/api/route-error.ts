@@ -4,8 +4,8 @@ import { logger } from "@/lib/logger";
 import { RequestError } from "@/lib/request-error";
 
 /**
- * A request the client got wrong is a 400 and needs no log entry. Anything
- * else is a server fault: it is logged with its cause and reported generically.
+ * Expected failures keep their user-facing status and message without a fault
+ * log. Unexpected failures are logged with their cause and reported generically.
  */
 export function routeErrorResponse(error: unknown, message: string) {
   if (error instanceof RequestError) {

@@ -1,4 +1,4 @@
-/** A well-formed request that asks for something the caller may not have. */
+/** Expected failures carry a user-facing response instead of a generic server error. */
 export class RequestError extends Error {
   readonly status: number;
 

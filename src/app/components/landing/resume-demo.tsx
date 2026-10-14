@@ -165,7 +165,6 @@ export function ResumeDemo() {
               frame="double"
               pressed
               className="text-success absolute top-[4cqw] right-[4cqw] text-[max(11px,3.4cqw)] [--stamp-tilt:7deg]"
-              // Lands after the strokes, so its start time depends on how many there are.
               style={
                 { "--stamp-delay": `${layout.stampDelay}ms` } as React.CSSProperties
               }

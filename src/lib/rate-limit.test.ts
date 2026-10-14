@@ -8,7 +8,6 @@ test("allows the limit, then refuses until the window moves on", () => {
 
   const refused = check("user", 20_000);
   expect(refused.allowed).toBe(false);
-  // The first request leaves the window 60 seconds after it was made.
   expect(refused.retryAfterSeconds).toBe(40);
 
   expect(check("user", 60_000).allowed).toBe(true);

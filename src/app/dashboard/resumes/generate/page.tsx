@@ -31,7 +31,7 @@ import {
   WorkbenchSkeleton,
 } from "../components/resume-workbench";
 
-// Only the on/off section switches; the selection also carries id lists.
+// Exclude ID-list fields so section switches can only address boolean selections.
 type ContentSelectionKey = Extract<
   keyof GenerateResumeRequest["contentSelection"],
   `include${string}`
@@ -179,7 +179,6 @@ export default function GenerateResumePage() {
   const sections: {
     key: ContentSelectionKey;
     label: string;
-    /** How much of this section the profile holds; null hides the note. */
     available: string | null;
   }[] = [
     {

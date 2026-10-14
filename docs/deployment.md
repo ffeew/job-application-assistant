@@ -1,6 +1,6 @@
 # Local server deployment
 
-The stack targets Linux x86-64 with Docker Engine and Compose v2. It runs the Next.js app, PostgreSQL 18, a one-shot migrator, a background generation worker, the LaTeX compiler, the OCR service, and SeaweedFS for stored files. Migrations initialize a fresh PostgreSQL database; they do not import historical Turso data.
+The stack targets Linux x86-64 with Docker Engine and Compose v2. It runs the Next.js app, PostgreSQL 18, a one-shot migrator, a background generation worker, the LaTeX compiler, the OCR service, and SeaweedFS for stored files.
 
 For host development, follow [local setup](../README.md#local-setup). Configuration variables are listed in the [README](../README.md#configuration), and automated checks are covered in the [testing guide](testing.md).
 
@@ -25,7 +25,7 @@ Production builds use non-secret placeholders and do not connect to a live datab
 
 ## Updates and rollback
 
-Back up the database before updates. Generate and commit schema migrations during development with `pnpm run db:generate`; deploy committed migrations rather than using `db:push` against production. Check out the new revision (for example `git pull --ff-only`), then:
+Back up the database and stored files before updates. Deploy [committed migrations](../README.md#commands). Check out the new revision (for example `git pull --ff-only`), check `.env` against the [configuration reference](../README.md#configuration), then:
 
 ```sh
 docker compose build
@@ -36,10 +36,6 @@ docker compose up -d --wait
 ```
 
 Keep the preceding source revision/images. Rebuilding that revision is sufficient only when its schema is compatible with the migration. Otherwise stop the stack and restore the matching database backup before starting the older version. Changing PostgreSQL's major version requires an explicit upgrade/restore procedure; keep version 18 for this stack. `docker compose down` preserves data; adding `--volumes` deletes it.
-
-When updating from a release without file storage, add `OBJECT_STORAGE_ACCESS_KEY` and a generated `OBJECT_STORAGE_SECRET_KEY` to `.env` before running the update commands; Compose refuses every command, including `build` and `stop`, until they are set. Resumes saved earlier have no stored PDF yet: each gets one the first time it is opened, compiled from its snapshot by the compiler image then running. Files imported earlier were never kept and cannot be recovered.
-
-When updating from a release that used Mistral OCR, add a generated `OCR_SERVICE_TOKEN` to `.env` before running the update commands, for the same reason; `MISTRAL_API_KEY` is no longer read. The first build produces an OCR image of about 500 MB.
 
 Keep app and compiler releases compatible with saved document snapshots. See the [compiler guide](../services/latex-compiler/README.md#image-and-template-compatibility) for image and template compatibility requirements.
 
@@ -69,7 +65,7 @@ docker run --rm -v job-application-assistant_seaweedfs-data:/data -v /path/to/ba
 docker compose up -d --wait
 ```
 
-Restore the database and the files from the same moment where you can. A database restored without its files still works: a saved resume whose PDF is missing is compiled and stored again when opened, and a missing imported file is reported as gone so it can be deleted from the list. Files restored without their database rows are unreferenced and are not cleaned up. There is no account deletion in the app; if you remove an account from the database by hand, also delete its `users/<account id>/` prefix from the bucket.
+Restore the database and the files from the same moment where you can. A database restored without its files still works: a saved generated resume whose PDF is missing is compiled and stored again when opened, and a missing imported file is reported as gone so it can be deleted from the list. Files restored without their database rows are unreferenced and are not cleaned up. There is no account deletion in the app; if you remove an account from the database by hand, also delete its `users/<account id>/` prefix from the bucket.
 
 To restore a backup to the configured database, stop the app and worker first. Restore replaces the database's saved state:
 
@@ -83,20 +79,18 @@ Test backups by restoring them into a separate empty database/container before r
 
 ## Background generation
 
-The worker runs one job at a time. HTTP generation requests enqueue work and return **202 `{ jobId, status }`**. Poll `GET /api/resume-generation/jobs/{id}` every two seconds; statuses are `queued`, `running`, `completed`, and `failed`. Completed responses contain a validated generated-resume result. `GET /api/resume-generation/jobs/{id}/pdf` downloads the PDF kept in the job's result without another AI call or compilation. Every job endpoint requires a session and enforces ownership.
+The worker runs one job at a time. Generation requests enqueue work and return HTTP 202; the browser polls every two seconds through the `queued`, `running`, `completed`, and `failed` states. Job access requires a session and enforces ownership. The generation screens restore the latest job's inputs and results after navigation and permit retry after failure. A restored result requires a download or save action; it does not trigger an automatic download.
 
-`POST /api/resume-generation/jobs` accepts `{ kind: "profile" | "application", intent, request }`, with the generation request schema for that kind. Profile intents are `preview` and `download`; application jobs also allow `save-and-download`. Application requests include `applicationId`. `POST /api/resume-generation/preview`, `POST /api/resume-generation/pdf`, and `POST /api/applications/{id}/resume` also enqueue jobs and return 202. The application endpoint's GET reads application and saved-resume information; its PUT explicitly saves or updates a tailored resume.
-
-`GET /api/resume-generation/jobs` restores the owner's latest profile job; provide `?applicationId=...` for an application's latest job. The generation screens restore inputs and completed results, show queue/running states, and permit retry after failure. Preview remains a draft, Download PDF downloads a profile resume, and Save and download PDF commits a tailored resume with job completion even when the browser closes. A restored result does not trigger another automatic download. Use the download and save actions to download or save the restored result.
+Preview remains a draft; Save and download PDF commits a tailored resume when the job completes, even if the browser closes. Completed jobs keep their PDFs in the database for download without another AI call or compilation. Saved library PDFs are written to object storage by the worker for Save and download PDF, by the app when a preview is saved, and by the app when a saved generated resume without a PDF is first opened.
 
 Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter and conversation-starter generation allow ten requests a minute per account and resume import five, counted in the app process's memory.
 
-Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Generation runs in the worker with a 180-second overall deadline, independently of Cloudflare's HTTP timeout. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain. Job results stay in PostgreSQL. Only a saved resume's PDF is written to storage: by the worker for Save and download PDF, by the app when a preview is saved, and by the app when a saved resume without one is first opened.
+Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Content selection, PDF compilation, and fitting use a 180-second abort deadline in the worker, independently of Cloudflare's HTTP timeout; subsequent file storage and database completion are outside that deadline. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain.
 
-Read `docker compose logs -f app worker latex-compiler ocr seaweedfs` for operational status. The app, worker, and migrator write one JSON object per line, at `LOG_LEVEL` and above. App health checks database readiness; worker health checks its processing heartbeat; compiler, OCR, and storage health check their HTTP services. The app and worker log every file they could not store, read, or remove, with its key. A storage request with no answer after 15 seconds counts as failed, so a stalled storage server slows the affected pages by that long instead of holding them. A worker health failure is visible in `docker compose ps`; Docker's restart policy restarts exited processes, not merely unhealthy ones. A missing worker leaves jobs queued until it returns.
+Read `docker compose logs -f app worker latex-compiler ocr seaweedfs` for operational status. The app, worker, and migrator write one JSON object per line, at `LOG_LEVEL` and above. App health checks database readiness; worker health checks its processing heartbeat; compiler, OCR, and storage health check their HTTP services. The app and worker log every file they could not store, read, or remove, with its key. Each storage call has a 15-second deadline, so a stalled store cannot hold a request indefinitely. A worker health failure is visible in `docker compose ps`; Docker's restart policy restarts exited processes, not merely unhealthy ones. A missing worker leaves jobs queued until it returns.
 
 ## Deployment verification
 
-Run the [quality and integration checks](testing.md) before deploying. CI builds the images and starts this Compose stack with synthetic credentials, which checks that the services become healthy but not your configuration. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, the OCR service, and file storage for host development.
+Run the [quality and integration checks](testing.md) before deploying. [CI checks](testing.md#ci) use synthetic credentials; verify your own configuration separately. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, the OCR service, and file storage for host development.
 
 Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Import a text-based PDF and a scanned PDF into a profile; the scan should populate fields and show the OCR warning. Both files should appear under Imported files on the profile and download unchanged. Confirm records and stored files survive container recreation and a backup restores into a separate test database. Live AI and email checks require your configured provider credentials.

@@ -245,7 +245,6 @@ export async function completeGenerationJob(
 ) {
   const result = generatedResumeResultSchema.parse(input);
   const payload = generationJobPayloadSchema.parse(job.payload);
-  // Only this intent saves a library resume, and with it the PDF.
   const savedForApplication =
     payload.kind === "application" && payload.intent === "save-and-download"
       ? payload.request.applicationId
@@ -314,7 +313,7 @@ function completeInTransaction(
             eq(resumes.isTailored, true),
           ),
         )
-        // The same row the application page reads as the saved resume.
+        // Match the application page's lookup so this save updates its displayed resume.
         .orderBy(desc(resumes.updatedAt))
         .limit(1);
       const values = {

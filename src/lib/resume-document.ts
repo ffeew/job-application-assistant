@@ -95,7 +95,7 @@ export function serializeGeneratedResume(
   return JSON.stringify(savedGeneratedResumeSchema.parse(result));
 }
 
-/** Legacy consumers need plain sections rather than the generated document shape. */
+/** Letter and conversation prompts need plain sections rather than document layout. */
 export function documentToResumeContent(document: ResumeDocument) {
   const sectionText = (kind: ResumeDocument["sections"][number]["kind"]) =>
     document.sections

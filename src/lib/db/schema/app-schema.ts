@@ -142,7 +142,6 @@ export const userProfiles = pgTable("user_profiles", {
     .notNull(),
 });
 
-// The original of each imported resume file; the bytes are in object storage.
 export const resumeUploads = pgTable("resume_uploads", {
   id: text("id")
     .primaryKey()

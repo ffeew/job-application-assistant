@@ -7,7 +7,6 @@ interface EmptyStateProps {
   className?: string;
 }
 
-/** An open folder with the outline of the sheet that is not in it yet. */
 function EmptyFolder() {
   return (
     <svg

@@ -8,7 +8,6 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    // One folder on the drawer's ink: its tab carries the wordmark.
     <div className="band flex min-h-screen flex-col items-center justify-center px-5 py-12">
       <div className="flex w-full max-w-md flex-col">
         <div className="flex px-4">

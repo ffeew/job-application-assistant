@@ -4,7 +4,6 @@ const shortDate = new Intl.DateTimeFormat(undefined, {
   year: "numeric",
 });
 
-/** A compact, locale-aware date such as "2 Oct 2026"; empty for invalid input. */
 export function formatShortDate(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
   return Number.isNaN(date.getTime()) ? "" : shortDate.format(date);
@@ -27,7 +26,7 @@ export function formatCalendarDay(value: string | Date): string {
   return Number.isNaN(date.getTime()) ? "" : calendarDay.format(date);
 }
 
-/** Today's date in the viewer's zone, as a date input expects it. */
+/** UTC conversion could shift today's date away from the viewer's calendar day. */
 export function localDateInputValue(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");

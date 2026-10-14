@@ -82,12 +82,9 @@ services:
     cpus: 2
     networks: [ocr]
 
-  # Keeps imported files and saved resume PDFs behind an S3 endpoint.
   seaweedfs:
     image: chrislusf/seaweedfs:4.48
     restart: unless-stopped
-    # One process runs the master, volume server, filer and S3 gateway. The
-    # parts this stack does not use are switched off.
     command:
       - mini
       - -dir=/data
@@ -101,7 +98,7 @@ services:
       AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_ACCESS_KEY:?Set OBJECT_STORAGE_ACCESS_KEY in .env}
       AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_SECRET_KEY:?Set OBJECT_STORAGE_SECRET_KEY in .env}
       S3_BUCKET: ${OBJECT_STORAGE_BUCKET:-job-assistant}
-    # The image's unprivileged account, which already owns /data in a new volume.
+    # Use the image's /data owner so fresh volumes can be written without root.
     user: "1000:1000"
     volumes:
       - seaweedfs-data:/data

@@ -150,7 +150,6 @@ function CertificationSummary({
 	pending = false,
 }: {
 	certification: CreateCertificationRequest;
-	/** Pending rows sit under the panel heading. */
 	pending?: boolean;
 }) {
 	const Heading = pending ? "h4" : "h3";

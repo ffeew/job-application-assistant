@@ -1,5 +1,3 @@
-"""Authenticated HTTP service that reads scanned resume PDFs."""
-
 import hmac
 import json
 import os

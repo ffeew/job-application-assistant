@@ -34,7 +34,6 @@ interface ManualResumeFormProps {
   submitLabel: string;
 }
 
-/** The hand-written resume fields shared by the new and edit pages. */
 export function ManualResumeForm({
   register,
   errors,

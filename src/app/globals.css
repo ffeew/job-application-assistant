@@ -49,7 +49,6 @@
   --text-xl: 1.3125rem;
   --text-xl--line-height: 1.35;
 
-  /* Paper and card stock have near-square corners. */
   --radius-sm: 3px;
   --radius-md: 4px;
   --radius-lg: 4px;
@@ -79,7 +78,6 @@ html:not(.dark)
   --popover-foreground: #1c2030;
   --primary: #2a44f0;
   --primary-foreground: #ffffff;
-  /* Deep manila: tags and secondary buttons, on folders and on sheets. */
   --secondary: #e3c684;
   --secondary-foreground: #1c2030;
   /* Translucent so washes and hover states read on both manila and paper. */
@@ -96,12 +94,11 @@ html:not(.dark)
   --ring: #2a44f0;
   --link: #2a44f0;
 
-  /* Folder furniture: edges, and the folders standing behind the open one. */
   --kraft: #b98a3e;
   --tab: #e3c684;
   --scrim: rgb(28 32 48 / 0.55);
 
-  /* Documents stay paper-white in both themes, as the compiled PDF does. */
+  /* Documents stay light in both themes to resemble the compiled PDF. */
   --paper: #ffffff;
   --paper-foreground: #1c2030;
   /* Sheets cast a shadow; folders do not. The ring keeps an edge on manila. */
@@ -127,7 +124,6 @@ html:not(.dark)
   --status-rejected: #d2283c;
   --status-withdrawn: #5b6675;
 
-  /* Fibres in the folder stock. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35 0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.29 0 0 0 0 0.06 0.5 0 0 0 -0.17'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -309,7 +305,6 @@ html:not(.dark) .band {
   }
 }
 
-/* The open folder's tab takes the folder's own stock. */
 @utility folder-tab-open {
   --tab-fill: var(--background);
   z-index: 1;
@@ -342,13 +337,11 @@ html:not(.dark) .band {
   rotate: var(--stamp-tilt, -1.5deg);
 }
 
-/* A second rule marks a final decision. */
 @utility stamp-double {
   outline: 1.5px solid currentColor;
   outline-offset: 1.5px;
 }
 
-/* No two impressions land at the same angle. */
 :is(li, tr):nth-child(even) {
   --stamp-tilt: 1deg;
 }
@@ -373,7 +366,6 @@ html:not(.dark) .band {
   animation-delay: var(--stamp-delay, 0ms);
 }
 
-/* A highlighter stroke: shorter than the line and uneven at the ends. */
 @utility highlight-stroke {
   /* Ink in both themes: light text on yellow is unreadable on dark panels. */
   color: var(--highlight-foreground);

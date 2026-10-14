@@ -11,13 +11,9 @@ const URL_MAX = 2_000;
 const tooLong = (max: number) =>
   `Keep this under ${max.toLocaleString("en-US")} characters`;
 
-/** A single-line value such as a name, title or place. */
 export const shortText = z.string().max(SHORT_TEXT_MAX, tooLong(SHORT_TEXT_MAX));
-/** Free text such as a description or a summary. */
 export const longText = z.string().max(LONG_TEXT_MAX, tooLong(LONG_TEXT_MAX));
-/** A stored document: a serialized resume snapshot or hand-written sections. */
 export const documentText = z.string().max(1_000_000, "This document is too large to save");
-/** An identifier supplied by the client; real ones are UUIDs. */
 export const recordId = z.string().min(1).max(100);
 export const jobDescriptionText = z
   .string()
@@ -56,7 +52,6 @@ export const httpUrl = z.url({
 
 export const optionalUrl = nullableText.pipe(httpUrl.nullable());
 
-/** Completes a link written without its scheme; null when it is not a web address. */
 export function normalizeHttpUrl(value: string | null | undefined): string | null {
   const text = value?.trim();
   if (!text) return null;

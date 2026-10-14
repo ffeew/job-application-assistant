@@ -10,7 +10,6 @@ const limiters = {
   resumeImport: createRateLimiter({ limit: 5, windowMs: 60_000 }),
 };
 
-/** Returns the 429 response to send, or null when the request may proceed. */
 export function limitAiRequest(
   kind: keyof typeof limiters,
   userId: string,

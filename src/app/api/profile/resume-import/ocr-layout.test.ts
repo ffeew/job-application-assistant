@@ -21,7 +21,6 @@ const page = (lines: OcrLine[]): OcrPage => ({
   height: 2200,
   lines,
 });
-/** Consecutive left-aligned lines, as in one column of body text. */
 const column = (texts: string[], left: number, top: number, width: number) =>
   texts.map((text, index) => line(text, left, top + index * LINE_PITCH, width));
 

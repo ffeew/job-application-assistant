@@ -3,7 +3,6 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface HighlightProps extends React.ComponentProps<"mark"> {
-  /** `stroke` marks running text on paper; `chip` is a standalone tag. */
   variant?: "stroke" | "chip";
 }
 

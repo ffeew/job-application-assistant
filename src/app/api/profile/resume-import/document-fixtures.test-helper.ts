@@ -3,7 +3,7 @@ import { crc32 } from "node:zlib";
 
 type PdfPage = { lines: string[]; link?: string };
 
-/** A minimal valid PDF. A page without lines has no text layer, like a scan. */
+/** Empty pages model scanned PDFs without a text layer. */
 export function buildPdf(pages: PdfPage[]): Buffer {
   const objects: string[] = [];
   const add = (body: string) => objects.push(body);
@@ -49,7 +49,6 @@ export function buildPdf(pages: PdfPage[]): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-/** Writes an uncompressed ZIP archive, which is all a DOCX container needs. */
 function zip(files: Record<string, string>): Buffer {
   const entries: Buffer[] = [];
   const directory: Buffer[] = [];
@@ -121,10 +120,6 @@ function renderParagraphs(paragraphs: DocxParagraph[]) {
   return { xml, relationships: relationships.join("") };
 }
 
-/**
- * A minimal DOCX whose paragraphs are plain text or a single hyperlink. Text
- * and links may be escaped XML. `header` fills the page header.
- */
 export function buildDocx(
   paragraphs: DocxParagraph[],
   header: DocxParagraph[] = [],

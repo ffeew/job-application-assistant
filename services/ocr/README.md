@@ -14,7 +14,7 @@ docker run --rm --name job-resume-ocr -p 127.0.0.1:8081:8080 \
   job-resume-ocr
 ```
 
-Set `OCR_SERVICE_URL=http://localhost:8081` and the matching `OCR_SERVICE_TOKEN` in the application's `.env`. Without these settings the application still imports text-based PDFs, DOCX, and TXT files; a scanned PDF returns an error that asks for a text-based file. For host development, `docker compose -f docker-compose.dev.yml up -d` starts the service on that port.
+Set `OCR_SERVICE_URL=http://localhost:8081` and the matching `OCR_SERVICE_TOKEN` in the application's `.env`. See [local setup](../../README.md#local-setup) to run it with the development stack, and [configuration](../../README.md#configuration) for import behavior when OCR is unavailable.
 
 ## Protocol and resource limits
 
@@ -22,9 +22,9 @@ Set `OCR_SERVICE_URL=http://localhost:8081` and the matching `OCR_SERVICE_TOKEN`
 
 Lines come back with positions, not in reading order. The application rebuilds rows and columns in `src/app/api/profile/resume-import/ocr-layout.ts`.
 
-Uploads are limited to 8 MiB and the first five pages, rendered at 1800 pixels on the long side. One document is read at a time, with a 100-second limit. Each document is read in a subprocess that exits afterwards, so the idle service uses about 16 MiB and the models' memory (about 700 MiB at peak) is returned after every job. The subprocess does not receive the service token. `OCR_THREADS` sets the inference thread count and defaults to 2; raise it together with the container's CPU limit.
+Uploads are limited to 8 MiB and the first five pages, rendered at 1800 pixels on the long side. One document is read at a time, with a 100-second limit. Each document is read in a subprocess that exits afterwards, releasing the models' memory after every job. The subprocess does not receive the service token. `OCR_THREADS` sets the inference thread count and defaults to 2; raise it together with the container's CPU limit.
 
-The Compose service uses a read-only root filesystem, no capabilities, a 1 GiB memory limit, and two CPUs. Its network is internal: the service can be reached by the app and can reach nothing else.
+The Compose service uses a read-only root filesystem, no capabilities, a 1 GiB memory limit, and two CPUs. It shares an internal network only with the app and cannot directly reach the database, compiler, or internet.
 
 ## Models and languages
 

@@ -10,9 +10,7 @@ interface SegmentedControlOption<T extends string | number> {
 }
 
 interface SegmentedControlProps<T extends string | number> {
-  /** Shared radio group name. */
   name: string;
-  /** Id of the element that labels the group. */
   labelledBy: string;
   options: readonly SegmentedControlOption<T>[];
   value: T | undefined;
