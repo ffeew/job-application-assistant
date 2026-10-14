@@ -6,6 +6,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { logger } from "@/lib/logger";
 import { assertOwnsApplication, assertOwnsResume } from "../linked-records";
 import type {
   CoverLetterResponse,
@@ -207,7 +208,7 @@ Format the cover letter properly with appropriate salutations and structure. Do 
         success: true,
       };
     } catch (error) {
-      console.error("AI Generation error:", error);
+      logger.error({ err: error }, "AI cover letter generation error");
       throw new Error("Failed to generate cover letter. Please try again.");
     }
   }

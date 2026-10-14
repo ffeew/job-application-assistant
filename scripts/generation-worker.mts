@@ -2,6 +2,7 @@ import "dotenv/config";
 import { writeFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { pool } from "../src/lib/db/db";
+import { logger } from "../src/lib/logger";
 import {
   claimGenerationJob,
   cleanupGenerationJobs,
@@ -21,7 +22,7 @@ const heartbeat = () =>
   writeFile("/tmp/generation-worker-heartbeat", String(Date.now()));
 
 try {
-  console.log("Resume generation worker started.");
+  logger.info("Resume generation worker started");
   while (!state.stopping) {
     try {
       await heartbeat();
@@ -32,14 +33,17 @@ try {
       }
       const job = await claimGenerationJob();
       if (job) {
-        console.log(`Processing generation job ${job.id}.`);
+        logger.info({ jobId: job.id }, "Processing generation job");
         await runGenerationJob(job, undefined, heartbeat);
-        console.log(`Finished processing generation job ${job.id}.`);
+        logger.info({ jobId: job.id }, "Finished processing generation job");
       } else {
         await delay(2000);
       }
     } catch (error) {
-      console.error("Generation worker iteration failed; retrying:", error);
+      logger.error(
+        { err: error },
+        "Generation worker iteration failed; retrying",
+      );
       await delay(2000);
     }
   }

@@ -67,7 +67,6 @@ export default function EditResumePage({
         const raw: unknown = JSON.parse(resume.content);
         content = resumeContentSchema.parse(raw);
       } catch {
-        console.error("Failed to parse resume content");
         content = {
           personalInfo: { name: "", email: "", phone: "", address: "" },
           summary: "",
@@ -124,8 +123,7 @@ export default function EditResumePage({
           toast.success("Changes saved");
           router.push("/dashboard/resumes");
         },
-        onError: (error) => {
-          console.error("Error updating resume:", error);
+        onError: () => {
           toast.error("Couldn't save the changes. Try again.");
         },
       },

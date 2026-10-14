@@ -1,4 +1,5 @@
 import { runAsyncAction } from "@/lib/async-action";
+import { logger } from "@/lib/logger";
 import { generationJobPayloadSchema } from "./validators";
 import {
   completeGenerationJob,
@@ -29,7 +30,7 @@ export async function runGenerationJob(
     await completeGenerationJob(job, result);
   } catch (error) {
     // The stored job keeps only a user-facing message, so the cause is logged here.
-    console.error(`Generation job ${job.id} failed:`, error);
+    logger.error({ err: error, jobId: job.id }, "Generation job failed");
     await failGenerationJob(job, error);
   } finally {
     clearInterval(heartbeat);

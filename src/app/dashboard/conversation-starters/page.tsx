@@ -65,7 +65,6 @@ export default function ConversationStartersPage() {
 					toast.success("Message ready");
 				},
 				onError: (error) => {
-					console.error("Conversation starter generation failed:", error);
 					toast.error(
 						error instanceof Error
 							? error.message
@@ -83,8 +82,7 @@ export default function ConversationStartersPage() {
 			setCopied(true);
 			toast.success("Message copied");
 			setTimeout(() => setCopied(false), 2000);
-		} catch (error) {
-			console.error("Failed to copy conversation starter:", error);
+		} catch {
 			toast.error("Couldn't copy. Select the text and copy it by hand.");
 		}
 	};

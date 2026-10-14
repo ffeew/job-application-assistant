@@ -5,6 +5,7 @@ import { chooseApplicationContent } from "./application-selection";
 import { buildResumeDocument, type ResumeData } from "@/lib/resume-data";
 import { fitResume } from "@/lib/resume-fitting";
 import { compileResumeLatex } from "@/lib/latex-compiler";
+import { logger } from "@/lib/logger";
 import { generateProfessionalResumeLatex } from "@/lib/resume-templates/professional-latex";
 import {
   resumeDocumentSchema,
@@ -151,7 +152,7 @@ export class ResumeGenerationService {
         // A lost claim must stop the job instead of compiling an unowned draft.
         signal.throwIfAborted();
         // Original profile content remains usable when selection fails.
-        console.warn("AI content selection failed:", error);
+        logger.warn({ err: error }, "AI content selection failed");
       }
     }
     // A manual choice in one section must not discard AI choices in other sections.

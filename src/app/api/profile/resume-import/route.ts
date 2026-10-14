@@ -3,6 +3,7 @@ import { getUserId } from "@/app/api/profile/utils";
 import { limitAiRequest } from "@/app/api/ai-rate-limit";
 import { fileStorageAvailable } from "@/app/api/stored-files";
 import { keepUpload } from "@/app/api/profile/resume-uploads/service";
+import { logger } from "@/lib/logger";
 import { ResumeImportError } from "./errors";
 import { ResumeImportService } from "./service";
 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
   try {
     formData = await request.formData();
   } catch (error) {
-    console.error("Failed to parse form data for resume import.", error);
+    logger.error({ err: error }, "Failed to parse form data for resume import");
     return NextResponse.json(
       { error: "Invalid form data. Please try again." },
       { status: 400 },
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
   try {
     arrayBuffer = await file.arrayBuffer();
   } catch (error) {
-    console.error("Failed to read resume file.", error);
+    logger.error({ err: error }, "Failed to read resume file");
     return NextResponse.json(
       { error: "Unable to read the uploaded file. Please try again." },
       { status: 400 },
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    console.error("Unexpected error during resume import.", error);
+    logger.error({ err: error }, "Unexpected error during resume import");
     return NextResponse.json(
       { error: "Unexpected error importing resume. Please try again." },
       { status: 500 },

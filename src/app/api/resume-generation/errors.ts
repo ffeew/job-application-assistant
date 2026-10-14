@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { JobRequestError } from "./jobs/service";
+import { logger } from "@/lib/logger";
 import { ResumeGenerationError } from "@/lib/resume-errors";
 
 export function generationErrorResponse(error: unknown) {
@@ -18,10 +19,10 @@ export function generationErrorResponse(error: unknown) {
   }
   if (error instanceof ResumeGenerationError) {
     // The message is written for the user; the cause is only useful here.
-    console.warn("Resume generation is unavailable:", error);
+    logger.warn({ err: error }, "Resume generation is unavailable");
     return NextResponse.json({ error: error.message }, { status: 503 });
   }
-  console.error("Resume generation request failed:", error);
+  logger.error({ err: error }, "Resume generation request failed");
   return NextResponse.json(
     { error: "The resume service hit an unexpected error. Please retry." },
     { status: 500 },

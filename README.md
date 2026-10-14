@@ -83,9 +83,10 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 | `OBJECT_STORAGE_URL` | Stored files; supplied by Compose | S3 endpoint for imported files and saved resume PDFs; Compose uses `http://seaweedfs:8333` |
 | `OBJECT_STORAGE_ACCESS_KEY` / `OBJECT_STORAGE_SECRET_KEY` | Stored files; required by Compose | Credentials shared by the app, worker, and storage container; the secret needs at least 32 characters |
 | `OBJECT_STORAGE_BUCKET` / `OBJECT_STORAGE_REGION` | No | Bucket and signing region; default to `job-assistant` and `us-east-1` |
-| `RESEND_API_KEY` | No | Password reset email delivery; without it, email content is logged to the server console |
+| `RESEND_API_KEY` | No | Password reset email delivery; without it, email content is written to the server log |
 | `RESEND_FROM_EMAIL` | No | Sender for Resend; defaults to `noreply@example.com` |
 | `NODE_ENV` | No | Defaults to `development`; runtime containers use `production` |
+| `LOG_LEVEL` | No | Minimum level the app, worker, and migrator log (`debug`, `info`, `warn`, `error`); defaults to `info` |
 | `PORT` | No | App port outside Compose; set in the process environment, not `.env`; defaults to `3000` |
 | `APP_PORT` | No | Compose host port published on loopback; defaults to `3000` |
 

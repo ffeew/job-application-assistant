@@ -108,8 +108,7 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 				toast.success(profile ? "Changes saved" : "Profile saved");
 				cancelEditing();
 			},
-			onError: (error) => {
-				console.error("Error saving profile:", error);
+			onError: () => {
 				toast.error("Couldn't save your profile. Try again.");
 			},
 		});
@@ -137,7 +136,6 @@ export function PersonalInfoSection({ profile, onImportPreview }: PersonalInfoSe
 				toast.success("Resume imported. Review each section before saving.");
 			},
 			onError: (error) => {
-				console.error("Resume import failed:", error);
 				toast.error(error.message || "Couldn't import that resume. Try again.");
 			},
 			onSettled: () => {

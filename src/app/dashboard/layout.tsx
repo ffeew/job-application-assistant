@@ -145,8 +145,8 @@ export default function DashboardLayout({
 	const handleSignOut = async () => {
 		try {
 			await authClient.signOut();
-		} catch (error) {
-			console.error("Error signing out:", error);
+		} catch {
+			// A failed request must not keep the account's data on screen.
 		}
 		clearAccountState(queryClient);
 		// The draft is persisted, so it would otherwise stay readable in this browser.

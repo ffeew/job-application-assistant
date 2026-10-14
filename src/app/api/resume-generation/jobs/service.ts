@@ -5,6 +5,7 @@ import {
   resumes,
   resumeGenerationJobs,
 } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import {
   generatedResumeResultSchema,
   serializeGeneratedResume,
@@ -48,9 +49,9 @@ function response(job: Job) {
     updatedAt: job.updatedAt.toISOString(),
   });
   if (!parsed.success) {
-    console.error(
-      `Generation job ${job.id} does not match the current schema:`,
-      parsed.error,
+    logger.error(
+      { err: parsed.error, jobId: job.id },
+      "Generation job does not match the current schema",
     );
     return null;
   }

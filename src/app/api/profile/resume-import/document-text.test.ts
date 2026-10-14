@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
 import { describe, expect, test, vi } from "vitest";
+import { logger } from "@/lib/logger";
 import type { OcrResult } from "@/lib/ocr-service";
 import { buildDocx, buildPdf } from "./document-fixtures.test-helper";
 import {
@@ -185,7 +186,7 @@ describe("resume text extraction", () => {
   });
 
   test("an OCR failure becomes a retryable error", async () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const logged = vi.spyOn(logger, "error").mockImplementation(() => {});
     await expect(
       extractResumeText({
         fileBuffer: scannedPdf(),
@@ -215,7 +216,7 @@ describe("resume text extraction", () => {
   });
 
   test("a damaged PDF is rejected before OCR", async () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const logged = vi.spyOn(logger, "error").mockImplementation(() => {});
     const readScannedPdf = vi.fn();
     await expect(
       extractResumeText({

@@ -61,6 +61,8 @@ const eslintConfig = defineConfig([
   {
     rules: {
       eqeqeq: ["error", "always"],
+      // Server code logs through src/lib/logger.ts.
+      "no-console": "error",
       "no-debugger": "error",
       "no-var": "error",
       "prefer-const": "error",
@@ -69,6 +71,17 @@ const eslintConfig = defineConfig([
       reportUnusedDisableDirectives: "error",
       reportUnusedInlineConfigs: "error",
     },
+  },
+  {
+    // These have no logger to use: the browser's catch-all for unexpected
+    // failures, the compiler image that ships without node_modules, and the
+    // E2E harness reporting progress to the terminal.
+    files: [
+      "src/lib/async-action.ts",
+      "services/latex-compiler/index.ts",
+      "tests/e2e/**",
+    ],
+    rules: { "no-console": "off" },
   },
   globalIgnores([
     ".next/**",

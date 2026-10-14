@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { RequestError } from "@/lib/request-error";
 
 /**
@@ -26,6 +27,6 @@ export function routeErrorResponse(error: unknown, message: string) {
       { status: 400 },
     );
   }
-  console.error(`${message}:`, error);
+  logger.error({ err: error }, message);
   return NextResponse.json({ error: message }, { status: 500 });
 }

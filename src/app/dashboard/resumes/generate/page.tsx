@@ -124,7 +124,6 @@ export default function GenerateResumePage() {
         await previewMutation.mutateAsync(validatedData, "download");
       }
     } catch (error) {
-      console.error("Error generating resume:", error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -139,7 +138,6 @@ export default function GenerateResumePage() {
       const formData = generateResumeSchema.parse(form.getValues());
       await previewMutation.mutateAsync(formData);
     } catch (error) {
-      console.error("Error generating preview:", error);
       toast.error(
         error instanceof Error
           ? error.message

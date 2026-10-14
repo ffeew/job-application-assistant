@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/db";
 import { resumeUploads } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import {
   discardFile,
   removeFile,
@@ -44,7 +45,7 @@ export async function keepUpload(
       storageKey,
     });
   } catch (error) {
-    console.error("Could not record an imported file:", error);
+    logger.error({ err: error }, "Could not record an imported file");
     await discardFile(storageKey);
     return false;
   }
@@ -67,7 +68,7 @@ async function removeSurplusUploads(userId: string) {
       await db.delete(resumeUploads).where(eq(resumeUploads.id, upload.id));
     }
   } catch (error) {
-    console.error("Could not remove older imported files:", error);
+    logger.error({ err: error }, "Could not remove older imported files");
   }
 }
 

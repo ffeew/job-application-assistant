@@ -2,6 +2,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { logger } from "@/lib/logger";
 import {
   parseGeneratedResume,
   documentToResumeContent,
@@ -134,7 +135,7 @@ Return only the message text and avoid placeholders or brackets.`;
         success: true,
       };
     } catch (error) {
-      console.error("AI conversation starter generation error:", error);
+      logger.error({ err: error }, "AI conversation starter generation error");
       throw new Error(
         "Failed to generate conversation starter. Please try again.",
       );

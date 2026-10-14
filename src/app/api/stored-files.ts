@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 import { createObjectStorage } from "@/lib/object-storage";
 import { RequestError } from "@/lib/request-error";
 
@@ -41,7 +42,7 @@ export async function storeFile(
     await storage.put(key, bytes, contentType);
     return true;
   } catch (error) {
-    console.error(`Could not store ${key}:`, error);
+    logger.error({ err: error, key }, "Could not store file");
     return false;
   }
 }
@@ -59,7 +60,7 @@ export async function readFile(key: string): Promise<StoredFile> {
     const bytes = await storage.get(key);
     return bytes ? { state: "found", bytes } : { state: "missing" };
   } catch (error) {
-    console.error(`Could not read ${key}:`, error);
+    logger.error({ err: error, key }, "Could not read file");
     return { state: "unavailable" };
   }
 }
@@ -74,7 +75,10 @@ export async function discardFile(key: string | null | undefined) {
   try {
     await storage.delete(key);
   } catch (error) {
-    console.error(`Could not remove ${key}; it is no longer referenced:`, error);
+    logger.error(
+      { err: error, key },
+      "Could not remove file; it is no longer referenced",
+    );
   }
 }
 
@@ -87,7 +91,7 @@ export async function removeFile(key: string | null | undefined) {
   try {
     await storage.delete(key);
   } catch (error) {
-    console.error(`Could not delete ${key}:`, error);
+    logger.error({ err: error, key }, "Could not delete file");
     throw new RequestError(
       "The stored file couldn't be deleted. Try again in a moment.",
       503,

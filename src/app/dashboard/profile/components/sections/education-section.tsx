@@ -67,8 +67,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 				toast.success("Education entry deleted");
 				closeDeleteConfirmation();
 			},
-			onError: (error) => {
-				console.error("Error deleting education:", error);
+			onError: () => {
 				toast.error("Couldn't delete the entry. Try again.");
 			},
 		});
@@ -80,8 +79,7 @@ export function EducationSection({ education, isLoading }: EducationSectionProps
 			await createMutation.mutateAsync(data);
 			removePendingItem(id);
 			toast.success("Education entry saved");
-		} catch (error) {
-			console.error("Failed to save education:", error);
+		} catch {
 			toast.error("Couldn't save the entry. Try again.");
 		} finally {
 			setSavingItemId(null);

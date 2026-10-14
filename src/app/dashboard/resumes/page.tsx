@@ -31,8 +31,7 @@ export default function ResumesPage() {
     try {
       await deleteResumeMutation.mutateAsync(id);
       toast.success("Resume deleted");
-    } catch (error) {
-      console.error("Error deleting resume:", error);
+    } catch {
       toast.error("Couldn't delete the resume. Try again.");
     }
   };
@@ -47,8 +46,7 @@ export default function ResumesPage() {
         data: { isDefault: !resume.isDefault },
       });
       toast.success(resume.isDefault ? "Default removed" : "Set as default");
-    } catch (error) {
-      console.error("Error updating resume:", error);
+    } catch {
       toast.error("Couldn't update the resume. Try again.");
     }
   };

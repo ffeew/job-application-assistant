@@ -9,6 +9,7 @@ x-database-environment: &database-environment
 x-runtime-environment: &runtime-environment
   <<: *database-environment
   NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
   BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to your public HTTPS origin}
   DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}

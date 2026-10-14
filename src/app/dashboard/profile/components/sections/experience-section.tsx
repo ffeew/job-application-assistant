@@ -80,8 +80,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 				toast.success("Work experience deleted");
 				closeDeleteConfirmation();
 			},
-			onError: (error) => {
-				console.error("Error deleting work experience:", error);
+			onError: () => {
 				toast.error("Couldn't delete the work experience. Try again.");
 			},
 		});
@@ -93,8 +92,7 @@ export function ExperienceSection({ experiences, isLoading }: ExperienceSectionP
 			await createMutation.mutateAsync(data);
 			removePendingItem(id);
 			toast.success("Work experience saved");
-		} catch (error) {
-			console.error("Failed to save work experience:", error);
+		} catch {
 			toast.error("Couldn't save the work experience. Try again.");
 		} finally {
 			setSavingItemId(null);
@@ -297,8 +295,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 						toast.success("Changes saved");
 						onSuccess();
 					},
-					onError: (error) => {
-						console.error("Error updating work experience:", error);
+					onError: () => {
 						toast.error("Couldn't save the changes. Try again.");
 					},
 				}
@@ -309,8 +306,7 @@ function ExperienceForm({ experience, onSuccess, onCancel }: ExperienceFormProps
 					toast.success("Work experience saved");
 					onSuccess();
 				},
-				onError: (error) => {
-					console.error("Error creating work experience:", error);
+				onError: () => {
 					toast.error("Couldn't save the work experience. Try again.");
 				},
 			});

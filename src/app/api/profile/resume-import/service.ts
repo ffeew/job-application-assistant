@@ -6,6 +6,7 @@ import type { CreateUserProfileRequest } from "@/app/api/profile/validators";
 import { createUserProfileSchema } from "@/app/api/profile/validators";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { logger } from "@/lib/logger";
 import { normalizeMonth } from "@/lib/month";
 import { normalizeHttpUrl, SHORT_TEXT_MAX } from "@/lib/validators/fields";
 import { recognizeScannedPdf } from "@/lib/ocr-service";
@@ -213,7 +214,10 @@ export class ResumeImportService {
         const aiResult = await this.aiExtractProfile(markdown);
         return aiResult;
       } catch (error) {
-        console.error("AI-based resume parsing failed. Falling back to heuristics.", error);
+        logger.error(
+          { err: error },
+          "AI-based resume parsing failed; falling back to heuristics",
+        );
         const fallback = this.fallbackExtractProfile(markdown);
         return {
           ...fallback,

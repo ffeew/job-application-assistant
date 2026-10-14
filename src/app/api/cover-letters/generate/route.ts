@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { limitAiRequest } from "@/app/api/ai-rate-limit";
 import { CoverLettersService } from "../service";
 import { generateCoverLetterSchema } from "../validators";
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error generating cover letter:", error);
+    logger.error({ err: error }, "Error generating cover letter");
     if (error instanceof Error) {
       return NextResponse.json(
         { error: error.message },

@@ -26,8 +26,7 @@ export default function NewApplicationPage() {
               toast.success("Application saved");
               router.push("/dashboard/applications");
             },
-            onError: (error) => {
-              console.error("Error creating application:", error);
+            onError: () => {
               toast.error("Couldn't save the application. Try again.");
             },
           });

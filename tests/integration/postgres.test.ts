@@ -16,6 +16,7 @@ import {
   userProfiles,
   workExperiences,
 } from "../../src/lib/db/schema";
+import { logger } from "../../src/lib/logger";
 import {
   serializeGeneratedResume,
   type GeneratedResumeResult,
@@ -226,7 +227,7 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   }
   // The storage helpers log the outage they survive.
   const silenceErrors = () =>
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
 
   test("migration is repeatable and auth timestamps and booleans retain their types", async () => {
     const [record] = await database.db
@@ -690,7 +691,7 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       .values({ userId, payload: { kind: "retired-kind" }, status: "completed" })
       .returning();
     if (!legacy) throw new Error("Missing legacy job fixture");
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(logger, "error").mockImplementation(() => undefined);
     try {
       expect(await jobs.getGenerationJob(userId, legacy.id)).toBeNull();
       expect(await jobs.getLatestGenerationJob(userId, null)).toBeNull();

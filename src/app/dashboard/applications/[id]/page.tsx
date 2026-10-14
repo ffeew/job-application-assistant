@@ -85,8 +85,7 @@ export default function EditApplicationPage({
 								toast.success("Changes saved");
 								router.push("/dashboard/applications");
 							},
-							onError: (error) => {
-								console.error("Error updating application:", error);
+							onError: () => {
 								toast.error("Couldn't save the changes. Try again.");
 							},
 						}

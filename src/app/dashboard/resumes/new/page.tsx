@@ -48,8 +48,7 @@ export default function NewResumePage() {
         toast.success("Resume saved");
         router.push("/dashboard/resumes");
       },
-      onError: (error) => {
-        console.error("Error creating resume:", error);
+      onError: () => {
         toast.error("Couldn't save the resume. Try again.");
       },
     });

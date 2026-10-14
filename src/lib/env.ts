@@ -52,7 +52,6 @@ export type Env = z.infer<typeof envSchema>;
 
 function validateEnv(): Env {
   try {
-    console.log("Validating environment variables...");
     const parsed = envSchema.parse(process.env);
     return parsed;
   } catch (error) {
@@ -69,7 +68,7 @@ function validateEnv(): Env {
         }
       });
 
-      let errorMessage = "❌ Environment validation failed:\n\n";
+      let errorMessage = "Environment validation failed:\n\n";
 
       if (missingVars.length > 0) {
         errorMessage += "Missing required environment variables:\n";
@@ -89,18 +88,15 @@ function validateEnv(): Env {
 
       errorMessage +=
         "Please check your .env file and ensure all required variables are set correctly.\n";
-      errorMessage += "See .env.example for reference.\n";
+      errorMessage += "See .env.example for reference.";
 
-      console.error(errorMessage);
-      throw new Error(
-        "Environment validation failed. Check console for details.",
-      );
+      // The detail travels in the message because this module must not log:
+      // the proxy and root layout import it, and whatever starts the process
+      // already prints an uncaught startup error.
+      throw new Error(errorMessage);
     }
 
-    console.error("❌ Environment validation failed:", error);
-    throw new Error(
-      "Environment validation failed. Check console for details.",
-    );
+    throw new Error("Environment validation failed.", { cause: error });
   }
 }
 

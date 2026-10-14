@@ -2,6 +2,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { generateText, Output } from "ai";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
+import { logger } from "@/lib/logger";
 import {
   applyResumeRevision,
   resumeRevisionSchema,
@@ -47,7 +48,7 @@ Keep all other entry fields and selected entries unchanged. Explain edits briefl
       return validated;
     } catch (error) {
       // A failed model must not prevent trying the fallback or alter the current draft.
-      console.warn(`AI fitting with ${model} failed:`, error);
+      logger.warn({ err: error, model }, "AI fitting failed");
     }
   }
   throw new Error(

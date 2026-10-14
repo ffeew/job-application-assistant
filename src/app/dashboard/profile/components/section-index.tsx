@@ -122,7 +122,6 @@ export function ProfileActions({ onImportPreview }: ProfileActionsProps) {
 				toast.success("Resume imported. Review each section before saving.");
 			},
 			onError: (error) => {
-				console.error("Resume import failed:", error);
 				toast.error(error.message || "Couldn't import that resume. Try again.");
 			},
 			onSettled: () => {

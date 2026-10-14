@@ -104,7 +104,7 @@ export default function NewCoverLetterPage() {
           ? documentToResumeContent(generated.document)
           : (JSON.parse(selectedResumeData.content) as unknown);
       } catch {
-        console.error("Failed to parse resume content");
+        // An unreadable resume is left out; the letter is still written.
       }
     }
 
@@ -122,7 +122,6 @@ export default function NewCoverLetterPage() {
           setTitle(`Cover letter for ${manualPosition} at ${manualCompany}`);
         },
         onError: (error: Error) => {
-          console.error("Error generating cover letter:", error);
           toast.error(
             error.message || "Couldn't write the cover letter. Try again.",
           );
@@ -151,8 +150,7 @@ export default function NewCoverLetterPage() {
           reset();
           router.push("/dashboard/cover-letters");
         },
-        onError: (error) => {
-          console.error("Error saving cover letter:", error);
+        onError: () => {
           toast.error("Couldn't save the cover letter. Try again.");
         },
       },

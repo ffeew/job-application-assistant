@@ -9,6 +9,7 @@ vi.mock("ai", async (importOriginal) => ({
 }));
 
 import { generateText } from "ai";
+import { logger } from "@/lib/logger";
 import { ResumeImportService } from "./service";
 
 const blankProfile = {
@@ -161,7 +162,7 @@ describe("dates read by the model", () => {
 
 describe("when the model is unavailable", () => {
   test("the text fallback still returns a valid profile", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
     vi.mocked(generateText).mockRejectedValue(new Error("model unavailable"));
     const result = await new ResumeImportService().importProfileFromResume({
       arrayBuffer: new TextEncoder().encode(

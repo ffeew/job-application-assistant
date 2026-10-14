@@ -170,8 +170,7 @@ export function PendingImportBanner() {
 							: undefined,
 				});
 			}
-		} catch (error) {
-			console.error("Failed to save imported resume data:", error);
+		} catch {
 			toast.error(
 				"Couldn't save everything. The entries still listed were not saved; try again.",
 			);

@@ -2,6 +2,7 @@ import { Buffer } from "node:buffer";
 import JSZip from "jszip";
 import mammoth from "mammoth";
 import { extractLinks, extractText, getDocumentProxy } from "unpdf";
+import { logger } from "@/lib/logger";
 import type { OcrResult } from "@/lib/ocr-service";
 import { ResumeImportError } from "./errors";
 import { ocrPagesToText } from "./ocr-layout";
@@ -192,7 +193,7 @@ async function extractFromPdf({
         error,
       );
     }
-    console.error("Failed to read the uploaded PDF.", error);
+    logger.error({ err: error }, "Failed to read the uploaded PDF");
     throw new ResumeImportError(
       "This PDF could not be read. Export it again, or upload a DOCX or TXT file.",
       422,
@@ -216,7 +217,7 @@ async function extractFromPdf({
   try {
     scan = await readScannedPdf(fileBuffer);
   } catch (error) {
-    console.error("OCR service error:", error);
+    logger.error({ err: error }, "OCR service error");
     throw new ResumeImportError(
       "The scanned resume could not be read. Try again, or upload a text-based PDF or DOCX.",
       502,
@@ -266,7 +267,7 @@ export async function extractResumeText(
       try {
         document = await extractDocxText(fileBuffer);
       } catch (error) {
-        console.error("Failed to read the uploaded DOCX.", error);
+        logger.error({ err: error }, "Failed to read the uploaded DOCX");
         throw new ResumeImportError(
           "This DOCX file could not be read. Save it again from your editor, or upload a PDF.",
           422,

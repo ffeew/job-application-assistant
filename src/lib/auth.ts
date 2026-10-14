@@ -1,9 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, isAPIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { Resend } from "resend";
 import { db } from "./db/db";
 import { env } from "./env";
+import { logger } from "./logger";
 
 async function sendEmail({
   to,
@@ -15,11 +17,10 @@ async function sendEmail({
   text: string;
 }) {
   if (!env.RESEND_API_KEY) {
-    console.log(`
-[DEV] Email would be sent to: ${to}
-Subject: ${subject}
-Content: ${text}
-    `);
+    logger.info(
+      { to, subject, text },
+      "RESEND_API_KEY is not set; email logged instead of sent",
+    );
     return;
   }
 
@@ -41,15 +42,39 @@ Content: ${text}
     failure = error;
   }
   if (failure) {
-    console.error("Failed to send email via Resend:", failure);
+    logger.error({ err: failure }, "Failed to send email via Resend");
     throw new Error("Failed to send email. Please try again later.");
   }
 }
+
+const authLogger = logger.child({ component: "better-auth" });
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
+  logger: {
+    // Better Auth appends a failure to its message as an extra argument; pino
+    // serializes an error only under `err`.
+    log: (level, message, ...details: unknown[]) => {
+      const err = details.find((detail) => detail instanceof Error);
+      const rest = details.filter((detail) => detail !== err);
+      authLogger[level](
+        { err, ...(rest.length > 0 && { details: rest }) },
+        message,
+      );
+    },
+  },
+  onAPIError: {
+    onError: (error) => {
+      const refusal = isAPIError(error);
+      if (refusal && error.status !== "INTERNAL_SERVER_ERROR") return;
+      authLogger.error({ err: error }, "Authentication request failed");
+      // Left unanswered, the router prints an unexpected error with
+      // console.error. Throwing an APIError answers the request instead.
+      if (!refusal) throw new APIError("INTERNAL_SERVER_ERROR");
+    },
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
   }),

@@ -194,7 +194,6 @@ export default function JobApplicationResumePage({
       });
       toast.success("Resume saved");
     } catch (error) {
-      console.error("Error saving resume:", error);
       toast.error(
         error instanceof Error
           ? error.message
