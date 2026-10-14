@@ -90,7 +90,8 @@ export function parseGeneratedResume(
 export function serializeGeneratedResume(
   result: GeneratedResumeResult,
 ): string {
-  // Persist content snapshots so saved resumes can be recompiled without storing PDFs.
+  // The snapshot can be compiled again without rerunning AI. The PDF itself is
+  // kept in object storage when that is configured, never in this record.
   return JSON.stringify(savedGeneratedResumeSchema.parse(result));
 }
 

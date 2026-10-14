@@ -6,6 +6,8 @@ import {
 import { resumeJsonResponseSchema } from "../../src/app/api/resumes/validators";
 import { parseGeneratedResume } from "../../src/lib/resume-document";
 import type { APIRequestContext, Page } from "@playwright/test";
+import { eq } from "drizzle-orm";
+import { resumes } from "../../src/lib/db/schema";
 import { BASE_URL } from "./support/runtime";
 
 test.setTimeout(120_000);
@@ -89,6 +91,7 @@ test("generate, save, and reopen a linked application resume", async ({
   createCandidate,
   browser,
   extraHTTPHeaders,
+  database,
 }) => {
   await worker.start();
   await openApplicationGenerator(
@@ -116,6 +119,46 @@ test("generate, save, and reopen a linked application resume", async ({
   expect(parseGeneratedResume(saved.content)?.document.name).toBe(
     "Alex Example",
   );
+  // The library serves the file kept in storage when the resume was saved,
+  // which is the generated PDF itself and not a later compilation.
+  const [savedRow] = await database
+    .select({ pdfKey: resumes.pdfKey })
+    .from(resumes)
+    .where(eq(resumes.id, saved.id));
+  expect(savedRow?.pdfKey).toMatch(
+    new RegExp(`^users/${candidate.id}/resumes/[0-9a-f-]{36}\\.pdf$`),
+  );
+  const storedPdf = await request.get(`/api/resumes/${saved.id}/pdf`);
+  expect(storedPdf.status()).toBe(200);
+  expect(
+    (await storedPdf.body()).equals(
+      Buffer.from(job.result?.pdfBase64 ?? "", "base64"),
+    ),
+  ).toBe(true);
+  // A resume whose file is gone, as after restoring the database alone, is
+  // compiled from its snapshot and given a stored file again.
+  const lostKey = `users/${candidate.id}/resumes/00000000-0000-4000-8000-000000000000.pdf`;
+  await database
+    .update(resumes)
+    .set({ pdfKey: lostKey })
+    .where(eq(resumes.id, saved.id));
+  const compiledPdf = await request.get(`/api/resumes/${saved.id}/pdf`);
+  expect(compiledPdf.status()).toBe(200);
+  const compiledBytes = await compiledPdf.body();
+  expect(compiledBytes.subarray(0, 5).toString()).toBe("%PDF-");
+  const [healedRow] = await database
+    .select({ pdfKey: resumes.pdfKey })
+    .from(resumes)
+    .where(eq(resumes.id, saved.id));
+  expect(healedRow?.pdfKey).toMatch(
+    new RegExp(`^users/${candidate.id}/resumes/[0-9a-f-]{36}\\.pdf$`),
+  );
+  expect(healedRow?.pdfKey).not.toBe(lostKey);
+  expect(
+    (await (await request.get(`/api/resumes/${saved.id}/pdf`)).body()).equals(
+      compiledBytes,
+    ),
+  ).toBe(true);
   await page.goto("/dashboard/resumes");
   await expect(
     page

@@ -9,13 +9,17 @@ import {
   jobApplications,
   resumes,
   resumeGenerationJobs,
+  resumeUploads,
   skills,
   session,
   user,
   userProfiles,
   workExperiences,
 } from "../../src/lib/db/schema";
-import type { GeneratedResumeResult } from "../../src/lib/resume-document";
+import {
+  serializeGeneratedResume,
+  type GeneratedResumeResult,
+} from "../../src/lib/resume-document";
 import { syntheticResume } from "../../src/lib/resume-fixture.test-helper";
 import {
   generateResumeSchema,
@@ -23,6 +27,48 @@ import {
   workExperienceJsonResponseSchema,
 } from "../../src/app/api/profile/validators";
 import { acceptedGenerationJobSchema } from "../../src/app/api/resume-generation/jobs/validators";
+
+// Object storage is replaced by a map, so the code that decides what to keep,
+// replace and remove runs for real while no storage server is needed. Each
+// operation can be made to fail to stand in for an outage.
+const objectStore = vi.hoisted(() => {
+  process.env.OBJECT_STORAGE_URL = "http://storage.example.test:8333";
+  process.env.OBJECT_STORAGE_ACCESS_KEY = "test-only-access-key";
+  process.env.OBJECT_STORAGE_SECRET_KEY =
+    "test-only-secret-with-thirty-two-characters";
+  return {
+    objects: new Map<string, Uint8Array<ArrayBuffer>>(),
+    failing: new Set<"put" | "get" | "delete">(),
+  };
+});
+vi.mock("../../src/lib/object-storage", () => {
+  class ObjectStorageError extends Error {}
+  const run = <T>(operation: "put" | "get" | "delete", action: () => T) =>
+    objectStore.failing.has(operation)
+      ? Promise.reject(new ObjectStorageError(`Synthetic ${operation} failure`))
+      : Promise.resolve(action());
+  return {
+    ObjectStorageError,
+    createObjectStorage: () => ({
+      put: (key: string, bytes: Uint8Array<ArrayBuffer>) =>
+        run("put", () => {
+          objectStore.objects.set(key, bytes);
+        }),
+      get: (key: string) =>
+        run("get", () => objectStore.objects.get(key) ?? null),
+      delete: (key: string) =>
+        run("delete", () => {
+          objectStore.objects.delete(key);
+        }),
+    }),
+  };
+});
+// A stored PDF must be served as it is; a test that expects a compilation
+// supplies the result.
+const compiler = vi.hoisted(() => ({ compile: vi.fn() }));
+vi.mock("../../src/lib/latex-compiler", () => ({
+  compileResumeLatex: compiler.compile,
+}));
 
 const integration = process.env.RUN_DB_INTEGRATION === "1";
 describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
@@ -137,6 +183,50 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       .delete(resumeGenerationJobs)
       .where(eq(resumeGenerationJobs.userId, userId));
   }
+  const pdfResult = (text: string): GeneratedResumeResult => ({
+    ...result(),
+    pdfBase64: Buffer.from(`%PDF-1.4\n${text}`).toString("base64"),
+  });
+  const storedText = (key: string | null) =>
+    key && objectStore.objects.has(key)
+      ? Buffer.from(objectStore.objects.get(key) ?? []).toString()
+      : null;
+  const tailoredRequest = () =>
+    jobApplicationResumeRequestSchema.parse({
+      title: "Tailored Fixture",
+      applicationId,
+      useAISelection: false,
+    });
+  async function tailoredResume() {
+    const [row] = await database.db
+      .select()
+      .from(resumes)
+      .where(
+        and(
+          eq(resumes.userId, userId),
+          eq(resumes.jobApplicationId, applicationId),
+          eq(resumes.isTailored, true),
+        ),
+      );
+    if (!row) throw new Error("Expected the saved tailored resume");
+    return row;
+  }
+  async function completeApplicationJob(
+    intent: "preview" | "save-and-download",
+    generated: GeneratedResumeResult,
+  ) {
+    await jobs.enqueueGenerationJob(userId, {
+      kind: "application",
+      intent,
+      request: tailoredRequest(),
+    });
+    const job = await claimed();
+    await jobs.completeGenerationJob(job, generated);
+    return job;
+  }
+  // The storage helpers log the outage they survive.
+  const silenceErrors = () =>
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
 
   test("migration is repeatable and auth timestamps and booleans retain their types", async () => {
     const [record] = await database.db
@@ -793,6 +883,394 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       }
       await applications.deleteApplication(otherUserId, foreign.id);
     }
+  });
+
+  test("saving a tailored resume keeps the job's PDF and replaces the previous file", async () => {
+    await clearJobs();
+    await completeApplicationJob("save-and-download", pdfResult("first"));
+    const first = await tailoredResume();
+    expect(first.pdfKey).toMatch(
+      new RegExp(`^users/${userId}/resumes/[0-9a-f-]{36}\\.pdf$`),
+    );
+    expect(storedText(first.pdfKey)).toBe("%PDF-1.4\nfirst");
+
+    const saving = await completeApplicationJob(
+      "save-and-download",
+      pdfResult("second"),
+    );
+    const second = await tailoredResume();
+    expect(second.id).toBe(first.id);
+    expect(second.pdfKey).not.toBe(first.pdfKey);
+    expect(storedText(second.pdfKey)).toBe("%PDF-1.4\nsecond");
+    expect(storedText(first.pdfKey)).toBeNull();
+
+    // A worker that lost its claim stores a PDF and must take it back.
+    const before = objectStore.objects.size;
+    expect(await jobs.completeGenerationJob(saving, pdfResult("stale"))).toBe(
+      false,
+    );
+    expect(objectStore.objects.size).toBe(before);
+    expect((await tailoredResume()).pdfKey).toBe(second.pdfKey);
+
+    // The resume is saved even when its PDF cannot be kept.
+    silenceErrors();
+    objectStore.failing.add("put");
+    try {
+      await completeApplicationJob("save-and-download", pdfResult("third"));
+    } finally {
+      objectStore.failing.clear();
+    }
+    const third = await tailoredResume();
+    expect(third.pdfKey).toBeNull();
+    expect(third.updatedAt.getTime()).toBeGreaterThan(
+      second.updatedAt.getTime(),
+    );
+    expect(storedText(second.pdfKey)).toBeNull();
+  });
+
+  test("a saved PDF is served from storage, and compiled and kept when it is missing", async () => {
+    await clearJobs();
+    const savedPdfRoute = await import(
+      "../../src/app/api/resumes/[id]/pdf/route"
+    );
+    await completeApplicationJob("save-and-download", pdfResult("as generated"));
+    const saved = await tailoredResume();
+    const fetchPdf = (headers: Record<string, string> = { cookie }) =>
+      savedPdfRoute.GET(
+        new NextRequest(`http://localhost:3000/api/resumes/${saved.id}/pdf`, {
+          headers,
+        }),
+        { params: Promise.resolve({ id: saved.id }) },
+      );
+    const compiled = (text: string) => ({
+      pdfBase64: Buffer.from(`%PDF-1.4\n${text}`).toString("base64"),
+      pageCount: 1,
+      overflowPt: 0,
+      warnings: [],
+    });
+
+    const served = await fetchPdf();
+    expect(served.status).toBe(200);
+    expect(served.headers.get("content-type")).toBe("application/pdf");
+    expect(await served.text()).toBe("%PDF-1.4\nas generated");
+    expect(compiler.compile).not.toHaveBeenCalled();
+    expect((await fetchPdf({})).status).toBe(401);
+
+    // An unreachable store may still hold the original: the page is compiled
+    // for this request and the record keeps pointing at the stored file.
+    silenceErrors();
+    compiler.compile.mockResolvedValue(compiled("compiled during outage"));
+    objectStore.failing.add("get");
+    try {
+      expect(await (await fetchPdf()).text()).toBe(
+        "%PDF-1.4\ncompiled during outage",
+      );
+    } finally {
+      objectStore.failing.clear();
+    }
+    expect((await tailoredResume()).pdfKey).toBe(saved.pdfKey);
+    expect(storedText(saved.pdfKey)).toBe("%PDF-1.4\nas generated");
+
+    // A file that is gone, as after restoring the database alone, is replaced
+    // by the compiled page without touching the resume's place in the library.
+    if (!saved.pdfKey) throw new Error("Expected a stored PDF");
+    objectStore.objects.delete(saved.pdfKey);
+    compiler.compile.mockResolvedValue(compiled("compiled again"));
+    expect(await (await fetchPdf()).text()).toBe("%PDF-1.4\ncompiled again");
+    const healed = await tailoredResume();
+    expect(healed.pdfKey).not.toBe(saved.pdfKey);
+    expect(storedText(healed.pdfKey)).toBe("%PDF-1.4\ncompiled again");
+    expect(healed.updatedAt).toEqual(saved.updatedAt);
+
+    compiler.compile.mockClear();
+    expect(await (await fetchPdf()).text()).toBe("%PDF-1.4\ncompiled again");
+    expect(compiler.compile).not.toHaveBeenCalled();
+  });
+
+  test("saving a preview names its job and keeps that job's document and PDF", async () => {
+    await clearJobs();
+    const route = await import(
+      "../../src/app/api/applications/[id]/resume/route"
+    );
+    const save = (body: unknown, id = applicationId) =>
+      route.PUT(
+        new NextRequest(`http://localhost:3000/api/applications/${id}/resume`, {
+          method: "PUT",
+          headers: { cookie, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+    const previewed = pdfResult("previewed");
+    const preview = await completeApplicationJob("preview", previewed);
+    const before = await tailoredResume();
+
+    const response = await save({
+      title: "Saved From Preview",
+      jobId: preview.id,
+      // A document sent by the client is not what gets saved.
+      content: JSON.stringify({ html: "<p>Client copy</p>" }),
+    });
+    expect(response.status).toBe(200);
+    const after = await tailoredResume();
+    expect(after.id).toBe(before.id);
+    expect(after.title).toBe("Saved From Preview");
+    // The job result was read back from a JSON column, which reorders keys.
+    const savedDocument: unknown = JSON.parse(after.content);
+    const previewedDocument: unknown = JSON.parse(
+      serializeGeneratedResume(previewed),
+    );
+    expect(savedDocument).toEqual(previewedDocument);
+    expect(storedText(after.pdfKey)).toBe("%PDF-1.4\npreviewed");
+    expect(storedText(before.pdfKey)).toBeNull();
+
+    // A job belongs to one application and to one account.
+    const [elsewhere] = await database.db
+      .insert(jobApplications)
+      .values({ userId, company: "Other Co", position: "Engineer" })
+      .returning();
+    if (!elsewhere) throw new Error("Fixture application missing");
+    try {
+      const refused = await save(
+        { title: "Wrong Application", jobId: preview.id },
+        elsewhere.id,
+      );
+      expect(refused.status).toBe(404);
+      expect(await refused.json()).toEqual({
+        error: "That preview is no longer available. Preview again, then save.",
+      });
+    } finally {
+      await database.db
+        .delete(jobApplications)
+        .where(eq(jobApplications.id, elsewhere.id));
+    }
+    await enqueue();
+    const profileJob = await claimed();
+    await jobs.completeGenerationJob(profileJob, result());
+    expect(
+      (await save({ title: "Profile Job", jobId: profileJob.id })).status,
+    ).toBe(404);
+    expect(
+      (await save({ title: "Unknown", jobId: crypto.randomUUID() })).status,
+    ).toBe(404);
+    expect((await save({ title: "No Job" })).status).toBe(400);
+    expect((await tailoredResume()).pdfKey).toBe(after.pdfKey);
+  });
+
+  test("new content clears a stored PDF, other edits keep it, and deleting removes the file", async () => {
+    const { ResumesService } = await import(
+      "../../src/app/api/resumes/service"
+    );
+    const stored = await import("../../src/app/api/stored-files");
+    const service = new ResumesService();
+    const keep = async (text: string) => {
+      const key = await stored.storeResumePdf(
+        userId,
+        new Uint8Array(Buffer.from(text)),
+      );
+      if (!key) throw new Error("Expected the PDF to be stored");
+      return key;
+    };
+    const pdfKeyOf = async (id: string) =>
+      (
+        await database.db
+          .select({ pdfKey: resumes.pdfKey })
+          .from(resumes)
+          .where(eq(resumes.id, id))
+      )[0]?.pdfKey;
+
+    const key = await keep("kept");
+    const resume = await service.createResume(
+      userId,
+      { title: "Stored", content: "{}", isDefault: false, isTailored: false },
+      key,
+    );
+    // The key is the server's business; no response carries it.
+    expect(resume).not.toHaveProperty("pdfKey");
+    expect(await service.getResumeById(userId, resume.id)).not.toHaveProperty(
+      "pdfKey",
+    );
+
+    await service.updateResume(userId, resume.id, { title: "Renamed" });
+    expect(await pdfKeyOf(resume.id)).toBe(key);
+    expect(storedText(key)).toBe("kept");
+
+    await service.updateResume(userId, resume.id, { content: '{"edited":true}' });
+    expect(await pdfKeyOf(resume.id)).toBeNull();
+    expect(storedText(key)).toBeNull();
+
+    // A PDF stored for a save that then matches no resume is taken back.
+    const orphan = await keep("orphan");
+    expect(
+      await service.updateResume(
+        otherUserId,
+        resume.id,
+        { content: "{}" },
+        orphan,
+      ),
+    ).toBeNull();
+    expect(storedText(orphan)).toBeNull();
+
+    const replacement = await keep("replacement");
+    await service.updateResume(
+      userId,
+      resume.id,
+      { content: "{}" },
+      replacement,
+    );
+    expect(await pdfKeyOf(resume.id)).toBe(replacement);
+
+    // While the file cannot be removed the resume stays, so the delete can be
+    // repeated instead of leaving a file nobody can find.
+    silenceErrors();
+    objectStore.failing.add("delete");
+    try {
+      await expect(service.deleteResume(userId, resume.id)).rejects.toThrow(
+        "The stored file couldn't be deleted. Try again in a moment.",
+      );
+    } finally {
+      objectStore.failing.clear();
+    }
+    expect(await pdfKeyOf(resume.id)).toBe(replacement);
+    expect(await service.deleteResume(otherUserId, resume.id)).toBe(false);
+    expect(await service.deleteResume(userId, resume.id)).toBe(true);
+    expect(storedText(replacement)).toBeNull();
+    expect(await service.getResumeById(userId, resume.id)).toBeNull();
+  });
+
+  test("imported files are kept per account, capped, downloadable and deletable", async () => {
+    const uploads = await import(
+      "../../src/app/api/profile/resume-uploads/service"
+    );
+    const listRoute = await import(
+      "../../src/app/api/profile/resume-uploads/route"
+    );
+    const fileRoute = await import(
+      "../../src/app/api/profile/resume-uploads/[id]/route"
+    );
+    const { resumeUploadsResponseSchema } = await import(
+      "../../src/app/api/profile/resume-uploads/validators"
+    );
+    const url = "http://localhost:3000/api/profile/resume-uploads";
+    const list = async () => {
+      const response = await listRoute.GET(
+        new NextRequest(url, { headers: { cookie } }),
+      );
+      expect(response.status).toBe(200);
+      const raw: unknown = await response.json();
+      return resumeUploadsResponseSchema.parse(raw);
+    };
+    const file = (id: string, method: "GET" | "DELETE") =>
+      fileRoute[method](
+        new NextRequest(`${url}/${id}`, { method, headers: { cookie } }),
+        { params: Promise.resolve({ id }) },
+      );
+    const keep = (fileName: string, text: string) =>
+      uploads.keepUpload(userId, {
+        fileName,
+        mimeType: "text/plain",
+        bytes: new Uint8Array(Buffer.from(text)),
+      });
+    const uploadObjects = () =>
+      [...objectStore.objects.keys()].filter((key) =>
+        key.startsWith(`users/${userId}/uploads/`),
+      );
+
+    try {
+      expect(await list()).toEqual({ available: true, files: [] });
+      expect(
+        (await listRoute.GET(new NextRequest(url))).status,
+      ).toBe(401);
+
+      expect(await keep("C:\\Users\\alex\\Résumé (final).txt", "first")).toBe(
+        true,
+      );
+      const [first] = (await list()).files;
+      if (!first) throw new Error("Expected the imported file to be listed");
+      expect(first).toMatchObject({
+        fileName: "Résumé (final).txt",
+        mimeType: "text/plain",
+        sizeBytes: 5,
+      });
+      expect(uploadObjects()).toEqual([`users/${userId}/uploads/${first.id}`]);
+
+      // Always a download, with the user's own name quoted for the header.
+      const download = await file(first.id, "GET");
+      expect(download.status).toBe(200);
+      expect(await download.text()).toBe("first");
+      expect(download.headers.get("content-type")).toBe("text/plain");
+      expect(download.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(download.headers.get("content-disposition")).toBe(
+        "attachment; filename=\"R_sum_ (final).txt\"; filename*=UTF-8''R%C3%A9sum%C3%A9%20%28final%29.txt",
+      );
+
+      expect(await uploads.getUpload(otherUserId, first.id)).toBeNull();
+      expect(await uploads.deleteUpload(otherUserId, first.id)).toBe(false);
+      expect(uploadObjects()).toHaveLength(1);
+
+      // The oldest file makes room once the account holds its limit.
+      await database.db
+        .update(resumeUploads)
+        .set({ createdAt: new Date(0) })
+        .where(eq(resumeUploads.id, first.id));
+      for (let index = 0; index < uploads.MAX_KEPT_UPLOADS; index += 1) {
+        expect(await keep(`later-${index}.txt`, `later ${index}`)).toBe(true);
+      }
+      const kept = (await list()).files;
+      expect(kept).toHaveLength(uploads.MAX_KEPT_UPLOADS);
+      expect(kept.map((upload) => upload.id)).not.toContain(first.id);
+      expect(uploadObjects()).toHaveLength(uploads.MAX_KEPT_UPLOADS);
+      expect((await file(first.id, "GET")).status).toBe(404);
+
+      const [target] = kept;
+      if (!target) throw new Error("Expected a kept file");
+      const targetKey = `users/${userId}/uploads/${target.id}`;
+      silenceErrors();
+
+      // A file that cannot be stored is not listed.
+      objectStore.failing.add("put");
+      expect(await keep("unstored.txt", "unstored")).toBe(false);
+      objectStore.failing.clear();
+      expect((await list()).files).toHaveLength(uploads.MAX_KEPT_UPLOADS);
+
+      objectStore.failing.add("get");
+      expect((await file(target.id, "GET")).status).toBe(503);
+      objectStore.failing.clear();
+
+      objectStore.failing.add("delete");
+      const refused = await file(target.id, "DELETE");
+      expect(refused.status).toBe(503);
+      expect(await refused.json()).toEqual({
+        error: "The stored file couldn't be deleted. Try again in a moment.",
+      });
+      objectStore.failing.clear();
+      expect(objectStore.objects.has(targetKey)).toBe(true);
+      expect((await list()).files.map((upload) => upload.id)).toContain(
+        target.id,
+      );
+
+      expect((await file(target.id, "DELETE")).status).toBe(200);
+      expect(objectStore.objects.has(targetKey)).toBe(false);
+      expect((await file(target.id, "DELETE")).status).toBe(404);
+      expect((await list()).files).toHaveLength(uploads.MAX_KEPT_UPLOADS - 1);
+
+      // The record of a file that is gone says so instead of failing.
+      const [lost] = (await list()).files;
+      if (!lost) throw new Error("Expected a kept file");
+      objectStore.objects.delete(`users/${userId}/uploads/${lost.id}`);
+      const missing = await file(lost.id, "GET");
+      expect(missing.status).toBe(404);
+      expect(await missing.json()).toEqual({
+        error:
+          "This file is no longer in storage. Delete it from the list and import it again.",
+      });
+    } finally {
+      objectStore.failing.clear();
+      for (const upload of await uploads.listUploads(userId)) {
+        await uploads.deleteUpload(userId, upload.id);
+      }
+    }
+    expect(uploadObjects()).toEqual([]);
   });
 
   test("retention removes old finished jobs and keeps active jobs and saved resumes", async () => {

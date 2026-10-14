@@ -27,6 +27,9 @@ export const resumes = pgTable("resumes", {
     { onDelete: "set null" },
   ),
   isTailored: boolean("is_tailored").default(false),
+  // The stored PDF for this exact content, when one was kept. It is cleared
+  // whenever the content changes without a new PDF to go with it.
+  pdfKey: text("pdf_key"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .$defaultFn(() => new Date())
     .notNull(),
@@ -138,6 +141,25 @@ export const userProfiles = pgTable("user_profiles", {
     .$defaultFn(() => new Date())
     .notNull(),
 });
+
+// The original of each imported resume file; the bytes are in object storage.
+export const resumeUploads = pgTable("resume_uploads", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  storageKey: text("storage_key").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .$defaultFn(() => new Date())
+    .notNull(),
+}, (table) => [
+  index("resume_uploads_user_idx").on(table.userId, table.createdAt),
+]);
 
 export const workExperiences = pgTable("work_experiences", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

@@ -12,6 +12,7 @@ import {
 } from "@/lib/resume-document";
 import { ResumeGenerationError } from "@/lib/resume-errors";
 import { ApplicationsService } from "../../applications/service";
+import { discardFile, storeResumePdf } from "../../stored-files";
 import { ResumeGenerationService } from "../service";
 import {
   generationJobPayloadSchema,
@@ -243,25 +244,60 @@ export async function completeGenerationJob(
 ) {
   const result = generatedResumeResultSchema.parse(input);
   const payload = generationJobPayloadSchema.parse(job.payload);
+  // Only this intent saves a library resume, and with it the PDF.
+  const savedForApplication =
+    payload.kind === "application" && payload.intent === "save-and-download"
+      ? payload.request.applicationId
+      : null;
+  // Stored ahead of the transaction so no row lock is held across the upload.
+  // The file is removed again below if the save does not commit.
+  const pdfKey = savedForApplication
+    ? await storeResumePdf(
+        job.userId,
+        Buffer.from(result.pdfBase64, "base64"),
+      )
+    : null;
+  let outcome: { completed: boolean; replacedKey: string | null };
+  try {
+    outcome = await completeInTransaction(
+      job,
+      result,
+      payload.request.title,
+      savedForApplication,
+      pdfKey,
+    );
+  } catch (error) {
+    await discardFile(pdfKey);
+    throw error;
+  }
+  await discardFile(outcome.completed ? outcome.replacedKey : pdfKey);
+  return outcome.completed;
+}
+
+function completeInTransaction(
+  job: ClaimedGenerationJob,
+  result: GeneratedResumeResult,
+  title: string,
+  savedForApplication: string | null,
+  pdfKey: string | null,
+) {
   return db.transaction(async (tx) => {
     const [owned] = await tx
       .select()
       .from(resumeGenerationJobs)
       .where(ownsClaim(job))
       .for("update");
-    if (!owned) return false;
+    if (!owned) return { completed: false, replacedKey: null };
     let savedResumeId: string | null = null;
-    if (
-      payload.kind === "application" &&
-      payload.intent === "save-and-download"
-    ) {
+    let replacedKey: string | null = null;
+    if (savedForApplication) {
       // Lock the application to serialize saves for the same workflow.
       const [application] = await tx
         .select()
         .from(jobApplications)
         .where(
           and(
-            eq(jobApplications.id, payload.request.applicationId),
+            eq(jobApplications.id, savedForApplication),
             eq(jobApplications.userId, job.userId),
           ),
         )
@@ -281,13 +317,15 @@ export async function completeGenerationJob(
         .orderBy(desc(resumes.updatedAt))
         .limit(1);
       const values = {
-        title: payload.request.title,
+        title,
         content: serializeGeneratedResume(result),
+        pdfKey,
         updatedAt: new Date(),
       };
       if (existing) {
         await tx.update(resumes).set(values).where(eq(resumes.id, existing.id));
         savedResumeId = existing.id;
+        replacedKey = existing.pdfKey;
       } else {
         const [saved] = await tx
           .insert(resumes)
@@ -316,7 +354,7 @@ export async function completeGenerationJob(
         leaseExpiresAt: null,
       })
       .where(eq(resumeGenerationJobs.id, job.id));
-    return true;
+    return { completed: true, replacedKey };
   });
 }
 

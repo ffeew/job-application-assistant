@@ -6,8 +6,8 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 
 - Email/password authentication, password reset, and a protected dashboard.
 - Profile management for personal details, work experience, education, skills, projects, certifications, achievements, and references.
-- Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction.
-- A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable.
+- Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction. The original of each imported file is kept, and the profile lists the ten most recent for download or deletion.
+- A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable. A saved tailored resume also keeps the PDF that was generated, so the library shows that file rather than a later compilation.
 - Profile-based and job-specific resume generation with manual content selection or Groq-assisted tailoring, using the A4 `professional` LaTeX template. Both flows support a one- or two-page target with up to three AI fitting revisions while keeping fonts and margins fixed. An unmet target returns the best compiled draft with a warning.
 - Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Save and download PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
 - AI cover letters and conversation starters based on saved profile and resume data.
@@ -19,11 +19,12 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - PostgreSQL with Drizzle ORM, BetterAuth, and Zod.
 - Tailwind CSS v4, shadcn/ui, React Hook Form, TanStack Query, and Zustand.
 - Vercel AI SDK 7 with Groq, a separate authenticated pdfLaTeX service, and a local OCR service running PaddleOCR models on CPU.
+- SeaweedFS for imported files and saved resume PDFs, used through its S3 API so another S3-compatible store can take its place.
 - Node.js 24, pnpm, Vitest, Playwright, and ESLint.
 
 ## Local setup
 
-Install Node.js 24 using fnm and the committed `.nvmrc`. Docker Engine with Compose v2 must be available for PostgreSQL, the PDF compiler, and the OCR service. The app and worker require a Groq API key at startup, even when you only use other features.
+Install Node.js 24 using fnm and the committed `.nvmrc`. Docker Engine with Compose v2 must be available for PostgreSQL, the PDF compiler, the OCR service, and file storage. The app and worker require a Groq API key at startup, even when you only use other features.
 
 ```sh
 git clone https://github.com/ffeew/job-application-assistant
@@ -41,14 +42,14 @@ pnpm install
 cp .env.example .env
 ```
 
-Fill in `.env` before continuing. Generate the database password, BetterAuth secret, compiler token, and OCR token independently with `openssl rand -hex 32`. Match `DATABASE_URL` to the Compose database credentials, URL-encoding special characters. For host development, use `BETTER_AUTH_URL=http://localhost:3000`, a database URL at `localhost:5432`, `LATEX_COMPILER_URL=http://localhost:8080`, and `OCR_SERVICE_URL=http://localhost:8081`.
+Fill in `.env` before continuing. Generate the database password, BetterAuth secret, compiler token, OCR token, and storage secret independently with `openssl rand -hex 32`. Match `DATABASE_URL` to the Compose database credentials, URL-encoding special characters. For host development, use `BETTER_AUTH_URL=http://localhost:3000`, a database URL at `localhost:5432`, `LATEX_COMPILER_URL=http://localhost:8080`, `OCR_SERVICE_URL=http://localhost:8081`, and `OBJECT_STORAGE_URL=http://localhost:8333`.
 
 ```sh
 docker compose -f docker-compose.dev.yml up -d
 pnpm run db:migrate
 ```
 
-The development file runs only the database, compiler, and OCR service, published on loopback. Run it on its own and use it only for local development. Start the worker in a separate terminal:
+The development file runs only the database, compiler, OCR service, and file storage, published on loopback. Run it on its own and use it only for local development. Start the worker in a separate terminal:
 
 ```sh
 pnpm run worker
@@ -79,6 +80,9 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 | `LATEX_COMPILER_TOKEN` | PDFs; required by Compose | Shared app/worker/compiler token, at least 32 characters |
 | `OCR_SERVICE_URL` | Scanned PDFs; supplied by Compose | OCR service URL; Compose uses `http://ocr:8080` |
 | `OCR_SERVICE_TOKEN` | Scanned PDFs; required by Compose | Shared app/OCR service token, at least 32 characters |
+| `OBJECT_STORAGE_URL` | Stored files; supplied by Compose | S3 endpoint for imported files and saved resume PDFs; Compose uses `http://seaweedfs:8333` |
+| `OBJECT_STORAGE_ACCESS_KEY` / `OBJECT_STORAGE_SECRET_KEY` | Stored files; required by Compose | Credentials shared by the app, worker, and storage container; the secret needs at least 32 characters |
+| `OBJECT_STORAGE_BUCKET` / `OBJECT_STORAGE_REGION` | No | Bucket and signing region; default to `job-assistant` and `us-east-1` |
 | `RESEND_API_KEY` | No | Password reset email delivery; without it, email content is logged to the server console |
 | `RESEND_FROM_EMAIL` | No | Sender for Resend; defaults to `noreply@example.com` |
 | `NODE_ENV` | No | Defaults to `development`; runtime containers use `production` |
@@ -88,6 +92,8 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 Qwen requests use non-thinking mode and cap explicit output budgets at 16,384 tokens. Resume fitting tries the fallback model if the primary fails. Model override changes require restarting the app and worker.
 
 Resume import reads text-based PDFs and DOCX files inside the app, including link targets and DOCX page headers. A PDF without a text layer is sent to the [OCR service](services/ocr/README.md); if that service is not configured, the import asks for a text-based file instead. Legacy `.doc` files are not supported.
+
+Imported files and saved resume PDFs are written to object storage. The Compose stack runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) for this; any store that speaks the S3 API with path-style addresses works if you point `OBJECT_STORAGE_URL` at it and create the bucket. Without these settings the app still runs: an import reads the file without keeping it, and a saved resume is compiled each time it is opened. If storage is configured but unreachable, imports and saves still succeed: the import warns that the original was not kept, and a saved resume's PDF is stored the next time the resume is opened.
 
 ## Commands
 

@@ -14,6 +14,7 @@ import { ProjectsSection } from "./sections/projects-section";
 import { CertificationsSection } from "./sections/certifications-section";
 import { AchievementsSection } from "./sections/achievements-section";
 import { ReferencesSection } from "./sections/references-section";
+import { ImportedFilesSection } from "./sections/imported-files-section";
 import { PendingImportBanner } from "./pending-import-banner";
 import {
 	useProfileUIStore,
@@ -29,6 +30,7 @@ import { useProjects } from "@/app/dashboard/profile/queries/use-projects";
 import { useCertifications } from "@/app/dashboard/profile/queries/use-certifications";
 import { useAchievements } from "@/app/dashboard/profile/queries/use-achievements";
 import { useReferences } from "@/app/dashboard/profile/queries/use-references";
+import { useResumeUploads } from "@/app/dashboard/profile/queries/use-resume-uploads";
 
 const listOrder = { orderBy: "displayOrder", order: "asc" } as const;
 
@@ -43,6 +45,9 @@ export function ProfileLayout() {
 	const certificationsQuery = useCertifications(listOrder);
 	const achievementsQuery = useAchievements(listOrder);
 	const referencesQuery = useReferences(listOrder);
+	// Feeds only the index count. The section reports its own loading and
+	// errors, so a storage problem never hides the rest of the profile.
+	const uploadsQuery = useResumeUploads();
 
 	const userProfile = profileQuery.data;
 	const workExperiences = workQuery.data ?? [];
@@ -52,6 +57,7 @@ export function ProfileLayout() {
 	const certifications = certificationsQuery.data ?? [];
 	const achievements = achievementsQuery.data ?? [];
 	const references = referencesQuery.data ?? [];
+	const uploadCount = uploadsQuery.data?.files.length ?? 0;
 
 	const initializeImport = useImportReviewStore((state) => state.initialize);
 
@@ -65,6 +71,7 @@ export function ProfileLayout() {
 			certifications: certifications.length,
 			achievements: achievements.length,
 			references: references.length,
+			files: uploadCount,
 		}),
 		[
 			userProfile,
@@ -75,6 +82,7 @@ export function ProfileLayout() {
 			certifications.length,
 			achievements.length,
 			references.length,
+			uploadCount,
 		]
 	);
 
@@ -167,6 +175,8 @@ export function ProfileLayout() {
 						isLoading={referencesQuery.isLoading}
 					/>
 				);
+			case "files":
+				return <ImportedFilesSection />;
 			default:
 				return null;
 		}

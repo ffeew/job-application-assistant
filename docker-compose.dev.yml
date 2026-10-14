@@ -1,4 +1,4 @@
-# Host development: the database, compiler, and OCR service from
+# Host development: the database, compiler, OCR service, and file storage from
 # docker-compose.yml, published on loopback. Run this file on its own; it is not
 # an override for the full stack.
 name: job-application-assistant
@@ -22,12 +22,21 @@ services:
       service: ocr
     ports:
       - "127.0.0.1:8081:8080"
+  seaweedfs:
+    extends:
+      file: docker-compose.yml
+      service: seaweedfs
+    ports:
+      - "127.0.0.1:8333:8333"
 
 networks:
   # A published port needs a routable network, so development does not reuse
-  # the full stack's internal one.
+  # the full stack's internal ones.
   ocr:
     name: job-application-assistant_ocr-dev
+  storage:
+    name: job-application-assistant_storage-dev
 
 volumes:
   postgres-data:
+  seaweedfs-data:

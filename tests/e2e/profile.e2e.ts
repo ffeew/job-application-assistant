@@ -1,4 +1,8 @@
+import { readFile } from "node:fs/promises";
+import { eq } from "drizzle-orm";
+import { resumeUploads } from "../../src/lib/db/schema";
 import { test, expect } from "./support/fixtures";
+import { resumeUploadsResponseSchema } from "../../src/app/api/profile/resume-uploads/validators";
 
 test("seeded personal information populates inputs and edits survive reload", async ({
   page,
@@ -181,4 +185,109 @@ test("imported entries show their details before saving", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "MSc Data Science", level: 3 }),
   ).toBeVisible();
+});
+
+test("an imported file is kept in storage and can be downloaded and deleted", async ({
+  page,
+  request,
+  candidate,
+  database,
+  createCandidate,
+  browser,
+  extraHTTPHeaders,
+  baseURL,
+}) => {
+  const original = Buffer.from(
+    "Alex Example\nalex@example.test\nSoftware Engineer at Example Co\n",
+  );
+  const listed = async () => {
+    const response = await request.get("/api/profile/resume-uploads");
+    expect(response.status()).toBe(200);
+    const raw: unknown = await response.json();
+    return resumeUploadsResponseSchema.parse(raw);
+  };
+  expect(await listed()).toEqual({ available: true, files: [] });
+
+  // This import reaches the real route. The AI provider is out of reach here,
+  // so the details come from basic extraction; the file is kept either way.
+  await page.goto("/dashboard/profile");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "Alex résumé.txt",
+    mimeType: "text/plain",
+    buffer: original,
+  });
+  await expect(
+    page.getByText("Resume imported. Review each section before saving."),
+  ).toBeVisible({ timeout: 30_000 });
+
+  await page.getByRole("button", { name: /^Imported files/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Alex résumé.txt", level: 3 }),
+  ).toBeVisible();
+  const [file] = (await listed()).files;
+  expect(file).toMatchObject({
+    fileName: "Alex résumé.txt",
+    mimeType: "text/plain",
+    sizeBytes: original.byteLength,
+  });
+
+  const downloadPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download Alex résumé.txt", exact: true })
+    .click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("Alex résumé.txt");
+  expect((await readFile(await download.path())).equals(original)).toBe(true);
+
+  const other = await createCandidate();
+  const context = await browser.newContext({
+    baseURL,
+    storageState: other.storageState,
+    extraHTTPHeaders,
+  });
+  try {
+    const path = `/api/profile/resume-uploads/${file?.id ?? ""}`;
+    expect((await context.request.get(path)).status()).toBe(404);
+    expect((await context.request.delete(path)).status()).toBe(404);
+  } finally {
+    await context.close();
+  }
+
+  // A record whose file has gone says so at once. This is the request that
+  // gets "not found" from the storage server itself; reading that answer the
+  // wrong way once held the response until the storage timeout.
+  const fileId = file?.id ?? "";
+  const storageKey = `users/${candidate.id}/uploads/${fileId}`;
+  await database
+    .update(resumeUploads)
+    .set({ storageKey: `${storageKey}-gone` })
+    .where(eq(resumeUploads.id, fileId));
+  const gone = await request.get(`/api/profile/resume-uploads/${fileId}`, {
+    timeout: 5_000,
+  });
+  expect(gone.status()).toBe(404);
+  expect(await gone.json()).toEqual({
+    error:
+      "This file is no longer in storage. Delete it from the list and import it again.",
+  });
+  await database
+    .update(resumeUploads)
+    .set({ storageKey })
+    .where(eq(resumeUploads.id, fileId));
+
+  await page
+    .getByRole("button", { name: "Delete Alex résumé.txt", exact: true })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete", exact: true })
+    .click();
+  await expect(page.getByText("File deleted", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "No imported files yet" }),
+  ).toBeVisible();
+  expect((await listed()).files).toEqual([]);
+  expect(
+    (await request.get(`/api/profile/resume-uploads/${file?.id ?? ""}`)).status(),
+  ).toBe(404);
 });

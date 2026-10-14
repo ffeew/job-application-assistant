@@ -96,23 +96,22 @@ test("disabled and explicitly empty sections do not leak into the document", () 
   expect(result.sections).toHaveLength(0);
 });
 
-test("saving accepts existing JSON records and rejects malformed versioned snapshots", () => {
+test("saving names the generation job to keep and takes no document from the client", () => {
+  const jobId = "0b0f3c5e-8a1d-4c7e-9f2a-3d4e5f6a7b8c";
   expect(
-    saveTailoredResumeRequestSchema.safeParse({
-      title: "Legacy",
-      content: JSON.stringify({ html: "<p>Legacy</p>" }),
-    }).success,
-  ).toBe(true);
+    saveTailoredResumeRequestSchema.parse({
+      title: "Tailored",
+      jobId,
+      content: JSON.stringify({ html: "<p>Client copy</p>" }),
+    }),
+  ).toEqual({ title: "Tailored", jobId });
   expect(
-    saveTailoredResumeRequestSchema.safeParse({
-      title: "Broken",
-      content: JSON.stringify({ schemaVersion: 2, renderer: "latex" }),
-    }).success,
+    saveTailoredResumeRequestSchema.safeParse({ title: "Tailored" }).success,
   ).toBe(false);
   expect(
     saveTailoredResumeRequestSchema.safeParse({
-      title: "Broken",
-      content: "invalid JSON",
+      title: "Tailored",
+      jobId: "not-a-job",
     }).success,
   ).toBe(false);
 });

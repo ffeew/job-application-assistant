@@ -9,6 +9,9 @@ export const runtimeSchema = z.object({
   compilerUrl: z.url(),
   compilerContainerId: z.string().min(1),
   compilerToken: z.string().min(32),
+  storageUrl: z.url(),
+  storageAccessKey: z.string().min(1),
+  storageSecretKey: z.string().min(32),
 });
 export type Runtime = z.infer<typeof runtimeSchema>;
 
@@ -55,7 +58,11 @@ export function runtimeEnvironment(
     NEXT_TELEMETRY_DISABLED: "1",
     E2E_TEST: "1",
     E2E_RUNTIME: JSON.stringify(runtime),
-    E2E_ALLOWED_ORIGINS: `${BASE_URL},${new URL(runtime.compilerUrl).origin}`,
+    E2E_ALLOWED_ORIGINS: [
+      BASE_URL,
+      new URL(runtime.compilerUrl).origin,
+      new URL(runtime.storageUrl).origin,
+    ].join(","),
     DATABASE_URL: runtime.databaseUrl,
     BETTER_AUTH_URL: BASE_URL,
     BETTER_AUTH_SECRET: "e2e-only-auth-secret-at-least-thirty-two-characters",
@@ -64,6 +71,9 @@ export function runtimeEnvironment(
     GROQ_FALLBACK_MODEL: "openai/gpt-oss-120b",
     LATEX_COMPILER_URL: runtime.compilerUrl,
     LATEX_COMPILER_TOKEN: runtime.compilerToken,
+    OBJECT_STORAGE_URL: runtime.storageUrl,
+    OBJECT_STORAGE_ACCESS_KEY: runtime.storageAccessKey,
+    OBJECT_STORAGE_SECRET_KEY: runtime.storageSecretKey,
     RESEND_API_KEY: "",
     RESEND_FROM_EMAIL: "",
     PORT: "3100",

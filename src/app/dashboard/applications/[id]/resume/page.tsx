@@ -31,7 +31,6 @@ import {
 } from "@/app/dashboard/resumes/components/resume-workbench";
 import { FormFieldError } from "@/components/ui/form-field-error";
 import { downloadPDF } from "@/lib/utils";
-import { serializeGeneratedResume } from "@/lib/resume-document";
 import { pdfBase64ToBlob, resumeRequestKey } from "@/lib/resume-preview";
 
 const plural = (count: number, singular: string, pluralForm = `${singular}s`) =>
@@ -55,7 +54,8 @@ export default function JobApplicationResumePage({
   const previewMutation = useGenerateJobApplicationPreview(resolvedParams?.id);
   const preview = previewMutation.preview;
   const aiSelection = preview?.aiSelection ?? null;
-  const resumeContent = preview ? serializeGeneratedResume(preview) : null;
+  // A save names the previewed job; the server keeps that job's document and PDF.
+  const previewJobId = preview ? previewMutation.job?.id : undefined;
   const saveMutation = useSaveTailoredResume();
 
   const isGeneratingPreview = previewMutation.isPending;
@@ -138,14 +138,12 @@ export default function JobApplicationResumePage({
     try {
       if (
         preview &&
+        previewJobId &&
         resumeRequestKey(preview.config) === resumeRequestKey(validatedData)
       ) {
         await saveMutation.mutateAsync({
           applicationId: resolvedParams.id,
-          data: {
-            title: validatedData.title,
-            content: serializeGeneratedResume(preview),
-          },
+          data: { title: validatedData.title, jobId: previewJobId },
         });
         downloadPDF(pdfBase64ToBlob(preview.pdfBase64), validatedData.title);
         toast.success("Resume saved and PDF downloaded");
@@ -186,21 +184,22 @@ export default function JobApplicationResumePage({
   };
 
   const handleSaveResume = async () => {
-    if (!resolvedParams?.id || !resumeContent || stale) return;
+    if (!resolvedParams?.id || !previewJobId || stale) return;
 
     const formData = form.getValues();
     try {
       await saveMutation.mutateAsync({
         applicationId: resolvedParams.id,
-        data: {
-          title: formData.title,
-          content: resumeContent,
-        },
+        data: { title: formData.title, jobId: previewJobId },
       });
       toast.success("Resume saved");
     } catch (error) {
       console.error("Error saving resume:", error);
-      toast.error("Couldn't save the resume. Try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Couldn't save the resume. Try again.",
+      );
     }
   };
 
@@ -382,7 +381,7 @@ export default function JobApplicationResumePage({
                 <Button
                   type="button"
                   variant="outline"
-                  className={resumeContent ? undefined : "col-span-2"}
+                  className={previewJobId ? undefined : "col-span-2"}
                   onClick={withAsyncHandler(handlePreview)}
                   disabled={isGeneratingPreview || isSaving}
                 >
@@ -393,7 +392,7 @@ export default function JobApplicationResumePage({
                   )}
                   Preview
                 </Button>
-                {resumeContent && (
+                {previewJobId && (
                   <Button
                     type="button"
                     variant="secondary"

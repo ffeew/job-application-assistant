@@ -21,9 +21,10 @@ export function SelfHostingSection() {
 					</h2>
 					<p className="text-muted-foreground max-w-[60ch]">
 						Docker Compose starts the whole stack: the app, PostgreSQL, a
-						background worker, the LaTeX compiler and an OCR reader for
-						scanned resumes. Your profile, applications and documents stay
-						in your own database.
+						background worker, the LaTeX compiler, an OCR reader for
+						scanned resumes and file storage. Your profile, applications
+						and documents stay in your own database, and your files on
+						your own disk.
 					</p>
 					<div className="flex flex-col gap-2">
 						<h3 className="font-semibold">What you need</h3>

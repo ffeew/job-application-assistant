@@ -30,6 +30,7 @@ const sections: SectionItem[] = [
 	{ id: "certifications", label: "Certifications" },
 	{ id: "achievements", label: "Achievements" },
 	{ id: "references", label: "References" },
+	{ id: "files", label: "Imported files" },
 ];
 
 interface SectionIndexProps {
@@ -50,6 +51,7 @@ export function SectionIndex({ counts }: SectionIndexProps) {
 		achievements: useImportReviewStore((state) => state.achievements.length),
 		references: useImportReviewStore((state) => state.references.length),
 		personal: 0,
+		files: 0,
 	};
 
 	return (

@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { cp, mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -39,6 +39,16 @@ async function checkApplicationPort() {
   });
 }
 
+// The storage image the Compose stack runs, so the browser tests exercise the
+// same server and version that is deployed.
+async function storageImage() {
+  const compose = await readFile("docker-compose.yml", "utf8");
+  const image = /^\s*image:\s*(chrislusf\/seaweedfs:\S+)\s*$/m.exec(compose)?.[1];
+  if (!image)
+    throw new Error("docker-compose.yml does not name the SeaweedFS image.");
+  return image;
+}
+
 export default async function globalSetup() {
   await checkApplicationPort();
   await rm(LOG_DIRECTORY, { recursive: true, force: true });
@@ -49,6 +59,7 @@ export default async function globalSetup() {
   );
   let postgres: StartedPostgreSqlContainer | undefined;
   let compiler: StartedTestContainer | undefined;
+  let storage: StartedTestContainer | undefined;
   let application: ManagedProcess | undefined;
 
   async function cleanup() {
@@ -58,6 +69,7 @@ export default async function globalSetup() {
       async () => {
         for (const [name, container] of [
           ["compiler", compiler],
+          ["storage", storage],
           ["postgres", postgres],
         ] as const) {
           if (container) {
@@ -72,6 +84,7 @@ export default async function globalSetup() {
         }
       },
       () => compiler?.stop(),
+      () => storage?.stop(),
       () => postgres?.stop(),
     ]) {
       try {
@@ -111,11 +124,34 @@ export default async function globalSetup() {
       .withWaitStrategy(Wait.forHttp("/health", 8080))
       .withStartupTimeout(90_000)
       .start();
+    const storageAccessKey = "e2e-only-storage-key";
+    const storageSecretKey = randomBytes(32).toString("hex");
+    storage = await new GenericContainer(await storageImage())
+      .withCommand([
+        "mini",
+        "-dir=/data",
+        "-webdav=false",
+        "-admin.ui=false",
+        "-s3.port.iceberg=0",
+        "-s3.port.lance=0",
+      ])
+      .withEnvironment({
+        AWS_ACCESS_KEY_ID: storageAccessKey,
+        AWS_SECRET_ACCESS_KEY: storageSecretKey,
+        S3_BUCKET: "job-assistant",
+      })
+      .withExposedPorts(8333)
+      .withWaitStrategy(Wait.forHttp("/healthz", 8333))
+      .withStartupTimeout(90_000)
+      .start();
     const runtime: Runtime = {
       databaseUrl: postgres.getConnectionUri(),
       compilerUrl: `http://${compiler.getHost()}:${compiler.getMappedPort(8080)}`,
       compilerContainerId: compiler.getId(),
       compilerToken: token,
+      storageUrl: `http://${storage.getHost()}:${storage.getMappedPort(8333)}`,
+      storageAccessKey,
+      storageSecretKey,
     };
     process.env.E2E_RUNTIME = JSON.stringify(runtime);
     const environment = runtimeEnvironment(runtime);

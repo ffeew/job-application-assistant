@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/app/api/profile/utils";
 import { limitAiRequest } from "@/app/api/ai-rate-limit";
+import { fileStorageAvailable } from "@/app/api/stored-files";
+import { keepUpload } from "@/app/api/profile/resume-uploads/service";
 import { ResumeImportError } from "./errors";
 import { ResumeImportService } from "./service";
 
@@ -63,6 +65,7 @@ export async function POST(request: NextRequest) {
     return tooLargeResponse();
   }
   const mimeType = file.type || "application/octet-stream";
+  const fileName = file instanceof File ? file.name : "resume";
 
   if (!ALLOWED_MIME_TYPES.has(mimeType)) {
     return NextResponse.json(
@@ -95,7 +98,28 @@ export async function POST(request: NextRequest) {
       mimeType,
     });
 
-    return NextResponse.json(result);
+    // The original is kept once it has been read, so every file listed under
+    // imported files is one that imported. Keeping it is secondary: a failure
+    // is reported beside the result, not in place of it.
+    const kept =
+      !fileStorageAvailable ||
+      (await keepUpload(userId, {
+        fileName,
+        mimeType,
+        bytes: new Uint8Array(arrayBuffer),
+      }));
+
+    return NextResponse.json(
+      kept
+        ? result
+        : {
+            ...result,
+            warnings: [
+              ...result.warnings,
+              "The original file couldn't be kept, so it is not listed under imported files. Everything read from it is still here.",
+            ],
+          },
+    );
   } catch (error) {
     if (error instanceof ResumeImportError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

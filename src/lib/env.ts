@@ -25,6 +25,12 @@ const envSchema = z.object({
   LATEX_COMPILER_TOKEN: z.string().min(32).optional(),
   OCR_SERVICE_URL: z.url().optional(),
   OCR_SERVICE_TOKEN: z.string().min(32).optional(),
+  // Any S3-compatible store; the Compose stack runs SeaweedFS.
+  OBJECT_STORAGE_URL: z.url().optional(),
+  OBJECT_STORAGE_BUCKET: z.string().min(1).default("job-assistant"),
+  OBJECT_STORAGE_ACCESS_KEY: z.string().min(1).optional(),
+  OBJECT_STORAGE_SECRET_KEY: z.string().min(32).optional(),
+  OBJECT_STORAGE_REGION: z.string().min(1).default("us-east-1"),
 
   RESEND_API_KEY: z.preprocess(
     (value) => (value === "" ? undefined : value),

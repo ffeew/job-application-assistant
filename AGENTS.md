@@ -11,6 +11,7 @@
 - **React Compiler & Forms**: Use `useWatch` for reactive form subscriptions. Pass `{ keepFieldsRef: true }` to `reset` when populating mounted inputs so memoized registration props remain valid.
 - **AI**: Vercel AI SDK 7 with Groq (`@ai-sdk/groq`) for text generation. Resume import reads PDF and DOCX text in-process (`unpdf`, `mammoth`) and sends only scanned PDFs to the local OCR service. Use `instructions` for system prompts and `getGroqGenerationOptions` for the configured model's provider options and output budget. See [configuration](README.md#configuration) for model defaults.
 - **Documents**: A separate authenticated pdfLaTeX service renders resume PDFs using templates in `src/lib/resume-templates/`. Generation checks the compiled PDF and may revise content up to three times to meet a one- or two-page target.
+- **Stored files**: Imported files and saved resume PDFs live in S3-compatible object storage (SeaweedFS in Compose); the database keeps only their keys. Go through `src/app/api/stored-files.ts`, never the client in `src/lib/object-storage.ts` directly. Storage is optional and must not fail the action it accompanies: a write that fails is logged and the import or save still succeeds. A delete the user asked for removes the file before the row (`removeFile`), so a failure is reported instead of leaving the file behind. Storage keys stay on the server.
 
 ## Module Organization
 
@@ -23,6 +24,7 @@
 - `scripts/`: Migration, generation-worker, runtime-bundling, and container entrypoints.
 - `services/latex-compiler/`: Authenticated PDF compiler and its container image.
 - `services/ocr/`: Authenticated OCR service for scanned PDFs (Python, RapidOCR on CPU) and its container image. Keep it a thin wrapper; reading-order and other testable logic stays in TypeScript.
+- File storage has no service directory: Compose runs the upstream SeaweedFS image, pinned in `docker-compose.yml`, and the browser tests read that tag.
 - `tests/`: PostgreSQL integration tests and the Playwright browser harness; focused unit tests are colocated with their modules.
 - `migrations/`: Generated SQL files—commit alongside schema adjustments.
 - `public/`, `components.json`, config roots (`drizzle.config.ts`, `tsconfig.json`, etc.) hold assets and tool configuration.
@@ -89,7 +91,7 @@ The interface is built on one idea: a job hunt is a filing job, so the app is a 
 
 ## Environment & Secrets
 
-- Follow the [configuration reference](README.md#configuration) and [deployment guide](docs/deployment.md). Compiler settings are required for PDFs and Compose, and OCR service settings for scanned-PDF imports and Compose; both are optional for other features outside Compose.
+- Follow the [configuration reference](README.md#configuration) and [deployment guide](docs/deployment.md). Compiler settings are required for PDFs and Compose, OCR service settings for scanned-PDF imports and Compose, and object storage settings for keeping files and Compose; all three are optional for other features outside Compose.
 - Never commit secrets. Mention new env vars in PRs.
 - `src/lib/env.ts` validates app and worker configuration at startup; migration tooling validates only `DATABASE_URL`. Never bake real secrets into container images.
 

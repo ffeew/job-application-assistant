@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { routeErrorResponse } from "@/app/api/route-error";
 import { auth } from "@/lib/auth";
 import { ApplicationsService } from "@/app/api/applications/service";
-import { enqueueGenerationJob } from "@/app/api/resume-generation/jobs/service";
+import {
+  enqueueGenerationJob,
+  getGenerationJob,
+} from "@/app/api/resume-generation/jobs/service";
 import { jobIntentSchema } from "@/app/api/resume-generation/jobs/validators";
 import { ResumesService } from "@/app/api/resumes/service";
 import { jobApplicationResumeRequestSchema } from "@/app/api/profile/validators";
 import { z } from "zod";
 import { saveTailoredResumeRequestSchema } from "./validators";
 import { generationErrorResponse } from "@/app/api/resume-generation/errors";
+import { storeResumePdf } from "@/app/api/stored-files";
+import { serializeGeneratedResume } from "@/lib/resume-document";
+import { RequestError } from "@/lib/request-error";
 
 const applicationsService = new ApplicationsService();
 const resumesService = new ResumesService();
@@ -132,9 +138,32 @@ export async function PUT(
       );
     }
 
+    // Finished jobs are removed after a week, and a job belongs to one
+    // application: a preview made elsewhere must not be saved here.
+    const job = await getGenerationJob(session.user.id, validatedData.jobId);
+    if (
+      job?.status !== "completed" ||
+      !job.result ||
+      job.payload.kind !== "application" ||
+      job.payload.request.applicationId !== applicationId
+    ) {
+      throw new RequestError(
+        "That preview is no longer available. Preview again, then save.",
+        404,
+      );
+    }
+    const content = serializeGeneratedResume(job.result);
+
     const existingResume = await resumesService.getTailoredResumeByApplication(
       session.user.id,
       applicationId,
+    );
+    // The resume is saved even if the PDF could not be kept; it is then
+    // compiled when the resume is opened. The service removes the file again
+    // if the save itself fails.
+    const pdfKey = await storeResumePdf(
+      session.user.id,
+      Buffer.from(job.result.pdfBase64, "base64"),
     );
 
     let resume;
@@ -142,19 +171,21 @@ export async function PUT(
       resume = await resumesService.updateResume(
         session.user.id,
         existingResume.id,
-        {
-          title: validatedData.title,
-          content: validatedData.content,
-        },
+        { title: validatedData.title, content },
+        pdfKey,
       );
     } else {
-      resume = await resumesService.createResume(session.user.id, {
-        title: validatedData.title,
-        content: validatedData.content,
-        isDefault: false,
-        jobApplicationId: applicationId,
-        isTailored: true,
-      });
+      resume = await resumesService.createResume(
+        session.user.id,
+        {
+          title: validatedData.title,
+          content,
+          isDefault: false,
+          jobApplicationId: applicationId,
+          isTailored: true,
+        },
+        pdfKey,
+      );
     }
 
     if (!resume) {

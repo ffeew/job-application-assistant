@@ -29,11 +29,11 @@ pnpm run test services/latex-compiler
 
 Compiler protocol and diagnostic tests run without TeX. Real compilation tests run when local `newtxtext` and Poppler are available and skip otherwise. They cover page counts, overflow, accents, links, literal TeX, and unsupported characters. The [browser suite](../tests/e2e/README.md) uses the actual compiler Docker image to verify PDF generation without installing TeX on the host.
 
-Resume import tests build synthetic PDF and DOCX files in memory and cover file-type detection, text and link extraction, the scanned-PDF fallback, and the reading order rebuilt from OCR line positions. The OCR client is tested against a stubbed `fetch`. The OCR service itself is Python and outside Vitest; its image build runs an offline [smoke test](../services/ocr/README.md#tests) that must read a generated image-only PDF.
+Resume import tests build synthetic PDF and DOCX files in memory and cover file-type detection, text and link extraction, the scanned-PDF fallback, and the reading order rebuilt from OCR line positions. The OCR client and the object storage client are tested against a stubbed `fetch`. The OCR service itself is Python and outside Vitest; its image build runs an offline [smoke test](../services/ocr/README.md#tests) that must read a generated image-only PDF.
 
 ## PostgreSQL integration tests
 
-Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, and retention. Generation is mocked; live AI, OCR, and email delivery are not exercised.
+Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, stored PDFs and imported files, and retention. Generation and compilation are mocked, and object storage is replaced by an in-memory map whose operations can be made to fail, so no storage server is needed; live AI, OCR, and email delivery are not exercised.
 
 For an isolated local database, start PostgreSQL 18 on loopback port 5433. The port and container name must be available:
 
@@ -60,7 +60,7 @@ Stop the container after testing even if the test command fails. The `--rm` cont
 
 ## Browser tests and CI
 
-The [browser testing guide](../tests/e2e/README.md) covers Playwright commands, isolated PostgreSQL Testcontainers, production app builds, real compiler PDFs, UI mode, and failure artifacts. Docker and Chromium are required, but development services and provider keys are not.
+The [browser testing guide](../tests/e2e/README.md) covers Playwright commands, isolated PostgreSQL and SeaweedFS Testcontainers, production app builds, real compiler PDFs, UI mode, and failure artifacts. Docker and Chromium are required, but development services and provider keys are not.
 
 [GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use the Node.js version in `.nvmrc` and frozen pnpm installs. Separate jobs run the three required checks, the integration suite against PostgreSQL 18 with synthetic credentials, Chromium browser tests, and a Compose smoke test. The browser job caches the compiler image build, runs the compiler tests inside that image with `REQUIRE_TEX=1` so the real compilation tests fail instead of skipping, and uploads reports and service logs for seven days. The smoke job builds every image, including the OCR image and its smoke test, starts `docker-compose.yml` with synthetic credentials, and waits for each health check. Actions are pinned to commit SHAs, which Dependabot updates monthly.
 

@@ -1,9 +1,6 @@
 import { z } from "zod";
-import { documentText, shortText } from "@/lib/validators/fields";
-import {
-  generatedResumeResultSchema,
-  savedGeneratedResumeSchema,
-} from "@/lib/resume-document";
+import { shortText } from "@/lib/validators/fields";
+import { generatedResumeResultSchema } from "@/lib/resume-document";
 
 export const applicationResumeInfoResponseSchema = z.object({
   id: z.string(),
@@ -31,22 +28,12 @@ export const jobApplicationResumeResponseSchema =
     }),
   });
 
+// A save names the generation job it keeps. The server then takes the document
+// and its PDF from that job, so the two cannot disagree and the PDF does not
+// have to travel back through the browser.
 export const saveTailoredResumeRequestSchema = z.object({
   title: shortText.min(1, "Title is required"),
-  content: documentText
-    .min(1, "Content is required")
-    .refine((value) => {
-      try {
-        const raw: unknown = JSON.parse(value);
-        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
-        return (
-          !("schemaVersion" in raw) ||
-          savedGeneratedResumeSchema.safeParse(raw).success
-        );
-      } catch {
-        return false;
-      }
-    }, "Resume content must be a valid saved document."),
+  jobId: z.uuid(),
 });
 
 export const saveTailoredResumeResponseSchema = z.object({

@@ -9,7 +9,8 @@ export type ProfileSection =
 	| "projects"
 	| "certifications"
 	| "achievements"
-	| "references";
+	| "references"
+	| "files";
 
 export type EditingState = {
 	type: "new" | "edit";

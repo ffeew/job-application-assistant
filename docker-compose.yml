@@ -17,6 +17,10 @@ x-runtime-environment: &runtime-environment
   GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-openai/gpt-oss-120b}
   LATEX_COMPILER_URL: http://latex-compiler:8080
   LATEX_COMPILER_TOKEN: ${LATEX_COMPILER_TOKEN:?Set LATEX_COMPILER_TOKEN in .env}
+  OBJECT_STORAGE_URL: http://seaweedfs:8333
+  OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-job-assistant}
+  OBJECT_STORAGE_ACCESS_KEY: ${OBJECT_STORAGE_ACCESS_KEY:?Set OBJECT_STORAGE_ACCESS_KEY in .env}
+  OBJECT_STORAGE_SECRET_KEY: ${OBJECT_STORAGE_SECRET_KEY:?Set OBJECT_STORAGE_SECRET_KEY in .env}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
   RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
 
@@ -75,6 +79,42 @@ services:
     cpus: 2
     networks: [ocr]
 
+  # Keeps imported files and saved resume PDFs behind an S3 endpoint.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    # One process runs the master, volume server, filer and S3 gateway. The
+    # parts this stack does not use are switched off.
+    command:
+      - mini
+      - -dir=/data
+      - -webdav=false
+      - -admin.ui=false
+      - -s3.port.iceberg=0
+      - -s3.port.lance=0
+    environment:
+      # Without credentials the gateway accepts every request. They are read on
+      # each start, so changing them in .env and recreating the stack rotates them.
+      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_ACCESS_KEY:?Set OBJECT_STORAGE_ACCESS_KEY in .env}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_SECRET_KEY:?Set OBJECT_STORAGE_SECRET_KEY in .env}
+      S3_BUCKET: ${OBJECT_STORAGE_BUCKET:-job-assistant}
+    # The image's unprivileged account, which already owns /data in a new volume.
+    user: "1000:1000"
+    volumes:
+      - seaweedfs-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    healthcheck:
+      test: [CMD, curl, -fsS, -o, /dev/null, http://127.0.0.1:8333/healthz]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [storage]
+
   app:
     build:
       context: .
@@ -86,13 +126,15 @@ services:
       OCR_SERVICE_TOKEN: ${OCR_SERVICE_TOKEN:?Set OCR_SERVICE_TOKEN in .env}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
-    networks: [default, ocr]
+    networks: [default, ocr, storage]
     depends_on:
       migrate:
         condition: service_completed_successfully
       latex-compiler:
         condition: service_healthy
       ocr:
+        condition: service_healthy
+      seaweedfs:
         condition: service_healthy
 
   worker:
@@ -102,10 +144,13 @@ services:
     restart: unless-stopped
     environment: *runtime-environment
     stop_grace_period: 200s
+    networks: [default, storage]
     depends_on:
       migrate:
         condition: service_completed_successfully
       latex-compiler:
+        condition: service_healthy
+      seaweedfs:
         condition: service_healthy
 
 networks:
@@ -113,6 +158,12 @@ networks:
   # its network reaches only the app: no internet, database, or compiler.
   ocr:
     internal: true
+  # Only the S3 port checks credentials; the storage server's other ports
+  # answer anyone who can reach them. This network reaches only the app and
+  # worker: no internet, database, or compiler.
+  storage:
+    internal: true
 
 volumes:
   postgres-data:
+  seaweedfs-data:

@@ -121,6 +121,8 @@ jobs:
       GROQ_API_KEY: ci-only
       LATEX_COMPILER_TOKEN: ci-only-compiler-token-at-least-thirty-two-characters
       OCR_SERVICE_TOKEN: ci-only-ocr-token-at-least-thirty-two-characters
+      OBJECT_STORAGE_ACCESS_KEY: ci-only-storage-key
+      OBJECT_STORAGE_SECRET_KEY: ci-only-storage-secret-at-least-thirty-two-characters
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
