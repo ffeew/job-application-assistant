@@ -21,11 +21,11 @@ Imported files and saved resume PDFs live in the `seaweedfs-data` volume, in the
 
 Migrations run after database readiness. The app and worker start after migration success, compiler readiness, and storage readiness; the app also waits for the OCR service. A failed migration blocks their initial startup; inspect the migrator logs before retrying. A worker resumes queued jobs after process restarts and transient database failures.
 
-Production builds use non-secret placeholders and do not connect to a live database or AI service. Real secrets are passed only to runtime containers, and runtime validation rejects missing/invalid configuration. The migrator requires only database settings. Optional Resend settings control password reset emails; without Resend, the server logs email content instead.
+Production builds use non-secret placeholders and do not connect to a live database or AI service. Real secrets are passed only to runtime containers, and runtime validation rejects missing/invalid configuration. The migrator requires only database settings. Optional Resend settings control password reset emails; without Resend, the server logs email content at `info` level instead.
 
 ## Updates and rollback
 
-Back up the database before updates. Generate and commit schema migrations during development with `pnpm run db:generate`; deploy committed migrations rather than using `db:push` against production.
+Back up the database before updates. Generate and commit schema migrations during development with `pnpm run db:generate`; deploy committed migrations rather than using `db:push` against production. Check out the new revision (for example `git pull --ff-only`), then:
 
 ```sh
 docker compose build
@@ -37,9 +37,9 @@ docker compose up -d --wait
 
 Keep the preceding source revision/images. Rebuilding that revision is sufficient only when its schema is compatible with the migration. Otherwise stop the stack and restore the matching database backup before starting the older version. Changing PostgreSQL's major version requires an explicit upgrade/restore procedure; keep version 18 for this stack. `docker compose down` preserves data; adding `--volumes` deletes it.
 
-When updating from a release without file storage, add `OBJECT_STORAGE_ACCESS_KEY` and a generated `OBJECT_STORAGE_SECRET_KEY` to `.env` before starting the stack; Compose refuses to start without them. Resumes saved earlier have no stored PDF yet: each gets one the first time it is opened, compiled from its snapshot by the compiler image then running. Files imported earlier were never kept and cannot be recovered.
+When updating from a release without file storage, add `OBJECT_STORAGE_ACCESS_KEY` and a generated `OBJECT_STORAGE_SECRET_KEY` to `.env` before running the update commands; Compose refuses every command, including `build` and `stop`, until they are set. Resumes saved earlier have no stored PDF yet: each gets one the first time it is opened, compiled from its snapshot by the compiler image then running. Files imported earlier were never kept and cannot be recovered.
 
-When updating from a release that used Mistral OCR, add a generated `OCR_SERVICE_TOKEN` to `.env` before starting the stack; `MISTRAL_API_KEY` is no longer read. The first build produces an OCR image of about 500 MB.
+When updating from a release that used Mistral OCR, add a generated `OCR_SERVICE_TOKEN` to `.env` before running the update commands, for the same reason; `MISTRAL_API_KEY` is no longer read. The first build produces an OCR image of about 500 MB.
 
 Keep app and compiler releases compatible with saved document snapshots. See the [compiler guide](../services/latex-compiler/README.md#image-and-template-compatibility) for image and template compatibility requirements.
 
@@ -83,7 +83,7 @@ Test backups by restoring them into a separate empty database/container before r
 
 ## Background generation
 
-The worker runs one job at a time. HTTP generation requests enqueue work and return **202 `{ jobId, status }`**. Poll `GET /api/resume-generation/jobs/{id}` every two seconds; statuses are `queued`, `running`, `completed`, and `failed`. Completed responses contain a validated generated-resume result. `GET /api/resume-generation/jobs/{id}/pdf` downloads the stored PDF without another AI call or compilation. Every job endpoint requires a session and enforces ownership.
+The worker runs one job at a time. HTTP generation requests enqueue work and return **202 `{ jobId, status }`**. Poll `GET /api/resume-generation/jobs/{id}` every two seconds; statuses are `queued`, `running`, `completed`, and `failed`. Completed responses contain a validated generated-resume result. `GET /api/resume-generation/jobs/{id}/pdf` downloads the PDF kept in the job's result without another AI call or compilation. Every job endpoint requires a session and enforces ownership.
 
 `POST /api/resume-generation/jobs` accepts `{ kind: "profile" | "application", intent, request }`, with the generation request schema for that kind. Profile intents are `preview` and `download`; application jobs also allow `save-and-download`. Application requests include `applicationId`. `POST /api/resume-generation/preview`, `POST /api/resume-generation/pdf`, and `POST /api/applications/{id}/resume` also enqueue jobs and return 202. The application endpoint's GET reads application and saved-resume information; its PUT explicitly saves or updates a tailored resume.
 
@@ -91,7 +91,7 @@ The worker runs one job at a time. HTTP generation requests enqueue work and ret
 
 Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter and conversation-starter generation allow ten requests a minute per account and resume import five, counted in the app process's memory.
 
-Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Generation runs in the worker with a 180-second overall deadline, independently of Cloudflare's HTTP timeout. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain. Job results stay in PostgreSQL. Only a saved resume's PDF is written to storage, by the worker for Save and download PDF and by the app when a preview is saved.
+Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Generation runs in the worker with a 180-second overall deadline, independently of Cloudflare's HTTP timeout. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain. Job results stay in PostgreSQL. Only a saved resume's PDF is written to storage: by the worker for Save and download PDF, by the app when a preview is saved, and by the app when a saved resume without one is first opened.
 
 Read `docker compose logs -f app worker latex-compiler ocr seaweedfs` for operational status. The app, worker, and migrator write one JSON object per line, at `LOG_LEVEL` and above. App health checks database readiness; worker health checks its processing heartbeat; compiler, OCR, and storage health check their HTTP services. The app and worker log every file they could not store, read, or remove, with its key. A storage request with no answer after 15 seconds counts as failed, so a stalled storage server slows the affected pages by that long instead of holding them. A worker health failure is visible in `docker compose ps`; Docker's restart policy restarts exited processes, not merely unhealthy ones. A missing worker leaves jobs queued until it returns.
 

@@ -46,7 +46,9 @@ services:
     build:
       context: .
       target: migrator
-    environment: *database-environment
+    environment:
+      <<: *database-environment
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       db:
         condition: service_healthy
