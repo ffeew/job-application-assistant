@@ -312,5 +312,4 @@ export class ResumesService {
     const resume = resumesList[0];
     return resume ? toResponse(resume) : null;
   }
-
 }

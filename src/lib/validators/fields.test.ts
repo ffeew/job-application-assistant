@@ -28,7 +28,9 @@ describe("optional form fields", () => {
   );
 
   test("filled fields are still checked", () => {
-    expect(optionalEmail.parse(" alex@example.test ")).toBe("alex@example.test");
+    expect(optionalEmail.parse(" alex@example.test ")).toBe(
+      "alex@example.test",
+    );
     expect(optionalEmail.safeParse("alex at example").success).toBe(false);
     expect(optionalMonth.parse("2024-03")).toBe("2024-03");
     expect(optionalMonth.safeParse("March 2024").success).toBe(false);
@@ -76,9 +78,19 @@ describe("profile schemas", () => {
 
   test("a profile with every optional field empty is valid", () => {
     const empty = {
-      firstName: null, lastName: null, email: null, phone: null, address: null,
-      city: null, state: null, zipCode: null, country: null, linkedinUrl: null,
-      githubUrl: null, portfolioUrl: null, professionalSummary: null,
+      firstName: null,
+      lastName: null,
+      email: null,
+      phone: null,
+      address: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      country: null,
+      linkedinUrl: null,
+      githubUrl: null,
+      portfolioUrl: null,
+      professionalSummary: null,
     };
     expect(createUserProfileSchema.parse(empty)).toEqual(empty);
   });

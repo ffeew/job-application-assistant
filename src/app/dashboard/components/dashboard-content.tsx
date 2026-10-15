@@ -27,9 +27,12 @@ const formatRelativeTime = (timestamp: string) => {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
   if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${plural(Math.floor(seconds / 60), "minute")} ago`;
-  if (seconds < 86400) return `${plural(Math.floor(seconds / 3600), "hour")} ago`;
-  if (seconds < 604800) return `${plural(Math.floor(seconds / 86400), "day")} ago`;
+  if (seconds < 3600)
+    return `${plural(Math.floor(seconds / 60), "minute")} ago`;
+  if (seconds < 86400)
+    return `${plural(Math.floor(seconds / 3600), "hour")} ago`;
+  if (seconds < 604800)
+    return `${plural(Math.floor(seconds / 86400), "day")} ago`;
   return date.toLocaleDateString();
 };
 
@@ -262,7 +265,9 @@ export function DashboardContent() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/dashboard/cover-letters/new">Write cover letter</Link>
+                <Link href="/dashboard/cover-letters/new">
+                  Write cover letter
+                </Link>
               </Button>
             </div>
           </Card>

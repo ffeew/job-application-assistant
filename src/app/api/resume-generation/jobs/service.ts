@@ -252,10 +252,7 @@ export async function completeGenerationJob(
   // Stored ahead of the transaction so no row lock is held across the upload.
   // The file is removed again below if the save does not commit.
   const pdfKey = savedForApplication
-    ? await storeResumePdf(
-        job.userId,
-        Buffer.from(result.pdfBase64, "base64"),
-      )
+    ? await storeResumePdf(job.userId, Buffer.from(result.pdfBase64, "base64"))
     : null;
   let outcome: { completed: boolean; replacedKey: string | null };
   try {

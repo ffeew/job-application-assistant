@@ -21,7 +21,10 @@ import { normalizeMonth } from "@/lib/month";
 import { normalizeHttpUrl } from "@/lib/validators/fields";
 
 const generateId = () => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return Math.random().toString(36).slice(2, 11);
@@ -47,7 +50,9 @@ export const safeString = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-export const joinStringArray = (values: string[] | undefined): string | null => {
+export const joinStringArray = (
+  values: string[] | undefined,
+): string | null => {
   if (!values || values.length === 0) {
     return null;
   }
@@ -195,7 +200,9 @@ const normalizeSkill = (
     "framework",
     "other",
   ];
-  const normalizedCategory = allowedCategories.includes(category as CreateSkillRequest["category"])
+  const normalizedCategory = allowedCategories.includes(
+    category as CreateSkillRequest["category"],
+  )
     ? (category as CreateSkillRequest["category"])
     : "technical";
 
@@ -206,7 +213,9 @@ const normalizeSkill = (
     "advanced",
     "expert",
   ];
-  const normalizedLevel = allowedLevels.includes(proficiency as NonNullable<CreateSkillRequest["proficiencyLevel"]>)
+  const normalizedLevel = allowedLevels.includes(
+    proficiency as NonNullable<CreateSkillRequest["proficiencyLevel"]>,
+  )
     ? (proficiency as NonNullable<CreateSkillRequest["proficiencyLevel"]>)
     : null;
 
@@ -215,7 +224,9 @@ const normalizeSkill = (
       name,
       category: normalizedCategory,
       proficiencyLevel: normalizedLevel,
-      yearsOfExperience: normalizeYearsOfExperience(item.yearsOfExperience ?? null),
+      yearsOfExperience: normalizeYearsOfExperience(
+        item.yearsOfExperience ?? null,
+      ),
       displayOrder: 0,
     },
     warnings,
@@ -352,7 +363,9 @@ export const buildWorkExperienceItems = (
   items.forEach((item, index) => {
     const result = normalizeWorkExperience(item);
     if (result.warnings.length > 0) {
-      warnings.push(...aggregateWarnings("Work experience", index, result.warnings));
+      warnings.push(
+        ...aggregateWarnings("Work experience", index, result.warnings),
+      );
     }
     if (result.request) {
       pendingItems.push({
@@ -451,7 +464,9 @@ export const buildCertificationItems = (
   items.forEach((item, index) => {
     const result = normalizeCertification(item);
     if (result.warnings.length > 0) {
-      warnings.push(...aggregateWarnings("Certification", index, result.warnings));
+      warnings.push(
+        ...aggregateWarnings("Certification", index, result.warnings),
+      );
     }
     if (result.request) {
       pendingItems.push({
@@ -474,7 +489,9 @@ export const buildAchievementItems = (
   items.forEach((item, index) => {
     const result = normalizeAchievement(item);
     if (result.warnings.length > 0) {
-      warnings.push(...aggregateWarnings("Achievement", index, result.warnings));
+      warnings.push(
+        ...aggregateWarnings("Achievement", index, result.warnings),
+      );
     }
     if (result.request) {
       pendingItems.push({

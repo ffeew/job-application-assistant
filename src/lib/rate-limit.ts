@@ -20,13 +20,18 @@ export function createRateLimiter({
   const hits = new Map<string, number[]>();
 
   return function check(key: string, now = Date.now()): RateLimitResult {
-    const recent = (hits.get(key) ?? []).filter((time) => now - time < windowMs);
+    const recent = (hits.get(key) ?? []).filter(
+      (time) => now - time < windowMs,
+    );
     const oldest = recent[0];
     if (recent.length >= limit && oldest !== undefined) {
       hits.set(key, recent);
       return {
         allowed: false,
-        retryAfterSeconds: Math.max(1, Math.ceil((oldest + windowMs - now) / 1000)),
+        retryAfterSeconds: Math.max(
+          1,
+          Math.ceil((oldest + windowMs - now) / 1000),
+        ),
       };
     }
 

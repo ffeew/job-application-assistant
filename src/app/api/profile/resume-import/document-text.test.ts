@@ -269,13 +269,16 @@ describe("resume text extraction", () => {
       Buffer.from("GIF89a"),
       "This file is not a PDF, DOCX or TXT document. Upload a PDF, DOCX or TXT file.",
     ],
-  ])("a %s file is rejected with a next step", async (_, fileBuffer, message) => {
-    await expect(
-      extractResumeText({
-        fileBuffer,
-        mimeType: "application/octet-stream",
-        readScannedPdf: null,
-      }),
-    ).rejects.toMatchObject({ status: 415, message });
-  });
+  ])(
+    "a %s file is rejected with a next step",
+    async (_, fileBuffer, message) => {
+      await expect(
+        extractResumeText({
+          fileBuffer,
+          mimeType: "application/octet-stream",
+          readScannedPdf: null,
+        }),
+      ).rejects.toMatchObject({ status: 415, message });
+    },
+  );
 });

@@ -39,9 +39,7 @@ test("create, edit, and delete a skill", async ({ page }) => {
   await page.getByRole("button", { name: "Add skill", exact: true }).click();
   await page.getByLabel("Skill name *", { exact: true }).fill("PostgreSQL");
   await page.getByLabel("Category *", { exact: true }).click();
-  await page
-    .getByRole("option", { name: "Technical", exact: true })
-    .click();
+  await page.getByRole("option", { name: "Technical", exact: true }).click();
   await page.getByLabel("Years of experience").fill("3");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
@@ -148,7 +146,9 @@ test("imported entries show their details before saving", async ({ page }) => {
   await expect(
     pending.getByRole("heading", { name: "Staff Engineer", level: 4 }),
   ).toBeVisible();
-  await expect(pending.getByText("Imported Labs", { exact: true })).toBeVisible();
+  await expect(
+    pending.getByText("Imported Labs", { exact: true }),
+  ).toBeVisible();
   await expect(
     pending.getByText("Mar 2021 to Jun 2023", { exact: true }),
   ).toBeVisible();
@@ -288,6 +288,8 @@ test("an imported file is kept in storage and can be downloaded and deleted", as
   ).toBeVisible();
   expect((await listed()).files).toEqual([]);
   expect(
-    (await request.get(`/api/profile/resume-uploads/${file?.id ?? ""}`)).status(),
+    (
+      await request.get(`/api/profile/resume-uploads/${file?.id ?? ""}`)
+    ).status(),
   ).toBe(404);
 });

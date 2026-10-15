@@ -28,8 +28,12 @@ export function useDeleteResume() {
       );
       queryClient.removeQueries({ queryKey: resumesKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: resumesKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

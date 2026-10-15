@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
-import {
-  createReferenceSchema,
-  profileQuerySchema,
-} from "../validators";
+import { createReferenceSchema, profileQuerySchema } from "../validators";
 import { getUserId } from "../utils";
 
 const profileService = new ProfileService();
@@ -37,7 +34,10 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const validatedData = createReferenceSchema.parse(body);
 
-    const reference = await profileService.createReference(userId, validatedData);
+    const reference = await profileService.createReference(
+      userId,
+      validatedData,
+    );
     return NextResponse.json(reference, { status: 201 });
   } catch (error) {
     return routeErrorResponse(error, "Failed to create reference");

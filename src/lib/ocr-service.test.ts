@@ -12,7 +12,9 @@ const result: OcrResult = {
     {
       width: 1700,
       height: 2200,
-      lines: [{ text: "Jordan Example", score: 0.99, box: [100, 100, 500, 128] }],
+      lines: [
+        { text: "Jordan Example", score: 0.99, box: [100, 100, 500, 128] },
+      ],
     },
   ],
 };
@@ -36,7 +38,9 @@ describe("OCR service client", () => {
     const request = fixture.requests[0];
     expect(request?.url).toBe("http://ocr.example.test:8080/ocr");
     expect(request?.method).toBe("POST");
-    expect(request?.headers.get("authorization")).toBe(`Bearer ${config.token}`);
+    expect(request?.headers.get("authorization")).toBe(
+      `Bearer ${config.token}`,
+    );
     expect(request?.headers.get("content-type")).toBe("application/pdf");
     expect(new Uint8Array((await request?.arrayBuffer()) ?? [])).toEqual(pdf);
   });

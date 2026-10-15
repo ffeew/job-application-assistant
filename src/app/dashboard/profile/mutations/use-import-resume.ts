@@ -1,15 +1,18 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { resumeImportResponseSchema, type ResumeImportResponse } from '@/app/api/profile/resume-import/validators';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  resumeImportResponseSchema,
+  type ResumeImportResponse,
+} from "@/app/api/profile/resume-import/validators";
 import { parseJsonResponse } from "@/lib/api-response";
-import { resumeUploadsKeys } from '../queries/use-resume-uploads';
+import { resumeUploadsKeys } from "../queries/use-resume-uploads";
 
 const resumeImportApi = {
   import: async (file: File): Promise<ResumeImportResponse> => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
-    const response = await fetch('/api/profile/resume-import', {
-      method: 'POST',
+    const response = await fetch("/api/profile/resume-import", {
+      method: "POST",
       body: formData,
     });
 

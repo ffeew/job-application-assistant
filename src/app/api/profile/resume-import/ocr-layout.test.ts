@@ -84,7 +84,14 @@ describe("single-column pages", () => {
 
 describe("two-column pages", () => {
   const sidebar = column(
-    ["Skills", "TypeScript", "PostgreSQL", "Accessibility", "Docker", "Testing"],
+    [
+      "Skills",
+      "TypeScript",
+      "PostgreSQL",
+      "Accessibility",
+      "Docker",
+      "Testing",
+    ],
     100,
     300,
     320,
@@ -129,7 +136,12 @@ describe("two-column pages", () => {
   test("keeps a full-width heading between the bands it divides", () => {
     const lowerTop = 900;
     const lowerLeft = column(["Languages", "English"], 100, lowerTop, 320);
-    const lowerRight = column(["Projects", "Example Tracker"], 560, lowerTop, 900);
+    const lowerRight = column(
+      ["Projects", "Example Tracker"],
+      560,
+      lowerTop,
+      900,
+    );
     const text = ocrPageToText(
       page([
         ...sidebar,

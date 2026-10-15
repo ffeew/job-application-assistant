@@ -123,7 +123,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     if (error instanceof ResumeImportError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
 
     logger.error({ err: error }, "Unexpected error during resume import");

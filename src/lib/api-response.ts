@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 const apiErrorSchema = z.object({ error: z.string().trim().min(1) });
-const invalidResponseMessage = "Received an invalid server response. Please try again.";
+const invalidResponseMessage =
+  "Received an invalid server response. Please try again.";
 
 /** Carries the HTTP status so callers can tell a rejected request from an outage. */
 export class ApiError extends Error {

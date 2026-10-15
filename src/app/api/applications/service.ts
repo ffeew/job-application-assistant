@@ -43,11 +43,7 @@ export class ApplicationsService {
       contactName: app.contactName ?? undefined,
       recruiterId: app.recruiterId ?? undefined,
       status: app.status as
-        | "applied"
-        | "interviewing"
-        | "offer"
-        | "rejected"
-        | "withdrawn",
+        "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     }));
   }
 
@@ -78,11 +74,7 @@ export class ApplicationsService {
       contactName: app.contactName ?? undefined,
       recruiterId: app.recruiterId ?? undefined,
       status: app.status as
-        | "applied"
-        | "interviewing"
-        | "offer"
-        | "rejected"
-        | "withdrawn",
+        "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     };
   }
 
@@ -131,11 +123,7 @@ export class ApplicationsService {
       contactName: application.contactName ?? undefined,
       recruiterId: application.recruiterId ?? undefined,
       status: application.status as
-        | "applied"
-        | "interviewing"
-        | "offer"
-        | "rejected"
-        | "withdrawn",
+        "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     };
   }
 
@@ -178,11 +166,7 @@ export class ApplicationsService {
       contactName: application.contactName ?? undefined,
       recruiterId: application.recruiterId ?? undefined,
       status: application.status as
-        | "applied"
-        | "interviewing"
-        | "offer"
-        | "rejected"
-        | "withdrawn",
+        "applied" | "interviewing" | "offer" | "rejected" | "withdrawn",
     };
   }
 

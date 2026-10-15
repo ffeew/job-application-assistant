@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { achievementsKeys } from '../queries/use-achievements';
-import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
-import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { achievementsKeys } from "../queries/use-achievements";
+import { dashboardStatsKeys } from "@/app/dashboard/queries/use-dashboard-stats";
+import { dashboardActivityKeys } from "@/app/dashboard/queries/use-dashboard-activity";
 
 const deleteAchievementApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/achievements/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error('Failed to delete achievement');
+      throw new Error("Failed to delete achievement");
     }
   },
 };
@@ -20,10 +20,16 @@ export function useDeleteAchievement() {
   return useMutation({
     mutationFn: (id: number) => deleteAchievementApi.delete(id),
     onSuccess: (_, deletedId) => {
-      queryClient.removeQueries({ queryKey: achievementsKeys.detail(deletedId) });
+      queryClient.removeQueries({
+        queryKey: achievementsKeys.detail(deletedId),
+      });
       void queryClient.invalidateQueries({ queryKey: achievementsKeys.all });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

@@ -17,7 +17,10 @@ export function limitAiRequest(
   const result = limiters[kind](userId);
   if (result.allowed) return null;
   return NextResponse.json(
-    { error: "You're sending requests too quickly. Wait a minute, then try again." },
+    {
+      error:
+        "You're sending requests too quickly. Wait a minute, then try again.",
+    },
     {
       status: 429,
       headers: { "Retry-After": String(result.retryAfterSeconds) },

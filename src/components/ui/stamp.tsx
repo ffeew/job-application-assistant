@@ -19,8 +19,7 @@ const stampVariants = cva("stamp", {
 });
 
 interface StampProps
-  extends React.ComponentProps<"span">,
-    VariantProps<typeof stampVariants> {
+  extends React.ComponentProps<"span">, VariantProps<typeof stampVariants> {
   /** Animate verdicts in response to an action to avoid distracting idle motion. */
   pressed?: boolean;
 }

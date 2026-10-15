@@ -14,11 +14,15 @@ export const generateConversationStarterSchema = z.object({
     .or(z.literal("").transform(() => undefined)),
 });
 
-export type GenerateConversationStarterRequest = z.infer<typeof generateConversationStarterSchema>;
+export type GenerateConversationStarterRequest = z.infer<
+  typeof generateConversationStarterSchema
+>;
 
 export const generateConversationStarterResponseSchema = z.object({
   message: z.string(),
   success: z.literal(true),
 });
 
-export type GenerateConversationStarterResponse = z.infer<typeof generateConversationStarterResponseSchema>;
+export type GenerateConversationStarterResponse = z.infer<
+  typeof generateConversationStarterResponseSchema
+>;

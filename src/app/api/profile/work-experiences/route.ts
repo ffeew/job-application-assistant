@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
-import {
-  createWorkExperienceSchema,
-  profileQuerySchema,
-} from "../validators";
+import { createWorkExperienceSchema, profileQuerySchema } from "../validators";
 import { getUserId } from "../utils";
 
 const profileService = new ProfileService();
@@ -20,10 +17,7 @@ export async function GET(request: NextRequest) {
       Object.fromEntries(new URL(request.url).searchParams),
     );
 
-    const experiences = await profileService.getWorkExperiences(
-      userId,
-      query,
-    );
+    const experiences = await profileService.getWorkExperiences(userId, query);
 
     return NextResponse.json(experiences);
   } catch (error) {

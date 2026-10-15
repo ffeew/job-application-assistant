@@ -50,7 +50,9 @@ async function openApplicationGenerator(
 ) {
   await page.goto(`/dashboard/applications/${applicationId}/resume`);
   await page.getByLabel("Resume title", { exact: true }).fill(title);
-  await page.getByLabel("Match content to the job description", { exact: true }).uncheck();
+  await page
+    .getByLabel("Match content to the job description", { exact: true })
+    .uncheck();
 }
 
 test("profile preview downloads the same real PDF without a second generation", async ({

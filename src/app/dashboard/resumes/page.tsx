@@ -38,7 +38,7 @@ export default function ResumesPage() {
 
   const toggleDefault = async (id: string) => {
     try {
-      const resume = resumes.find(r => r.id === id);
+      const resume = resumes.find((r) => r.id === id);
       if (!resume) return;
 
       await updateResumeMutation.mutateAsync({
@@ -126,8 +126,12 @@ export default function ResumesPage() {
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{resume.title}</span>
-                    {resume.isDefault && <Badge variant="secondary">Default</Badge>}
-                    {resume.isTailored && <Badge variant="outline">Tailored</Badge>}
+                    {resume.isDefault && (
+                      <Badge variant="secondary">Default</Badge>
+                    )}
+                    {resume.isTailored && (
+                      <Badge variant="outline">Tailored</Badge>
+                    )}
                   </p>
                   <p className="text-muted-foreground text-sm tabular-nums">
                     Updated {formatShortDate(resume.updatedAt)}
@@ -147,7 +151,9 @@ export default function ResumesPage() {
                     onClick={withAsyncHandler(() => toggleDefault(resume.id))}
                     disabled={updateResumeMutation.isPending}
                   >
-                    <Star className={resume.isDefault ? "fill-current" : undefined} />
+                    <Star
+                      className={resume.isDefault ? "fill-current" : undefined}
+                    />
                     {resume.isDefault ? "Default" : "Set as default"}
                   </Button>
                   <Button

@@ -100,38 +100,32 @@ export class DashboardService {
     ]);
 
     const activities: ActivityRow[] = [
-      ...applications.map(
-        (app): ActivityRow => ({
-          id: app.id,
-          type: "application",
-          action: "created",
-          title: `${app.position} at ${app.company}`,
-          description: `Applied for ${app.position} position`,
-          createdAt: app.createdAt,
-        }),
-      ),
-      ...resumesList.map(
-        (resume): ActivityRow => ({
-          id: resume.id,
-          type: "resume",
-          action: "created",
-          title: resume.title,
-          description: `Created resume: ${resume.title}`,
-          createdAt: resume.createdAt,
-        }),
-      ),
-      ...coverLettersList.map(
-        (letter): ActivityRow => ({
-          id: letter.id,
-          type: "cover_letter",
-          action: "created",
-          title: letter.title,
-          description: letter.isAiGenerated
-            ? `Generated AI cover letter: ${letter.title}`
-            : `Created cover letter: ${letter.title}`,
-          createdAt: letter.createdAt,
-        }),
-      ),
+      ...applications.map((app): ActivityRow => ({
+        id: app.id,
+        type: "application",
+        action: "created",
+        title: `${app.position} at ${app.company}`,
+        description: `Applied for ${app.position} position`,
+        createdAt: app.createdAt,
+      })),
+      ...resumesList.map((resume): ActivityRow => ({
+        id: resume.id,
+        type: "resume",
+        action: "created",
+        title: resume.title,
+        description: `Created resume: ${resume.title}`,
+        createdAt: resume.createdAt,
+      })),
+      ...coverLettersList.map((letter): ActivityRow => ({
+        id: letter.id,
+        type: "cover_letter",
+        action: "created",
+        title: letter.title,
+        description: letter.isAiGenerated
+          ? `Generated AI cover letter: ${letter.title}`
+          : `Created cover letter: ${letter.title}`,
+        createdAt: letter.createdAt,
+      })),
     ];
 
     return activities

@@ -7,7 +7,11 @@ interface HighlightProps extends React.ComponentProps<"mark"> {
 }
 
 /** Marks content that was matched to the job. Reserve it for that meaning. */
-function Highlight({ className, variant = "stroke", ...props }: HighlightProps) {
+function Highlight({
+  className,
+  variant = "stroke",
+  ...props
+}: HighlightProps) {
   return (
     <mark
       data-slot="highlight"

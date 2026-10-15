@@ -9,15 +9,7 @@ import {
   userProfiles,
   workExperiences,
 } from "@/lib/db/schema";
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  sql,
-  type AnyColumn,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, desc, eq, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import type {
   AchievementResponse,
   BulkUpdateOrderRequest,
@@ -219,7 +211,9 @@ export class ProfileService {
       .where(eq(education.userId, userId))
       .orderBy(
         order(orderBy),
-        newestFirst(sql`coalesce(${education.startDate}, ${education.endDate})`),
+        newestFirst(
+          sql`coalesce(${education.startDate}, ${education.endDate})`,
+        ),
         asc(education.id),
       )
       .limit(query?.limit || 100)
@@ -303,12 +297,7 @@ export class ProfileService {
         eq(
           skills.category,
           query.category as
-            | "technical"
-            | "soft"
-            | "language"
-            | "tool"
-            | "framework"
-            | "other",
+            "technical" | "soft" | "language" | "tool" | "framework" | "other",
         ),
       );
     }

@@ -25,15 +25,24 @@ export function useDeleteApplication() {
     onSuccess: (_, deletedId) => {
       // Returning undefined leaves a list that was never fetched untouched.
       // Seeding it with [] would show an empty tracker until the cache expired.
-      queryClient.setQueryData<JobApplication[]>(applicationsKeys.lists(), (old) =>
-        old?.filter((app) => app.id !== deletedId),
+      queryClient.setQueryData<JobApplication[]>(
+        applicationsKeys.lists(),
+        (old) => old?.filter((app) => app.id !== deletedId),
       );
-      queryClient.removeQueries({ queryKey: applicationsKeys.detail(deletedId) });
-      void queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
+      queryClient.removeQueries({
+        queryKey: applicationsKeys.detail(deletedId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: applicationsKeys.lists(),
+      });
       // The database removes an application's cover letters with it.
       void queryClient.invalidateQueries({ queryKey: coverLettersKeys.all });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

@@ -19,7 +19,8 @@ const noticeVariants = cva(
 );
 
 interface NoticeProps
-  extends Omit<React.ComponentProps<"div">, "title">,
+  extends
+    Omit<React.ComponentProps<"div">, "title">,
     VariantProps<typeof noticeVariants> {
   title?: React.ReactNode;
 }

@@ -36,7 +36,11 @@ export const statusInks: Record<ApplicationStatus, string> = {
   withdrawn: "text-status-withdrawn",
 };
 
-const decided: readonly ApplicationStatus[] = ["offer", "rejected", "withdrawn"];
+const decided: readonly ApplicationStatus[] = [
+  "offer",
+  "rejected",
+  "withdrawn",
+];
 
 /** Status inks need a sheet beneath them to preserve contrast. */
 export function StatusMark({

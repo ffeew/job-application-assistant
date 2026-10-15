@@ -8,9 +8,7 @@ const originalFetch = globalThis.fetch;
 globalThis.fetch = (input, init) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (!allowed.has(url.origin)) {
-    console.error(
-      `E2E blocked unexpected external request to ${url.origin}.`,
-    );
+    console.error(`E2E blocked unexpected external request to ${url.origin}.`);
     throw new Error(
       `E2E blocked unexpected external request to ${url.origin}.`,
     );

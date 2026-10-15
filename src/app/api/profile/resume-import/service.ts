@@ -142,9 +142,28 @@ const aiProfileGenerationSchema = z.object({
   warnings: z.array(z.string()),
 });
 
-const SKILL_CATEGORIES = new Set(["technical", "soft", "language", "tool", "framework", "other"]);
-const SKILL_PROFICIENCY_LEVELS = new Set(["beginner", "intermediate", "advanced", "expert"]);
-const REFERENCE_RELATIONSHIPS = new Set(["manager", "colleague", "client", "professor", "mentor", "other"]);
+const SKILL_CATEGORIES = new Set([
+  "technical",
+  "soft",
+  "language",
+  "tool",
+  "framework",
+  "other",
+]);
+const SKILL_PROFICIENCY_LEVELS = new Set([
+  "beginner",
+  "intermediate",
+  "advanced",
+  "expert",
+]);
+const REFERENCE_RELATIONSHIPS = new Set([
+  "manager",
+  "colleague",
+  "client",
+  "professor",
+  "mentor",
+  "other",
+]);
 
 type AiProfile = z.infer<typeof aiProfileGenerationSchema>;
 
@@ -166,7 +185,9 @@ type NormalizedResumeData = {
 };
 
 export class ResumeImportService {
-  async importProfileFromResume(params: ImportParams): Promise<ResumeImportResponse> {
+  async importProfileFromResume(
+    params: ImportParams,
+  ): Promise<ResumeImportResponse> {
     const extracted = await extractResumeText({
       fileBuffer: Buffer.from(params.arrayBuffer),
       mimeType: params.mimeType,
@@ -263,7 +284,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const aiData = aiProfileGenerationSchema.parse(result.output);
 
     const profile = this.normalizeProfile(aiData);
-    const workExperiences = this.normalizeWorkExperiences(aiData.workExperiences);
+    const workExperiences = this.normalizeWorkExperiences(
+      aiData.workExperiences,
+    );
     const education = this.normalizeEducation(aiData.education);
     const skills = this.normalizeSkills(aiData.skills);
     const projects = this.normalizeProjects(aiData.projects);
@@ -271,12 +294,12 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const achievements = this.normalizeAchievements(aiData.achievements);
     const references = this.normalizeReferences(aiData.references);
 
-    const modelWarnings =
-      Array.isArray(aiData.warnings)
-        ? aiData.warnings.filter(
-          (item): item is string => typeof item === "string" && item.trim().length > 0,
+    const modelWarnings = Array.isArray(aiData.warnings)
+      ? aiData.warnings.filter(
+          (item): item is string =>
+            typeof item === "string" && item.trim().length > 0,
         )
-        : [];
+      : [];
 
     const warnings = this.collectWarnings(profile, [
       ...modelWarnings,
@@ -302,9 +325,7 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     };
   }
 
-  private fallbackExtractProfile(
-    markdown: string,
-  ): NormalizedResumeData {
+  private fallbackExtractProfile(markdown: string): NormalizedResumeData {
     const text = markdown.replace(/\r/g, "\n");
     const lines = text
       .split("\n")
@@ -316,7 +337,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     const nameCandidate = this.findLikelyName(lines);
 
     if (nameCandidate) {
-      const parts = nameCandidate.split(/\s+/).filter((part) => part.length > 0);
+      const parts = nameCandidate
+        .split(/\s+/)
+        .filter((part) => part.length > 0);
       if (parts.length === 1) {
         firstName = parts[0] ?? null;
       } else if (parts.length >= 2) {
@@ -325,24 +348,17 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       }
     }
 
-    const email = this.normalizeEmail(this.matchPattern(text, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i));
+    const email = this.normalizeEmail(
+      this.matchPattern(text, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i),
+    );
     const phone = this.stringOrNull(
-      this.matchPattern(
-        text,
-        /(\+?\d[\d\s().-]{7,}\d)/,
-      ),
+      this.matchPattern(text, /(\+?\d[\d\s().-]{7,}\d)/),
     );
     const linkedinUrl = this.normalizeUrl(
-      this.matchPattern(
-        text,
-        /https?:\/\/(?:www\.)?linkedin\.com\/[^\s)]+/i,
-      ),
+      this.matchPattern(text, /https?:\/\/(?:www\.)?linkedin\.com\/[^\s)]+/i),
     );
     const githubUrl = this.normalizeUrl(
-      this.matchPattern(
-        text,
-        /https?:\/\/(?:www\.)?github\.com\/[^\s)]+/i,
-      ),
+      this.matchPattern(text, /https?:\/\/(?:www\.)?github\.com\/[^\s)]+/i),
     );
     const websiteUrl = this.normalizeUrl(
       this.matchPattern(
@@ -423,14 +439,14 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       githubUrl: this.normalizeUrl(data.githubUrl),
       portfolioUrl: this.normalizeUrl(data.portfolioUrl),
       professionalSummary: this.truncateSummary(
-        this.stringOrNull(
-          data.professionalSummary,
-        ),
+        this.stringOrNull(data.professionalSummary),
       ),
     };
   }
 
-  private normalizeWorkExperiences(data: AiProfile["workExperiences"]): SectionNormalizationResult<ResumeImportWorkExperience> {
+  private normalizeWorkExperiences(
+    data: AiProfile["workExperiences"],
+  ): SectionNormalizationResult<ResumeImportWorkExperience> {
     const warnings: string[] = [];
     const items: ResumeImportWorkExperience[] = [];
 
@@ -444,18 +460,26 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       let isCurrent: boolean | null =
         typeof experience.isCurrent === "boolean" ? experience.isCurrent : null;
 
-      if (!isCurrent && typeof experience.endDate === "string" && /present|current/i.test(experience.endDate)) {
+      if (
+        !isCurrent &&
+        typeof experience.endDate === "string" &&
+        /present|current/i.test(experience.endDate)
+      ) {
         isCurrent = true;
         endDate = null;
       }
 
       if (!jobTitle || !company) {
-        warnings.push(`Skipped a work experience entry at position ${index + 1} due to missing job title or company.`);
+        warnings.push(
+          `Skipped a work experience entry at position ${index + 1} due to missing job title or company.`,
+        );
         return;
       }
 
       if (!startDate) {
-        warnings.push(`Work experience "${jobTitle} at ${company}" is missing a recognizable start date.`);
+        warnings.push(
+          `Work experience "${jobTitle} at ${company}" is missing a recognizable start date.`,
+        );
       }
 
       items.push({
@@ -473,7 +497,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeEducation(data: AiProfile["education"]): SectionNormalizationResult<ResumeImportEducation> {
+  private normalizeEducation(
+    data: AiProfile["education"],
+  ): SectionNormalizationResult<ResumeImportEducation> {
     const warnings: string[] = [];
     const items: ResumeImportEducation[] = [];
 
@@ -486,10 +512,14 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       const honors = this.stringOrNull(education.honors);
       const startDate = normalizeMonth(this.stringOrNull(education.startDate));
       const endDate = normalizeMonth(this.stringOrNull(education.endDate));
-      const relevantCoursework = this.normalizeStringArray(education.relevantCoursework);
+      const relevantCoursework = this.normalizeStringArray(
+        education.relevantCoursework,
+      );
 
       if (!degree || !institution) {
-        warnings.push(`Skipped an education entry at position ${index + 1} due to missing degree or institution.`);
+        warnings.push(
+          `Skipped an education entry at position ${index + 1} due to missing degree or institution.`,
+        );
         return;
       }
 
@@ -509,7 +539,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeSkills(data: AiProfile["skills"]): SectionNormalizationResult<ResumeImportSkill> {
+  private normalizeSkills(
+    data: AiProfile["skills"],
+  ): SectionNormalizationResult<ResumeImportSkill> {
     const warnings: string[] = [];
     const items: ResumeImportSkill[] = [];
     const seen = new Set<string>();
@@ -517,7 +549,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     data.forEach((skill, index) => {
       const name = this.stringOrNull(skill.name);
       if (!name) {
-        warnings.push(`Skipped a skill entry at position ${index + 1} due to missing name.`);
+        warnings.push(
+          `Skipped a skill entry at position ${index + 1} due to missing name.`,
+        );
         return;
       }
 
@@ -527,9 +561,15 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       }
       seen.add(key);
 
-      const category = this.normalizeSkillCategory(this.stringOrNull(skill.category));
-      const proficiencyLevel = this.normalizeSkillLevel(this.stringOrNull(skill.proficiencyLevel));
-      const yearsOfExperience = this.normalizeYearsOfExperience(skill.yearsOfExperience);
+      const category = this.normalizeSkillCategory(
+        this.stringOrNull(skill.category),
+      );
+      const proficiencyLevel = this.normalizeSkillLevel(
+        this.stringOrNull(skill.proficiencyLevel),
+      );
+      const yearsOfExperience = this.normalizeYearsOfExperience(
+        skill.yearsOfExperience,
+      );
 
       items.push({
         name,
@@ -542,14 +582,18 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeProjects(data: AiProfile["projects"]): SectionNormalizationResult<ResumeImportProject> {
+  private normalizeProjects(
+    data: AiProfile["projects"],
+  ): SectionNormalizationResult<ResumeImportProject> {
     const warnings: string[] = [];
     const items: ResumeImportProject[] = [];
 
     data.forEach((project, index) => {
       const title = this.stringOrNull(project.title);
       if (!title) {
-        warnings.push(`Skipped a project entry at position ${index + 1} due to missing title.`);
+        warnings.push(
+          `Skipped a project entry at position ${index + 1} due to missing title.`,
+        );
         return;
       }
 
@@ -557,7 +601,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       const endDateRaw = this.stringOrNull(project.endDate);
       const endDate = normalizeMonth(endDateRaw);
       const derivedOngoing =
-        endDate === null && typeof endDateRaw === "string" && /present|current/i.test(endDateRaw)
+        endDate === null &&
+        typeof endDateRaw === "string" &&
+        /present|current/i.test(endDateRaw)
           ? true
           : null;
       const isOngoing =
@@ -580,15 +626,21 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeCertifications(data: AiProfile["certifications"]): SectionNormalizationResult<ResumeImportCertification> {
+  private normalizeCertifications(
+    data: AiProfile["certifications"],
+  ): SectionNormalizationResult<ResumeImportCertification> {
     const warnings: string[] = [];
     const items: ResumeImportCertification[] = [];
 
     data.forEach((certification, index) => {
       const name = this.stringOrNull(certification.name);
-      const issuingOrganization = this.stringOrNull(certification.issuingOrganization);
+      const issuingOrganization = this.stringOrNull(
+        certification.issuingOrganization,
+      );
       if (!name || !issuingOrganization) {
-        warnings.push(`Skipped a certification entry at position ${index + 1} due to missing name or issuing organization.`);
+        warnings.push(
+          `Skipped a certification entry at position ${index + 1} due to missing name or issuing organization.`,
+        );
         return;
       }
 
@@ -596,7 +648,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
         name,
         issuingOrganization,
         issueDate: normalizeMonth(this.stringOrNull(certification.issueDate)),
-        expirationDate: normalizeMonth(this.stringOrNull(certification.expirationDate)),
+        expirationDate: normalizeMonth(
+          this.stringOrNull(certification.expirationDate),
+        ),
         credentialId: this.stringOrNull(certification.credentialId),
         credentialUrl: this.normalizeUrl(certification.credentialUrl),
       });
@@ -605,14 +659,18 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeAchievements(data: AiProfile["achievements"]): SectionNormalizationResult<ResumeImportAchievement> {
+  private normalizeAchievements(
+    data: AiProfile["achievements"],
+  ): SectionNormalizationResult<ResumeImportAchievement> {
     const warnings: string[] = [];
     const items: ResumeImportAchievement[] = [];
 
     data.forEach((achievement, index) => {
       const title = this.stringOrNull(achievement.title);
       if (!title) {
-        warnings.push(`Skipped an achievement entry at position ${index + 1} due to missing title.`);
+        warnings.push(
+          `Skipped an achievement entry at position ${index + 1} due to missing title.`,
+        );
         return;
       }
 
@@ -628,14 +686,18 @@ Populate the provided schema using only facts that appear in the resume. Use nul
     return { items, warnings };
   }
 
-  private normalizeReferences(data: AiProfile["references"]): SectionNormalizationResult<ResumeImportReference> {
+  private normalizeReferences(
+    data: AiProfile["references"],
+  ): SectionNormalizationResult<ResumeImportReference> {
     const warnings: string[] = [];
     const items: ResumeImportReference[] = [];
 
     data.forEach((reference, index) => {
       const name = this.stringOrNull(reference.name);
       if (!name) {
-        warnings.push(`Skipped a reference entry at position ${index + 1} due to missing name.`);
+        warnings.push(
+          `Skipped a reference entry at position ${index + 1} due to missing name.`,
+        );
         return;
       }
 
@@ -645,7 +707,9 @@ Populate the provided schema using only facts that appear in the resume. Use nul
         company: this.stringOrNull(reference.company),
         email: this.stringOrNull(reference.email),
         phone: this.sanitizePhone(this.stringOrNull(reference.phone)),
-        relationship: this.normalizeReferenceRelationship(this.stringOrNull(reference.relationship)),
+        relationship: this.normalizeReferenceRelationship(
+          this.stringOrNull(reference.relationship),
+        ),
       });
     });
 
@@ -780,7 +844,10 @@ Populate the provided schema using only facts that appear in the resume. Use nul
         continue;
       }
 
-      if (/^[A-Za-z][A-Za-z\s.,'-]*$/.test(line) && line.split(/\s+/).length <= 6) {
+      if (
+        /^[A-Za-z][A-Za-z\s.,'-]*$/.test(line) &&
+        line.split(/\s+/).length <= 6
+      ) {
         return line.replace(/\s{2,}/g, " ").trim();
       }
     }
@@ -804,7 +871,10 @@ Populate the provided schema using only facts that appear in the resume. Use nul
       }
 
       if (isCollecting) {
-        if (/^#{1,6}\s/.test(line) || SUMMARY_SECTION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+        if (
+          /^#{1,6}\s/.test(line) ||
+          SUMMARY_SECTION_PATTERNS.some((pattern) => pattern.test(normalized))
+        ) {
           break;
         }
 

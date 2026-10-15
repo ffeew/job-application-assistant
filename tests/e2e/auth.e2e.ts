@@ -26,7 +26,9 @@ test("sign up, reload the session, sign out, and sign back in", async ({
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByLabel("Confirm password").fill(password);
-    await page.getByRole("button", { name: "Create account", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Create account", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(
       page.getByRole("heading", { name: "Dashboard", exact: true }),

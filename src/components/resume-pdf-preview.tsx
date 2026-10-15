@@ -21,7 +21,8 @@ export function ResumePDFPreview({
   const previewURL = useRef<string | null>(null);
   useEffect(() => {
     const url = URL.createObjectURL(pdfBase64ToBlob(result.pdfBase64));
-    if (frame.current) frame.current.src = `${url}#toolbar=0&navpanes=0&view=FitH`;
+    if (frame.current)
+      frame.current.src = `${url}#toolbar=0&navpanes=0&view=FitH`;
     previewURL.current = url;
     return () => {
       URL.revokeObjectURL(url);

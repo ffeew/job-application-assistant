@@ -5,11 +5,7 @@ import { parseGeneratedResume } from "@/lib/resume-document";
 import { generateProfessionalResumeLatex } from "@/lib/resume-templates/professional-latex";
 import { compileResumeLatex } from "@/lib/latex-compiler";
 import { generationErrorResponse } from "@/app/api/resume-generation/errors";
-import {
-  discardFile,
-  readFile,
-  storeResumePdf,
-} from "@/app/api/stored-files";
+import { discardFile, readFile, storeResumePdf } from "@/app/api/stored-files";
 
 export const maxDuration = 60;
 

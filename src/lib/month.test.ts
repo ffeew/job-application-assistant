@@ -26,8 +26,18 @@ describe("normalizeMonth", () => {
   });
 
   test.each([
-    null, undefined, "", "   ", "Present", "current", "Ongoing",
-    "2020-13", "13/2020", "Summer 2020", "soon", "March",
+    null,
+    undefined,
+    "",
+    "   ",
+    "Present",
+    "current",
+    "Ongoing",
+    "2020-13",
+    "13/2020",
+    "Summer 2020",
+    "soon",
+    "March",
   ])("returns null for %s", (input) => {
     expect(normalizeMonth(input)).toBeNull();
   });

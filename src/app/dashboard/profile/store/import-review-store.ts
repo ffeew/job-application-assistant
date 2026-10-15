@@ -39,8 +39,14 @@ type ImportReviewState = {
   lastImportedAt: number | null;
   initialize: (payload: ResumeImportResponse) => void;
   clear: () => void;
-  updateProfileDraft: (data: CreateUserProfileRequest, warnings?: string[]) => void;
-  updateWorkExperienceDraft: (id: string, request: CreateWorkExperienceRequest) => void;
+  updateProfileDraft: (
+    data: CreateUserProfileRequest,
+    warnings?: string[],
+  ) => void;
+  updateWorkExperienceDraft: (
+    id: string,
+    request: CreateWorkExperienceRequest,
+  ) => void;
   removeWorkExperienceDraft: (id: string) => void;
   updateEducationDraft: (id: string, request: CreateEducationRequest) => void;
   removeEducationDraft: (id: string) => void;
@@ -48,9 +54,15 @@ type ImportReviewState = {
   removeSkillDraft: (id: string) => void;
   updateProjectDraft: (id: string, request: CreateProjectRequest) => void;
   removeProjectDraft: (id: string) => void;
-  updateCertificationDraft: (id: string, request: CreateCertificationRequest) => void;
+  updateCertificationDraft: (
+    id: string,
+    request: CreateCertificationRequest,
+  ) => void;
   removeCertificationDraft: (id: string) => void;
-  updateAchievementDraft: (id: string, request: CreateAchievementRequest) => void;
+  updateAchievementDraft: (
+    id: string,
+    request: CreateAchievementRequest,
+  ) => void;
   removeAchievementDraft: (id: string) => void;
   updateReferenceDraft: (id: string, request: CreateReferenceRequest) => void;
   removeReferenceDraft: (id: string) => void;
@@ -72,7 +84,7 @@ const initialState = {
   lastImportedAt: null as number | null,
 };
 
-const updateDraft = <T,>(
+const updateDraft = <T>(
   items: SectionState<T>,
   id: string,
   request: T,
@@ -84,10 +96,10 @@ const updateDraft = <T,>(
           request,
           warnings: [],
         }
-      : item
+      : item,
   );
 
-const removeDraft = <T,>(items: SectionState<T>, id: string): SectionState<T> =>
+const removeDraft = <T>(items: SectionState<T>, id: string): SectionState<T> =>
   items.filter((item) => item.id !== id);
 
 export const useImportReviewStore = create<ImportReviewState>((set) => ({

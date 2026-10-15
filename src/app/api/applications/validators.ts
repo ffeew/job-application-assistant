@@ -14,7 +14,9 @@ export const applicationSchema = z.object({
   location: shortText.optional(),
   jobUrl: httpUrl.max(2000).optional().or(z.literal("")),
   salaryRange: shortText.optional(),
-  status: z.enum(["applied", "interviewing", "offer", "rejected", "withdrawn"]).default("applied"),
+  status: z
+    .enum(["applied", "interviewing", "offer", "rejected", "withdrawn"])
+    .default("applied"),
   // A date input submits YYYY-MM-DD, or "" once it has been cleared.
   appliedAt: z
     .union([z.literal(""), z.iso.date(), z.iso.datetime()], {
@@ -66,13 +68,25 @@ export const applicationJsonResponseSchema = z.object({
   ...serializedTimestamps,
 });
 
-export type ApplicationJsonResponse = z.infer<typeof applicationJsonResponseSchema>;
+export type ApplicationJsonResponse = z.infer<
+  typeof applicationJsonResponseSchema
+>;
 
 export const applicationsQuerySchema = z.object({
-  status: z.enum(["applied", "interviewing", "offer", "rejected", "withdrawn"]).optional(),
+  status: z
+    .enum(["applied", "interviewing", "offer", "rejected", "withdrawn"])
+    .optional(),
   company: shortText.optional(),
-  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
+  limit: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().positive().max(100))
+    .optional(),
+  offset: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().nonnegative())
+    .optional(),
 });
 
 export type ApplicationsQuery = z.infer<typeof applicationsQuerySchema>;

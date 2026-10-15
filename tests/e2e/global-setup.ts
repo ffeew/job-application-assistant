@@ -43,7 +43,9 @@ async function checkApplicationPort() {
 // same server and version that is deployed.
 async function storageImage() {
   const compose = await readFile("docker-compose.yml", "utf8");
-  const image = /^\s*image:\s*(chrislusf\/seaweedfs:\S+)\s*$/m.exec(compose)?.[1];
+  const image = /^\s*image:\s*(chrislusf\/seaweedfs:\S+)\s*$/m.exec(
+    compose,
+  )?.[1];
   if (!image)
     throw new Error("docker-compose.yml does not name the SeaweedFS image.");
   return image;

@@ -66,11 +66,13 @@ describe("object storage client", () => {
     const missing = storageFixture(() => new Response(null, { status: 404 }));
     expect(await missing.storage.get(key)).toBeNull();
 
-    const denied = storageFixture(() => new Response("denied", { status: 403 }));
-    await expect(denied.storage.get(key)).rejects.toThrow(ObjectStorageError);
-    await expect(denied.storage.put(key, pdf, "application/pdf")).rejects.toThrow(
-      `Storing ${key} failed with status 403.`,
+    const denied = storageFixture(
+      () => new Response("denied", { status: 403 }),
     );
+    await expect(denied.storage.get(key)).rejects.toThrow(ObjectStorageError);
+    await expect(
+      denied.storage.put(key, pdf, "application/pdf"),
+    ).rejects.toThrow(`Storing ${key} failed with status 403.`);
   });
 
   test("deleting succeeds when the object is already gone", async () => {
@@ -82,7 +84,9 @@ describe("object storage client", () => {
     await expect(gone.storage.delete(key)).resolves.toBeUndefined();
 
     const failed = storageFixture(() => new Response(null, { status: 500 }));
-    await expect(failed.storage.delete(key)).rejects.toThrow(ObjectStorageError);
+    await expect(failed.storage.delete(key)).rejects.toThrow(
+      ObjectStorageError,
+    );
   });
 
   test("settles when the runtime holds a second reader on the response", async () => {

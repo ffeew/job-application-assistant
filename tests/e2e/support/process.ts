@@ -86,7 +86,8 @@ export async function runProcess(
   }, timeout);
   try {
     await managed.wait();
-    if (state.timedOut) throw new Error(`${command} timed out. See ${logPath}.`);
+    if (state.timedOut)
+      throw new Error(`${command} timed out. See ${logPath}.`);
   } finally {
     clearTimeout(timer);
     await managed.stop();

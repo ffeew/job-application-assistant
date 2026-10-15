@@ -25,7 +25,11 @@ const themes = [
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   // Keep the server and initial hydration render consistent before reading the theme.
-  const mounted = React.useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+  const mounted = React.useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   if (!mounted) {
     return (

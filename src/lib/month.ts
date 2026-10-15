@@ -3,8 +3,18 @@ export const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const MONTH_NAMES =
   /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i;
 const MONTH_PREFIXES = [
-  "jan", "feb", "mar", "apr", "may", "jun",
-  "jul", "aug", "sep", "oct", "nov", "dec",
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
 ];
 
 function toMonth(year: string | undefined, month: number): string | null {
@@ -17,7 +27,9 @@ function toMonth(year: string | undefined, month: number): string | null {
  * parser is avoided on purpose: it reads "Jan 2020" as local midnight, which is
  * still December in UTC for any host east of Greenwich.
  */
-export function normalizeMonth(value: string | null | undefined): string | null {
+export function normalizeMonth(
+  value: string | null | undefined,
+): string | null {
   const text = value?.trim();
   if (!text || /present|current|ongoing/i.test(text)) return null;
 
@@ -38,7 +50,10 @@ export function normalizeMonth(value: string | null | undefined): string | null 
   const name = MONTH_NAMES.exec(text)?.[1];
   const year = /\b(\d{4})\b/.exec(text)?.[1];
   if (name && year) {
-    return toMonth(year, MONTH_PREFIXES.indexOf(name.slice(0, 3).toLowerCase()) + 1);
+    return toMonth(
+      year,
+      MONTH_PREFIXES.indexOf(name.slice(0, 3).toLowerCase()) + 1,
+    );
   }
 
   return /^\d{4}$/.test(text) ? `${text}-01` : null;

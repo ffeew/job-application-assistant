@@ -176,11 +176,16 @@ export default function NewCoverLetterPage() {
                 value={selectedApplication}
                 onValueChange={handleApplicationChange}
               >
-                <SelectTrigger id="application" aria-describedby="application-hint">
+                <SelectTrigger
+                  id="application"
+                  aria-describedby="application-hint"
+                >
                   <SelectValue placeholder="Choose an application" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None, I will type the job in</SelectItem>
+                  <SelectItem value="none">
+                    None, I will type the job in
+                  </SelectItem>
                   {applications.map((app) => (
                     <SelectItem key={app.id} value={app.id}>
                       {app.position} at {app.company}
@@ -188,7 +193,10 @@ export default function NewCoverLetterPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p id="application-hint" className="text-muted-foreground text-sm">
+              <p
+                id="application-hint"
+                className="text-muted-foreground text-sm"
+              >
                 Optional. Fills in the job below and links the letter to it.
               </p>
             </div>
@@ -229,7 +237,10 @@ export default function NewCoverLetterPage() {
               rows={6}
               className="max-h-72"
             />
-            <p id="jobDescription-hint" className="text-muted-foreground text-sm">
+            <p
+              id="jobDescription-hint"
+              className="text-muted-foreground text-sm"
+            >
               Paste the listing so the letter can answer it.
             </p>
           </div>
@@ -320,7 +331,9 @@ export default function NewCoverLetterPage() {
           ) : (
             <Paper className="flex min-h-[26rem] items-center justify-center p-10 text-center font-sans">
               <p
-                role={generateCoverLetterMutation.isPending ? "status" : undefined}
+                role={
+                  generateCoverLetterMutation.isPending ? "status" : undefined
+                }
                 className="text-paper-foreground/70 max-w-[34ch] text-sm"
               >
                 {generateCoverLetterMutation.isPending

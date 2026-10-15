@@ -23,7 +23,9 @@ test("a malformed JSON body is the client's error", () => {
   } catch (error) {
     failure = error;
   }
-  expect(routeErrorResponse(failure, "Failed to create skill").status).toBe(400);
+  expect(routeErrorResponse(failure, "Failed to create skill").status).toBe(
+    400,
+  );
   expect(log).not.toHaveBeenCalled();
 });
 

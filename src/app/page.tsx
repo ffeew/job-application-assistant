@@ -6,21 +6,21 @@ import { SelfHostingSection } from "@/app/components/landing/self-hosting-sectio
 import { Footer } from "@/app/components/landing/footer";
 
 export default function Home() {
-	return (
-		<div className="min-h-screen">
-			{/* On wide screens the strip leaves room for the hero's tabs to rise into it. */}
-			<div className="band lg:pb-10">
-				<Header />
-			</div>
+  return (
+    <div className="min-h-screen">
+      {/* On wide screens the strip leaves room for the hero's tabs to rise into it. */}
+      <div className="band lg:pb-10">
+        <Header />
+      </div>
 
-			<main>
-				<HeroSection />
-				<HowItWorksSection />
-				<DeskSection />
-				<SelfHostingSection />
-			</main>
+      <main>
+        <HeroSection />
+        <HowItWorksSection />
+        <DeskSection />
+        <SelfHostingSection />
+      </main>
 
-			<Footer />
-		</div>
-	);
+      <Footer />
+    </div>
+  );
 }

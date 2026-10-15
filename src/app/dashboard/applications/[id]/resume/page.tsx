@@ -222,8 +222,8 @@ export default function JobApplicationResumePage({
           back={{ href: "/dashboard/applications", label: "Applications" }}
         />
         <Notice tone="error" title="This application didn't load">
-          It may have been deleted, or it belongs to another account. Go back
-          to your applications and open it again.
+          It may have been deleted, or it belongs to another account. Go back to
+          your applications and open it again.
         </Notice>
       </div>
     );
@@ -325,7 +325,10 @@ export default function JobApplicationResumePage({
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <Label htmlFor="maxProjects" className="justify-between">
+                        <Label
+                          htmlFor="maxProjects"
+                          className="justify-between"
+                        >
                           Projects
                           <span className="tabular-nums">
                             {watchedValues.maxProjects}
@@ -371,8 +374,9 @@ export default function JobApplicationResumePage({
               ) : (
                 <Notice tone="warning" title="No job description">
                   Content can only be matched to a listing once its text is
-                  saved. <Link href={applicationHref}>Add the job description</Link>{" "}
-                  to this application, or continue and include everything.
+                  saved.{" "}
+                  <Link href={applicationHref}>Add the job description</Link> to
+                  this application, or continue and include everything.
                 </Notice>
               )}
 
@@ -449,8 +453,7 @@ export default function JobApplicationResumePage({
                       "work experience",
                     )}
                     , {plural(aiSelection.selectedSkills.length, "skill")},{" "}
-                    {plural(aiSelection.selectedProjects.length, "project")}{" "}
-                    and{" "}
+                    {plural(aiSelection.selectedProjects.length, "project")} and{" "}
                     {plural(
                       aiSelection.selectedEducation.length,
                       "education entry",

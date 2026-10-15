@@ -25,23 +25,26 @@ describe("landing demo data", () => {
     expect(new Set(marked)).toEqual(new Set(listing.phrases));
   });
 
-  it.each(demoListings)("$id marks every matched phrase on the page", (listing) => {
-    const pageText = [
-      listing.summary,
-      ...tailorRoles(listing).flatMap((role) =>
-        role.bullets.map((bullet) => bullet.text),
-      ),
-      ...listing.skills,
-    ];
-    const marked = new Set(
-      pageText.flatMap((text) =>
-        splitByPhrases(text, listing.matched)
-          .filter((segment) => segment.marked)
-          .map((segment) => segment.text),
-      ),
-    );
-    expect(marked).toEqual(new Set(listing.matched));
-  });
+  it.each(demoListings)(
+    "$id marks every matched phrase on the page",
+    (listing) => {
+      const pageText = [
+        listing.summary,
+        ...tailorRoles(listing).flatMap((role) =>
+          role.bullets.map((bullet) => bullet.text),
+        ),
+        ...listing.skills,
+      ];
+      const marked = new Set(
+        pageText.flatMap((text) =>
+          splitByPhrases(text, listing.matched)
+            .filter((segment) => segment.marked)
+            .map((segment) => segment.text),
+        ),
+      );
+      expect(marked).toEqual(new Set(listing.matched));
+    },
+  );
 
   it("keeps bullets grouped by role in profile order", () => {
     const [platform] = demoListings;
@@ -64,9 +67,9 @@ describe("splitByPhrases", () => {
   });
 
   it("prefers the longest phrase", () => {
-    expect(splitByPhrases("CI/CD pipelines", ["CI/CD", "CI/CD pipelines"])).toEqual([
-      { text: "CI/CD pipelines", marked: true },
-    ]);
+    expect(
+      splitByPhrases("CI/CD pipelines", ["CI/CD", "CI/CD pipelines"]),
+    ).toEqual([{ text: "CI/CD pipelines", marked: true }]);
   });
 
   it("returns the text unchanged without phrases", () => {

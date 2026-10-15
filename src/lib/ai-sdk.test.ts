@@ -54,7 +54,11 @@ function groqFixture(content: string, modelId = "qwen/qwen3.8-27b") {
                 finish_reason: "stop",
               },
             ],
-            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+            usage: {
+              prompt_tokens: 10,
+              completion_tokens: 5,
+              total_tokens: 15,
+            },
           }),
           { headers: { "Content-Type": "application/json" } },
         ),
@@ -125,8 +129,12 @@ test.each(modelIds)(
     expect(revised.sections[0]?.entries[0]?.heading).toBe(entry.heading);
     expect(source.sections[0]?.entries[0]?.bullets).toHaveLength(2);
     expect(fixture.requests[0]?.response_format?.type).toBe("json_schema");
-    expect(fixture.requests[0]?.response_format?.json_schema?.strict).toBe(true);
-    expect(fixture.requests[0]?.response_format?.json_schema?.schema).toMatchObject({
+    expect(fixture.requests[0]?.response_format?.json_schema?.strict).toBe(
+      true,
+    );
+    expect(
+      fixture.requests[0]?.response_format?.json_schema?.schema,
+    ).toMatchObject({
       type: "object",
       required: ["summary", "entries", "changes"],
     });
@@ -149,7 +157,8 @@ test.each([
       model: fixture.model,
       ...getGroqGenerationOptions(modelId, requested),
       output: Output.object({ schema: z.object({ firstName: z.string() }) }),
-      prompt: "Extract the first name from this synthetic resume: Alex Example.",
+      prompt:
+        "Extract the first name from this synthetic resume: Alex Example.",
       maxRetries: 0,
     });
 
@@ -168,7 +177,10 @@ test.each([
 
 test.each([
   ["malformed JSON", "{invalid"],
-  ["invalid schema", JSON.stringify({ summary: 123, entries: [], changes: [] })],
+  [
+    "invalid schema",
+    JSON.stringify({ summary: 123, entries: [], changes: [] }),
+  ],
 ])("Groq structured generation rejects %s", async (_description, content) => {
   const fixture = groqFixture(content);
   let failure: unknown;

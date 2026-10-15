@@ -20,10 +20,7 @@ test("container credentials round-trip reserved characters without changing the 
     const username = "demo@%40";
     const output = spawnSync(
       process.execPath,
-      [
-        join(directory, "scripts", "entrypoint.mjs"),
-        "migrate.mjs",
-      ],
+      [join(directory, "scripts", "entrypoint.mjs"), "migrate.mjs"],
       {
         encoding: "utf8",
         env: {

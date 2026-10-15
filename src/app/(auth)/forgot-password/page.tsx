@@ -10,7 +10,8 @@ import { Notice } from "@/components/ui/notice";
 import { authClient } from "@/app/utils/authClient";
 import { AuthPanel } from "../components/auth-panel";
 
-const SEND_FAILED = "Couldn't send the reset email. Check the address and try again.";
+const SEND_FAILED =
+  "Couldn't send the reset email. Check the address and try again.";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -69,7 +70,10 @@ export default function ForgotPasswordPage() {
         </p>
       }
     >
-      <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
+      <form
+        onSubmit={withAsyncHandler(handleSubmit)}
+        className="flex flex-col gap-4"
+      >
         {error && <Notice tone="error">{error}</Notice>}
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Email</Label>
@@ -82,7 +86,12 @@ export default function ForgotPasswordPage() {
             required
           />
         </div>
-        <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="mt-2 w-full"
+          disabled={isLoading}
+        >
           {isLoading ? "Sending…" : "Send reset link"}
         </Button>
       </form>

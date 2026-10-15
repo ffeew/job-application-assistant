@@ -23,9 +23,7 @@ export function getRuntime(): Runtime {
   return runtimeSchema.parse(raw);
 }
 
-export function runtimeEnvironment(
-  runtime: Runtime,
-): NodeJS.ProcessEnv {
+export function runtimeEnvironment(runtime: Runtime): NodeJS.ProcessEnv {
   // Carry tooling/OS settings without inheriting application secrets from .env.
   const inherited: Record<string, string | undefined> = {};
   for (const key of [

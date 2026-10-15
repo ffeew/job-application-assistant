@@ -41,8 +41,8 @@
 
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-document: var(--font-stix), "Times New Roman", Times, serif;
-  --font-stencil: var(--font-big-shoulders-stencil), var(--font-archivo),
-    sans-serif;
+  --font-stencil:
+    var(--font-big-shoulders-stencil), var(--font-archivo), sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* 21px keeps the scale on 12/14/16/18/21/24/36/48/60/72. */
@@ -102,9 +102,11 @@ html:not(.dark)
   --paper: #ffffff;
   --paper-foreground: #1c2030;
   /* Sheets cast a shadow; folders do not. The ring keeps an edge on manila. */
-  --sheet-shadow: 0 0 0 1px rgb(150 108 40 / 0.2), 0 1px 2px rgb(74 52 12 / 0.14),
+  --sheet-shadow:
+    0 0 0 1px rgb(150 108 40 / 0.2), 0 1px 2px rgb(74 52 12 / 0.14),
     0 10px 18px -14px rgb(74 52 12 / 0.55);
-  --page-shadow: 0 0 0 1px rgb(150 108 40 / 0.2), 0 2px 5px rgb(74 52 12 / 0.16),
+  --page-shadow:
+    0 0 0 1px rgb(150 108 40 / 0.2), 0 2px 5px rgb(74 52 12 / 0.16),
     0 24px 40px -24px rgb(74 52 12 / 0.65);
 
   /* Highlighter means "matched to the job" and nothing else. Paper only:
@@ -191,8 +193,8 @@ html:not(.dark) .band {
 
   --paper: #f1ecdd;
   --paper-foreground: #1c2030;
-  --sheet-shadow: 0 0 0 1px rgb(239 216 161 / 0.1),
-    0 10px 18px -14px rgb(0 0 0 / 0.8);
+  --sheet-shadow:
+    0 0 0 1px rgb(239 216 161 / 0.1), 0 10px 18px -14px rgb(0 0 0 / 0.8);
   --page-shadow: 0 1px 1px rgb(0 0 0 / 0.5), 0 16px 32px -16px rgb(0 0 0 / 0.8);
 
   --warning: #f2b45c;

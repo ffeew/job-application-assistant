@@ -79,8 +79,10 @@ test("application dates and links are validated, and a cleared date is accepted"
     ).toBe(true);
   }
   expect(
-    createApplicationSchema.safeParse({ ...application, appliedAt: "next week" })
-      .success,
+    createApplicationSchema.safeParse({
+      ...application,
+      appliedAt: "next week",
+    }).success,
   ).toBe(false);
   expect(updateApplicationSchema.parse({ appliedAt: "" })).toEqual({
     appliedAt: "",

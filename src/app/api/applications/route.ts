@@ -3,10 +3,7 @@ import { routeErrorResponse } from "@/app/api/route-error";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ApplicationsService } from "./service";
-import {
-  applicationsQuerySchema,
-  createApplicationSchema,
-} from "./validators";
+import { applicationsQuerySchema, createApplicationSchema } from "./validators";
 
 const applicationsService = new ApplicationsService();
 

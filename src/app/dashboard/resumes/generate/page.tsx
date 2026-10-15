@@ -111,7 +111,9 @@ export default function GenerateResumePage() {
       const validation = await validateMutation.mutateAsync(validatedData);
 
       if (!validation.valid) {
-        toast.error(`This resume can't be generated: ${validation.errors.join(", ")}`);
+        toast.error(
+          `This resume can't be generated: ${validation.errors.join(", ")}`,
+        );
         return;
       }
 
@@ -234,9 +236,12 @@ export default function GenerateResumePage() {
       />
 
       {!hasMinimalData && (
-        <Notice tone="warning" title="Your profile is too empty to generate from">
-          Add your personal details and at least one work experience,
-          education entry or skill.{" "}
+        <Notice
+          tone="warning"
+          title="Your profile is too empty to generate from"
+        >
+          Add your personal details and at least one work experience, education
+          entry or skill.{" "}
           <Link href="/dashboard/profile">Open your profile</Link>
         </Notice>
       )}
@@ -268,30 +273,30 @@ export default function GenerateResumePage() {
 
             {/* A legend would sit on the divider, so the rule goes on a wrapper. */}
             <div className="border-t pt-6">
-            <fieldset>
-              <legend className="mb-3 text-sm font-medium">
-                Sections to include
-              </legend>
-              <ul className="flex flex-col gap-3">
-                {sections.map((section) => (
-                  <li key={section.key} className="flex items-center gap-3">
-                    <Checkbox
-                      id={section.key}
-                      checked={contentSelection[section.key]}
-                      onCheckedChange={(checked) =>
-                        setValue(`contentSelection.${section.key}`, !!checked)
-                      }
-                    />
-                    <Label htmlFor={section.key} className="flex-1">
-                      {section.label}
-                    </Label>
-                    <span className="text-muted-foreground text-sm tabular-nums">
-                      {section.available ?? "None yet"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </fieldset>
+              <fieldset>
+                <legend className="mb-3 text-sm font-medium">
+                  Sections to include
+                </legend>
+                <ul className="flex flex-col gap-3">
+                  {sections.map((section) => (
+                    <li key={section.key} className="flex items-center gap-3">
+                      <Checkbox
+                        id={section.key}
+                        checked={contentSelection[section.key]}
+                        onCheckedChange={(checked) =>
+                          setValue(`contentSelection.${section.key}`, !!checked)
+                        }
+                      />
+                      <Label htmlFor={section.key} className="flex-1">
+                        {section.label}
+                      </Label>
+                      <span className="text-muted-foreground text-sm tabular-nums">
+                        {section.available ?? "None yet"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </fieldset>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t pt-6">

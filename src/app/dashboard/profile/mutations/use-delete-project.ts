@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { projectsKeys } from '../queries/use-projects';
-import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
-import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { projectsKeys } from "../queries/use-projects";
+import { dashboardStatsKeys } from "@/app/dashboard/queries/use-dashboard-stats";
+import { dashboardActivityKeys } from "@/app/dashboard/queries/use-dashboard-activity";
 
 const deleteProjectApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/projects/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error('Failed to delete project');
+      throw new Error("Failed to delete project");
     }
   },
 };
@@ -22,8 +22,12 @@ export function useDeleteProject() {
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: projectsKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: projectsKeys.all });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

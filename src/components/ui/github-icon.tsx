@@ -6,7 +6,11 @@ interface GithubIconProps {
   height?: number;
 }
 
-export function GithubIcon({ className, width = 24, height = 24 }: GithubIconProps) {
+export function GithubIcon({
+  className,
+  width = 24,
+  height = 24,
+}: GithubIconProps) {
   return (
     <svg
       width={width}

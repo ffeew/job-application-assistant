@@ -64,9 +64,15 @@ describe("other imported sections", () => {
   test("education keeps entries whose dates are missing", () => {
     const { items } = buildEducationItems([
       {
-        degree: "BSc", fieldOfStudy: null, institution: "Example University",
-        location: null, startDate: null, endDate: "2019", gpa: null,
-        honors: null, relevantCoursework: [],
+        degree: "BSc",
+        fieldOfStudy: null,
+        institution: "Example University",
+        location: null,
+        startDate: null,
+        endDate: "2019",
+        gpa: null,
+        honors: null,
+        relevantCoursework: [],
       },
     ]);
     expect(items[0]?.request).toMatchObject({
@@ -76,8 +82,16 @@ describe("other imported sections", () => {
   });
 
   test("skills are de-duplicated and given a valid category", () => {
-    const skill = { name: "TypeScript", category: "Programming", proficiencyLevel: null, yearsOfExperience: null };
-    const { items } = buildSkillItems([skill, { ...skill, name: "typescript" }]);
+    const skill = {
+      name: "TypeScript",
+      category: "Programming",
+      proficiencyLevel: null,
+      yearsOfExperience: null,
+    };
+    const { items } = buildSkillItems([
+      skill,
+      { ...skill, name: "typescript" },
+    ]);
     expect(items).toHaveLength(1);
     expect(items[0]?.request.category).toBe("technical");
   });

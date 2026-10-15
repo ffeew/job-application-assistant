@@ -46,11 +46,27 @@ export const resumeJsonResponseSchema = z.object({
 export type ResumeJsonResponse = z.infer<typeof resumeJsonResponseSchema>;
 
 export const resumesQuerySchema = z.object({
-  isDefault: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
-  isTailored: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
+  isDefault: z
+    .string()
+    .transform((val) => val === "true")
+    .pipe(z.boolean())
+    .optional(),
+  isTailored: z
+    .string()
+    .transform((val) => val === "true")
+    .pipe(z.boolean())
+    .optional(),
   jobApplicationId: recordId.optional(),
-  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
+  limit: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().positive().max(100))
+    .optional(),
+  offset: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().nonnegative())
+    .optional(),
 });
 
 export type ResumesQuery = z.infer<typeof resumesQuerySchema>;

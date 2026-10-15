@@ -1,4 +1,5 @@
-export const REPOSITORY_URL = "https://github.com/ffeew/job-application-assistant";
+export const REPOSITORY_URL =
+  "https://github.com/ffeew/job-application-assistant";
 
 export const sectionLinks = [
   { href: "#how-it-works", label: "How it works" },

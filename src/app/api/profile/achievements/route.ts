@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { routeErrorResponse } from "@/app/api/route-error";
 import { ProfileService } from "../service";
-import {
-  createAchievementSchema,
-  profileQuerySchema,
-} from "../validators";
+import { createAchievementSchema, profileQuerySchema } from "../validators";
 import { getUserId } from "../utils";
 
 const profileService = new ProfileService();

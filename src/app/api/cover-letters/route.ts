@@ -3,10 +3,7 @@ import { routeErrorResponse } from "@/app/api/route-error";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { CoverLettersService } from "./service";
-import {
-  coverLettersQuerySchema,
-  createCoverLetterSchema,
-} from "./validators";
+import { coverLettersQuerySchema, createCoverLetterSchema } from "./validators";
 
 const coverLettersService = new CoverLettersService();
 

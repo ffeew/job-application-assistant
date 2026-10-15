@@ -66,7 +66,9 @@ export function PreviewPane({
 
   return (
     <Paper className="flex aspect-[210/297] w-full items-center justify-center p-10 text-center font-sans">
-      <p className="text-paper-foreground/70 max-w-[30ch] text-sm">{emptyHint}</p>
+      <p className="text-paper-foreground/70 max-w-[30ch] text-sm">
+        {emptyHint}
+      </p>
     </Paper>
   );
 }

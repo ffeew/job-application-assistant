@@ -18,7 +18,11 @@ const conversationStarterApi = {
       body: JSON.stringify(data),
     });
 
-    return parseJsonResponse(response, generateConversationStarterResponseSchema, "Failed to generate conversation starter");
+    return parseJsonResponse(
+      response,
+      generateConversationStarterResponseSchema,
+      "Failed to generate conversation starter",
+    );
   },
 };
 

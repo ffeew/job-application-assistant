@@ -3,11 +3,7 @@ import type { IntelligentContentSelection } from "@/app/api/profile/validators";
 import type { GeneratedResumeResult } from "@/lib/resume-document";
 
 export type GenerationStatus =
-  | "idle"
-  | "validating"
-  | "generating"
-  | "complete"
-  | "error";
+  "idle" | "validating" | "generating" | "complete" | "error";
 
 interface ValidationResult {
   valid: boolean;

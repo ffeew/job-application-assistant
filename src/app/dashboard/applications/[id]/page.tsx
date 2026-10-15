@@ -15,83 +15,83 @@ import { ApplicationDetailSkeleton } from "../components/application-detail-skel
 import { ApplicationForm } from "../components/application-form";
 
 export default function EditApplicationPage({
-	params,
+  params,
 }: {
-	params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }) {
-	const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
-		null
-	);
-	const router = useRouter();
-	const {
-		data: application,
-		isLoading,
-		error,
-	} = useApplication(resolvedParams?.id || "");
-	const updateApplicationMutation = useUpdateApplication();
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
+    null,
+  );
+  const router = useRouter();
+  const {
+    data: application,
+    isLoading,
+    error,
+  } = useApplication(resolvedParams?.id || "");
+  const updateApplicationMutation = useUpdateApplication();
 
-	useEffect(() => {
-		const resolveParams = async () => {
-			const resolved = await params;
-			setResolvedParams(resolved);
-		};
-		runAsyncAction(resolveParams());
-	}, [params]);
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolved = await params;
+      setResolvedParams(resolved);
+    };
+    runAsyncAction(resolveParams());
+  }, [params]);
 
-	if (!resolvedParams || isLoading) {
-		return <ApplicationDetailSkeleton />;
-	}
+  if (!resolvedParams || isLoading) {
+    return <ApplicationDetailSkeleton />;
+  }
 
-	if (error || !application) {
-		return (
-			<div className="flex max-w-4xl flex-col gap-8">
-				<PageHeader
-					title="Edit application"
-					back={{ href: "/dashboard/applications", label: "Applications" }}
-				/>
-				<Notice tone="error" title="This application didn't load">
-					It may have been deleted, or the server could not be reached. Go
-					back to your applications and open it again.
-				</Notice>
-			</div>
-		);
-	}
+  if (error || !application) {
+    return (
+      <div className="flex max-w-4xl flex-col gap-8">
+        <PageHeader
+          title="Edit application"
+          back={{ href: "/dashboard/applications", label: "Applications" }}
+        />
+        <Notice tone="error" title="This application didn't load">
+          It may have been deleted, or the server could not be reached. Go back
+          to your applications and open it again.
+        </Notice>
+      </div>
+    );
+  }
 
-	return (
-		<div className="flex max-w-4xl flex-col gap-8">
-			<PageHeader
-				title="Edit application"
-				description={`${application.position} at ${application.company}`}
-				back={{ href: "/dashboard/applications", label: "Applications" }}
-				actions={
-					<Button variant="outline" asChild>
-						<Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
-							<FileText />
-							Tailor resume
-						</Link>
-					</Button>
-				}
-			/>
+  return (
+    <div className="flex max-w-4xl flex-col gap-8">
+      <PageHeader
+        title="Edit application"
+        description={`${application.position} at ${application.company}`}
+        back={{ href: "/dashboard/applications", label: "Applications" }}
+        actions={
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/applications/${resolvedParams.id}/resume`}>
+              <FileText />
+              Tailor resume
+            </Link>
+          </Button>
+        }
+      />
 
-			<ApplicationForm
-				application={application}
-				submitLabel="Save changes"
-				isPending={updateApplicationMutation.isPending}
-				onSubmit={(data) => {
-					updateApplicationMutation.mutate(
-						{ id: resolvedParams.id, data },
-						{
-							onSuccess: () => {
-								toast.success("Changes saved");
-								router.push("/dashboard/applications");
-							},
-							onError: () => {
-								toast.error("Couldn't save the changes. Try again.");
-							},
-						}
-					);
-				}}
-			/>
-		</div>
-	);
+      <ApplicationForm
+        application={application}
+        submitLabel="Save changes"
+        isPending={updateApplicationMutation.isPending}
+        onSubmit={(data) => {
+          updateApplicationMutation.mutate(
+            { id: resolvedParams.id, data },
+            {
+              onSuccess: () => {
+                toast.success("Changes saved");
+                router.push("/dashboard/applications");
+              },
+              onError: () => {
+                toast.error("Couldn't save the changes. Try again.");
+              },
+            },
+          );
+        }}
+      />
+    </div>
+  );
 }

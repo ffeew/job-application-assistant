@@ -28,10 +28,18 @@ export function useDeleteCoverLetter() {
       queryClient.setQueryData<CoverLetter[]>(coverLettersKeys.lists(), (old) =>
         old?.filter((letter) => letter.id !== deletedId),
       );
-      queryClient.removeQueries({ queryKey: coverLettersKeys.detail(deletedId) });
-      void queryClient.invalidateQueries({ queryKey: coverLettersKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      queryClient.removeQueries({
+        queryKey: coverLettersKeys.detail(deletedId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: coverLettersKeys.lists(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

@@ -100,7 +100,10 @@ function ResetPasswordForm() {
         </p>
       }
     >
-      <form onSubmit={withAsyncHandler(handleSubmit)} className="flex flex-col gap-4">
+      <form
+        onSubmit={withAsyncHandler(handleSubmit)}
+        className="flex flex-col gap-4"
+      >
         {error && <Notice tone="error">{error}</Notice>}
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">New password</Label>
@@ -128,7 +131,12 @@ function ResetPasswordForm() {
             required
           />
         </div>
-        <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="mt-2 w-full"
+          disabled={isLoading}
+        >
           {isLoading ? "Saving…" : "Save new password"}
         </Button>
       </form>

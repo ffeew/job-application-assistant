@@ -24,10 +24,7 @@ export async function GET(
 
     const project = await profileService.getProject(userId, projectId);
     if (!project) {
-      return NextResponse.json(
-        { error: "Project not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
     return NextResponse.json(project);
@@ -62,10 +59,7 @@ export async function PUT(
     );
 
     if (!project) {
-      return NextResponse.json(
-        { error: "Project not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
     return NextResponse.json(project);
@@ -92,10 +86,7 @@ export async function DELETE(
 
     const deleted = await profileService.deleteProject(userId, projectId);
     if (!deleted) {
-      return NextResponse.json(
-        { error: "Project not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });

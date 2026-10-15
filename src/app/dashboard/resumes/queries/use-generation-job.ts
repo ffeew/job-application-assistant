@@ -75,7 +75,8 @@ export function useGenerationJob(applicationId: string | null | undefined) {
     gcTime: 0,
     refetchInterval: (query) => {
       // A job the server no longer has will not reappear; only outages are waited out.
-      if (query.state.error && !isRetryableError(query.state.error)) return false;
+      if (query.state.error && !isRetryableError(query.state.error))
+        return false;
       const status = query.state.data?.status;
       return status === "completed" || status === "failed" ? false : 2000;
     },

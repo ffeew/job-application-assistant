@@ -69,16 +69,34 @@ export const coverLetterJsonResponseSchema = z.object({
   ...serializedTimestamps,
 });
 
-export type CoverLetterJsonResponse = z.infer<typeof coverLetterJsonResponseSchema>;
-export type GenerateCoverLetterRequest = z.infer<typeof generateCoverLetterSchema>;
-export type GenerateCoverLetterResponse = z.infer<typeof generateCoverLetterResponseSchema>;
+export type CoverLetterJsonResponse = z.infer<
+  typeof coverLetterJsonResponseSchema
+>;
+export type GenerateCoverLetterRequest = z.infer<
+  typeof generateCoverLetterSchema
+>;
+export type GenerateCoverLetterResponse = z.infer<
+  typeof generateCoverLetterResponseSchema
+>;
 
 export const coverLettersQuerySchema = z.object({
-  isAiGenerated: z.string().transform((val) => val === 'true').pipe(z.boolean()).optional(),
+  isAiGenerated: z
+    .string()
+    .transform((val) => val === "true")
+    .pipe(z.boolean())
+    .optional(),
   jobApplicationId: recordId.optional(),
   resumeId: recordId.optional(),
-  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional(),
-  offset: z.string().transform(Number).pipe(z.number().int().nonnegative()).optional(),
+  limit: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().positive().max(100))
+    .optional(),
+  offset: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().int().nonnegative())
+    .optional(),
 });
 
 export type CoverLettersQuery = z.infer<typeof coverLettersQuerySchema>;

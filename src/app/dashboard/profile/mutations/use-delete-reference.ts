@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { referencesKeys } from '../queries/use-references';
-import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
-import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { referencesKeys } from "../queries/use-references";
+import { dashboardStatsKeys } from "@/app/dashboard/queries/use-dashboard-stats";
+import { dashboardActivityKeys } from "@/app/dashboard/queries/use-dashboard-activity";
 
 const deleteReferenceApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/references/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error('Failed to delete reference');
+      throw new Error("Failed to delete reference");
     }
   },
 };
@@ -22,8 +22,12 @@ export function useDeleteReference() {
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: referencesKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: referencesKeys.all });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

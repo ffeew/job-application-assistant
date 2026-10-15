@@ -11,9 +11,13 @@ const URL_MAX = 2_000;
 const tooLong = (max: number) =>
   `Keep this under ${max.toLocaleString("en-US")} characters`;
 
-export const shortText = z.string().max(SHORT_TEXT_MAX, tooLong(SHORT_TEXT_MAX));
+export const shortText = z
+  .string()
+  .max(SHORT_TEXT_MAX, tooLong(SHORT_TEXT_MAX));
 export const longText = z.string().max(LONG_TEXT_MAX, tooLong(LONG_TEXT_MAX));
-export const documentText = z.string().max(1_000_000, "This document is too large to save");
+export const documentText = z
+  .string()
+  .max(1_000_000, "This document is too large to save");
 export const recordId = z.string().min(1).max(100);
 export const jobDescriptionText = z
   .string()
@@ -52,10 +56,14 @@ export const httpUrl = z.url({
 
 export const optionalUrl = nullableText.pipe(httpUrl.nullable());
 
-export function normalizeHttpUrl(value: string | null | undefined): string | null {
+export function normalizeHttpUrl(
+  value: string | null | undefined,
+): string | null {
   const text = value?.trim();
   if (!text) return null;
-  const candidate = /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`;
+  const candidate = /^[a-z][a-z0-9+.-]*:/i.test(text)
+    ? text
+    : `https://${text}`;
   const parsed = httpUrl.safeParse(candidate);
   if (!parsed.success) return null;
   try {

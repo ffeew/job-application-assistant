@@ -24,5 +24,9 @@ export const resumeValidationResponseSchema = z.object({
   errors: z.array(z.string()),
 });
 
-export type ResumeDataJsonResponse = z.infer<typeof resumeDataJsonResponseSchema>;
-export type ResumeValidationResponse = z.infer<typeof resumeValidationResponseSchema>;
+export type ResumeDataJsonResponse = z.infer<
+  typeof resumeDataJsonResponseSchema
+>;
+export type ResumeValidationResponse = z.infer<
+  typeof resumeValidationResponseSchema
+>;

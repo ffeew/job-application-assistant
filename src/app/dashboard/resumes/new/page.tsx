@@ -20,7 +20,11 @@ export default function NewResumePage() {
 
   const form = useForm<ResumeFormData>({ defaultValues: emptyResumeForm });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
 
   const onSubmit = (data: ResumeFormData) => {
     if (!data.title.trim()) {

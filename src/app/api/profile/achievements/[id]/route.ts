@@ -22,7 +22,10 @@ export async function GET(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    const achievement = await profileService.getAchievement(userId, achievementId);
+    const achievement = await profileService.getAchievement(
+      userId,
+      achievementId,
+    );
     if (!achievement) {
       return NextResponse.json(
         { error: "Achievement not found" },
@@ -90,7 +93,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    const deleted = await profileService.deleteAchievement(userId, achievementId);
+    const deleted = await profileService.deleteAchievement(
+      userId,
+      achievementId,
+    );
     if (!deleted) {
       return NextResponse.json(
         { error: "Achievement not found" },

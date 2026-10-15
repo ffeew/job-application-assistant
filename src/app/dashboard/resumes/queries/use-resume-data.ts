@@ -8,7 +8,11 @@ import type { ResumeDataJsonResponse } from "@/app/api/resume-generation/validat
 const resumeDataApi = {
   get: async (): Promise<ResumeDataJsonResponse> => {
     const response = await fetch("/api/resume-generation");
-    return parseJsonResponse(response, resumeDataJsonResponseSchema, "Failed to fetch resume data");
+    return parseJsonResponse(
+      response,
+      resumeDataJsonResponseSchema,
+      "Failed to fetch resume data",
+    );
   },
 };
 

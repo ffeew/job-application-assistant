@@ -1,26 +1,28 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 // A plain sheet in the folder, for tables, lists and grouped settings. The
 // shadow carries the edge, so there is no border. Documents use Paper.
-const cardVariants = cva("bg-card text-card-foreground rounded-lg shadow-sheet", {
-  variants: {
-    layout: {
-      default: "flex flex-col gap-5 py-6",
-      flush: "",
-      compact: "flex flex-col gap-4 py-4",
+const cardVariants = cva(
+  "bg-card text-card-foreground rounded-lg shadow-sheet",
+  {
+    variants: {
+      layout: {
+        default: "flex flex-col gap-5 py-6",
+        flush: "",
+        compact: "flex flex-col gap-4 py-4",
+      },
+    },
+    defaultVariants: {
+      layout: "default",
     },
   },
-  defaultVariants: {
-    layout: "default",
-  },
-})
+);
 
 interface CardProps
-  extends React.ComponentProps<"div">,
-    VariantProps<typeof cardVariants> {}
+  extends React.ComponentProps<"div">, VariantProps<typeof cardVariants> {}
 
 function Card({ className, layout, ...props }: CardProps) {
   return (
@@ -29,7 +31,7 @@ function Card({ className, layout, ...props }: CardProps) {
       className={cn(cardVariants({ layout }), className)}
       {...props}
     />
-  )
+  );
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -38,11 +40,11 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-header"
       className={cn(
         "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
@@ -52,7 +54,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("text-base leading-snug font-semibold", className)}
       {...props}
     />
-  )
+  );
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
@@ -62,7 +64,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
-  )
+  );
 }
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
@@ -71,11 +73,11 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-action"
       className={cn(
         "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
@@ -85,7 +87,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("px-6", className)}
       {...props}
     />
-  )
+  );
 }
 
 const cardFooterVariants = cva("px-6 [.border-t]:pt-6", {
@@ -96,10 +98,11 @@ const cardFooterVariants = cva("px-6 [.border-t]:pt-6", {
     },
   },
   defaultVariants: { direction: "row" },
-})
+});
 
 interface CardFooterProps
-  extends React.ComponentProps<"div">,
+  extends
+    React.ComponentProps<"div">,
     VariantProps<typeof cardFooterVariants> {}
 
 function CardFooter({ className, direction, ...props }: CardFooterProps) {
@@ -109,7 +112,7 @@ function CardFooter({ className, direction, ...props }: CardFooterProps) {
       className={cn(cardFooterVariants({ direction }), className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -120,4 +123,4 @@ export {
   CardAction,
   CardDescription,
   CardContent,
-}
+};

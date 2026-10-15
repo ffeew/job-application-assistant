@@ -100,7 +100,11 @@ export function StoredResumeView({ resume }: { resume: ResumeJsonResponse }) {
                 />
                 <Label htmlFor="stored-default">Use as my default resume</Label>
               </div>
-              <Button type="submit" className="w-fit" disabled={mutation.isPending}>
+              <Button
+                type="submit"
+                className="w-fit"
+                disabled={mutation.isPending}
+              >
                 <Save />
                 Save details
               </Button>

@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
     }
 
     const userProfile = await profileService.getUserProfile(session.user.id);
-    const defaultResume = await resumesService.getDefaultResume(session.user.id);
+    const defaultResume = await resumesService.getDefaultResume(
+      session.user.id,
+    );
 
     const result =
       await conversationStartersService.generateConversationStarter(

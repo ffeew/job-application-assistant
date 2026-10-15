@@ -16,7 +16,10 @@ const FILE_NAME_MAX = 200;
 
 export function cleanFileName(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? "";
-  const cleaned = base.replace(/\p{Cc}/gu, "").trim().slice(0, FILE_NAME_MAX);
+  const cleaned = base
+    .replace(/\p{Cc}/gu, "")
+    .trim()
+    .slice(0, FILE_NAME_MAX);
   return cleaned || "resume";
 }
 

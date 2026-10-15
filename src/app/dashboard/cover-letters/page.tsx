@@ -19,7 +19,12 @@ import { RowListSkeleton } from "@/app/dashboard/components/row-list-skeleton";
 import { formatShortDate } from "@/lib/format-date";
 
 export default function CoverLettersPage() {
-  const { data: coverLetters = [], isLoading, error, refetch } = useCoverLetters();
+  const {
+    data: coverLetters = [],
+    isLoading,
+    error,
+    refetch,
+  } = useCoverLetters();
   const deleteCoverLetterMutation = useDeleteCoverLetter();
   const [pendingDelete, setPendingDelete] =
     useState<CoverLetterJsonResponse | null>(null);
@@ -66,8 +71,8 @@ export default function CoverLettersPage() {
 
       {coverLetters.length === 0 ? (
         <EmptyState title="No cover letters yet" actions={writeButton}>
-          Write one from a job listing. It works best once you have a resume
-          and an application saved.
+          Write one from a job listing. It works best once you have a resume and
+          an application saved.
         </EmptyState>
       ) : (
         <Card layout="flush">

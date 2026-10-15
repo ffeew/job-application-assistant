@@ -72,7 +72,11 @@ export function ManualResumeForm({
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("personalInfo.email")} />
+            <Input
+              id="email"
+              type="email"
+              {...register("personalInfo.email")}
+            />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

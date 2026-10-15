@@ -50,10 +50,12 @@ export const workExperienceSchema = z.object({
 export const createWorkExperienceSchema = workExperienceSchema;
 // Partial schemas keep field defaults, so an omitted key would overwrite the
 // stored value on update. Defaulted fields are redeclared as plain optionals.
-export const updateWorkExperienceSchema = workExperienceSchema.partial().extend({
-  isCurrent: z.boolean().optional(),
-  displayOrder: z.number().int().min(0).optional(),
-});
+export const updateWorkExperienceSchema = workExperienceSchema
+  .partial()
+  .extend({
+    isCurrent: z.boolean().optional(),
+    displayOrder: z.number().int().min(0).optional(),
+  });
 
 export const workExperienceResponseSchema = workExperienceSchema.extend({
   id: z.number(),

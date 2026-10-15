@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { skillsKeys } from '../queries/use-skills';
-import { dashboardStatsKeys } from '@/app/dashboard/queries/use-dashboard-stats';
-import { dashboardActivityKeys } from '@/app/dashboard/queries/use-dashboard-activity';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { skillsKeys } from "../queries/use-skills";
+import { dashboardStatsKeys } from "@/app/dashboard/queries/use-dashboard-stats";
+import { dashboardActivityKeys } from "@/app/dashboard/queries/use-dashboard-activity";
 
 const deleteSkillApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`/api/profile/skills/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error('Failed to delete skill');
+      throw new Error("Failed to delete skill");
     }
   },
 };
@@ -22,8 +22,12 @@ export function useDeleteSkill() {
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: skillsKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: skillsKeys.all });
-      void queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.stats() });
-      void queryClient.invalidateQueries({ queryKey: dashboardActivityKeys.activity() });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardStatsKeys.stats(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: dashboardActivityKeys.activity(),
+      });
     },
   });
 }

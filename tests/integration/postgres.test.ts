@@ -122,12 +122,10 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     await migrate(database.db, { migrationsFolder: "./migrations" });
     jobs = await import("../../src/app/api/resume-generation/jobs/service");
     routes = await import("../../src/app/api/resume-generation/jobs/route");
-    detailRoute = await import(
-      "../../src/app/api/resume-generation/jobs/[id]/route"
-    );
-    pdfRoute = await import(
-      "../../src/app/api/resume-generation/jobs/[id]/pdf/route"
-    );
+    detailRoute =
+      await import("../../src/app/api/resume-generation/jobs/[id]/route");
+    pdfRoute =
+      await import("../../src/app/api/resume-generation/jobs/[id]/pdf/route");
     auth = await import("../../src/lib/auth");
     const signedUp = await auth.auth.api.signUpEmail({
       body: {
@@ -300,18 +298,14 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("numeric identities, CRUD, ownership, and DELETE RETURNING work with PostgreSQL", async () => {
-    const { ApplicationsService } = await import(
-      "../../src/app/api/applications/service"
-    );
-    const { ResumesService } = await import(
-      "../../src/app/api/resumes/service"
-    );
-    const { CoverLettersService } = await import(
-      "../../src/app/api/cover-letters/service"
-    );
-    const { ProfileService } = await import(
-      "../../src/app/api/profile/service"
-    );
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
+    const { CoverLettersService } =
+      await import("../../src/app/api/cover-letters/service");
+    const { ProfileService } =
+      await import("../../src/app/api/profile/service");
     const service = new ApplicationsService();
     const created = await service.createApplication(userId, {
       company: "Fixture",
@@ -491,9 +485,8 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     await clearJobs();
     await enqueue();
     const job = await claimed();
-    const { runGenerationJob } = await import(
-      "../../src/app/api/resume-generation/jobs/worker"
-    );
+    const { runGenerationJob } =
+      await import("../../src/app/api/resume-generation/jobs/worker");
     let release: (() => void) | undefined;
     const waiting = new Promise<void>((resolve) => {
       release = resolve;
@@ -533,12 +526,10 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("profile requests the client got wrong return 400 and entries list newest first", async () => {
-    const collection = await import(
-      "../../src/app/api/profile/work-experiences/route"
-    );
-    const item = await import(
-      "../../src/app/api/profile/work-experiences/[id]/route"
-    );
+    const collection =
+      await import("../../src/app/api/profile/work-experiences/route");
+    const item =
+      await import("../../src/app/api/profile/work-experiences/[id]/route");
     const url = "http://localhost:3000/api/profile/work-experiences";
     const post = (body: string) =>
       collection.POST(
@@ -628,9 +619,8 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("the default resume changes atomically and an unknown ID leaves it alone", async () => {
-    const { ResumesService } = await import(
-      "../../src/app/api/resumes/service"
-    );
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
     const service = new ResumesService();
     const draft = { content: "{}", isTailored: false };
     const first = await service.createResume(userId, {
@@ -688,7 +678,11 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     await clearJobs();
     const [legacy] = await database.db
       .insert(resumeGenerationJobs)
-      .values({ userId, payload: { kind: "retired-kind" }, status: "completed" })
+      .values({
+        userId,
+        payload: { kind: "retired-kind" },
+        status: "completed",
+      })
       .returning();
     if (!legacy) throw new Error("Missing legacy job fixture");
     const log = vi.spyOn(logger, "error").mockImplementation(() => undefined);
@@ -735,25 +729,25 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("links to another account's records are refused and removed with their target", async () => {
-    const { ApplicationsService } = await import(
-      "../../src/app/api/applications/service"
-    );
-    const { ResumesService } = await import(
-      "../../src/app/api/resumes/service"
-    );
-    const { CoverLettersService } = await import(
-      "../../src/app/api/cover-letters/service"
-    );
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
+    const { CoverLettersService } =
+      await import("../../src/app/api/cover-letters/service");
     const applications = new ApplicationsService();
     const resumeService = new ResumesService();
     const letters = new CoverLettersService();
     const draft = { content: "{}", isDefault: false, isTailored: true };
 
-    const foreignApplication = await applications.createApplication(otherUserId, {
-      company: "Other Co",
-      position: "Engineer",
-      status: "applied",
-    });
+    const foreignApplication = await applications.createApplication(
+      otherUserId,
+      {
+        company: "Other Co",
+        position: "Engineer",
+        status: "applied",
+      },
+    );
     const foreignResume = await resumeService.createResume(otherUserId, {
       ...draft,
       title: "Other resume",
@@ -814,9 +808,9 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
         }),
       ).rejects.toMatchObject(refused);
 
-      expect(await applications.deleteApplication(userId, ownApplication.id)).toBe(
-        true,
-      );
+      expect(
+        await applications.deleteApplication(userId, ownApplication.id),
+      ).toBe(true);
       expect(await letters.getCoverLetterById(userId, linked.id)).toBeNull();
       const kept = await resumeService.getResumeById(userId, ownResume.id);
       expect(kept?.jobApplicationId).toBeNull();
@@ -829,12 +823,10 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("dashboard figures are counted per account and status", async () => {
-    const { ApplicationsService } = await import(
-      "../../src/app/api/applications/service"
-    );
-    const { DashboardService } = await import(
-      "../../src/app/api/dashboard/service"
-    );
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const { DashboardService } =
+      await import("../../src/app/api/dashboard/service");
     const applications = new ApplicationsService();
     const dashboard = new DashboardService();
     const before = await dashboard.getDashboardStats(userId);
@@ -929,10 +921,12 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
 
   test("a saved PDF is served from storage, and compiled and kept when it is missing", async () => {
     await clearJobs();
-    const savedPdfRoute = await import(
-      "../../src/app/api/resumes/[id]/pdf/route"
+    const savedPdfRoute =
+      await import("../../src/app/api/resumes/[id]/pdf/route");
+    await completeApplicationJob(
+      "save-and-download",
+      pdfResult("as generated"),
     );
-    await completeApplicationJob("save-and-download", pdfResult("as generated"));
     const saved = await tailoredResume();
     const fetchPdf = (headers: Record<string, string> = { cookie }) =>
       savedPdfRoute.GET(
@@ -988,9 +982,8 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
 
   test("saving a preview names its job and keeps that job's document and PDF", async () => {
     await clearJobs();
-    const route = await import(
-      "../../src/app/api/applications/[id]/resume/route"
-    );
+    const route =
+      await import("../../src/app/api/applications/[id]/resume/route");
     const save = (body: unknown, id = applicationId) =>
       route.PUT(
         new NextRequest(`http://localhost:3000/api/applications/${id}/resume`, {
@@ -1057,9 +1050,8 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("new content clears a stored PDF, other edits keep it, and deleting removes the file", async () => {
-    const { ResumesService } = await import(
-      "../../src/app/api/resumes/service"
-    );
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
     const stored = await import("../../src/app/api/stored-files");
     const service = new ResumesService();
     const keep = async (text: string) => {
@@ -1094,7 +1086,9 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     expect(await pdfKeyOf(resume.id)).toBe(key);
     expect(storedText(key)).toBe("kept");
 
-    await service.updateResume(userId, resume.id, { content: '{"edited":true}' });
+    await service.updateResume(userId, resume.id, {
+      content: '{"edited":true}',
+    });
     expect(await pdfKeyOf(resume.id)).toBeNull();
     expect(storedText(key)).toBeNull();
 
@@ -1138,18 +1132,14 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
   });
 
   test("imported files are kept per account, capped, downloadable and deletable", async () => {
-    const uploads = await import(
-      "../../src/app/api/profile/resume-uploads/service"
-    );
-    const listRoute = await import(
-      "../../src/app/api/profile/resume-uploads/route"
-    );
-    const fileRoute = await import(
-      "../../src/app/api/profile/resume-uploads/[id]/route"
-    );
-    const { resumeUploadsResponseSchema } = await import(
-      "../../src/app/api/profile/resume-uploads/validators"
-    );
+    const uploads =
+      await import("../../src/app/api/profile/resume-uploads/service");
+    const listRoute =
+      await import("../../src/app/api/profile/resume-uploads/route");
+    const fileRoute =
+      await import("../../src/app/api/profile/resume-uploads/[id]/route");
+    const { resumeUploadsResponseSchema } =
+      await import("../../src/app/api/profile/resume-uploads/validators");
     const url = "http://localhost:3000/api/profile/resume-uploads";
     const list = async () => {
       const response = await listRoute.GET(
@@ -1177,9 +1167,7 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
 
     try {
       expect(await list()).toEqual({ available: true, files: [] });
-      expect(
-        (await listRoute.GET(new NextRequest(url))).status,
-      ).toBe(401);
+      expect((await listRoute.GET(new NextRequest(url))).status).toBe(401);
 
       expect(await keep("C:\\Users\\alex\\Résumé (final).txt", "first")).toBe(
         true,

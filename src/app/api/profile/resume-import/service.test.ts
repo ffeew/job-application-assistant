@@ -63,7 +63,9 @@ describe("profile details read by the model", () => {
       portfolioUrl: "not a link at all",
     });
     const result = await importText();
-    expect(result.profile.linkedinUrl).toBe("https://linkedin.com/in/alex-example");
+    expect(result.profile.linkedinUrl).toBe(
+      "https://linkedin.com/in/alex-example",
+    );
     expect(result.profile.githubUrl).toBe("https://github.com/alex-example");
     expect(result.profile.portfolioUrl).toBeNull();
   });
@@ -93,9 +95,14 @@ describe("values the profile schema would reject", () => {
       portfolioUrl: "javascript:alert(1)",
       projects: [
         {
-          title: "Example Project", description: null, technologies: [],
-          projectUrl: "file:///etc/passwd", githubUrl: "github.com/alex/example",
-          startDate: null, endDate: null, isOngoing: null,
+          title: "Example Project",
+          description: null,
+          technologies: [],
+          projectUrl: "file:///etc/passwd",
+          githubUrl: "github.com/alex/example",
+          startDate: null,
+          endDate: null,
+          isOngoing: null,
         },
       ],
     });
@@ -110,7 +117,8 @@ describe("values the profile schema would reject", () => {
   test("a document far longer than a resume is read only in part", async () => {
     modelReturns({});
     const result = await new ResumeImportService().importProfileFromResume({
-      arrayBuffer: new TextEncoder().encode("resume text ".repeat(10_000)).buffer,
+      arrayBuffer: new TextEncoder().encode("resume text ".repeat(10_000))
+        .buffer,
       mimeType: "text/plain",
     });
     expect(result.markdown).toHaveLength(60_000);
@@ -125,15 +133,23 @@ describe("dates read by the model", () => {
     modelReturns({
       workExperiences: [
         {
-          jobTitle: "Engineer", company: "Example Company", location: null,
-          startDate: "Jan 2020", endDate: "Present", isCurrent: null,
-          description: null, technologies: [],
+          jobTitle: "Engineer",
+          company: "Example Company",
+          location: null,
+          startDate: "Jan 2020",
+          endDate: "Present",
+          isCurrent: null,
+          description: null,
+          technologies: [],
         },
       ],
       certifications: [
         {
-          name: "Example Certificate", issuingOrganization: "Example Board",
-          issueDate: "03/2021", expirationDate: null, credentialId: null,
+          name: "Example Certificate",
+          issuingOrganization: "Example Board",
+          issueDate: "03/2021",
+          expirationDate: null,
+          credentialId: null,
           credentialUrl: "example.test/cert/1",
         },
       ],

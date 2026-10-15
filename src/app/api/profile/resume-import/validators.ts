@@ -85,10 +85,16 @@ export const resumeImportResponseSchema = z.object({
 });
 
 export type ResumeImportResponse = z.infer<typeof resumeImportResponseSchema>;
-export type ResumeImportWorkExperience = z.infer<typeof resumeImportWorkExperienceSchema>;
+export type ResumeImportWorkExperience = z.infer<
+  typeof resumeImportWorkExperienceSchema
+>;
 export type ResumeImportEducation = z.infer<typeof resumeImportEducationSchema>;
 export type ResumeImportSkill = z.infer<typeof resumeImportSkillSchema>;
 export type ResumeImportProject = z.infer<typeof resumeImportProjectSchema>;
-export type ResumeImportCertification = z.infer<typeof resumeImportCertificationSchema>;
-export type ResumeImportAchievement = z.infer<typeof resumeImportAchievementSchema>;
+export type ResumeImportCertification = z.infer<
+  typeof resumeImportCertificationSchema
+>;
+export type ResumeImportAchievement = z.infer<
+  typeof resumeImportAchievementSchema
+>;
 export type ResumeImportReference = z.infer<typeof resumeImportReferenceSchema>;
