@@ -27,9 +27,12 @@ jobs:
       - name: Set up Node.js and pnpm
         id: setup
         uses: ./.github/actions/setup
+      - name: Run format check
+        run: pnpm run format:check
+      # The later checks still run after a failure, so one push reports them all.
       - name: Run lint
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run lint
-      # The later checks still run after a failure, so one push reports all three.
       - name: Run typecheck
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run typecheck

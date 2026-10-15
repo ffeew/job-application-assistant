@@ -1,0 +1,5 @@
+# Markdown is formatted by hand: Prettier re-pads the README tables, and
+# AGENTS.md holds a block that `next dev` compares against its own copy.
+*.md
+migrations/
+pnpm-lock.yaml

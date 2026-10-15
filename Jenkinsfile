@@ -76,7 +76,7 @@ pipeline {
 
           # The builder stage runs the lint gate and the production build.
           docker build --pull --target builder --tag "$CI_IMAGE" .
-          docker run --rm "$CI_IMAGE" sh -c 'pnpm run typecheck && pnpm run test'
+          docker run --rm "$CI_IMAGE" sh -c 'pnpm run format:check && pnpm run typecheck && pnpm run test'
         '''
       }
       post {

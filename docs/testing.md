@@ -7,10 +7,13 @@ Use Node.js 24 and the pnpm version pinned in `package.json`. See [local setup](
 Run these commands from the repository root before completing changes or opening a pull request:
 
 ```sh
+pnpm run format:check
 pnpm run lint
 pnpm run typecheck
 pnpm run test
 ```
+
+Prettier owns formatting with its default options; `pnpm run format` rewrites files in place. Markdown, generated migrations, and the lockfile are excluded in `.prettierignore`.
 
 ESLint treats errors and warnings as failures. Its configuration includes Next.js/React Compiler checks, TypeScript ESLint's strict type-aware preset, TanStack Query, and JSX accessibility rules. TypeScript ESLint is pinned because preset changes can alter the gate; review its rules when upgrading. `pnpm run lint:fix` applies automatic fixes and reports remaining findings.
 
@@ -89,7 +92,7 @@ Reports, screenshots, retained failure traces, downloaded PDFs, per-test worker 
 
 ## CI
 
-[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use `.nvmrc` and frozen pnpm installs. The code-quality job runs the three required checks; separate jobs run PostgreSQL integration tests with synthetic credentials, Chromium browser tests, and a Compose smoke test.
+[GitHub Actions](../.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to `main`, and workflow dispatch. The Node.js jobs use `.nvmrc` and frozen pnpm installs. The code-quality job runs the four required checks; separate jobs run PostgreSQL integration tests with synthetic credentials, Chromium browser tests, and a Compose smoke test.
 
 The browser job uses the GitHub Actions BuildKit cache for the compiler image, runs compiler tests inside that image with `REQUIRE_TEX=1` so real compilation tests fail instead of skipping, and uploads browser reports and service logs for seven days. The smoke job builds all project images, including the OCR image and its smoke test, starts `docker-compose.yml` with synthetic credentials, and waits for each health check. Actions are pinned to commit SHAs, which Dependabot updates monthly.
 

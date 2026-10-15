@@ -20,7 +20,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Tailwind CSS v4, shadcn/ui, React Hook Form, TanStack Query, and Zustand.
 - Vercel AI SDK 7 with Groq, a separate authenticated pdfLaTeX service, and a local OCR service running RapidOCR with PaddleOCR models on CPU.
 - SeaweedFS for imported files and saved resume PDFs, used through its S3 API so another S3-compatible store can take its place.
-- Node.js 24, pnpm, Vitest, Playwright, and ESLint.
+- Node.js 24, pnpm, Vitest, Playwright, ESLint, and Prettier.
 
 ## Local setup
 
@@ -103,6 +103,7 @@ Imported files and saved resume PDFs are written to object storage. The Compose 
 | `pnpm run dev` | Start the Turbopack development server |
 | `pnpm run build` / `pnpm run start` | Run lint and the production build; serve the build. `next start` warns about the standalone output, which the containers run as `.next/standalone/server.js` |
 | `pnpm run lint` / `pnpm run lint:fix` | Run strict ESLint checks; optionally apply automatic fixes |
+| `pnpm run format` / `pnpm run format:check` | Format files with Prettier; check formatting without writing |
 | `pnpm run typecheck` | Generate Next.js route types, then run TypeScript checks |
 | `pnpm run test` | Run Vitest tests; database integration is opt-in |
 | `pnpm run test:integration` | Run PostgreSQL/API/worker integration tests with the test environment configured |
