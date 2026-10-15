@@ -122,7 +122,7 @@ Commit generated SQL in `migrations/` alongside schema changes. Deploy committed
 - [Self-hosted deployment](docs/deployment.md): Docker Compose, Cloudflare Tunnel, Jenkins deployment, queue operation, updates, and backups.
 - [Resume compiler](services/latex-compiler/README.md): compiler setup, protocol, resource limits, and compatibility.
 - [OCR service](services/ocr/README.md): scanned-PDF reading, protocol, resource limits, and models.
-- [Contributor guidelines](AGENTS.md): architecture, module ownership, coding standards, and review expectations.
+- [Contributor guidelines](AGENTS.md): stack, module layout, and the checks to run before finishing a change.
 
 ## License
 
