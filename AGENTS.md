@@ -20,7 +20,7 @@
 
 ## Planning
 
-Before exiting plan mode, have the plan critiqued:
+Before exiting plan mode, have the plan adversarially reviewed:
 
 1. Start a new `adversarial-review` agent rather than continuing an earlier one, so it reviews without your context. Pass it the plan file path, the user's original request, and the decisions the user has already made.
 2. Check each finding against the code yourself; the reviewer can be wrong. Drop the ones that don't hold, with a one-line reason in the plan.
