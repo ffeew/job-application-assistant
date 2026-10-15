@@ -3,6 +3,7 @@ import { createHmac } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { NextRequest } from "next/server";
+import { generateText } from "ai";
 import {
   account,
   education,
@@ -69,6 +70,13 @@ vi.mock("../../src/lib/object-storage", () => {
 const compiler = vi.hoisted(() => ({ compile: vi.fn() }));
 vi.mock("../../src/lib/latex-compiler", () => ({
   compileResumeLatex: compiler.compile,
+}));
+
+// Autofill asks the model for a plan; the test supplies it, so the records the
+// route reads and the resume it picks are what is checked.
+vi.mock("ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("ai")>()),
+  generateText: vi.fn(),
 }));
 
 const integration = process.env.RUN_DB_INTEGRATION === "1";
@@ -1254,6 +1262,89 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       }
     }
     expect(uploadObjects()).toEqual([]);
+  });
+
+  test("autofill reads only the caller's application and attaches its tailored resume", async () => {
+    const { POST } = await import("../../src/app/api/autofill/route");
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
+    const applications = new ApplicationsService();
+    const resumeService = new ResumesService();
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        fills: [{ fieldId: "0:0", value: "resume", drafted: false }],
+        unanswered: [],
+      },
+    } as never);
+    const plan = async (applicationId?: string) =>
+      POST(
+        new NextRequest("http://localhost/api/autofill", {
+          method: "POST",
+          headers: { cookie, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: "https://jobs.example.test/apply",
+            pageText: "",
+            applicationId,
+            fields: [
+              { id: "0:0", kind: "file", label: "Resume", required: true },
+            ],
+          }),
+        }),
+      );
+
+    const own = await applications.createApplication(userId, {
+      company: "Autofill Co",
+      position: "Engineer",
+      status: "applied",
+    });
+    const foreign = await applications.createApplication(otherUserId, {
+      company: "Other Autofill Co",
+      position: "Engineer",
+      status: "applied",
+    });
+    const draft = { content: "{}", isTailored: false, isDefault: false };
+    const fallback = await resumeService.createResume(userId, {
+      ...draft,
+      title: "Autofill default",
+      isDefault: true,
+    });
+    const tailored = await resumeService.createResume(userId, {
+      ...draft,
+      title: "Autofill tailored",
+      isTailored: true,
+      jobApplicationId: own.id,
+    });
+
+    try {
+      expect((await plan(foreign.id)).status).toBe(404);
+
+      const forApplication = await plan(own.id);
+      expect(forApplication.status).toBe(200);
+      expect(await forApplication.json()).toMatchObject({
+        resumeId: tailored.id,
+        fills: [{ fieldId: "0:0", value: "resume" }],
+      });
+
+      expect(await (await plan()).json()).toMatchObject({
+        resumeId: fallback.id,
+      });
+
+      await resumeService.deleteResume(userId, fallback.id);
+      expect(await (await plan()).json()).toEqual({
+        fills: [],
+        unanswered: [
+          { fieldId: "0:0", reason: "No tailored or default resume to attach" },
+        ],
+        resumeId: null,
+      });
+    } finally {
+      await resumeService.deleteResume(userId, fallback.id);
+      await resumeService.deleteResume(userId, tailored.id);
+      await applications.deleteApplication(userId, own.id);
+      await applications.deleteApplication(otherUserId, foreign.id);
+    }
   });
 
   test("retention removes old finished jobs and keeps active jobs and saved resumes", async () => {

@@ -15,6 +15,7 @@
 /out/
 
 /build
+/extension/dist
 
 .DS_Store
 *.pem
