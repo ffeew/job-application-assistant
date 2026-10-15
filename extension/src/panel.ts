@@ -1,16 +1,22 @@
 /// <reference types="chrome" />
 import "./zod-config";
 import { z } from "zod";
-import { applicationJsonResponseSchema } from "@/app/api/applications/validators";
+import {
+  applicationJsonResponseSchema,
+  type ApplicationJsonResponse,
+} from "@/app/api/applications/validators";
 import {
   AUTOFILL_MAX_FIELDS,
   AUTOFILL_PAGE_TEXT_MAX,
+  AUTOFILL_URL_MAX,
 } from "@/app/api/autofill/limits";
 import {
   autofillResponseSchema,
   type AutofillField,
   type AutofillResponse,
 } from "@/app/api/autofill/validators";
+import { parseJsonResponse, readApiError } from "@/lib/api-response";
+import { matchApplication } from "./job-match";
 import type {
   Extracted,
   Outcome,
@@ -25,7 +31,7 @@ interface Frame extends Extracted {
 }
 
 const tabId = Number(new URLSearchParams(location.search).get("tab"));
-const errorBodySchema = z.object({ error: z.string() });
+const APP_ERROR = "The app couldn't answer. Try again.";
 
 const element = <T extends HTMLElement>(id: string, type: new () => T): T => {
   const found = document.getElementById(id);
@@ -36,6 +42,7 @@ const settings = element("settings", HTMLFormElement);
 const appUrlInput = element("app-url", HTMLInputElement);
 const fillSection = element("fill-section", HTMLElement);
 const applicationSelect = element("application", HTMLSelectElement);
+const applicationHint = element("application-hint", HTMLParagraphElement);
 const fillButton = element("fill", HTMLButtonElement);
 const editAddress = element("edit-address", HTMLButtonElement);
 const status = element("status", HTMLParagraphElement);
@@ -46,6 +53,8 @@ const results = element("results", HTMLElement);
 const needsList = element("needs", HTMLUListElement);
 
 let appUrl = "";
+let applications: ApplicationJsonResponse[] = [];
+let chosenByUser = false;
 let frames: Frame[] = [];
 let fields = new Map<string, AutofillField>();
 let plan: AutofillResponse | null = null;
@@ -69,47 +78,43 @@ async function api(path: string, init?: RequestInit): Promise<Response> {
       "You're signed out. Sign in to the app in this browser, then try again.",
     );
   }
-  if (!response.ok) {
-    const body: unknown = await response.json().catch(() => null);
-    const parsed = errorBodySchema.safeParse(body);
-    throw new Error(
-      parsed.success
-        ? parsed.data.error
-        : `The app couldn't answer (${String(response.status)}). Try again.`,
-    );
-  }
+  if (!response.ok) throw await readApiError(response, APP_ERROR);
   return response;
 }
 
-function jobMatches(tabUrl: string, jobUrl: string | undefined): boolean {
-  if (!jobUrl) return false;
-  try {
-    const tab = new URL(tabUrl);
-    const job = new URL(jobUrl);
-    return (
-      tab.host === job.host &&
-      tab.pathname.startsWith(job.pathname.replace(/\/$/, ""))
-    );
-  } catch {
-    return false;
-  }
+// The panel stays open while the tab moves between jobs. A choice made by hand
+// stays; an automatic one follows the job the tab shows, and is kept with a
+// hint when no saved job matches, as on an apply step with another path.
+function selectFor(url: string) {
+  if (chosenByUser) return;
+  const matched = matchApplication(url, applications);
+  if (matched) applicationSelect.value = matched;
+  applicationHint.hidden = Boolean(matched) || !applicationSelect.value;
 }
 
 async function loadApplications() {
   const response = await api("/api/applications");
-  const applications = z
-    .array(applicationJsonResponseSchema)
-    .parse(await response.json());
-  const tab = await chrome.tabs.get(tabId);
+  applications = await parseJsonResponse(
+    response,
+    z.array(applicationJsonResponseSchema),
+    APP_ERROR,
+  );
+  const previous = applicationSelect.value;
   applicationSelect.replaceChildren(applicationSelect.options[0] ?? "");
   for (const application of applications) {
-    const option = new Option(
-      `${application.company}, ${application.position}`,
-      application.id,
+    applicationSelect.add(
+      new Option(
+        `${application.company}, ${application.position}`,
+        application.id,
+      ),
     );
-    option.selected = jobMatches(tab.url ?? "", application.jobUrl);
-    applicationSelect.add(option);
   }
+  if (chosenByUser && applications.some(({ id }) => id === previous)) {
+    applicationSelect.value = previous;
+    return;
+  }
+  chosenByUser = false;
+  selectFor((await chrome.tabs.get(tabId)).url ?? "");
 }
 
 async function showFillSection() {
@@ -154,7 +159,10 @@ function renderPreview(response: AutofillResponse) {
     // unless the user opts them in.
     box.checked = frame.frameId === mostFields;
     const site = document.createElement("strong");
-    site.textContent = `${new URL(frame.origin).host} (${String(frame.fields.length)} fields)`;
+    // Sandboxed frames have the opaque origin "null".
+    const host =
+      frame.origin === "null" ? "Sandboxed frame" : new URL(frame.origin).host;
+    site.textContent = `${host} (${String(frame.fields.length)} fields)`;
     toggle.append(box, site);
     const list = document.createElement("ul");
     sheet.append(toggle, list);
@@ -227,7 +235,7 @@ async function fillPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        url: tab.url ?? "",
+        url: (tab.url ?? "").slice(0, AUTOFILL_URL_MAX),
         pageText: [...frames]
           .sort((a, b) => a.frameId - b.frameId)
           .map((frame) => frame.pageText)
@@ -237,7 +245,7 @@ async function fillPage() {
         fields: sent,
       }),
     });
-    plan = autofillResponseSchema.parse(await response.json());
+    plan = await parseJsonResponse(response, autofillResponseSchema, APP_ERROR);
     renderPreview(plan);
     preview.hidden = false;
     say(
@@ -340,6 +348,13 @@ async function applyPlan() {
             reason: "The page changed. Click Fill this page again.",
           });
         }
+        for (const flag of flags) {
+          outcomes.push({
+            ...flag,
+            fieldId: prefix + flag.fieldId,
+            status: "flagged",
+          });
+        }
       }
     }
 
@@ -378,6 +393,13 @@ editAddress.addEventListener("click", () => {
   appUrlInput.value = appUrl;
   settings.hidden = false;
   fillSection.hidden = true;
+});
+applicationSelect.addEventListener("change", () => {
+  chosenByUser = true;
+  applicationHint.hidden = true;
+});
+chrome.tabs.onUpdated.addListener((id, change) => {
+  if (id === tabId && change.url) selectFor(change.url);
 });
 fillButton.addEventListener("click", () => void fillPage());
 applyButton.addEventListener("click", () => void applyPlan());

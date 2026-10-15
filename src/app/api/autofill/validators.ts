@@ -6,6 +6,7 @@ import {
   AUTOFILL_MAX_OPTIONS,
   AUTOFILL_OPTION_MAX,
   AUTOFILL_PAGE_TEXT_MAX,
+  AUTOFILL_URL_MAX,
 } from "./limits";
 
 export const autofillFieldKinds = [
@@ -32,7 +33,7 @@ export const autofillFieldSchema = z.object({
 });
 
 export const autofillRequestSchema = z.object({
-  url: z.string().max(2_000),
+  url: z.string().max(AUTOFILL_URL_MAX),
   pageText: z.string().max(AUTOFILL_PAGE_TEXT_MAX),
   applicationId: recordId.optional(),
   fields: z.array(autofillFieldSchema).min(1).max(AUTOFILL_MAX_FIELDS),

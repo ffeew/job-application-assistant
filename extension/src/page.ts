@@ -74,6 +74,11 @@ const registry = new Map<string, Entry>();
 const clean = (text: string | null | undefined) =>
   (text ?? "").replace(/\s+/g, " ").trim();
 const normalize = (text: string) => clean(text).toLowerCase();
+const words = (text: string) =>
+  text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
 const visible = (el: Element) =>
   el.getClientRects().length > 0 &&
   getComputedStyle(el).visibility !== "hidden";
@@ -98,13 +103,15 @@ function byId(el: Element, id: string): Element | null {
   return scoped ?? document.getElementById(id);
 }
 
-function ariaLabel(el: Element): string {
+function labelledBy(el: Element): Element[] {
   const ids = el.getAttribute("aria-labelledby")?.split(/\s+/) ?? [];
-  const labelled = ids
+  return ids
     .map((id) => byId(el, id))
-    .filter((node): node is Element => node !== null)
-    .map(textOf)
-    .join(" ");
+    .filter((node): node is Element => node !== null);
+}
+
+function ariaLabel(el: Element): string {
+  const labelled = labelledBy(el).map(textOf).join(" ");
   return clean(labelled) || clean(el.getAttribute("aria-label"));
 }
 
@@ -145,14 +152,28 @@ function questionOf(el: HTMLElement, ownTexts: string[]): string {
     const named = ariaLabel(group);
     if (named) return named;
   }
+  const checkbox = kindOf(el) === "checkbox";
   let node = el.parentElement;
   for (let depth = 0; node && depth < 4; depth++, node = node.parentElement) {
+    // A lone checkbox's ancestors soon hold the whole form. A checkbox
+    // group's container holds at most one other field, such as "self-describe".
+    if (checkbox && otherFields(node) >= 2) break;
     let text = textOf(node);
     for (const own of ownTexts) text = text.replace(own, " ");
     text = clean(text);
     if (text) return text;
   }
   return "";
+}
+
+/** Fillable controls in `node` other than checkboxes. */
+function otherFields(node: Element): number {
+  return Array.from(node.querySelectorAll<HTMLElement>(CONTROLS)).filter(
+    (control) => {
+      const kind = kindOf(control);
+      return kind !== null && kind !== "checkbox" && usable(control, kind);
+    },
+  ).length;
 }
 
 function kindOf(el: Element): Kind | null {
@@ -227,7 +248,7 @@ function extract(): Extracted {
   collect(document, found);
 
   const fields: AutofillField[] = [];
-  const groups = new Map<unknown, Entry>();
+  const groups = new Map<Node, Map<string, Entry>>();
   let notSent = 0;
 
   for (const el of found) {
@@ -235,18 +256,26 @@ function extract(): Extracted {
     if (!kind || !usable(el, kind)) continue;
 
     if (kind === "radio") {
-      const key =
-        el instanceof HTMLInputElement && el.name
-          ? `${el.form ? "form" : "page"}:${el.name}`
+      // Same-named radios form one group within one form, or within one
+      // document or shadow root when they have no form.
+      const name = el instanceof HTMLInputElement ? el.name : "";
+      const owner =
+        el instanceof HTMLInputElement && name
+          ? (el.form ?? el.getRootNode())
           : el.closest('[role="radiogroup"]');
-      const group = key ? groups.get(key) : undefined;
+      const group = owner ? groups.get(owner)?.get(name) : undefined;
       if (group) {
         group.elements.push(el);
         group.options.push(ownLabel(el));
         continue;
       }
       const entry: Entry = { kind, elements: [el], options: [ownLabel(el)] };
-      if (key) groups.set(key, entry);
+      if (owner) {
+        groups.set(
+          owner,
+          (groups.get(owner) ?? new Map<string, Entry>()).set(name, entry),
+        );
+      }
       fields.push(
         register(entry, { label: "", required: isRequired(el), kind }),
       );
@@ -257,10 +286,7 @@ function extract(): Extracted {
     const entry: Entry = {
       kind,
       elements: [el],
-      options:
-        el instanceof HTMLSelectElement
-          ? Array.from(el.options, (option) => clean(option.text))
-          : [],
+      options: [],
       maxLength:
         (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
         el.maxLength > 0
@@ -335,7 +361,6 @@ function register(
 ): AutofillField {
   const id = String(registry.size);
   registry.set(id, entry);
-  for (const el of entry.elements) el.dataset.jaaId = id;
   return { id, ...field };
 }
 
@@ -382,6 +407,15 @@ function listboxFor(el: HTMLElement, before: Set<Element>): Element | null {
   return opened.at(-1) ?? null;
 }
 
+/** How often `phrase` appears as consecutive words of `text`. */
+function occurrences(text: string[], phrase: string[]): number {
+  let count = 0;
+  for (let start = 0; start + phrase.length <= text.length; start++) {
+    if (phrase.every((word, index) => text[start + index] === word)) count++;
+  }
+  return count;
+}
+
 async function chooseOption(el: HTMLElement, value: string): Promise<string> {
   const before = new Set(document.querySelectorAll('[role="listbox"]'));
   // Typing opens a searchable list; blurring would close it again.
@@ -398,23 +432,41 @@ async function chooseOption(el: HTMLElement, value: string): Promise<string> {
     const options = Array.from(
       listbox?.querySelectorAll<HTMLElement>('[role="option"]') ?? [],
     );
-    if (!options.length) continue;
+    // A searchable list may still show stale options until its filter runs.
     const option = options[matchOption(value, options.map(textOf))];
-    if (!option) break;
-    const chosen = textOf(option);
-    option.click();
-    await sleep(100);
-    // A click on the option proves nothing; the widget must now show it.
-    let node: Element | null = el;
-    for (let depth = 0; node && depth < 3; depth++, node = node.parentElement) {
-      if (normalize(textOf(node)).includes(normalize(chosen))) return "";
-    }
-    return "The list didn't keep the choice. Pick it yourself.";
+    if (option) return pick(el, option);
   }
   el.dispatchEvent(
     new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
   );
   return "No matching option. Pick it yourself.";
+}
+
+/**
+ * A click on the option proves nothing; the widget must now show it. Either
+ * the control shows exactly the choice (a trigger's text, or an input's value,
+ * which blur resets to the committed choice), or the choice appears once more
+ * near it (react-select shows its value beside its input). Text that already
+ * named the choice, such as "(Yes/No)", is counted before the click.
+ */
+async function pick(el: HTMLElement, option: HTMLElement): Promise<string> {
+  const chosen = words(textOf(option));
+  const scope = el.parentElement?.parentElement ?? el.parentElement ?? el;
+  const nearby = () => occurrences(words(textOf(scope)), chosen);
+  const nearbyBefore = nearby();
+  option.click();
+  // React commits the click's update after this task, and a blur handler run
+  // before then would restore the old value.
+  await sleep(50);
+  // shortcut: a widget that keeps the typed text after blur (Downshift) passes
+  // even if it ignored the click; type less than the whole choice to catch it.
+  if (el instanceof HTMLInputElement) el.blur();
+  await sleep(100);
+  if (!chosen.length) return "Check this choice yourself.";
+  const shown = words(el instanceof HTMLInputElement ? el.value : textOf(el));
+  return shown.join(" ") === chosen.join(" ") || nearby() > nearbyBefore
+    ? ""
+    : "The list didn't keep the choice. Pick it yourself.";
 }
 
 async function fill(
@@ -447,7 +499,12 @@ async function fill(
     case "select": {
       if (!(el instanceof HTMLSelectElement))
         return "This field can't be filled.";
-      const index = matchOption(value, entry.options);
+      // Read the options now: a dependent list, such as a state after its
+      // country, may have been refilled since the page was read.
+      const index = matchOption(
+        value,
+        Array.from(el.options, (option) => clean(option.text)),
+      );
       if (index === -1) return "No matching option. Pick it yourself.";
       el.selectedIndex = index;
       el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -497,11 +554,16 @@ async function fill(
 function mark(entry: Entry, status: Outcome["status"], reason?: string) {
   const [el] = entry.elements;
   if (!el) return;
+  // A hidden control, such as a file input behind a button, is outlined
+  // through its label, not through whichever ancestor shows, often the form.
   let target: HTMLElement | null =
     entry.kind === "radio"
       ? (el.closest<HTMLElement>('fieldset, [role="radiogroup"]') ??
         el.parentElement)
-      : el;
+      : ([el, ...labelsOf(el), ...labelledBy(el)].find(
+          (node): node is HTMLElement =>
+            node instanceof HTMLElement && visible(node),
+        ) ?? el);
   while (target && !visible(target)) target = target.parentElement;
   if (!target) return;
   target.style.outline = OUTLINES[status];

@@ -1,5 +1,6 @@
 import type { ResumeData } from "@/lib/resume-data";
 import type {
+  AutofillField,
   AutofillRequest,
   AutofillResponse,
   ModelOutput,
@@ -9,9 +10,22 @@ export const COVER_LETTER_PLACEHOLDER = "{{cover_letter}}";
 const JOB_DESCRIPTION_PROMPT_MAX = 8_000;
 
 // The prompt asks the model to leave these for the applicant, but labels and
-// page text are written by the site, so a ticked consent box is refused here too.
+// page text are written by the site, so any answer to them is refused here too,
+// even "false", which would untick a box the applicant ticked. Consent is given
+// by choosing, so "Confirm email" text is not read for it; "certif" and
+// "accept" also name ordinary questions ("PMP certification?"), so they only
+// count on checkboxes.
+const CHOICE_KINDS = new Set<AutofillField["kind"]>([
+  "checkbox",
+  "radio",
+  "select",
+  "combobox",
+]);
 const CONSENT_LABEL =
-  /agree|certif|consent|acknowledg|terms|privacy|signature|attest/i;
+  /agree|certify|consent|acknowledg|confirm|declar|authori[sz]e\b|i have read|terms|privacy|signature|attest/i;
+const CHECKBOX_CONSENT_LABEL = /certif|accept/i;
+const APPLICANT_ONLY_LABEL =
+  /gender|sexual orientation|\brace\b|ethnic|hispanic|latin[oax]|veteran|disabilit|sponsor|\bvisa\b|citizen|authori[sz]ed to work|work authori[sz]ation|eligible to work|work permit|right to work|salary|compensation|\bpay\b|\bctc\b|signature/i;
 const COVER_LETTER_LABEL = /cover\s*letter/i;
 const RESUME_LABEL = /resume|résumé|\bcv\b/i;
 
@@ -116,15 +130,25 @@ export function finalizeFills(
       leave(fill.fieldId, "Needs your answer");
       continue;
     }
-    if (field.kind === "checkbox") {
-      if (fill.value !== "true" && fill.value !== "false") {
-        leave(fill.fieldId, "Needs your answer");
-        continue;
-      }
-      if (fill.value === "true" && CONSENT_LABEL.test(field.label)) {
-        leave(fill.fieldId, "Read and confirm this yourself");
-        continue;
-      }
+    if (
+      CHOICE_KINDS.has(field.kind) &&
+      (CONSENT_LABEL.test(field.label) ||
+        (field.kind === "checkbox" && CHECKBOX_CONSENT_LABEL.test(field.label)))
+    ) {
+      leave(fill.fieldId, "Read and confirm this yourself");
+      continue;
+    }
+    if (APPLICANT_ONLY_LABEL.test(field.label)) {
+      leave(fill.fieldId, "Answer this yourself");
+      continue;
+    }
+    if (
+      field.kind === "checkbox" &&
+      fill.value !== "true" &&
+      fill.value !== "false"
+    ) {
+      leave(fill.fieldId, "Needs your answer");
+      continue;
     }
     if (field.kind === "file") {
       if (COVER_LETTER_LABEL.test(field.label)) {
@@ -156,6 +180,12 @@ export function finalizeFills(
     if (fields.has(item.fieldId)) leave(item.fieldId, item.reason);
   }
   const filled = new Set(fills.map((fill) => fill.fieldId));
+  // A required field the model skipped must still reach the applicant.
+  for (const field of request.fields) {
+    if (field.required && !filled.has(field.id)) {
+      leave(field.id, "Needs your answer");
+    }
+  }
   return {
     fills,
     unanswered: [...unanswered]

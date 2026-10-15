@@ -8,3 +8,4 @@ export const AUTOFILL_GROUP_LABEL_MAX = 80;
 export const AUTOFILL_MAX_OPTIONS = 15;
 export const AUTOFILL_OPTION_MAX = 80;
 export const AUTOFILL_PAGE_TEXT_MAX = 4_000;
+export const AUTOFILL_URL_MAX = 2_000;

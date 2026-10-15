@@ -43,7 +43,7 @@ vi.mock("../cover-letters/service", () => ({
   },
 }));
 
-import { APICallError, generateText } from "ai";
+import { APICallError, generateText, NoObjectGeneratedError } from "ai";
 import { RequestError } from "@/lib/request-error";
 import { AutofillService } from "./service";
 
@@ -102,5 +102,27 @@ describe("AutofillService model choice", () => {
     const failure = await plan().catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(RequestError);
     expect(failure).toMatchObject({ status: 402 });
+  });
+
+  test("an answer cut off at the output cap is reported as too large", async () => {
+    vi.mocked(generateText).mockRejectedValueOnce(
+      new NoObjectGeneratedError({
+        message: "No object generated: could not parse the response.",
+        text: '{"fills":[{"fieldId":"0:0","va',
+        response: { id: "r", timestamp: new Date(0), modelId: "m" },
+        usage: {} as never,
+        finishReason: "length",
+      }),
+    );
+    await expect(plan()).rejects.toMatchObject({ status: 413 });
+
+    // With nothing written before the cap there is no output to parse.
+    vi.mocked(generateText).mockResolvedValueOnce({
+      finishReason: "length",
+      get output(): never {
+        throw new Error("No output generated");
+      },
+    } as never);
+    await expect(plan()).rejects.toMatchObject({ status: 413 });
   });
 });

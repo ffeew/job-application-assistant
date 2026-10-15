@@ -45,6 +45,12 @@ const formHtml = (frameOrigin: string) => `<!doctype html>
     <option value="us">United States</option>
     <option value="ca">Canada</option>
   </select>
+  <label for="province">Province</label>
+  <select id="province">
+    <option value="">Select…</option>
+    <option value="ca">California</option>
+    <option value="ny">New York</option>
+  </select>
   <fieldset><legend>Will you relocate?</legend>
     <label><input type="radio" name="relocate" value="1" style="display:none"> Yes</label>
     <label><input type="radio" name="relocate" value="0" style="display:none"> No</label>
@@ -52,6 +58,12 @@ const formHtml = (frameOrigin: string) => `<!doctype html>
   <fieldset><legend>Preferences</legend>
     <label><input type="checkbox" id="remote"> Open to remote work</label>
   </fieldset>
+  <div><label><input type="checkbox" id="relocation"> Open to relocation</label></div>
+  <div><span>Gender</span>
+    <label><input type="checkbox"> Woman</label>
+    <label><input type="checkbox"> Man</label>
+    <input aria-label="Self-describe">
+  </div>
   <div role="radiogroup" aria-label="Preferred shift">
     <div role="radio" aria-checked="false" tabindex="0">Day</div>
     <div role="radio" aria-checked="false" tabindex="-1">Night</div>
@@ -59,8 +71,24 @@ const formHtml = (frameOrigin: string) => `<!doctype html>
   <label for="bio">Short bio</label><textarea id="bio" maxlength="20"></textarea>
   <div id="react-root"></div>
 </form>
+<form>
+  <fieldset><legend>Relocate within the city?</legend>
+    <label><input type="radio" name="relocate" value="yes"> Yes</label>
+    <label><input type="radio" name="relocate" value="no"> No</label>
+  </fieldset>
+</form>
 <iframe src="${frameOrigin}/frame" title="Address"></iframe>
 <script>
+  document.getElementById("country").addEventListener("change", (event) => {
+    if (event.target.value !== "ca") return;
+    document
+      .getElementById("province")
+      .replaceChildren(
+        new Option("Select…", ""),
+        new Option("Ontario", "on"),
+        new Option("Quebec", "qc"),
+      );
+  });
   for (const radio of document.querySelectorAll('[role="radio"]')) {
     radio.addEventListener("click", () => {
       for (const other of document.querySelectorAll('[role="radio"]')) {
@@ -226,7 +254,17 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
     kind: "radio",
     options: ["Yes", "No"],
   });
+  expect(fieldFor("Relocate within the city?")).toMatchObject({
+    kind: "radio",
+    options: ["Yes", "No"],
+  });
   expect(fieldFor("Preferences › Open to remote work").kind).toBe("checkbox");
+  // A lone box takes no question from the form around it, but a group with a
+  // self-describe box still gets its own.
+  expect(fieldFor("Open to relocation").kind).toBe("checkbox");
+  expect(
+    top.result.fields.find((field) => field.label.endsWith("› Woman"))?.label,
+  ).toMatch(/^Gender/);
   expect(fieldFor("Preferred shift")).toMatchObject({
     kind: "radio",
     options: ["Day", "Night"],
@@ -237,12 +275,15 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
   });
   expect(fieldFor("Preferred name").kind).toBe("text");
   expect(fieldFor("Start date").kind).toBe("combobox");
+  expect(fieldFor("Office").kind).toBe("combobox");
   const labels = top.result.fields.map((field) => field.label);
   expect(labels).not.toContain("Hidden tracking");
   // Radix mirrors its select into an aria-hidden native one for form posts.
   expect(
-    top.result.fields.filter((field) => field.kind === "select"),
-  ).toHaveLength(1);
+    top.result.fields
+      .filter((field) => field.kind === "select")
+      .map((field) => field.label),
+  ).toEqual(["Country", "Province"]);
   expect(framed.result.fields.map((field) => field.label)).toEqual(["City"]);
 
   const fill = (label: string, value: string, drafted = false) => ({
@@ -257,12 +298,17 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
       fill("First name", "Alex"),
       fill("Resume/CV", "resume"),
       fill("Country", "Canada"),
+      // Filling Country refills this list after the page was read.
+      fill("Province", "Ontario"),
       fill("Will you relocate?", "No"),
       fill("Preferences › Open to remote work", "true"),
       fill("Preferred shift", "Night"),
       fill("Short bio", "Far longer than twenty characters"),
       fill("Preferred name", "Lex", true),
       fill("Start date", "In two weeks"),
+      fill("Office", "Lisbon"),
+      fill("Team", "Platform"),
+      fill("Region", "Narnia"),
     ],
     [{ fieldId: fieldFor("Email").id, reason: "Needs your answer" }],
     { name: "resume.pdf", bytes: Array.from(Buffer.from("%PDF-1.4\n")) },
@@ -277,6 +323,7 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
       .evaluate((input: HTMLInputElement) => input.files?.[0]?.name),
   ).toBe("resume.pdf");
   await expect(page.locator("#country")).toHaveValue("ca");
+  await expect(page.locator("#province")).toHaveValue("on");
   await expect(page.locator('input[name="relocate"][value="0"]')).toBeChecked();
   await expect(page.locator("#remote")).toBeChecked();
   await expect(page.getByRole("radio", { name: "Night" })).toHaveAttribute(
@@ -293,6 +340,17 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
     "In two weeks",
   );
   expect(statusOf("Start date")?.status).toBe("filled");
+  await expect(page.getByRole("combobox", { name: "Office" })).toHaveValue(
+    "Lisbon",
+  );
+  expect(statusOf("Team")?.reason).toContain("didn't keep");
+  expect(statusOf("Region")?.reason).toContain("No matching option");
+  // The hidden file input is outlined through its label, not the whole form.
+  await expect(page.locator('label[for="resume"]')).toHaveAttribute(
+    "title",
+    "Filled from your profile",
+  );
+  await expect(page.locator("form").first()).not.toHaveAttribute("title");
   await expect(page.locator("#email")).toHaveAttribute(
     "title",
     "Needs your answer",
@@ -301,12 +359,20 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
     "First name",
     "Resume/CV",
     "Country",
+    "Province",
     "Will you relocate?",
     "Preferences › Open to remote work",
     "Preferred shift",
+    "Office",
   ]) {
     expect(statusOf(label)?.status, label).toBe("filled");
   }
+
+  // A choice the widget already shows still counts as filled.
+  const [again] = await applyIn(tabId, top.documentId, [
+    fill("Start date", "In two weeks"),
+  ]);
+  expect(again?.status).toBe("filled");
 
   const city = framed.result.fields[0];
   if (!city) throw new Error("No City field");

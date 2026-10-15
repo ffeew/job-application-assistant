@@ -1,6 +1,12 @@
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { APICallError, generateText, Output, RetryError } from "ai";
+import {
+  APICallError,
+  generateText,
+  NoObjectGeneratedError,
+  Output,
+  RetryError,
+} from "ai";
 import { env } from "@/lib/env";
 import { getGroqGenerationOptions } from "@/lib/groq-model";
 import { RequestError } from "@/lib/request-error";
@@ -21,6 +27,8 @@ import {
 
 // The request is held open for the reply, so it must not wait indefinitely.
 const GENERATION_TIMEOUT_MS = 45_000;
+const TOO_LARGE_MESSAGE =
+  "This page is too large for the model to fill. Fill it in yourself or use a model with a larger limit.";
 
 // One fill can carry a whole profile and form, more than lower Groq tiers
 // accept per minute, so this route moves to the OpenRouter tier-3 model when
@@ -71,14 +79,20 @@ export class AutofillService {
         prompt: buildAutofillPrompt(request, context),
         abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
       });
+      // An answer cut off at the output cap has no output to read.
+      if (result.finishReason === "length") {
+        throw new RequestError(TOO_LARGE_MESSAGE, 413);
+      }
       output = result.output;
     } catch (error) {
       const status = providerStatus(error);
-      if (status === 413) {
-        throw new RequestError(
-          "This page is too large for the model to fill. Fill it in yourself or use a model with a larger limit.",
-          413,
-        );
+      // Cut-off JSON that fails to parse surfaces as NoObjectGeneratedError.
+      if (
+        status === 413 ||
+        (NoObjectGeneratedError.isInstance(error) &&
+          error.finishReason === "length")
+      ) {
+        throw new RequestError(TOO_LARGE_MESSAGE, 413);
       }
       if (status === 402) {
         throw new RequestError(

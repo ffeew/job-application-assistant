@@ -112,6 +112,65 @@ describe("finalizeFills", () => {
     ]);
   });
 
+  test("leaves consent, demographic, salary and work authorization answers to the applicant", () => {
+    const refused = [
+      field("0:0", "radio", "Do you agree to the privacy policy?"),
+      field("0:1", "select", "I acknowledge the statement above"),
+      field("0:2", "combobox", "Do you consent to a background check?"),
+      field("0:3", "checkbox", "I confirm the above is accurate"),
+      field(
+        "0:4",
+        "checkbox",
+        "Applicant Certification › I have read and understand",
+      ),
+      field("0:5", "checkbox", "I authorize a background check"),
+      field("0:6", "checkbox", "I accept the terms"),
+      field("0:7", "text", "Desired salary"),
+      field("0:8", "radio", "Are you legally eligible to work in Canada?"),
+      field("0:9", "radio", "Will you require visa sponsorship?"),
+      field("0:10", "checkbox", "Race › Hispanic or Latino"),
+    ];
+    const kept = [
+      field("1:0", "radio", "Do you hold a PMP certification?"),
+      field("1:1", "radio", "Would you accept a contract role?"),
+      field("1:2", "text", "Confirm email"),
+    ];
+    const fields = [...refused, ...kept];
+    const result = finalizeFills(
+      {
+        fills: fields.map((item) => ({
+          fieldId: item.id,
+          // "false" is refused too: it would untick a box the user ticked.
+          value: item.kind === "checkbox" ? "false" : "Yes",
+          drafted: false,
+        })),
+        unanswered: [],
+      },
+      request(fields),
+      context(),
+    );
+    expect(result.fills.map((fill) => fill.fieldId)).toEqual(
+      kept.map((item) => item.id),
+    );
+    expect(result.unanswered.map((item) => item.fieldId)).toEqual(
+      refused.map((item) => item.id),
+    );
+  });
+
+  test("reports required fields the model skipped", () => {
+    const result = finalizeFills(
+      { fills: [], unanswered: [] },
+      request([
+        { ...field("0:0", "text", "Last name"), required: true },
+        field("0:1", "text", "Site search"),
+      ]),
+      context(),
+    );
+    expect(result.unanswered).toEqual([
+      { fieldId: "0:0", reason: "Needs your answer" },
+    ]);
+  });
+
   test("attaches the resume to one field and leaves cover letter uploads alone", () => {
     const fields = [
       field("0:0", "file", "Attachment"),
