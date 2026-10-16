@@ -24,7 +24,7 @@ pipeline {
       }
     }
 
-    stage('Validate Compose') {
+    stage('Validate Build Setup') {
       steps {
         sh '''
           set -eu
@@ -58,13 +58,7 @@ pipeline {
             exit 1
           fi
 
-          if [ ! -f .env ]; then
-            echo "No .env in $WORKSPACE. Copy the production .env into this job's workspace before deploying; see docs/deployment.md."
-            exit 1
-          fi
-
-          # Without --quiet, config prints the interpolated secrets.
-          docker compose config --quiet
+          sh scripts/jenkins-compose.sh validate-build
         '''
       }
     }
@@ -92,40 +86,16 @@ pipeline {
         sh '''
           set -eu
 
-          docker compose build --pull
+          sh scripts/jenkins-compose.sh build
         '''
       }
     }
 
     stage('Deploy') {
       steps {
-        sh '''
-          set -eu
-
-          # Stop both consumers before schema changes; the worker has 200 seconds to finish.
-          docker compose stop app worker
-
-          if ! docker compose run --rm migrate; then
-            # Drizzle applies pending migrations in one transaction, so a failed
-            # run leaves the old schema, and the stopped containers still hold
-            # the previous images. Bring the previous release back up.
-            docker compose start app worker || true
-            exit 1
-          fi
-
-          # A containerized Jenkins cannot reach the app's host loopback port, so
-          # the wait on health checks verifies the release; the app's checks
-          # /api/health.
-          docker compose up --detach --no-build --wait --wait-timeout 300 --remove-orphans
-          docker compose ps
-        '''
-      }
-      post {
-        failure {
-          sh '''
-            docker compose ps --all || true
-            docker compose logs --no-color --tail=100 || true
-          '''
+        // Bind outside any dir() block so the temporary file stays outside the checkout.
+        withCredentials([file(credentialsId: 'job-assistant-production-env', variable: 'JAA_ENV_FILE')]) {
+          sh 'sh scripts/jenkins-compose.sh deploy'
         }
       }
     }

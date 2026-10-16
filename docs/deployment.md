@@ -43,21 +43,32 @@ Keep app and compiler releases compatible with saved document snapshots. See the
 
 ## Automated deployment with Jenkins
 
-The `Jenkinsfile` tests each change to `main` and deploys it with the update sequence above. It runs on an existing Jenkins controller whose agent has the Docker CLI with the Buildx and Compose plugins and can reach the Docker daemon of the deployment host, typically a dockerized controller with `/var/run/docker.sock` mounted. That mount gives Jenkins root-equivalent control of the host, so run only trusted jobs on it. Check access from inside the controller with `docker buildx version`, `docker compose version`, and `docker ps`.
+The `Jenkinsfile` tests each change to `main` and deploys it with the update sequence above. Its agent needs Docker CLI, Buildx, Compose, and access to the deployment host's Docker daemon. Check access as the agent user with `docker buildx version`, `docker compose version`, and `docker ps`. Only trusted jobs may share this agent: Docker socket access gives it root-equivalent control of the host. Use a dedicated agent rather than building on the controller; stronger separation also needs a build daemon isolated from production.
 
-Complete the [first deployment](#first-deployment) steps for `.env` and the tunnel first. Then create a Pipeline job named `job-application-assistant` that uses "Pipeline script from SCM" with this repository, branch `*/main`, and script path `Jenkinsfile`, triggered by Poll SCM (for example `H/5 * * * *`) or a GitHub webhook. It needs the Pipeline, Git, and Timestamper plugins.
+Create a Pipeline job named `job-application-assistant` using "Pipeline script from SCM", this repository, branch `*/main`, and script path `Jenkinsfile`. It needs Pipeline, Git, Timestamper, and Credentials Binding. Configure credentials and settings before enabling Poll SCM or a GitHub webhook. Only trusted repository changes may deploy.
 
-The pipeline reads the production `.env` from the job's workspace; Git ignores it and `.dockerignore` keeps it out of every image. Copy it in as the `jenkins` user, readable only by that user, replacing `jenkins` after `-i` with your controller's container name:
+### One credential to add
 
-```sh
-docker exec -i jenkins \
-  sh -c 'mkdir -p "$1" && umask 077 && cat > "$1/.env"' sh /var/jenkins_home/workspace/job-application-assistant \
-  < /path/to/production.env
-```
+Upload the existing production `.env` as one **Secret file** credential. It can contain both secrets and ordinary settings, including `BETTER_AUTH_URL`, database names, `DISABLE_SIGNUP`, model names, and optional Resend settings. Use the existing values so this change does not rotate passwords or tokens. No individual Secret text credentials or `JAA_` environment settings are needed.
 
-The path ends with the job name. To change a setting, such as `DISABLE_SIGNUP=true` once your account exists, copy the file again and run the job. Do not enable "Wipe out repository & force clone", a clean before checkout, or `cleanWs()`: they delete the `.env`.
+1. Open **Manage Jenkins → Credentials → System → Global credentials → Add Credentials**. If the job is in a dedicated folder, use that folder's **Credentials** page instead to limit access to its jobs.
+2. Choose **Kind: Secret file** and **Scope: Global**. The **System** scope is for controller operations and cannot be used by the pipeline.
+3. Select the production `.env` file. For this existing installation it is `/home/daniel/job-application-assistant/.env`; select a local copy if your browser runs on another machine. For a new installation, start from `.env.example`, fill in production values, and set `BETTER_AUTH_URL` to the public HTTPS origin.
+4. Enter the exact **ID: `job-assistant-production-env`** and save.
 
-Each run checks Docker access, the `.env`, and the Compose file; builds the Dockerfile's `builder` stage, which runs lint and the production build, then runs the format check, type checks, and unit tests inside it; builds the images; and deploys. The site is unavailable while migrations run. If a migration fails, the pipeline starts the previous app and worker again: pending migrations are applied in one transaction, so the schema is unchanged. If the stack is not healthy within five minutes, the build fails after printing service state and the last 100 log lines of each service. Without Resend, those lines can include password reset emails, so restrict who can read build logs.
+The file uses normal Compose dotenv syntax (`KEY=value`). Preserve quoting needed for literal characters such as `$` in passwords. Include `OBJECT_STORAGE_ACCESS_KEY` as well as its secret. Optional settings use the defaults in `docker-compose.yml`; include `DISABLE_SIGNUP=true` when registrations should be closed. Put `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in the same file if email delivery is enabled.
+
+Jenkins provides a temporary file through `JAA_ENV_FILE` during **Deploy** and cleans it up after the binding. The pipeline passes its path directly to `docker compose --env-file`; it does not source it as shell code, copy it into the checkout, or put it in an image. Binding occurs outside any `dir()` block so the file stays outside the browsable checkout. Workspace cleanup is safe.
+
+The uploaded file is the source of truth for automated deployments. Update that credential when changing configuration; editing the host `.env` alone does not update Jenkins. Keep any host copy used for manual recovery synchronized deliberately. Application variables inherited from Jenkins are cleared before Compose runs, so they cannot override values from the file. The old individual credentials and `JAA_` settings are unused by this version.
+
+Secret-file contents are not automatically masked by Jenkins. The pipeline disables shell tracing, validates with `config --quiet`, suppresses parser errors that might echo file contents, and reports service state without dumping application logs. Do not add commands that print or archive the file or resolved configuration. Only trusted jobs may run on the deployment agent.
+
+### Pipeline behavior
+
+Build validation and image builds use synthetic values because Compose interpolates runtime settings even for `build`. The helper permits only validation and building with those values. The Dockerfile's `builder` stage runs lint and the production build; the pipeline then runs the format check, type checks, and unit tests. The production file is bound only in **Deploy**, where its presence and the real Compose configuration are checked before any containers stop. Every Compose call pins the existing `job-application-assistant` project, including when the Jenkins job moves into a folder.
+
+The site is unavailable while migrations run. If a migration fails, the pipeline starts the previous app and worker again: pending migrations are applied in one transaction, so the schema is unchanged. If the stack is not healthy within five minutes, the build fails and reports service state. It does not automatically print application logs or expanded Compose configuration, which can include secrets or password-reset emails. Inspect service logs directly on the host when needed. Jenkins masking only reduces accidental exposure; anyone controlling the deployment pipeline can use its bound credentials.
 
 The pipeline takes no backups; back up before merging a change that adds migrations. To roll back, push a revert to `main`, subject to the schema compatibility described above.
 
