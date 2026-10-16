@@ -3,3 +3,4 @@
 *.md
 migrations/
 pnpm-lock.yaml
+extension/dist/

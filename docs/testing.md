@@ -21,7 +21,7 @@ Type checking generates Next.js route types before running `tsc --noEmit`. Gener
 
 ## Unit and service tests
 
-Vitest runs on Node.js and discovers `*.test.ts(x)` files in `src`, tests in `scripts` and `services`, and the opt-in PostgreSQL suite. Import test APIs explicitly from `vitest`. Add focused tests for changes to regression-prone transforms, validation, resume fitting, or generation helpers, using sanitized candidate fixtures.
+Vitest runs on Node.js and discovers `*.test.ts(x)` files in `src`, tests in `scripts`, `services` and `extension`, and the opt-in PostgreSQL suite. Import test APIs explicitly from `vitest`. Add focused tests for changes to regression-prone transforms, validation, resume fitting, or generation helpers, using sanitized candidate fixtures.
 
 Pass a path to run a subset:
 
@@ -36,7 +36,7 @@ Resume import tests build synthetic PDF and DOCX files in memory and cover file-
 
 ## PostgreSQL integration tests
 
-Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, stored PDFs and imported files, and retention. Generation and compilation are mocked, and object storage is replaced by an in-memory map whose operations can be made to fail, so no storage server is needed; live AI, OCR, and email delivery are not exercised.
+Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, stored PDFs and imported files, autofill's application ownership and resume choice, and retention. Generation and compilation are mocked, and object storage is replaced by an in-memory map whose operations can be made to fail, so no storage server is needed; live AI, OCR, and email delivery are not exercised.
 
 For an isolated local database, start PostgreSQL 18 on loopback port 5433. The port and container name must be available:
 
@@ -75,6 +75,10 @@ pnpm run test:e2e:ui
 The first run builds the compiler's TeX/font packages; later runs use Docker's build cache. To reuse an image built from the current compiler sources, set `E2E_LATEX_IMAGE` to its local tag; the harness then skips that build.
 
 The app runs at `http://127.0.0.1:3100`; the port must be free. Test-only `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup applies committed migrations to a fresh database ending in `_test`, overrides runtime credentials with synthetic values, and waits for healthy services. Each test gets a fresh BetterAuth account, seeded profile and application data, and browser context. Authentication tests also exercise the actual UI.
+
+The autofill test (`tests/e2e/autofill.e2e.ts`) builds the extension, loads it unpacked into Playwright's Chromium, and serves a fixture form from `127.0.0.1` with an iframe from `localhost`, so the frame is cross-origin. It runs the page script through `chrome.scripting` in the extension's isolated world and checks label extraction, hidden and `aria-hidden` inputs, coded select values, a select refilled by another field, native and ARIA radios, same-named radios in two forms, a lone checkbox and a checkbox group with a self-describe box, a `maxlength` overflow, a hidden file input outlined through its label, a React controlled input, a Radix Select (filled twice), search comboboxes that filter after a delay or ignore a click, and the iframe field.
+
+It then drives the real side panel (`panel.html`, opened for the fixture tab) through whole runs. The fixture server stands in for the app: it checks each step request against the route's schema, answers with a scripted model from `tests/e2e/support/autofill-agent.ts` passed through the route's `finalizeFills`, and records what was sent. The runs cover a Workday-style wizard (repeaters, a collapsed section, a nested list, a slow Next and a review page whose Submit is never offered or clicked), a form embedded from another origin with a follow-up an answer reveals, beside a chat frame and a nav "Next" that are never sent, a form that loads a new page and saves an entry from a dialog, answers and a verification code typed by the applicant that are kept and never sent, a double-clicked Continue, a required field that can't be filled, Stop during a slow step, a click that changes nothing, and a "Next" that turns into "Submit" before the click. The model itself is not exercised; the click and answer rules are unit-tested in `src/app/api/autofill/policy.test.ts` and `fills.test.ts`.
 
 Resume tests use manual content selection and a small one-page profile. The app and worker reject fetches outside their local app/compiler/storage origins to prevent live provider calls. Completed generation tests require zero fitting revisions and warnings, so an unexpected AI fitting attempt fails their assertions even when generation falls back to a draft. The imported-file test sends a real upload and checks the basic extraction used when structured parsing fails. Stored files use the real storage container, providing the suite's check of request signing against SeaweedFS. PDF checks use `pdfinfo` and `pdftotext` in the compiler container.
 
