@@ -63,7 +63,7 @@ pnpm run dev
 
 ## Configuration
 
-The app and worker validate their runtime environment through `src/lib/env.ts`. Missing or invalid required values prevent startup. The migration command validates only `DATABASE_URL`.
+The app and worker validate their runtime environment through `src/lib/env.ts`. Missing or invalid required values prevent startup. The migration command validates only `DATABASE_URL`. The Jenkins pipeline reads these variables from a [Secret file credential](docs/deployment.md#production-credential), not from a `.env` in its workspace.
 
 | Variable | Required | Purpose/default |
 | --- | --- | --- |
