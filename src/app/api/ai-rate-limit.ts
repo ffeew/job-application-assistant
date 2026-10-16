@@ -8,7 +8,8 @@ const limiters = {
   coverLetter: createRateLimiter({ limit: 10, windowMs: 60_000 }),
   conversationStarter: createRateLimiter({ limit: 10, windowMs: 60_000 }),
   resumeImport: createRateLimiter({ limit: 5, windowMs: 60_000 }),
-  autofill: createRateLimiter({ limit: 10, windowMs: 60_000 }),
+  // One application takes a model call per step, often several a minute.
+  autofill: createRateLimiter({ limit: 30, windowMs: 60_000 }),
 };
 
 export function limitAiRequest(

@@ -1,14 +1,26 @@
 // Injected into every frame of the job page by the side panel. It uses no
 // chrome.* APIs, so the E2E test can drive it the same way the panel does.
 import {
+  AUTOFILL_CLICK_LABEL_MAX,
   AUTOFILL_GROUP_LABEL_MAX,
   AUTOFILL_LABEL_MAX,
+  AUTOFILL_MAX_CHOICES,
+  AUTOFILL_MAX_CLICKABLES,
   AUTOFILL_MAX_FIELDS,
   AUTOFILL_MAX_OPTIONS,
   AUTOFILL_OPTION_MAX,
   AUTOFILL_PAGE_TEXT_MAX,
+  AUTOFILL_VALUE_MAX,
 } from "@/app/api/autofill/limits";
-import type { AutofillField } from "@/app/api/autofill/validators";
+import {
+  clickRefusal,
+  labelPurpose,
+  type ClickPurpose,
+} from "@/app/api/autofill/policy";
+import type {
+  AutofillClickable,
+  AutofillField,
+} from "@/app/api/autofill/validators";
 
 type Kind = AutofillField["kind"];
 
@@ -16,7 +28,9 @@ export interface Extracted {
   origin: string;
   pageText: string;
   fields: AutofillField[];
-  notSent: number;
+  clickables: AutofillClickable[];
+  /** Unfilled fields left out because the page has too many. */
+  unfilledNotSent: number;
 }
 export interface PageFill {
   fieldId: string;
@@ -33,7 +47,8 @@ export interface PageResume {
 }
 export interface Outcome {
   fieldId: string;
-  status: "filled" | "drafted" | "flagged";
+  /** "kept": the field held the applicant's answer, so it was left alone. */
+  status: "filled" | "drafted" | "flagged" | "kept";
   reason?: string;
 }
 
@@ -44,6 +59,16 @@ declare global {
     flags: PageFlag[],
     resume: PageResume | null,
   ) => Promise<Outcome[]>;
+  var jaaClick: (id: string, label: string) => string | null;
+  var jaaHandOver: (fieldIds: string[]) => void;
+  var jaaSettle: () => Promise<void>;
+  var jaaShape: () => string;
+  var jaaState: () => string;
+  // Each injection re-runs this script, but globals last as long as the
+  // document, so what the assistant wrote is remembered across steps.
+  var jaaWritten: WeakMap<Element, string> | undefined;
+  var jaaYours: WeakSet<Element> | undefined;
+  var jaaStop: boolean | undefined;
 }
 
 const CONTROLS =
@@ -56,7 +81,22 @@ const SKIPPED_INPUT_TYPES = new Set([
   "image",
   "password",
 ]);
+// Buttons, disclosure toggles and options of an open list. Combobox fields are
+// offered from the fields, to be opened.
+const CLICKABLE =
+  'button, input[type="submit"], input[type="button"], [role="button"], summary, [aria-expanded="false"], [role="option"]';
+// Site navigation and result paging also say "Next". A plain <header> is not
+// excluded: form sections use them for their titles and toggles.
+const OFF_FORM =
+  'nav, [role="navigation"], [role="banner"], [aria-label*="pagination" i]';
+const HEADINGS = 'h1, h2, h3, h4, h5, h6, [role="heading"], legend';
+const PLACEHOLDER =
+  /^(select|choose|please|make a selection|search|none selected|--|—)/i;
 const COMBOBOX_WAIT_MS = 1_000;
+const SETTLE_QUIET_MS = 500;
+const SETTLE_MAX_MS = 10_000;
+// A step that loads by XHR can sit still behind a spinner.
+const BUSY = '[aria-busy="true"], [role="progressbar"]';
 const OUTLINES = {
   filled: "2px solid #1a7f4b",
   drafted: "2px dashed #9a5200",
@@ -69,7 +109,21 @@ interface Entry {
   options: string[];
   maxLength?: number;
 }
+interface Click {
+  el: HTMLElement;
+  purpose: ClickPurpose;
+  label: string;
+  section?: string;
+  question?: string;
+}
+interface OpenList {
+  combobox: HTMLElement;
+  listbox: Element;
+}
 const registry = new Map<string, Entry>();
+const clicks = new Map<string, Click>();
+const written = (globalThis.jaaWritten ??= new WeakMap<Element, string>());
+const yours = (globalThis.jaaYours ??= new WeakSet<Element>());
 
 const clean = (text: string | null | undefined) =>
   (text ?? "").replace(/\s+/g, " ").trim();
@@ -199,10 +253,14 @@ function kindOf(el: Element): Kind | null {
   return null;
 }
 
-function collect(root: Document | ShadowRoot, found: HTMLElement[]) {
+function collect(
+  root: Document | ShadowRoot,
+  selector: string,
+  found: HTMLElement[],
+) {
   for (const el of root.querySelectorAll("*")) {
-    if (el instanceof HTMLElement && el.matches(CONTROLS)) found.push(el);
-    if (el.shadowRoot) collect(el.shadowRoot, found);
+    if (el instanceof HTMLElement && el.matches(selector)) found.push(el);
+    if (el.shadowRoot) collect(el.shadowRoot, selector, found);
   }
 }
 
@@ -242,14 +300,189 @@ function checked(el: HTMLElement): boolean {
     : el.getAttribute("aria-checked") === "true";
 }
 
-function extract(): Extracted {
-  registry.clear();
-  const found: HTMLElement[] = [];
-  collect(document, found);
+/** The label a field is sent with: its own name, after its question. */
+function fieldLabel(el: HTMLElement, kind: Kind): string {
+  const own = ownLabel(el);
+  const question =
+    kind === "checkbox" || !own ? questionOf(el, own ? [own] : []) : "";
+  return label(question, own);
+}
 
-  const fields: AutofillField[] = [];
+/** The nearest heading or legend before the element, such as "Work Experience 2". */
+function sectionOf(el: Element): string {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const before = Array.from(node.querySelectorAll(HEADINGS)).filter(
+      (heading) =>
+        !heading.contains(el) &&
+        Boolean(
+          heading.compareDocumentPosition(el) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+    );
+    const nearest = before.at(-1);
+    if (nearest) return textOf(nearest).slice(0, AUTOFILL_GROUP_LABEL_MAX);
+  }
+  return "";
+}
+
+/** The answer a field shows now, or "" when it shows none. */
+function currentValue(entry: Entry): string {
+  const [el] = entry.elements;
+  if (!el) return "";
+  switch (entry.kind) {
+    case "text":
+    case "textarea":
+      return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+        ? el.value
+        : "";
+    case "select": {
+      const option =
+        el instanceof HTMLSelectElement ? el.selectedOptions[0] : undefined;
+      if (
+        !option ||
+        option.disabled ||
+        option.value === "" ||
+        (option.index === 0 && PLACEHOLDER.test(clean(option.text)))
+      ) {
+        return "";
+      }
+      return clean(option.text);
+    }
+    case "radio": {
+      const index = entry.elements.findIndex(checked);
+      return index === -1 ? "" : (entry.options[index] ?? "");
+    }
+    case "checkbox":
+      return checked(el) ? "true" : "";
+    case "file":
+      return el instanceof HTMLInputElement ? (el.files?.[0]?.name ?? "") : "";
+    case "combobox": {
+      if (el instanceof HTMLInputElement) return el.value;
+      if (el.hasAttribute("data-placeholder")) return "";
+      const shown = textOf(el);
+      return PLACEHOLDER.test(shown) ? "" : shown;
+    }
+  }
+}
+
+function openList(): OpenList | null {
+  const combobox = document.querySelector<HTMLElement>(
+    '[aria-expanded="true"]:is([role="combobox"], [aria-haspopup="listbox"])',
+  );
+  const listbox = combobox ? listboxFor(combobox, new Set()) : null;
+  return combobox && listbox ? { combobox, listbox } : null;
+}
+
+function submitsForm(el: HTMLElement): boolean {
+  return (
+    (el instanceof HTMLButtonElement && el.type === "submit" && !!el.form) ||
+    (el instanceof HTMLInputElement &&
+      (el.type === "submit" || el.type === "image"))
+  );
+}
+
+function buttonLabel(el: HTMLElement): string {
+  return (
+    ariaLabel(el) ||
+    textOf(el) ||
+    (el instanceof HTMLInputElement ? clean(el.value) : "") ||
+    clean(el.getAttribute("title"))
+  );
+}
+
+/**
+ * What a click on the element would do, read from its structure and name.
+ * Elements that match no allowed purpose are never offered or clicked.
+ */
+function purposeOf(
+  el: HTMLElement,
+  list: OpenList | null,
+): ClickPurpose | null {
+  if (
+    el.matches(':disabled, [aria-disabled="true"]') ||
+    el.closest('[aria-hidden="true"]') ||
+    el.closest(OFF_FORM) ||
+    !visible(el)
+  ) {
+    return null;
+  }
+  if (el.matches('[role="option"]')) {
+    return list?.listbox.contains(el) ? "choose_option" : null;
+  }
+  if (kindOf(el) === "combobox") {
+    return el.getAttribute("aria-expanded") === "true" ? null : "open_list";
+  }
+  let purpose: ClickPurpose | null = null;
+  if (el.tagName === "SUMMARY") {
+    const details = el.parentElement;
+    purpose =
+      details instanceof HTMLDetailsElement && !details.open ? "expand" : null;
+  } else if (el.getAttribute("aria-expanded") === "false") {
+    purpose = "expand";
+  } else if (
+    el.matches(
+      'button, input[type="submit"], input[type="button"], [role="button"]',
+    )
+  ) {
+    purpose = labelPurpose(buttonLabel(el));
+    if (purpose === "save_entry" && !el.closest('[role="dialog"], dialog')) {
+      purpose = null;
+    }
+  }
+  // Moving to the next step may post the form; nothing else should.
+  return purpose && purpose !== "next" && submitsForm(el) ? null : purpose;
+}
+
+function describeClick(el: HTMLElement, list: OpenList | null): Click | null {
+  const purpose = purposeOf(el, list);
+  if (!purpose) return null;
+  const name =
+    purpose === "open_list"
+      ? fieldLabel(el, "combobox")
+      : purpose === "choose_option"
+        ? textOf(el)
+        : buttonLabel(el);
+  return {
+    el,
+    purpose,
+    label: name.slice(0, AUTOFILL_CLICK_LABEL_MAX),
+    section: sectionOf(el) || undefined,
+    question:
+      purpose === "open_list"
+        ? name
+        : purpose === "choose_option" && list
+          ? fieldLabel(list.combobox, "combobox")
+          : undefined,
+  };
+}
+
+const CLICK_ORDER: Record<ClickPurpose, number> = {
+  next: 0,
+  save_entry: 0,
+  add_entry: 1,
+  expand: 2,
+  open_list: 3,
+  choose_option: 4,
+};
+
+interface Read {
+  items: { field: AutofillField; entry: Entry }[];
+  offered: Click[];
+}
+
+/** Reads the page without changing the registries, so it can be polled. */
+function read(): Read {
+  const found: HTMLElement[] = [];
+  collect(document, CONTROLS, found);
+
+  const items: Read["items"] = [];
   const groups = new Map<Node, Map<string, Entry>>();
-  let notSent = 0;
+  const add = (entry: Entry, field: Omit<AutofillField, "id" | "filled">) => {
+    items.push({
+      entry,
+      field: { id: String(items.length), filled: false, ...field },
+    });
+  };
 
   for (const el of found) {
     const kind = kindOf(el);
@@ -276,13 +509,10 @@ function extract(): Extracted {
           (groups.get(owner) ?? new Map<string, Entry>()).set(name, entry),
         );
       }
-      fields.push(
-        register(entry, { label: "", required: isRequired(el), kind }),
-      );
+      add(entry, { label: "", required: isRequired(el), kind });
       continue;
     }
 
-    const own = ownLabel(el);
     const entry: Entry = {
       kind,
       elements: [el],
@@ -293,41 +523,32 @@ function extract(): Extracted {
           ? el.maxLength
           : undefined,
     };
-    const question =
-      kind === "checkbox" || !own ? questionOf(el, own ? [own] : []) : "";
-    fields.push(
-      register(entry, {
-        kind,
-        label: label(question, own),
-        required: isRequired(el),
-        inputType: el instanceof HTMLInputElement ? el.type : undefined,
-        maxLength: entry.maxLength,
-      }),
-    );
+    add(entry, {
+      kind,
+      label: fieldLabel(el, kind),
+      required: isRequired(el),
+      inputType: el instanceof HTMLInputElement ? el.type : undefined,
+      maxLength: entry.maxLength,
+    });
   }
 
-  // Radio groups learn their question once every option is known.
-  for (const field of fields) {
-    const entry = registry.get(field.id);
-    if (entry?.kind !== "radio") continue;
-    const first = entry.elements[0];
-    if (first) {
+  const offered: Click[] = [];
+  const list = openList();
+  for (const { field, entry } of items) {
+    const [first] = entry.elements;
+    if (!first) continue;
+    // Radio groups learn their question once every option is known.
+    if (entry.kind === "radio") {
       field.label = questionOf(first, entry.options).slice(
         0,
         AUTOFILL_LABEL_MAX,
       );
+      field.required = entry.elements.some(isRequired);
     }
-    field.required = entry.elements.some(isRequired);
-  }
-
-  for (const field of fields) {
-    const entry = registry.get(field.id);
-    if (!entry) continue;
     if (entry.kind === "select" || entry.kind === "radio") {
       // Large lists, such as countries, are matched here after the model
       // names a value, so they don't fill the prompt. A placeholder such as
       // "Select…" has no value and is no answer.
-      const [first] = entry.elements;
       const options = (
         first instanceof HTMLSelectElement
           ? Array.from(first.options)
@@ -341,27 +562,162 @@ function extract(): Extracted {
         );
       }
     }
+    field.section = sectionOf(first) || undefined;
+    const own = yours.has(first) ? undefined : written.get(first);
+    field.filled =
+      own !== undefined || yours.has(first) || currentValue(entry) !== "";
+    if (own !== undefined) {
+      field.value = (entry.kind === "checkbox" ? own || "false" : own).slice(
+        0,
+        AUTOFILL_VALUE_MAX,
+      );
+    }
+    if (entry.kind === "combobox" && !field.filled) {
+      const click = describeClick(first, list);
+      if (click) offered.push(click);
+    }
   }
 
-  if (fields.length > AUTOFILL_MAX_FIELDS) {
-    notSent = fields.length - AUTOFILL_MAX_FIELDS;
-    fields.length = AUTOFILL_MAX_FIELDS;
+  const buttons: HTMLElement[] = [];
+  collect(document, CLICKABLE, buttons);
+  for (const el of buttons) {
+    if (kindOf(el) === "combobox") continue;
+    const click = describeClick(el, list);
+    if (click) offered.push(click);
   }
+  offered.sort((a, b) => CLICK_ORDER[a.purpose] - CLICK_ORDER[b.purpose]);
+  const choices = offered.filter((click) => click.purpose === "choose_option");
+  const dropped = new Set(choices.slice(AUTOFILL_MAX_CHOICES));
   return {
-    origin: location.origin,
-    pageText: clean(document.body.innerText).slice(0, AUTOFILL_PAGE_TEXT_MAX),
-    fields,
-    notSent,
+    items,
+    offered: offered
+      .filter((click) => !dropped.has(click))
+      .slice(0, AUTOFILL_MAX_CLICKABLES),
   };
 }
 
-function register(
-  entry: Entry,
-  field: Omit<AutofillField, "id">,
-): AutofillField {
-  const id = String(registry.size);
-  registry.set(id, entry);
-  return { id, ...field };
+function extract(): Extracted {
+  const { items, offered } = read();
+  registry.clear();
+  clicks.clear();
+  for (const { field, entry } of items) registry.set(field.id, entry);
+  offered.forEach((click, index) => clicks.set(`c${String(index)}`, click));
+
+  // Answered fields go first when the page has too many, so questions further
+  // down a long page are still seen.
+  let fields = items.map(({ field }) => field);
+  let unfilledNotSent = 0;
+  if (fields.length > AUTOFILL_MAX_FIELDS) {
+    const sent = new Set(
+      [
+        ...fields.filter((field) => !field.filled),
+        ...fields.filter((field) => field.filled),
+      ].slice(0, AUTOFILL_MAX_FIELDS),
+    );
+    unfilledNotSent = fields.filter(
+      (field) => !field.filled && !sent.has(field),
+    ).length;
+    fields = fields.filter((field) => sent.has(field));
+  }
+
+  // Validation messages lead, so the length cap never cuts them.
+  const alerts = [
+    ...Array.from(document.querySelectorAll('[role="alert"]'), textOf),
+    ...items
+      .filter(({ entry }) =>
+        entry.elements.some((el) => el.getAttribute("aria-invalid") === "true"),
+      )
+      .map(({ field }) => `Check: ${field.label}`),
+  ].filter(Boolean);
+  return {
+    origin: location.origin,
+    pageText: [...alerts, clean(document.body.innerText)]
+      .join("\n")
+      .slice(0, AUTOFILL_PAGE_TEXT_MAX),
+    fields,
+    clickables: [...clicks].map(([id, click]) => ({
+      id,
+      purpose: click.purpose,
+      label: click.label,
+      section: click.section,
+      question: click.question,
+    })),
+    unfilledNotSent,
+  };
+}
+
+/** The questions on the page, in order; new ones mean an answer revealed more. */
+function shape(items: Read["items"]): string {
+  return JSON.stringify(
+    items.map(({ field }) => `${field.section ?? ""}›${field.label}`),
+  );
+}
+
+/** Everything a step can change; when it stays the same, the step did nothing. */
+function state(): string {
+  const { items, offered } = read();
+  return JSON.stringify([
+    location.href,
+    shape(items),
+    items.map(({ field }) => field.filled),
+    offered.map((click) => `${click.purpose}:${click.label}`),
+  ]);
+}
+
+/** Waits until the page has been still for a moment and shows no spinner. */
+function settle(): Promise<void> {
+  return new Promise((done) => {
+    const finish = () => {
+      observer.disconnect();
+      clearTimeout(quiet);
+      clearTimeout(cap);
+      done();
+    };
+    const idle = () => {
+      if (Array.from(document.querySelectorAll(BUSY)).some(visible)) {
+        quiet = setTimeout(idle, SETTLE_QUIET_MS);
+      } else {
+        finish();
+      }
+    };
+    let quiet = setTimeout(idle, SETTLE_QUIET_MS);
+    const cap = setTimeout(finish, SETTLE_MAX_MS);
+    const observer = new MutationObserver(() => {
+      clearTimeout(quiet);
+      quiet = setTimeout(idle, SETTLE_QUIET_MS);
+    });
+    observer.observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    });
+  });
+}
+
+/**
+ * Clicks an offered element after checking it again as it is now. Returns ""
+ * once clicked, why it was refused, or null when the page changed under it.
+ */
+function click(id: string, offeredLabel: string): string | null {
+  const offered = clicks.get(id);
+  if (!offered?.el.isConnected) return null;
+  const now = describeClick(offered.el, openList());
+  if (now?.purpose !== offered.purpose || now.label !== offeredLabel) {
+    return null;
+  }
+  const refused = clickRefusal(now);
+  if (refused) return refused;
+  now.el.click();
+  return "";
+}
+
+/** Fields the applicant was asked to answer are theirs from then on. */
+function handOver(fieldIds: string[]) {
+  for (const id of fieldIds) {
+    const el = registry.get(id)?.elements[0];
+    if (el) yours.add(el);
+  }
 }
 
 function isRequired(el: HTMLElement): boolean {
@@ -469,6 +825,15 @@ async function pick(el: HTMLElement, option: HTMLElement): Promise<string> {
     : "The list didn't keep the choice. Pick it yourself.";
 }
 
+/**
+ * The assistant may change a field only while it is empty or still holds what
+ * the assistant wrote, so an answer the applicant gave, before the run or
+ * during a pause, cleared or unticked included, stays.
+ */
+function mayWrite(entry: Entry, el: HTMLElement): boolean {
+  return !yours.has(el) && currentValue(entry) === (written.get(el) ?? "");
+}
+
 async function fill(
   entry: Entry,
   value: string,
@@ -476,9 +841,23 @@ async function fill(
 ): Promise<string> {
   const [el] = entry.elements;
   if (!el || entry.elements.some((node) => !node.isConnected)) {
-    return "The page changed. Click Fill this page again.";
+    return "The page changed. Click Continue.";
   }
+  const before = currentValue(entry);
+  const reason = await write(entry, el, value, resume);
+  const after = currentValue(entry);
+  // A failed attempt that changed the field, such as a reformatted phone
+  // number, is still the assistant's to correct.
+  if (!reason || after !== before) written.set(el, after);
+  return reason;
+}
 
+async function write(
+  entry: Entry,
+  el: HTMLElement,
+  value: string,
+  resume: PageResume | null,
+): Promise<string> {
   switch (entry.kind) {
     case "text":
     case "textarea": {
@@ -551,7 +930,7 @@ async function fill(
   }
 }
 
-function mark(entry: Entry, status: Outcome["status"], reason?: string) {
+function mark(entry: Entry, status: keyof typeof OUTLINES, reason?: string) {
   const [el] = entry.elements;
   if (!el) return;
   // A hidden control, such as a file input behind a button, is outlined
@@ -580,15 +959,28 @@ async function apply(
   flags: PageFlag[],
   resume: PageResume | null,
 ): Promise<Outcome[]> {
+  globalThis.jaaStop = false;
+  // Set by the panel's Stop button while a slow list is being filled; read
+  // through a call, since TypeScript keeps the `false` above across awaits.
+  const stopped = () => globalThis.jaaStop === true;
   const outcomes: Outcome[] = [];
   for (const { fieldId, value, drafted } of fills) {
+    if (stopped()) return outcomes;
     const entry = registry.get(fieldId);
     if (!entry) {
       outcomes.push({
         fieldId,
         status: "flagged",
-        reason: "The page changed. Click Fill this page again.",
+        reason: "The page changed. Click Continue.",
       });
+      continue;
+    }
+    const [el] = entry.elements;
+    if (el?.isConnected && !mayWrite(entry, el)) {
+      yours.add(el);
+      const reason = "You answered this, so it was left as it is.";
+      mark(entry, "flagged", reason);
+      outcomes.push({ fieldId, status: "kept", reason });
       continue;
     }
     const reason = await fill(entry, value, resume);
@@ -606,3 +998,8 @@ async function apply(
 
 globalThis.jaaExtract = extract;
 globalThis.jaaApply = apply;
+globalThis.jaaClick = click;
+globalThis.jaaHandOver = handOver;
+globalThis.jaaSettle = settle;
+globalThis.jaaShape = () => shape(read().items);
+globalThis.jaaState = state;

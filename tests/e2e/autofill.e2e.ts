@@ -9,6 +9,7 @@ import {
   expect,
   test,
   type BrowserContext,
+  type Page,
   type Worker,
 } from "@playwright/test";
 import { build } from "esbuild";
@@ -19,6 +20,13 @@ import type {
   PageFlag,
   PageResume,
 } from "../../extension/src/page";
+import { finalizeFills } from "../../src/app/api/autofill/fills";
+import {
+  autofillRequestSchema,
+  type AutofillRequest,
+} from "../../src/app/api/autofill/validators";
+import type { ResumeData } from "../../src/lib/resume-data";
+import { agentAnswer, agentPages } from "./support/autofill-agent";
 
 // The extension runs against a fixture page, not the app: the form comes from
 // 127.0.0.1 and its iframe from localhost, so the frame is cross-origin, as an
@@ -112,6 +120,38 @@ let userDataDir: string;
 let context: BrowserContext;
 let worker: Worker;
 
+// The fixture server also stands in for the app: the panel's requests are
+// checked against the route's schema, answered by a scripted model through the
+// route's own rules, and recorded.
+const steps: AutofillRequest[] = [];
+const invalidSteps: unknown[] = [];
+const visited: string[] = [];
+const slowPaths = new Set(["/slow"]);
+let raceArmed = false;
+
+async function answerStep(body: string): Promise<[number, string]> {
+  const parsed = autofillRequestSchema.safeParse(JSON.parse(body));
+  if (!parsed.success) {
+    invalidSteps.push(parsed.error.issues);
+    return [400, JSON.stringify({ error: "Invalid request data" })];
+  }
+  const request = parsed.data;
+  steps.push(request);
+  const path = new URL(request.url).pathname;
+  if (slowPaths.has(path)) await new Promise((done) => setTimeout(done, 3_000));
+  if (path === "/race") {
+    raceArmed = true;
+    await new Promise((done) => setTimeout(done, 500));
+  }
+  const plan = finalizeFills(agentAnswer(request), request, {
+    profile: {} as ResumeData,
+    job: null,
+    coverLetter: null,
+    resumeId: null,
+  });
+  return [200, JSON.stringify(plan)];
+}
+
 test.beforeAll(async () => {
   execFileSync("pnpm", ["run", "extension:build"], { stdio: "pipe" });
   const fixture = await build({
@@ -126,16 +166,43 @@ test.beforeAll(async () => {
   const fixtureScript = fixture.outputFiles[0]?.text ?? "";
 
   server = createServer((request, response) => {
+    const url = new URL(request.url ?? "/", "http://fixture");
+    visited.push(`${url.pathname}${url.search}`);
+    const send = (status: number, type: string, body: string) => {
+      response.writeHead(status, { "Content-Type": type });
+      response.end(body);
+    };
+    if (url.pathname === "/api/autofill" && request.method === "POST") {
+      let body = "";
+      request.on("data", (chunk: Buffer) => (body += chunk.toString()));
+      request.on("end", () => {
+        void answerStep(body).then(([status, json]) =>
+          send(status, "application/json", json),
+        );
+      });
+      return;
+    }
+    if (url.pathname === "/api/applications") {
+      send(200, "application/json", "[]");
+      return;
+    }
+    if (url.pathname === "/race-armed") {
+      send(200, "text/plain", raceArmed ? "yes" : "no");
+      return;
+    }
     const pages: Record<string, [string, string] | undefined> = {
       "/form": ["text/html", formHtml(frameOrigin)],
       "/frame": ["text/html", frameHtml],
       "/fixture.js": ["text/javascript", fixtureScript],
+      ...Object.fromEntries(
+        Object.entries(agentPages(frameOrigin)).map(([path, html]) => [
+          path,
+          ["text/html", html] as [string, string],
+        ]),
+      ),
     };
-    const page = pages[request.url ?? ""];
-    response.writeHead(page ? 200 : 404, {
-      "Content-Type": page?.[0] ?? "text/plain",
-    });
-    response.end(page?.[1] ?? "");
+    const page = pages[url.pathname];
+    send(page ? 200 : 404, page?.[0] ?? "text/plain", page?.[1] ?? "");
   });
   await new Promise<void>((listening) => server.listen(0, listening));
   const { port } = server.address() as AddressInfo;
@@ -382,4 +449,191 @@ test("the extension reads and fills a form in its page and a cross-origin frame"
   await expect(page.frameLocator("iframe").getByLabel("City")).toHaveValue(
     "Lisbon",
   );
+});
+
+/** Opens a fixture page and the extension's panel for its tab. */
+async function openWithPanel(path: string) {
+  const page = await context.newPage();
+  await page.goto(`${origin}${path}`);
+  const tabId = await worker.evaluate(async (url) => {
+    const tab = (await chrome.tabs.query({})).find(
+      (candidate) => candidate.url === url,
+    );
+    if (tab?.id === undefined) throw new Error("Fixture tab not found");
+    await chrome.storage.local.set({ appUrl: new URL(url).origin });
+    return tab.id;
+  }, `${origin}${path}`);
+  const panel = await context.newPage();
+  await panel.goto(
+    `chrome-extension://${new URL(worker.url()).host}/panel.html?tab=${String(tabId)}`,
+  );
+  await expect(panel.locator("#fill-section")).toBeVisible();
+  return { page, panel };
+}
+
+const stepsFor = (path: string) =>
+  steps.filter((step) => new URL(step.url).pathname === path);
+const windowValue = (page: Page, name: string) =>
+  page.evaluate(
+    (key) => (window as unknown as Record<string, unknown>)[key],
+    name,
+  );
+const DONE = "Check the outlined fields, then submit the application yourself.";
+
+test.describe("the panel's run", () => {
+  test.describe.configure({ timeout: 90_000 });
+
+  test.afterEach(() => {
+    expect(invalidSteps).toEqual([]);
+  });
+
+  test("works a Workday-style wizard to its review page and never submits", async () => {
+    const { page, panel } = await openWithPanel("/workday");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#status")).toContainText(DONE, {
+      timeout: 60_000,
+    });
+
+    expect(await windowValue(page, "saved")).toEqual({
+      values: ["Engineer", "Acme", "Intern", "Beta", "Happy to relocate."],
+      heard: "LinkedIn",
+    });
+    expect(await windowValue(page, "nextClicks")).toBe(1);
+    expect(await windowValue(page, "submitted")).toBe(false);
+    for (const step of stepsFor("/workday")) {
+      for (const clickable of step.clickables) {
+        expect(clickable.label).not.toMatch(/submit/i);
+      }
+    }
+    expect(stepsFor("/workday").at(-1)?.fields).toEqual([]);
+  });
+
+  test("fills a form embedded from another site and leaves the page around it alone", async () => {
+    const { page, panel } = await openWithPanel("/greenhouse");
+    const form = page.frameLocator("#form");
+    await expect(form.getByLabel("First name")).toBeVisible();
+    await expect(
+      page.frameLocator("#chat").getByLabel("Message"),
+    ).toBeVisible();
+
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#status")).toContainText(DONE, {
+      timeout: 45_000,
+    });
+
+    await expect(form.getByLabel("First name")).toHaveValue("Alex");
+    await expect(form.getByLabel("Yes")).toBeChecked();
+    // The follow-up that "Yes" revealed was answered before the run ended.
+    await expect(form.getByLabel("Where to?")).toHaveValue("Lisbon");
+    await expect(page.locator("#newsletter")).toHaveValue("");
+    await expect(page.frameLocator("#chat").getByLabel("Message")).toHaveValue(
+      "",
+    );
+    const sent = stepsFor("/greenhouse");
+    expect(sent.length).toBeGreaterThan(1);
+    for (const step of sent) {
+      expect(step.fields.map((field) => field.label)).not.toContain(
+        "Newsletter email",
+      );
+      expect(step.fields.map((field) => field.label)).not.toContain("Message");
+      expect(step.clickables).toEqual([]);
+    }
+    const frame = page
+      .frames()
+      .find((candidate) => candidate.url().endsWith("/greenhouse-form"));
+    expect(
+      await frame?.evaluate(
+        () => (window as unknown as { submitted: boolean }).submitted,
+      ),
+    ).toBe(false);
+  });
+
+  test("follows a form across page loads, opening sections and saving a dialog entry", async () => {
+    const { page, panel } = await openWithPanel("/steps/1");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#status")).toContainText(DONE, {
+      timeout: 60_000,
+    });
+
+    expect(visited).toContain(
+      "/steps/2?email=alex%40example.test&school=Lisbon+University",
+    );
+    await expect(page.locator("#certs li")).toHaveText([
+      "AWS Solutions Architect",
+    ]);
+    expect(visited.some((path) => path.startsWith("/steps/done"))).toBe(false);
+  });
+
+  test("keeps the applicant's answers and never sends what they typed", async () => {
+    const { page, panel } = await openWithPanel("/own");
+    await page.locator("#preferred").fill("Lex");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+
+    await expect(panel.locator("#pause")).toBeVisible({ timeout: 30_000 });
+    await expect(panel.locator("#pause-message")).toContainText(
+      "Enter the code",
+    );
+    await expect(panel.locator("#needs")).toContainText("Verification code");
+    await expect(page.locator("#phone")).toHaveValue("555-0100");
+    await expect(page.locator("#relocation")).toBeChecked();
+
+    await page.locator("#code").fill("123456");
+    await page.locator("#relocation").uncheck();
+    await panel.getByRole("button", { name: "Continue filling" }).dblclick();
+    await expect(panel.locator("#status")).toContainText(DONE, {
+      timeout: 30_000,
+    });
+
+    await expect(page.locator("#preferred")).toHaveValue("Lex");
+    await expect(page.locator("#code")).toHaveValue("123456");
+    await expect(page.locator("#relocation")).not.toBeChecked();
+    const sent = JSON.stringify(stepsFor("/own"));
+    expect(sent).not.toContain("Lex");
+    expect(sent).not.toContain("123456");
+    // A double click on Continue starts one run, not two.
+    expect(
+      stepsFor("/own").filter((step) => step.history.length === 1),
+    ).toHaveLength(1);
+  });
+
+  test("pauses on a required field it can't fill instead of retrying", async () => {
+    const { page, panel } = await openWithPanel("/fails");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#pause")).toBeVisible({ timeout: 30_000 });
+    await expect(panel.locator("#needs")).toContainText("Phone");
+    expect(stepsFor("/fails")).toHaveLength(2);
+    expect(await windowValue(page, "nextClicks")).toBe(0);
+  });
+
+  test("stops without filling when Stop is pressed mid-step", async () => {
+    const { page, panel } = await openWithPanel("/slow");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect.poll(() => stepsFor("/slow").length).toBe(1);
+    await panel.getByRole("button", { name: "Stop filling" }).click();
+    await expect(panel.locator("#status")).toContainText("Stopped");
+    // The model's answer arrives after Stop and is never applied.
+    await page.waitForTimeout(4_000);
+    await expect(page.locator("#first")).toHaveValue("");
+    expect(stepsFor("/slow")).toHaveLength(1);
+  });
+
+  test("pauses when a click doesn't change the page", async () => {
+    const { page, panel } = await openWithPanel("/stuck");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#pause-message")).toContainText(
+      "hasn't changed",
+      { timeout: 60_000 },
+    );
+    expect(await windowValue(page, "nextClicks")).toBe(2);
+  });
+
+  test("refuses a click whose button turned into Submit after the page was read", async () => {
+    const { page, panel } = await openWithPanel("/race");
+    await panel.getByRole("button", { name: "Fill this application" }).click();
+    await expect(panel.locator("#status")).toContainText(DONE, {
+      timeout: 30_000,
+    });
+    expect(await windowValue(page, "submitted")).toBe(false);
+    expect(await windowValue(page, "nextClicks")).toBe(0);
+  });
 });

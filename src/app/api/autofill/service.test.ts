@@ -51,8 +51,17 @@ const request = {
   url: "https://jobs.example.test/apply",
   pageText: "",
   fields: [
-    { id: "0:0", kind: "text" as const, label: "First name", required: true },
+    {
+      id: "0",
+      kind: "text" as const,
+      label: "First name",
+      required: true,
+      filled: false,
+    },
   ],
+  clickables: [],
+  unfilledNotSent: 0,
+  history: [],
 };
 const plan = () => new AutofillService().plan("user-1", request);
 const callOptions = () => vi.mocked(generateText).mock.calls[0]?.[0];
@@ -62,8 +71,23 @@ describe("AutofillService model choice", () => {
     env.OPENROUTER_API_KEY = undefined;
     env.OPENROUTER_TIER_3_MODEL = undefined;
     vi.mocked(generateText).mockResolvedValue({
-      output: { fills: [], unanswered: [] },
+      output: {
+        fills: [],
+        unanswered: [],
+        click: null,
+        status: "continue",
+        message: "",
+      },
     } as never);
+  });
+
+  test("sends the stable rules as instructions and the page as the prompt", async () => {
+    await plan();
+    const options = callOptions();
+    expect(options?.instructions).toContain("Applicant profile");
+    expect(options?.prompt).toContain(
+      "Page URL: https://jobs.example.test/apply",
+    );
   });
 
   test("uses the configured tier-3 model through OpenRouter", async () => {
@@ -108,7 +132,7 @@ describe("AutofillService model choice", () => {
     vi.mocked(generateText).mockRejectedValueOnce(
       new NoObjectGeneratedError({
         message: "No object generated: could not parse the response.",
-        text: '{"fills":[{"fieldId":"0:0","va',
+        text: '{"fills":[{"fieldId":"0","va',
         response: { id: "r", timestamp: new Date(0), modelId: "m" },
         usage: {} as never,
         finishReason: "length",

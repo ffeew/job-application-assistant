@@ -76,7 +76,7 @@ export class AutofillService {
       const result = await generateText({
         ...autofillModel(),
         output: Output.object({ schema: modelOutputSchema }),
-        prompt: buildAutofillPrompt(request, context),
+        ...buildAutofillPrompt(request, context),
         abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
       });
       // An answer cut off at the output cap has no output to read.

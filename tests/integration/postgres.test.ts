@@ -1274,8 +1274,11 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     const resumeService = new ResumesService();
     vi.mocked(generateText).mockResolvedValue({
       output: {
-        fills: [{ fieldId: "0:0", value: "resume", drafted: false }],
+        fills: [{ fieldId: "0", value: "resume", drafted: false }],
         unanswered: [],
+        click: null,
+        status: "continue",
+        message: "",
       },
     } as never);
     const plan = async (applicationId?: string) =>
@@ -1288,8 +1291,17 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
             pageText: "",
             applicationId,
             fields: [
-              { id: "0:0", kind: "file", label: "Resume", required: true },
+              {
+                id: "0",
+                kind: "file",
+                label: "Resume",
+                required: true,
+                filled: false,
+              },
             ],
+            clickables: [],
+            unfilledNotSent: 0,
+            history: [],
           }),
         }),
       );
@@ -1324,7 +1336,7 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       expect(forApplication.status).toBe(200);
       expect(await forApplication.json()).toMatchObject({
         resumeId: tailored.id,
-        fills: [{ fieldId: "0:0", value: "resume" }],
+        fills: [{ fieldId: "0", value: "resume" }],
       });
 
       expect(await (await plan()).json()).toMatchObject({
@@ -1335,8 +1347,11 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       expect(await (await plan()).json()).toEqual({
         fills: [],
         unanswered: [
-          { fieldId: "0:0", reason: "No tailored or default resume to attach" },
+          { fieldId: "0", reason: "No tailored or default resume to attach" },
         ],
+        click: null,
+        status: "handoff",
+        message: "Take this step yourself, then click Continue.",
         resumeId: null,
       });
     } finally {
