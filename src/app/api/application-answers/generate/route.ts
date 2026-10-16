@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { limitAiRequest } from "@/app/api/ai-rate-limit";
 import { routeErrorResponse } from "@/app/api/route-error";
 import { auth } from "@/lib/auth";
-import { AutofillService } from "./service";
-import { autofillRequestSchema } from "./validators";
+import { ApplicationAnswersService } from "../service";
+import { draftAnswersRequestSchema } from "../validators";
 
-const autofillService = new AutofillService();
+const applicationAnswersService = new ApplicationAnswersService();
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const limited = limitAiRequest("autofill", session.user.id);
+    const limited = limitAiRequest("applicationAnswers", session.user.id);
     if (limited) return limited;
 
     const body: unknown = await request.json();
-    const validatedData = autofillRequestSchema.safeParse(body);
+    const validatedData = draftAnswersRequestSchema.safeParse(body);
     if (!validatedData.success) {
       return NextResponse.json(
         { error: "Invalid request data", details: validatedData.error.issues },
@@ -26,9 +26,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      await autofillService.plan(session.user.id, validatedData.data),
+      await applicationAnswersService.draft(
+        session.user.id,
+        validatedData.data,
+      ),
     );
   } catch (error) {
-    return routeErrorResponse(error, "Failed to plan the form fill");
+    return routeErrorResponse(error, "Failed to draft the answers");
   }
 }

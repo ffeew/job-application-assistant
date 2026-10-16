@@ -31,6 +31,10 @@ const navigation = [
   { name: "Resumes", href: "/dashboard/resumes" },
   { name: "Cover letters", href: "/dashboard/cover-letters" },
   { name: "Conversation starters", href: "/dashboard/conversation-starters" },
+  {
+    name: "Application questions",
+    href: "/dashboard/application-answers",
+  },
 ];
 
 // The dashboard root would otherwise match every nested route.

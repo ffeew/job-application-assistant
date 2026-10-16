@@ -55,7 +55,7 @@ const envSchema = z
       .transform(Number)
       .pipe(z.number().int().positive()),
   })
-  // Either one alone would quietly leave form filling on Groq.
+  // Either one alone would quietly leave answer drafting on Groq.
   .refine(
     (values) => !values.OPENROUTER_API_KEY === !values.OPENROUTER_TIER_3_MODEL,
     {

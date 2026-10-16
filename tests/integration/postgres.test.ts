@@ -72,8 +72,8 @@ vi.mock("../../src/lib/latex-compiler", () => ({
   compileResumeLatex: compiler.compile,
 }));
 
-// Autofill asks the model for a plan; the test supplies it, so the records the
-// route reads and the resume it picks are what is checked.
+// Drafting answers asks the model; the test supplies its reply, so what is
+// checked is which application the route reads and what reaches the prompt.
 vi.mock("ai", async (importOriginal) => ({
   ...(await importOriginal<typeof import("ai")>()),
   generateText: vi.fn(),
@@ -1264,99 +1264,52 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
     expect(uploadObjects()).toEqual([]);
   });
 
-  test("autofill reads only the caller's application and attaches its tailored resume", async () => {
-    const { POST } = await import("../../src/app/api/autofill/route");
+  test("drafting answers reads only the caller's application", async () => {
+    const { POST } =
+      await import("../../src/app/api/application-answers/generate/route");
     const { ApplicationsService } =
       await import("../../src/app/api/applications/service");
-    const { ResumesService } =
-      await import("../../src/app/api/resumes/service");
     const applications = new ApplicationsService();
-    const resumeService = new ResumesService();
     vi.mocked(generateText).mockResolvedValue({
       output: {
-        fills: [{ fieldId: "0", value: "resume", drafted: false }],
-        unanswered: [],
-        click: null,
-        status: "continue",
-        message: "",
+        answers: [{ question: "Why us?", answer: "Rockets.", reason: "" }],
       },
     } as never);
-    const plan = async (applicationId?: string) =>
+    const draft = (applicationId: string) =>
       POST(
-        new NextRequest("http://localhost/api/autofill", {
+        new NextRequest("http://localhost/api/application-answers/generate", {
           method: "POST",
           headers: { cookie, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: "https://jobs.example.test/apply",
-            pageText: "",
-            applicationId,
-            fields: [
-              {
-                id: "0",
-                kind: "file",
-                label: "Resume",
-                required: true,
-                filled: false,
-              },
-            ],
-            clickables: [],
-            unfilledNotSent: 0,
-            history: [],
-          }),
+          body: JSON.stringify({ applicationId, questions: "Why us?" }),
         }),
       );
 
     const own = await applications.createApplication(userId, {
-      company: "Autofill Co",
+      company: "Answers Co",
       position: "Engineer",
+      jobDescription: "Own job description",
       status: "applied",
     });
     const foreign = await applications.createApplication(otherUserId, {
-      company: "Other Autofill Co",
+      company: "Other Answers Co",
       position: "Engineer",
+      jobDescription: "Foreign job description",
       status: "applied",
-    });
-    const draft = { content: "{}", isTailored: false, isDefault: false };
-    const fallback = await resumeService.createResume(userId, {
-      ...draft,
-      title: "Autofill default",
-      isDefault: true,
-    });
-    const tailored = await resumeService.createResume(userId, {
-      ...draft,
-      title: "Autofill tailored",
-      isTailored: true,
-      jobApplicationId: own.id,
     });
 
     try {
-      expect((await plan(foreign.id)).status).toBe(404);
+      expect((await draft(foreign.id)).status).toBe(404);
+      expect(generateText).not.toHaveBeenCalled();
 
-      const forApplication = await plan(own.id);
-      expect(forApplication.status).toBe(200);
-      expect(await forApplication.json()).toMatchObject({
-        resumeId: tailored.id,
-        fills: [{ fieldId: "0", value: "resume" }],
+      const response = await draft(own.id);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        answers: [{ question: "Why us?", answer: "Rockets.", reason: "" }],
       });
-
-      expect(await (await plan()).json()).toMatchObject({
-        resumeId: fallback.id,
-      });
-
-      await resumeService.deleteResume(userId, fallback.id);
-      expect(await (await plan()).json()).toEqual({
-        fills: [],
-        unanswered: [
-          { fieldId: "0", reason: "No tailored or default resume to attach" },
-        ],
-        click: null,
-        status: "handoff",
-        message: "Take this step yourself, then click Continue.",
-        resumeId: null,
-      });
+      const prompt = vi.mocked(generateText).mock.calls[0]?.[0].prompt;
+      expect(prompt).toContain("Own job description");
+      expect(prompt).not.toContain("Foreign job description");
     } finally {
-      await resumeService.deleteResume(userId, fallback.id);
-      await resumeService.deleteResume(userId, tailored.id);
       await applications.deleteApplication(userId, own.id);
       await applications.deleteApplication(otherUserId, foreign.id);
     }

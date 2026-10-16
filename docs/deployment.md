@@ -105,7 +105,7 @@ The worker runs one job at a time. Generation requests enqueue work and return H
 
 Preview remains a draft; Save and download PDF commits a tailored resume when the job completes, even if the browser closes. Completed jobs keep their PDFs in the database for download without another AI call or compilation. Saved library PDFs are written to object storage by the worker for Save and download PDF, by the app when a preview is saved, and by the app when a saved generated resume without a PDF is first opened.
 
-Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter and conversation-starter generation allow ten requests a minute per account and resume import five, counted in the app process's memory.
+Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter, conversation-starter and answer drafting allow ten requests a minute per account and resume import five, counted in the app process's memory.
 
 Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Content selection, PDF compilation, and fitting use a 180-second abort deadline in the worker, independently of Cloudflare's HTTP timeout; subsequent file storage and database completion are outside that deadline. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain.
 
