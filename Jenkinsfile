@@ -10,8 +10,6 @@ pipeline {
     timeout(time: 60, unit: 'MINUTES')
   }
 
-  // The Compose project name comes from docker-compose.yml, so the stack and
-  // its volumes match a deployment started by hand from docs/deployment.md.
   environment {
     DOCKER_BUILDKIT = '1'
     CI_IMAGE = "job-application-assistant-ci:${env.BUILD_NUMBER}"

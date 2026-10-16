@@ -13,7 +13,8 @@ unset OBJECT_STORAGE_SECRET_KEY OBJECT_STORAGE_BUCKET RESEND_API_KEY RESEND_FROM
 
 compose_env_file=/dev/null
 compose() {
-  # Pin the project across folder/job renames and ignore leftover workspace .env files.
+  # Match the manual deployment's project even if COMPOSE_PROJECT_NAME is set,
+  # and ignore any .env left in the workspace.
   docker compose --project-name job-application-assistant --file docker-compose.yml --env-file "$compose_env_file" "$@"
 }
 
