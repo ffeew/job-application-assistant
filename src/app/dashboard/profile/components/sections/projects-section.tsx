@@ -4,11 +4,12 @@ import { formatMonthYear } from "@/lib/format-month-year";
 import { cn } from "@/lib/utils";
 
 import { withAsyncHandler } from "@/lib/async-action";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useCreateProject } from "@/app/dashboard/profile/mutations/use-create-project";
 import { useUpdateProject } from "@/app/dashboard/profile/mutations/use-update-project";
@@ -191,10 +192,14 @@ function ProjectSummary({
 }) {
   const Heading = pending ? "h4" : "h3";
   const start = formatMonthYear(project.startDate);
-  // "present" only reads as a range after a start date.
-  const end =
-    project.isOngoing && start ? "present" : formatMonthYear(project.endDate);
-  const dates = [start, end].filter(Boolean).join(" to ");
+  const end = formatMonthYear(project.endDate);
+  // "present" only reads as a range after a start date. Without one, the
+  // card still says ongoing, as the resume prints "Present".
+  const dates = start
+    ? [start, project.isOngoing ? "present" : end].filter(Boolean).join(" to ")
+    : project.isOngoing
+      ? "Ongoing"
+      : end;
 
   return (
     <>
@@ -248,14 +253,18 @@ function ProjectForm({
       githubUrl: project?.githubUrl ?? null,
       startDate: project?.startDate ?? null,
       endDate: project?.endDate ?? null,
+      isOngoing: project?.isOngoing ?? false,
       displayOrder: project?.displayOrder ?? 0,
     },
   });
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = form;
+
+  const isOngoing = useWatch({ control: form.control, name: "isOngoing" });
 
   const onSubmit = (data: unknown) => {
     const validatedData = data as CreateProjectRequest;
@@ -311,8 +320,28 @@ function ProjectForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="endDate">End date</Label>
-          <Input id="endDate" type="month" {...register("endDate")} />
+          <Input
+            id="endDate"
+            type="month"
+            {...register("endDate")}
+            disabled={isOngoing}
+          />
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="isOngoing"
+          checked={isOngoing}
+          onCheckedChange={(checked) => {
+            setValue("isOngoing", checked === true);
+            if (checked) {
+              setValue("endDate", null);
+            }
+          }}
+        />
+        <Label htmlFor="isOngoing" className="cursor-pointer">
+          This project is ongoing
+        </Label>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="projectUrl">Project URL</Label>

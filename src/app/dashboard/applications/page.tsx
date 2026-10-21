@@ -239,7 +239,7 @@ export default function ApplicationsPage() {
         title="Delete this application?"
         description={
           pendingDelete &&
-          `${pendingDelete.position} at ${pendingDelete.company} will be removed from your tracker. This can't be undone.`
+          `${pendingDelete.position} at ${pendingDelete.company} will be removed from your tracker, along with cover letters written for it and any resume still being tailored for it. Saved resumes are kept. This can't be undone.`
         }
         onConfirm={() => {
           if (!pendingDelete) return;

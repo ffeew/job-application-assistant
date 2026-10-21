@@ -3,6 +3,7 @@ import { execFile, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import {
   test as base,
   expect,
@@ -21,13 +22,15 @@ import {
   runtimeEnvironment,
 } from "./runtime";
 import { startProcess, type ManagedProcess } from "./process";
+import { startFakeAI, type FakeAI } from "./fake-ai";
 
 const execute = promisify(execFile);
 const signupSchema = z.object({ user: z.object({ id: z.string().min(1) }) });
 const PASSWORD = "E2E-only-password-1234";
 const PROFILE_EMAIL = "alex@example.test";
 
-type Database = ReturnType<typeof drizzle<typeof schema>>;
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
+type Service = "storage" | "compiler";
 export interface Candidate {
   id: string;
   email: string;
@@ -44,10 +47,54 @@ interface Fixtures {
   inspectPDF: (
     download: Download,
   ) => Promise<{ bytes: Buffer; text: string; pageCount: number }>;
+  ai: FakeAI;
+  outage: { pause: (service: Service) => Promise<void> };
 }
 
 interface WorkerFixtures {
   database: Database;
+  fakeAI: FakeAI;
+  containerGuard: undefined;
+}
+
+function services() {
+  const runtime = getRuntime();
+  return {
+    storage: {
+      id: runtime.storageContainerId,
+      health: `${runtime.storageUrl}/healthz`,
+    },
+    compiler: {
+      id: runtime.compilerContainerId,
+      health: `${runtime.compilerUrl}/health`,
+    },
+  };
+}
+
+async function unpause(service: Service) {
+  const { id, health } = services()[service];
+  const state = await execute("docker", [
+    "inspect",
+    "--format",
+    "{{.State.Paused}}",
+    id,
+  ]);
+  if (state.stdout.trim() !== "true") return;
+  await execute("docker", ["unpause", id]);
+  const deadline = Date.now() + 30_000;
+  for (;;) {
+    try {
+      const response = await fetch(health, {
+        signal: AbortSignal.timeout(2_000),
+      });
+      if (response.ok) return;
+    } catch {
+      // The service can refuse connections for a moment after unpausing.
+    }
+    if (Date.now() > deadline)
+      throw new Error(`The ${service} container did not recover.`);
+    await delay(200);
+  }
 }
 
 export const test = base.extend<Fixtures, WorkerFixtures>({
@@ -79,6 +126,58 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     },
     { scope: "worker" },
   ],
+  fakeAI: [
+    // eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern, and this fixture has none.
+    async ({}, provide) => {
+      const server = await startFakeAI();
+      try {
+        await provide(server.fake);
+      } finally {
+        await server.close();
+      }
+    },
+    { scope: "worker", auto: true },
+  ],
+  containerGuard: [
+    // eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern, and this fixture has none.
+    async ({}, provide) => {
+      // A worker that died mid-outage cannot unpause; its successor does.
+      await unpause("storage");
+      await unpause("compiler");
+      await provide(undefined);
+      await unpause("storage");
+      await unpause("compiler");
+    },
+    { scope: "worker", auto: true },
+  ],
+  ai: [
+    async ({ fakeAI }, provide, testInfo) => {
+      fakeAI.reset();
+      await provide(fakeAI);
+      // Unused replies matter only when the test otherwise passed; after a
+      // failure they are a consequence, not a cause.
+      const problems = fakeAI.problems();
+      if (testInfo.status === "passed" && problems.length)
+        throw new Error(problems.join("\n"));
+    },
+    { auto: true },
+  ],
+  // eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern, and this fixture has none.
+  outage: async ({}, provide) => {
+    const paused = new Set<Service>();
+    try {
+      await provide({
+        async pause(service) {
+          paused.add(service);
+          await execute("docker", ["pause", services()[service].id]);
+        },
+      });
+    } finally {
+      // Fixture teardown still runs after a test timeout; a finally block in
+      // the test body might not.
+      for (const service of paused) await unpause(service);
+    }
+  },
   createCandidate: async (
     { playwright, database, extraHTTPHeaders },
     provide,

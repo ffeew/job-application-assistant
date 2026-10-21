@@ -12,7 +12,7 @@ import { Notice } from "@/components/ui/notice";
 import { toast } from "sonner";
 import { ResumeDetailSkeleton } from "../components/resume-detail-skeleton";
 import {
-  resumeContentSchema,
+  parseManualResumeContent,
   type ResumeContent,
 } from "@/lib/validators/resume-content";
 import { parseGeneratedResume } from "@/lib/resume-document";
@@ -61,20 +61,8 @@ export default function EditResumePage({
   }, [params]);
 
   useEffect(() => {
-    if (resume) {
-      let content: ResumeContent;
-      try {
-        const raw: unknown = JSON.parse(resume.content);
-        content = resumeContentSchema.parse(raw);
-      } catch {
-        content = {
-          personalInfo: { name: "", email: "", phone: "", address: "" },
-          summary: "",
-          experience: "",
-          education: "",
-          skills: "",
-        };
-      }
+    const content = resume && parseManualResumeContent(resume.content);
+    if (resume && content) {
       // Compiler memoization can reuse register() props; retain refs to update mounted inputs.
       reset(
         {
@@ -154,6 +142,22 @@ export default function EditResumePage({
     legacyResumeHTML(resume.content)
   ) {
     return <StoredResumeView key={resume.id} resume={resume} />;
+  }
+
+  if (!parseManualResumeContent(resume.content)) {
+    return (
+      <div className="flex max-w-4xl flex-col gap-8">
+        <PageHeader
+          title="Resume"
+          back={{ href: "/dashboard/resumes", label: "Resumes" }}
+        />
+        <Notice tone="error" title="This resume can't be edited here">
+          Its saved content is in a format this editor does not read, so it is
+          left as it is. Go back to your resumes to open another one or write a
+          new one.
+        </Notice>
+      </div>
+    );
   }
 
   return (

@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const BASE_URL = "http://127.0.0.1:3100";
+// The fake AI provider; the fetch guard forwards Groq calls here.
+export const AI_STUB_URL = "http://127.0.0.1:3101";
 export const LOG_DIRECTORY = "artifacts/e2e/logs";
 export const BUILD_DIRECTORY = ".next-e2e";
 
@@ -10,6 +12,7 @@ export const runtimeSchema = z.object({
   compilerContainerId: z.string().min(1),
   compilerToken: z.string().min(32),
   storageUrl: z.url(),
+  storageContainerId: z.string().min(1),
   storageAccessKey: z.string().min(1),
   storageSecretKey: z.string().min(32),
 });
@@ -56,6 +59,10 @@ export function runtimeEnvironment(runtime: Runtime): NodeJS.ProcessEnv {
     NEXT_TELEMETRY_DISABLED: "1",
     E2E_TEST: "1",
     E2E_RUNTIME: JSON.stringify(runtime),
+    E2E_AI_STUB_ORIGIN: AI_STUB_URL,
+    // The worker imports dotenv/config, which would otherwise read the
+    // developer's .env and enable OCR or OpenRouter only on that machine.
+    DOTENV_CONFIG_PATH: "/dev/null",
     E2E_ALLOWED_ORIGINS: [
       BASE_URL,
       new URL(runtime.compilerUrl).origin,

@@ -219,9 +219,19 @@ function AchievementSummary({
           {achievement.description}
         </p>
       )}
-      {achievement.date && (
+      {(achievement.date || achievement.url) && (
         <EntryMeta>
-          <span>{formatMonthYear(achievement.date)}</span>
+          {achievement.date && <span>{formatMonthYear(achievement.date)}</span>}
+          {achievement.url && (
+            <a
+              href={achievement.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-link underline underline-offset-4 hover:no-underline"
+            >
+              Open link
+            </a>
+          )}
         </EntryMeta>
       )}
     </>
@@ -246,6 +256,7 @@ function AchievementForm({
       organization: achievement?.organization ?? null,
       date: achievement?.date ?? null,
       description: achievement?.description ?? null,
+      url: achievement?.url ?? null,
       displayOrder: achievement?.displayOrder ?? 0,
     },
   });
@@ -300,6 +311,16 @@ function AchievementForm({
       <div className="flex flex-col gap-2">
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" {...register("description")} rows={3} />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="url">Link</Label>
+        <Input
+          id="url"
+          type="url"
+          {...register("url")}
+          placeholder="https://"
+        />
+        <FormFieldError message={errors.url?.message} />
       </div>
       <FormActions
         onCancel={onCancel}

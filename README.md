@@ -4,7 +4,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 
 ## Features
 
-- Email/password authentication, password reset, and a protected dashboard.
+- Email/password authentication, password reset (which signs out every existing session), and a protected dashboard.
 - Profile management for personal details, work experience, education, skills, projects, certifications, achievements, and references.
 - Resume import from PDF, DOCX, or TXT with structured parsing. Text is read directly from the file, and scanned PDFs go through a local OCR service. Imported details and suggested entries can be reviewed before saving; failed structured parsing falls back to basic text extraction. When storage succeeds, originals are available for download or deletion, normally keeping the ten most recent. Failed cleanup leaves older files listed until a later import retries it.
 - A resume library with editing, default resume selection, PDF previews, and downloads. Generated resumes store a versioned document snapshot that can be compiled again without rerunning AI; legacy manual and HTML records remain readable. When storage succeeds, saved tailored resumes reuse the generated PDF instead of compiling it again.

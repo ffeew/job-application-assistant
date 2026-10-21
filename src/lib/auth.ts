@@ -101,6 +101,9 @@ Job Application Assistant Team`,
       });
     },
     resetPasswordTokenExpiresIn: 3600,
+    // A reset often follows a leaked password, so sessions opened with the
+    // old one end too.
+    revokeSessionsOnPasswordReset: true,
   },
   plugins: [nextCookies()], // Keep this last so cookies set by other plugins reach Next.js.
 });

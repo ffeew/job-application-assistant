@@ -17,3 +17,27 @@ export const resumeContentSchema = z.object({
 });
 
 export type ResumeContent = z.infer<typeof resumeContentSchema>;
+
+// Generated snapshots and legacy HTML resumes carry these keys; the manual
+// schema would accept them as an empty resume.
+const otherFormatKeys = ["schemaVersion", "renderer", "document", "html"];
+
+/**
+ * Reads stored content as a manual resume, or returns null for anything else,
+ * so the editor never opens other content as a blank form and saves over it.
+ */
+export function parseManualResumeContent(
+  content: string,
+): ResumeContent | null {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(content);
+  } catch {
+    return null;
+  }
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+    return null;
+  if (otherFormatKeys.some((key) => key in raw)) return null;
+  const parsed = resumeContentSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}

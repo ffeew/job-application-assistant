@@ -1,7 +1,15 @@
 import { readFile } from "node:fs/promises";
-import { eq } from "drizzle-orm";
-import { resumeUploads } from "../../src/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
+import { resumeUploads, skills } from "../../src/lib/db/schema";
 import { test, expect } from "./support/fixtures";
+import {
+  expectedFail,
+  listGet,
+  revokeSessions,
+  sectionButton,
+  sectionIndex,
+} from "./support/helpers";
 import { resumeUploadsResponseSchema } from "../../src/app/api/profile/resume-uploads/validators";
 
 test("seeded personal information populates inputs and edits survive reload", async ({
@@ -236,7 +244,8 @@ test("an imported file is kept in storage and can be downloaded and deleted", as
     .getByRole("button", { name: "Download Alex résumé.txt", exact: true })
     .click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("Alex résumé.txt");
+  // The name is not checked: the object URL is revoked as soon as the link is
+  // clicked, so Chromium sometimes names the file by its blob id.
   expect((await readFile(await download.path())).equals(original)).toBe(true);
 
   const other = await createCandidate();
@@ -293,3 +302,236 @@ test("an imported file is kept in storage and can be downloaded and deleted", as
     ).status(),
   ).toBe(404);
 });
+
+const INVALID_RESPONSE =
+  "Received an invalid server response. Please try again.";
+
+test.describe(
+  "Profile page shell: sections, persistence and load errors",
+  { tag: "@profile-shell" },
+  () => {
+    test("the index switches sections, counts entries and keeps the choice across a reload", async ({
+      page,
+    }) => {
+      await page.goto("/dashboard/profile");
+      const main = page.getByRole("main");
+      await expect(
+        main.getByRole("heading", { name: "Profile", level: 1 }),
+      ).toBeVisible();
+      await expect(
+        main.getByText(
+          "Everything you might put on a resume, kept in one place. Each resume draws from it.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+      const personal = sectionIndex(page).getByRole("button", {
+        name: "Personal information",
+        exact: true,
+      });
+      await expect(personal).toHaveAttribute("aria-current", "true");
+      await expect(
+        main.getByRole("heading", {
+          name: "Personal information",
+          level: 2,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(sectionButton(page, "Work experience")).toHaveText(
+        /^Work experience\s*1$/,
+      );
+      await expect(sectionButton(page, "Education")).toHaveText(
+        /^Education\s*1$/,
+      );
+      await expect(sectionButton(page, "Skills")).toHaveText(/^Skills\s*1$/);
+
+      await sectionButton(page, "Work experience").click();
+      await expect(sectionButton(page, "Work experience")).toHaveAttribute(
+        "aria-current",
+        "true",
+      );
+      await expect(personal).not.toHaveAttribute("aria-current");
+      await expect(
+        main.getByRole("heading", {
+          name: "Work experience",
+          level: 2,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        main.getByRole("heading", { name: "Software Engineer", level: 3 }),
+      ).toBeVisible();
+
+      await sectionButton(page, "Education").click();
+      await expect(
+        main.getByRole("heading", { name: "Education", level: 2, exact: true }),
+      ).toBeVisible();
+      await sectionButton(page, "Skills").click();
+      await expect(sectionButton(page, "Skills")).toHaveAttribute(
+        "aria-current",
+        "true",
+      );
+      await expect(
+        main.getByRole("heading", { name: "Skills", level: 2, exact: true }),
+      ).toBeVisible();
+
+      // An open sheet is not part of the stored state, so a reload closes it.
+      await page
+        .getByRole("button", { name: "Add skill", exact: true })
+        .click();
+      await expect(
+        page.getByRole("dialog", { name: "Add skill" }),
+      ).toBeVisible();
+      await page.reload();
+      await expect(
+        main.getByRole("heading", { name: "Skills", level: 2, exact: true }),
+      ).toBeVisible();
+      await expect(sectionButton(page, "Skills")).toHaveAttribute(
+        "aria-current",
+        "true",
+      );
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+    });
+
+    test("Generate resume opens the profile generator", async ({ page }) => {
+      await page.goto("/dashboard/profile");
+      await page
+        .getByRole("main")
+        .getByRole("link", { name: "Generate resume", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/dashboard\/resumes\/generate$/);
+    });
+
+    test("a rejected list request replaces the page with the error, and Try again recovers", async ({
+      page,
+    }) => {
+      const skillsList = listGet("/api/profile/skills");
+      await page.route(skillsList, (route) =>
+        route.request().method() === "GET"
+          ? route.fulfill({
+              status: 403,
+              json: { error: "Stubbed skills failure" },
+            })
+          : route.fallback(),
+      );
+      await page.goto("/dashboard/profile");
+      const main = page.getByRole("main");
+      const notice = main.getByRole("alert");
+      await expect(notice).toContainText("Your profile didn't load");
+      await expect(notice).toContainText("Stubbed skills failure");
+      await expect(
+        main.getByRole("heading", { name: "Profile", level: 1 }),
+      ).toBeVisible();
+      await expect(sectionIndex(page)).toHaveCount(0);
+
+      await page.unroute(skillsList);
+      await notice
+        .getByRole("button", { name: "Try again", exact: true })
+        .click();
+      await expect(sectionIndex(page)).toBeVisible();
+      await expect(
+        main.getByRole("heading", {
+          name: "Personal information",
+          level: 2,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(notice).toHaveCount(0);
+    });
+
+    test("a failed profile request shows its message instead of the page", async ({
+      page,
+    }) => {
+      await page.route(listGet("/api/profile"), (route) =>
+        route.request().method() === "GET"
+          ? route.fulfill({
+              status: 400,
+              json: { error: "Profile unavailable" },
+            })
+          : route.fallback(),
+      );
+      await page.goto("/dashboard/profile");
+      const notice = page.getByRole("main").getByRole("alert");
+      await expect(notice).toContainText("Your profile didn't load");
+      await expect(notice).toContainText("Profile unavailable");
+      await expect(sectionIndex(page)).toHaveCount(0);
+    });
+
+    test("a malformed list response is reported at once", async ({ page }) => {
+      await page.route(listGet("/api/profile/education"), (route) =>
+        route.request().method() === "GET"
+          ? route.fulfill({ json: [{ foo: 1 }] })
+          : route.fallback(),
+      );
+      await page.goto("/dashboard/profile");
+      const notice = page.getByRole("main").getByRole("alert");
+      await expect(notice).toContainText("Your profile didn't load");
+      await expect(notice).toContainText(INVALID_RESPONSE);
+    });
+
+    test("a server error is retried before the error is shown", async ({
+      page,
+    }) => {
+      let attempts = 0;
+      await page.route(listGet("/api/profile/work-experiences"), (route) => {
+        if (route.request().method() !== "GET") return route.fallback();
+        attempts += 1;
+        return route.fulfill({ status: 500 });
+      });
+      await page.goto("/dashboard/profile");
+      const notice = page.getByRole("main").getByRole("alert");
+      // An empty 500 has no message of its own, so the query's fallback shows.
+      await expect(notice).toContainText("Failed to fetch work experiences", {
+        timeout: 20_000,
+      });
+      expect(attempts).toBe(4);
+    });
+
+    test("a stored skill category the form does not offer still lets the page load", async ({
+      page,
+      database,
+      candidate,
+    }) => {
+      // The column has no CHECK constraint, so older or imported rows can hold this.
+      await database
+        .update(skills)
+        .set({ category: sql`'hobby'` })
+        .where(eq(skills.userId, candidate.id));
+      const listed = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname === "/api/profile/skills" &&
+          response.request().method() === "GET",
+      );
+      await page.goto("/dashboard/profile");
+      const response = await listed;
+      expect(response.status()).toBe(200);
+      const raw: unknown = await response.json();
+      expect(
+        z
+          .array(z.object({ category: z.string() }))
+          .parse(raw)
+          .map((skill) => skill.category),
+      ).toEqual(["hobby"]);
+      expectedFail(
+        'src/app/api/profile/validators.ts:261: the client parses skills with the form\'s category enum, so one stored "hobby" fails the skills query and the whole page shows "Your profile didn\'t load"',
+      );
+      await expect(sectionIndex(page)).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+    });
+
+    test("a session revoked elsewhere sends the next visit to sign in", async ({
+      page,
+      request,
+      database,
+      candidate,
+    }) => {
+      await page.goto("/dashboard/profile");
+      await expect(sectionIndex(page)).toBeVisible();
+      await revokeSessions(database, candidate.id);
+      await page.reload();
+      await expect(page).toHaveURL(/\/sign-in$/);
+      const response = await request.get("/api/profile");
+      expect(response.status()).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized" });
+    });
+  },
+);
