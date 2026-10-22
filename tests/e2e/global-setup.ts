@@ -18,6 +18,7 @@ import {
 import {
   BASE_URL,
   BUILD_DIRECTORY,
+  CLOSED_SIGNUP_URL,
   LOG_DIRECTORY,
   runtimeEnvironment,
   type Runtime,
@@ -29,11 +30,12 @@ import {
   type ManagedProcess,
 } from "./support/process";
 
-async function checkApplicationPort() {
+async function checkPortFree(url: string) {
+  const { hostname, port } = new URL(url);
   const server = createServer();
   await new Promise<void>((resolvePort, reject) => {
     server.once("error", reject);
-    server.listen(3100, "127.0.0.1", () =>
+    server.listen(Number(port), hostname, () =>
       server.close((error) => (error ? reject(error) : resolvePort())),
     );
   });
@@ -52,7 +54,9 @@ async function storageImage() {
 }
 
 export default async function globalSetup() {
-  await checkApplicationPort();
+  await checkPortFree(BASE_URL);
+  // Tests that need registration closed start this app themselves.
+  await checkPortFree(CLOSED_SIGNUP_URL);
   await rm(LOG_DIRECTORY, { recursive: true, force: true });
   await mkdir(LOG_DIRECTORY, { recursive: true });
   await writeFile(

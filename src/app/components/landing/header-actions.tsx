@@ -8,7 +8,7 @@ import { authClient } from "@/app/utils/authClient";
 import { runAsyncAction } from "@/lib/async-action";
 import { MobileMenu } from "./mobile-menu";
 
-export function HeaderActions() {
+export function HeaderActions({ signUpOpen }: { signUpOpen: boolean }) {
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function HeaderActions() {
         {isSignedIn === null ? (
           <>
             <Skeleton className="h-10 w-20" />
-            <Skeleton className="h-10 w-32" />
+            {signUpOpen && <Skeleton className="h-10 w-32" />}
           </>
         ) : isSignedIn ? (
           <Button asChild>
@@ -38,16 +38,18 @@ export function HeaderActions() {
           </Button>
         ) : (
           <>
-            <Button variant="ghost" asChild>
+            <Button variant={signUpOpen ? "ghost" : "default"} asChild>
               <Link href="/sign-in">Sign in</Link>
             </Button>
-            <Button asChild>
-              <Link href="/sign-up">Create account</Link>
-            </Button>
+            {signUpOpen && (
+              <Button asChild>
+                <Link href="/sign-up">Create account</Link>
+              </Button>
+            )}
           </>
         )}
       </div>
-      <MobileMenu isSignedIn={isSignedIn} />
+      <MobileMenu isSignedIn={isSignedIn} signUpOpen={signUpOpen} />
     </>
   );
 }

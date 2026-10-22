@@ -16,9 +16,10 @@ import { REPOSITORY_URL, sectionLinks } from "./links";
 
 interface MobileMenuProps {
   isSignedIn: boolean | null;
+  signUpOpen: boolean;
 }
 
-export function MobileMenu({ isSignedIn }: MobileMenuProps) {
+export function MobileMenu({ isSignedIn, signUpOpen }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -58,7 +59,7 @@ export function MobileMenu({ isSignedIn }: MobileMenuProps) {
           {isSignedIn === null ? (
             <>
               <Skeleton className="h-12" />
-              <Skeleton className="h-12" />
+              {signUpOpen && <Skeleton className="h-12" />}
             </>
           ) : isSignedIn ? (
             <Button asChild size="lg">
@@ -68,12 +69,18 @@ export function MobileMenu({ isSignedIn }: MobileMenuProps) {
             </Button>
           ) : (
             <>
-              <Button asChild size="lg">
-                <Link href="/sign-up" onClick={close}>
-                  Create account
-                </Link>
-              </Button>
-              <Button variant="outline" asChild size="lg">
+              {signUpOpen && (
+                <Button asChild size="lg">
+                  <Link href="/sign-up" onClick={close}>
+                    Create account
+                  </Link>
+                </Button>
+              )}
+              <Button
+                variant={signUpOpen ? "outline" : "default"}
+                asChild
+                size="lg"
+              >
                 <Link href="/sign-in" onClick={close}>
                   Sign in
                 </Link>

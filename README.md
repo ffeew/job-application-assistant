@@ -69,7 +69,7 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 | --- | --- | --- |
 | `BETTER_AUTH_SECRET` | Yes | Authentication secret, at least 32 characters |
 | `BETTER_AUTH_URL` | Yes | Canonical authentication origin; use the public HTTPS origin in production |
-| `DISABLE_SIGNUP` | No | Set to `true` to close registration; existing accounts keep working. Defaults to `false` |
+| `DISABLE_SIGNUP` | No | Set to `true` to close registration and hide the sign-up links; existing accounts keep working. Defaults to `false` |
 | `DATABASE_URL` | Host processes | PostgreSQL connection URL for local app/worker and database tooling |
 | `POSTGRES_PASSWORD` | Compose | Database password; Compose builds its internal connection URL from database fields |
 | `POSTGRES_USER` / `POSTGRES_DB` | No | Compose user/database names; both default to `job_assistant` |
