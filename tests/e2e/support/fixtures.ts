@@ -18,10 +18,12 @@ import * as schema from "../../../src/lib/db/schema";
 import {
   BASE_URL,
   BUILD_DIRECTORY,
+  CLOSED_SIGNUP_URL,
+  LOG_DIRECTORY,
   getRuntime,
   runtimeEnvironment,
 } from "./runtime";
-import { startProcess, type ManagedProcess } from "./process";
+import { startProcess, waitForHealth, type ManagedProcess } from "./process";
 import { startFakeAI, type FakeAI } from "./fake-ai";
 
 const execute = promisify(execFile);
@@ -55,6 +57,7 @@ interface WorkerFixtures {
   database: Database;
   fakeAI: FakeAI;
   containerGuard: undefined;
+  closedSignUpURL: string;
 }
 
 function services() {
@@ -178,6 +181,36 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       for (const service of paused) await unpause(service);
     }
   },
+  closedSignUpURL: [
+    // eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern, and this fixture has none.
+    async ({}, provide) => {
+      const application = await startProcess(
+        process.execPath,
+        [
+          "--import",
+          resolve(`${BUILD_DIRECTORY}/block-external-fetch.mjs`),
+          `${BUILD_DIRECTORY}/standalone/server.js`,
+        ],
+        {
+          ...runtimeEnvironment(getRuntime()),
+          DISABLE_SIGNUP: "true",
+          // Keeps the sign-in redirect and Better Auth's trusted origin on this app.
+          BETTER_AUTH_URL: CLOSED_SIGNUP_URL,
+          PORT: new URL(CLOSED_SIGNUP_URL).port,
+        },
+        `${LOG_DIRECTORY}/application-closed-sign-up.log`,
+      );
+      try {
+        await waitForHealth(`${CLOSED_SIGNUP_URL}/api/health`, application);
+        await provide(CLOSED_SIGNUP_URL);
+      } finally {
+        await application.stop();
+      }
+    },
+    // Above waitForHealth's 90 s and stop's 10 s, so a slow start still
+    // reaches finally instead of leaving the detached server running.
+    { scope: "worker", timeout: 120_000 },
+  ],
   createCandidate: async (
     { playwright, database, extraHTTPHeaders },
     provide,

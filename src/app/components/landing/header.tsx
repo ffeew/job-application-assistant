@@ -4,7 +4,7 @@ import { Wordmark } from "@/components/wordmark";
 import { HeaderActions } from "./header-actions";
 import { REPOSITORY_URL, sectionLinks } from "./links";
 
-export function Header() {
+export function Header({ signUpOpen }: { signUpOpen: boolean }) {
   return (
     <header className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-5 sm:px-8">
       <Link href="/" className="rounded-sm">
@@ -36,7 +36,7 @@ export function Header() {
 
       <div className="flex items-center gap-1">
         <ThemeToggle />
-        <HeaderActions />
+        <HeaderActions signUpOpen={signUpOpen} />
       </div>
     </header>
   );

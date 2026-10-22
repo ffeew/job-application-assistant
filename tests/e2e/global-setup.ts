@@ -19,6 +19,7 @@ import {
   AI_STUB_URL,
   BASE_URL,
   BUILD_DIRECTORY,
+  CLOSED_SIGNUP_URL,
   LOG_DIRECTORY,
   runtimeEnvironment,
   type Runtime,
@@ -57,6 +58,8 @@ export default async function globalSetup() {
   await checkPortFree(BASE_URL);
   // The test worker starts the fake AI provider here.
   await checkPortFree(AI_STUB_URL);
+  // Tests that need registration closed start this app themselves.
+  await checkPortFree(CLOSED_SIGNUP_URL);
   await rm(LOG_DIRECTORY, { recursive: true, force: true });
   await mkdir(LOG_DIRECTORY, { recursive: true });
   await writeFile(

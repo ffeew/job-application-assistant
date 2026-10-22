@@ -74,7 +74,7 @@ pnpm run test:e2e:ui
 
 The first run builds the compiler's TeX/font packages; later runs use Docker's build cache. To reuse an image built from the current compiler sources, set `E2E_LATEX_IMAGE` to its local tag; the harness then skips that build.
 
-The app runs at `http://127.0.0.1:3100` and the fake AI provider at `127.0.0.1:3101`; both ports must be free. Test-only `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup applies committed migrations to a fresh database ending in `_test`, overrides runtime credentials with synthetic values, and waits for healthy services. Each test gets a fresh BetterAuth account, seeded profile and application data, and browser context. The browser runs in the `en-US` locale and the UTC time zone, and so do the test workers.
+The app runs at `http://127.0.0.1:3100` and the fake AI provider at `127.0.0.1:3101`. Tests that need registration closed start a second app from the same build with `DISABLE_SIGNUP=true` at `http://127.0.0.1:3102`, which stops with the test worker that started it. All three ports must be free. Test-only `E2E_TEST=1` selects `.next-e2e` build output, keeping `.next` separate. Setup applies committed migrations to a fresh database ending in `_test`, overrides runtime credentials with synthetic values, and waits for healthy services. Each test gets a fresh BetterAuth account, seeded profile and application data, and browser context. The browser runs in the `en-US` locale and the UTC time zone, and so do the test workers.
 
 The developer's `.env` does not reach the stack: setup deletes the copy Next places in the standalone output, and the worker's `dotenv/config` reads an empty file. Without that, a local OCR or OpenRouter key would make local runs behave unlike CI.
 
@@ -123,7 +123,7 @@ pnpm exec playwright show-report artifacts/e2e/report
 
 Reports, screenshots, retained failure traces, downloaded PDFs, per-test worker logs, and setup/application/compiler/storage/database logs live under `artifacts/e2e`. Build output and artifacts are ignored by Git, ESLint, and normal TypeScript source discovery.
 
-Not covered: the `DISABLE_SIGNUP` server branch (a stub covers the page's handling of it), OpenRouter drafting, the health check's database-down answer, an unconfigured compiler, OCR, password-protected PDFs, the 45 and 90 second AI timeouts, the names of downloaded files (the app revokes the download's object URL at once, so Chromium sometimes names the file by its id), real email delivery, live AI providers, and other browser engines.
+Not covered: OpenRouter drafting, the health check's database-down answer, an unconfigured compiler, OCR, password-protected PDFs, the 45 and 90 second AI timeouts, the names of downloaded files (the app revokes the download's object URL at once, so Chromium sometimes names the file by its id), real email delivery, live AI providers, and other browser engines.
 
 ## CI
 
