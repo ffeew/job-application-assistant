@@ -11,6 +11,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Profile-based and job-specific resume generation with manual content selection or Groq-assisted tailoring, using the A4 `professional` LaTeX template. Both flows support a one- or two-page target with up to three AI fitting revisions while keeping fonts and margins fixed. An unmet target returns the best compiled draft with a warning.
 - Background resume generation that continues after navigation and restores the latest job on return. Preview remains a draft; Save and download PDF saves an application resume when the job completes, even if the browser closes. Temporary job results expire after seven days.
 - AI cover letters and conversation starters based on saved profile and resume data.
+- A local Chrome/Edge extension that fills the selected job application from the saved profile, steps through supported forms and attaches a tailored or default resume. It pauses for applicant-only answers and leaves final submission to the user.
 - Drafted answers to an application's questions: paste a page of the form, optionally pick the saved job, and copy each answer into the form yourself. Answers come only from the saved profile; demographic, eligibility, salary and consent questions are flagged for you to answer.
 - Application tracking with status, notes, job descriptions, and recruiter information, plus dashboard counts, offer rate, and recent activity.
 
@@ -19,7 +20,7 @@ Job Application Assistant helps candidates maintain a professional profile, trac
 - Next.js 16 App Router, React 19 with React Compiler, and TypeScript 6.
 - PostgreSQL with Drizzle ORM, BetterAuth, and Zod.
 - Tailwind CSS v4, shadcn/ui, React Hook Form, TanStack Query, and Zustand.
-- Vercel AI SDK 7 with Groq (and optionally an OpenRouter model for drafting application answers), a separate authenticated pdfLaTeX service, and a local OCR service running RapidOCR with PaddleOCR models on CPU.
+- Vercel AI SDK 7 with Groq (and optionally an OpenRouter model for drafting application answers and extension form filling), a separate authenticated pdfLaTeX service, and a local OCR service running RapidOCR with PaddleOCR models on CPU.
 - SeaweedFS for imported files and saved resume PDFs, used through its S3 API so another S3-compatible store can take its place.
 - Node.js 24, pnpm, Vitest, Playwright, ESLint, and Prettier.
 
@@ -62,6 +63,23 @@ Start the application in another terminal, then open `http://localhost:3000`:
 pnpm run dev
 ```
 
+
+### Local autofill extension
+
+Build the extension, then open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose **Load unpacked**, and select the repository's `extension/` directory:
+
+```sh
+pnpm run extension:build
+```
+
+Sign in to the web app in the same browser profile. Open a job application, click the extension toolbar button, and enter the web app's address once. The extension reuses that browser session and stores only the address. It has no separate sign-in and does not copy passwords or session cookies. When the app session expires, sign in on the website and reopen the panel. If the website is already signed in but the panel cannot authenticate, check whether browser cookie/privacy settings or an administrator policy block access to the configured app. The answer-drafting page remains available when extension access is unavailable.
+
+Choose the form document in the side panel before **Fill this application**, even when there is only one choice. Each choice shows its origin, heading and sample fields. Use **Rescan forms** if an embedded application loads later. The selection stays fixed; changing the page or selected frame to another origin requires confirmation. The extension requests access to all sites because both the self-hosted app address and embedded application hosts vary. Page scripts run for a user-started operation; forms it cannot inspect require manual completion.
+
+Supported controls include ordinary fields, React-controlled inputs, lists, expandable sections and repeated-entry dialogs. Recognized repeated sections that start empty can be filled automatically. Pre-existing saved entries and sections whose progress cannot be reliably counted are handed to you to avoid duplicates. Signing in to an employer's website, verification, demographic/eligibility/salary questions, references, consents and final submission remain yours. **Stop filling** cancels pending actions and leaves completed changes in place; each Start/Continue allows at most 40 steps. Rebuild and reload the extension after source updates.
+
+The browser runs on the user's computer; no browser-hosting service is used. Answer generation still uses the app's existing OpenRouter configuration, or Groq when OpenRouter is not configured. Every planning step can send the saved profile (without references), saved job context, bounded form metadata and synthetic progress to that provider. Raw page bodies, saved-entry text and user-written field values are excluded from context; known current free-text values are redacted from metadata. This is data minimization, not a guarantee against a hostile website inventing labels containing sensitive text. AI calls can still incur charges or exceed a free provider limit; failed calls are not automatically retried. The copy-and-paste answer drafter is the fallback for unsupported forms.
+
 ## Configuration
 
 The app and worker validate their runtime environment through `src/lib/env.ts`. Missing or invalid required values prevent startup. The migration command validates only `DATABASE_URL`.
@@ -77,8 +95,8 @@ The app and worker validate their runtime environment through `src/lib/env.ts`. 
 | `GROQ_API_KEY` | Yes | Content generation and resume parsing |
 | `GROQ_MODEL` | No | Primary model; defaults to `qwen/qwen3.8-27b` |
 | `GROQ_FALLBACK_MODEL` | No | Resume-fitting fallback; defaults to `openai/gpt-oss-120b` |
-| `OPENROUTER_API_KEY` | No | OpenRouter key for drafting answers to application questions; set together with `OPENROUTER_TIER_3_MODEL` |
-| `OPENROUTER_TIER_3_MODEL` | No | OpenRouter model ID behind the tier-3 codename, which drafts answers to application questions, such as `openai/gpt-6-luna`. Set both or neither; without them, answer drafting uses `GROQ_MODEL` |
+| `OPENROUTER_API_KEY` | No | OpenRouter key for answer drafting and extension form filling; set together with `OPENROUTER_TIER_3_MODEL` |
+| `OPENROUTER_TIER_3_MODEL` | No | OpenRouter model ID behind the tier-3 codename, which drafts answers and plans extension form filling, such as `openai/gpt-6-luna`. Set both or neither; without them, both features use `GROQ_MODEL` |
 | `LATEX_COMPILER_URL` | PDFs; supplied by Compose | Compiler URL; Compose uses `http://latex-compiler:8080` |
 | `LATEX_COMPILER_TOKEN` | PDFs; required by Compose | Shared app/worker/compiler token, at least 32 characters |
 | `OCR_SERVICE_URL` | Scanned PDFs; supplied by Compose | OCR service URL; Compose uses `http://ocr:8080` |
@@ -114,6 +132,7 @@ Imported files and saved resume PDFs are written to object storage. The Compose 
 | `pnpm run test:integration` | Run PostgreSQL/API/worker integration tests with the test environment configured |
 | `pnpm run test:e2e` / `pnpm run test:e2e:ui` | Run Playwright browser tests or open UI mode |
 | `pnpm run build:runtime` | Bundle the migrator, worker, and compiler as Node.js ESM entrypoints |
+| `pnpm run extension:build` | Build the unpacked Chrome/Edge extension |
 | `pnpm run worker` | Process queued resume generation jobs |
 | `pnpm run db:migrate` | Apply committed PostgreSQL migrations |
 | `pnpm run db:generate` / `pnpm run db:studio` | Generate migrations from schema changes; inspect the database |

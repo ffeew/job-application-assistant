@@ -116,3 +116,7 @@ Read `docker compose logs -f app worker latex-compiler ocr seaweedfs` for operat
 Run the [quality and integration checks](testing.md) before deploying. [CI checks](testing.md#ci) use synthetic credentials; verify your own configuration separately. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, the OCR service, and file storage for host development.
 
 Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Import a text-based PDF and a scanned PDF into a profile; the scan should populate fields and show the OCR warning. Both files should appear under Imported files on the profile and download unchanged. Confirm records and stored files survive container recreation and a backup restores into a separate test database. Live AI and email checks require your configured provider credentials.
+
+## Local autofill extension
+
+Deploy the autofill API with the app and rebuild/reload the unpacked extension from the same checkout (`pnpm run extension:build`). The extension uses the public app origin and the user's existing browser session; it needs no additional container, browser-hosting account or environment variables. Existing Groq/OpenRouter settings also govern its model requests. See the [extension setup](../README.md#local-autofill-extension) for browser installation, permissions and cookie-policy troubleshooting.

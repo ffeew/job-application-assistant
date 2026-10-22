@@ -5,7 +5,7 @@
 - Next.js 16 App Router, React 19 with the React Compiler, TypeScript 6, Tailwind CSS v4 and shadcn/ui.
 - PostgreSQL with Drizzle ORM, BetterAuth, and Zod 4 at every runtime boundary.
 - React Hook Form, TanStack Query and Zustand on the client.
-- Vercel AI SDK 7 with Groq, and an OpenRouter model for drafting application answers when configured; separate services for LaTeX PDF compilation and OCR; SeaweedFS over the S3 API for stored files.
+- Vercel AI SDK 7 with Groq, and an OpenRouter model for drafting application answers and extension form filling when configured; separate services for LaTeX PDF compilation and OCR; SeaweedFS over the S3 API for stored files.
 - Node.js 24, pnpm, Vitest, Playwright, ESLint and Prettier.
 
 ## Module organization

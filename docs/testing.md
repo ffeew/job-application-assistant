@@ -21,7 +21,7 @@ Type checking generates Next.js route types before running `tsc --noEmit`. Gener
 
 ## Unit and service tests
 
-Vitest runs on Node.js and discovers `*.test.ts(x)` files in `src`, tests in `scripts` and `services`, and the opt-in PostgreSQL suite. Import test APIs explicitly from `vitest`. Add focused tests for changes to regression-prone transforms, validation, resume fitting, or generation helpers, using sanitized candidate fixtures.
+Vitest runs on Node.js and discovers `*.test.ts(x)` files in `src` and `extension`, tests in `scripts` and `services`, and the opt-in PostgreSQL suite. Import test APIs explicitly from `vitest`. Add focused tests for changes to regression-prone transforms, validation, resume fitting, or generation helpers, using sanitized candidate fixtures.
 
 Pass a path to run a subset:
 
@@ -36,7 +36,7 @@ Resume import tests build synthetic PDF and DOCX files in memory and cover file-
 
 ## PostgreSQL integration tests
 
-Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, stored PDFs and imported files, answer drafting's application ownership, and retention. Generation and compilation are mocked, and object storage is replaced by an in-memory map whose operations can be made to fail, so no storage server is needed; live AI, OCR, and email delivery are not exercised.
+Integration tests require `RUN_DB_INTEGRATION=1`, a dedicated disposable database whose name ends in `_test`, and synthetic service credentials. They apply committed migrations twice and test authentication compatibility, CRUD/types/cascades, endpoint ownership, job claims and recovery, stale completion, save intent, failure handling, PDF retrieval, stored PDFs and imported files, answer drafting/autofill application and resume ownership, and retention. Generation and compilation are mocked, and object storage is replaced by an in-memory map whose operations can be made to fail, so no storage server is needed; live AI, OCR, and email delivery are not exercised.
 
 For an isolated local database, start PostgreSQL 18 on loopback port 5433. The port and container name must be available:
 
@@ -132,3 +132,14 @@ Not covered: the `DISABLE_SIGNUP` server branch (a stub covers the page's handli
 The browser job runs as four shards (`--shard=N/4`), each with its own stack. Tests are split per test, so shards stay similar in length. Each shard uses the GitHub Actions BuildKit cache for the compiler image; only shard 1 writes it back and runs the compiler tests inside that image with `REQUIRE_TEX=1`, so real compilation tests fail instead of skipping. A shard stops after 25 failures or 20 minutes, still writing its report, and uploads browser reports and service logs as `e2e-results-N` for seven days. To reproduce a shard locally, pass the same `--shard` option to `pnpm run test:e2e`. The smoke job builds all project images, including the OCR image and its smoke test, starts `docker-compose.yml` with synthetic credentials, and waits for each health check. Actions are pinned to commit SHAs, which Dependabot updates monthly.
 
 Document relevant manual QA with the change. Public deployment checks, including live provider behavior and backup restoration, are covered in the [deployment guide](deployment.md#deployment-verification).
+
+### Local autofill extension
+
+```sh
+pnpm run extension:build
+pnpm run test:e2e --grep @autofill
+```
+
+The extension tests load the real unpacked extension in a fresh persistent context using Playwright's bundled Chromium. Each test has isolated browser state, including under CI sharding. Fixture forms cover controlled fields, multi-page navigation, explicit iframe selection, late frames and origin changes, repeaters and saved dialogs, privacy filtering, stale fields, final-submit prevention, PDF authentication failures and cancellation during delayed option selection.
+
+A separate session suite signs in through the actual website, then calls the real autofill route from the extension using the same cookie session. It verifies application ownership, session revocation and re-login recovery with the existing fake Groq provider. The session suite also opens the native side panel through Chrome’s API and checks its authenticated requests directly. A cookie-policy scenario records whether a browser profile configured to block third-party cookies can forward its session in that native panel; blocked access must give actionable guidance and make no model request. Managed browser policies and live ATS sites still require environment-specific checks. These fixtures do not establish support for every external form, and tests make no paid AI calls.
