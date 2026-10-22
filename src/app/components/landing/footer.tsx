@@ -4,7 +4,7 @@ import { GithubIcon } from "@/components/ui/github-icon";
 import { Wordmark } from "@/components/wordmark";
 import { projectLinks, REPOSITORY_URL } from "./links";
 
-export function Footer() {
+export function Footer({ signUpOpen }: { signUpOpen: boolean }) {
   return (
     <footer>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-16 sm:px-8 md:flex-row md:items-center md:justify-between lg:py-20">
@@ -13,7 +13,11 @@ export function Footer() {
         </h2>
         <div className="flex flex-wrap gap-3">
           <Button size="lg" asChild>
-            <Link href="/sign-up">Create account</Link>
+            {signUpOpen ? (
+              <Link href="/sign-up">Create account</Link>
+            ) : (
+              <Link href="/sign-in">Sign in</Link>
+            )}
           </Button>
           <Button size="lg" variant="outline" asChild>
             <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">

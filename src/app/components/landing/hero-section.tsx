@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ResumeDemo } from "./resume-demo";
 
-export function HeroSection() {
+export function HeroSection({ signUpOpen }: { signUpOpen: boolean }) {
   return (
     <section className="border-kraft border-t">
       <div className="mx-auto grid w-full max-w-7xl items-start gap-x-10 gap-y-12 px-5 pb-20 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:pb-28">
@@ -18,7 +18,11 @@ export function HeroSection() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild>
-              <Link href="/sign-up">Create account</Link>
+              {signUpOpen ? (
+                <Link href="/sign-up">Create account</Link>
+              ) : (
+                <Link href="/sign-in">Sign in</Link>
+              )}
             </Button>
             <Button size="lg" variant="outline" asChild>
               <a href="#how-it-works">See how it works</a>

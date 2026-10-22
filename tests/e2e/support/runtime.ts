@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const BASE_URL = "http://127.0.0.1:3100";
+// A second app from the same build, with registration closed.
+export const CLOSED_SIGNUP_URL = "http://127.0.0.1:3102";
 export const LOG_DIRECTORY = "artifacts/e2e/logs";
 export const BUILD_DIRECTORY = ".next-e2e";
 
@@ -63,6 +65,8 @@ export function runtimeEnvironment(runtime: Runtime): NodeJS.ProcessEnv {
     ].join(","),
     DATABASE_URL: runtime.databaseUrl,
     BETTER_AUTH_URL: BASE_URL,
+    // Next would otherwise fill it from a .env copied into the standalone output.
+    DISABLE_SIGNUP: "false",
     BETTER_AUTH_SECRET: "e2e-only-auth-secret-at-least-thirty-two-characters",
     GROQ_API_KEY: "e2e-only-no-provider-access",
     GROQ_MODEL: "qwen/qwen3.8-27b",
