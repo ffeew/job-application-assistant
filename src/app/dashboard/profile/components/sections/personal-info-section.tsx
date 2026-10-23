@@ -158,6 +158,13 @@ export function PersonalInfoSection({
     });
   };
 
+  const handleCancel = () => {
+    // Restores the values the sheet opened with, so a discarded edit cannot
+    // be saved by a later submit.
+    reset(undefined, { keepFieldsRef: true });
+    cancelEditing();
+  };
+
   const handleEditClick = () => {
     if (profile) {
       startEditing("personal", profile.id);
@@ -169,7 +176,7 @@ export function PersonalInfoSection({
   const profileSheet = (
     <EntrySheet
       open={isEditing}
-      onClose={cancelEditing}
+      onClose={handleCancel}
       title={profile ? "Edit profile" : "Add your details"}
       description="Your name and contact details head every resume."
     >
@@ -182,7 +189,7 @@ export function PersonalInfoSection({
         }
         handleSubmit={handleSubmit as UseFormHandleSubmit<FieldValues>}
         onSubmit={onSubmit}
-        onCancel={cancelEditing}
+        onCancel={handleCancel}
         submitLabel={profile ? "Save changes" : "Save profile"}
       />
     </EntrySheet>

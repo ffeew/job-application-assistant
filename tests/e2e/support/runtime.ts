@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const BASE_URL = "http://127.0.0.1:3100";
+// The fake AI provider; the fetch guard forwards Groq calls here.
+export const AI_STUB_URL = "http://127.0.0.1:3101";
 // A second app from the same build, with registration closed.
 export const CLOSED_SIGNUP_URL = "http://127.0.0.1:3102";
 export const LOG_DIRECTORY = "artifacts/e2e/logs";
@@ -12,6 +14,7 @@ export const runtimeSchema = z.object({
   compilerContainerId: z.string().min(1),
   compilerToken: z.string().min(32),
   storageUrl: z.url(),
+  storageContainerId: z.string().min(1),
   storageAccessKey: z.string().min(1),
   storageSecretKey: z.string().min(32),
 });
@@ -58,6 +61,10 @@ export function runtimeEnvironment(runtime: Runtime): NodeJS.ProcessEnv {
     NEXT_TELEMETRY_DISABLED: "1",
     E2E_TEST: "1",
     E2E_RUNTIME: JSON.stringify(runtime),
+    E2E_AI_STUB_ORIGIN: AI_STUB_URL,
+    // The worker imports dotenv/config, which would otherwise read the
+    // developer's .env and enable OCR or OpenRouter only on that machine.
+    DOTENV_CONFIG_PATH: "/dev/null",
     E2E_ALLOWED_ORIGINS: [
       BASE_URL,
       new URL(runtime.compilerUrl).origin,
@@ -65,7 +72,7 @@ export function runtimeEnvironment(runtime: Runtime): NodeJS.ProcessEnv {
     ].join(","),
     DATABASE_URL: runtime.databaseUrl,
     BETTER_AUTH_URL: BASE_URL,
-    // Next would otherwise fill it from a .env copied into the standalone output.
+    // Explicit, so the shared app stays open whatever the developer's .env says.
     DISABLE_SIGNUP: "false",
     BETTER_AUTH_SECRET: "e2e-only-auth-secret-at-least-thirty-two-characters",
     GROQ_API_KEY: "e2e-only-no-provider-access",

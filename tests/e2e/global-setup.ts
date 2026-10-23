@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -16,6 +16,7 @@ import {
   type StartedTestContainer,
 } from "testcontainers";
 import {
+  AI_STUB_URL,
   BASE_URL,
   BUILD_DIRECTORY,
   CLOSED_SIGNUP_URL,
@@ -55,6 +56,8 @@ async function storageImage() {
 
 export default async function globalSetup() {
   await checkPortFree(BASE_URL);
+  // The test worker starts the fake AI provider here.
+  await checkPortFree(AI_STUB_URL);
   // Tests that need registration closed start this app themselves.
   await checkPortFree(CLOSED_SIGNUP_URL);
   await rm(LOG_DIRECTORY, { recursive: true, force: true });
@@ -156,6 +159,7 @@ export default async function globalSetup() {
       compilerContainerId: compiler.getId(),
       compilerToken: token,
       storageUrl: `http://${storage.getHost()}:${storage.getMappedPort(8333)}`,
+      storageContainerId: storage.getId(),
       storageAccessKey,
       storageSecretKey,
     };
@@ -174,6 +178,12 @@ export default async function globalSetup() {
       environment,
       `${LOG_DIRECTORY}/build.log`,
     );
+    // Next copies the developer's .env into the standalone output, where the
+    // server would load keys this harness leaves unset, such as OCR.
+    for (const file of await readdir(`${BUILD_DIRECTORY}/standalone`)) {
+      if (file.startsWith(".env"))
+        await rm(`${BUILD_DIRECTORY}/standalone/${file}`);
+    }
     await cp("public", `${BUILD_DIRECTORY}/standalone/public`, {
       recursive: true,
     });

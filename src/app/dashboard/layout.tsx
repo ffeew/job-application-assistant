@@ -23,6 +23,7 @@ import { useCoverLetterStore } from "@/app/dashboard/cover-letters/store/use-cov
 import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu } from "lucide-react";
+import { toast } from "sonner";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard" },
@@ -31,6 +32,10 @@ const navigation = [
   { name: "Resumes", href: "/dashboard/resumes" },
   { name: "Cover letters", href: "/dashboard/cover-letters" },
   { name: "Conversation starters", href: "/dashboard/conversation-starters" },
+  {
+    name: "Application questions",
+    href: "/dashboard/application-answers",
+  },
 ];
 
 // The dashboard root would otherwise match every nested route.
@@ -144,14 +149,26 @@ export default function DashboardLayout({
   }, [router, queryClient, setUser, setLoading]);
 
   const handleSignOut = async () => {
+    // The client reports a server error in its result and throws only when
+    // the request itself fails.
+    let signedOut = false;
     try {
-      await authClient.signOut();
+      const { error } = await authClient.signOut();
+      signedOut = !error;
     } catch {
-      // A failed request must not keep the account's data on screen.
+      // Left false, so the warning below covers a request that never arrived.
     }
+    // A failed request must not keep the account's data on screen.
     clearAccountState(queryClient);
     // The draft is persisted, so it would otherwise stay readable in this browser.
     useCoverLetterStore.getState().reset();
+    if (!signedOut) {
+      // Only the server can end the session, so the redirect alone would make
+      // a live session look signed out.
+      toast.error(
+        "Couldn't sign you out on the server, so this browser may still be signed in. Open the dashboard and sign out again.",
+      );
+    }
     router.push("/sign-in");
   };
 

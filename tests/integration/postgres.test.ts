@@ -3,6 +3,7 @@ import { createHmac } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { NextRequest } from "next/server";
+import { generateText } from "ai";
 import {
   account,
   education,
@@ -69,6 +70,13 @@ vi.mock("../../src/lib/object-storage", () => {
 const compiler = vi.hoisted(() => ({ compile: vi.fn() }));
 vi.mock("../../src/lib/latex-compiler", () => ({
   compileResumeLatex: compiler.compile,
+}));
+
+// Drafting answers asks the model; the test supplies its reply, so what is
+// checked is which application the route reads and what reaches the prompt.
+vi.mock("ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("ai")>()),
+  generateText: vi.fn(),
 }));
 
 const integration = process.env.RUN_DB_INTEGRATION === "1";
@@ -1254,6 +1262,154 @@ describe.skipIf(!integration)("PostgreSQL and persistent generation", () => {
       }
     }
     expect(uploadObjects()).toEqual([]);
+  });
+
+  test("autofill authenticates, validates ownership and selects only the caller's resume", async () => {
+    vi.mocked(generateText).mockClear();
+    const { POST } = await import("../../src/app/api/autofill/route");
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const { ResumesService } =
+      await import("../../src/app/api/resumes/service");
+    const { GET } = await import("../../src/app/api/resumes/[id]/pdf/route");
+    const applications = new ApplicationsService();
+    const service = new ResumesService();
+    const own = await applications.createApplication(userId, {
+      company: "Own Autofill Co",
+      position: "Engineer",
+      jobDescription: "OWN AUTOFILL JOB",
+      notes: "PRIVATE NOTE",
+      status: "applied",
+    });
+    const foreign = await applications.createApplication(otherUserId, {
+      company: "Foreign Autofill Co",
+      position: "Engineer",
+      jobDescription: "FOREIGN JOB",
+      status: "applied",
+    });
+    const ownResume = await service.createResume(userId, {
+      title: "Autofill",
+      content: "{}",
+      isDefault: false,
+      isTailored: true,
+      jobApplicationId: own.id,
+    });
+    const foreignResume = await service.createResume(otherUserId, {
+      title: "Foreign",
+      content: "{}",
+      isDefault: true,
+      isTailored: false,
+    });
+    const input = {
+      url: "https://jobs.example.test/apply",
+      pageText: "Application",
+      fields: [],
+      clickables: [],
+      unfilledNotSent: 0,
+      history: [],
+    };
+    const invoke = (body: unknown, authenticated = true) =>
+      POST(
+        new NextRequest("http://localhost/api/autofill", {
+          method: "POST",
+          headers: {
+            ...(authenticated ? { cookie } : {}),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }),
+      );
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        fills: [],
+        unanswered: [],
+        click: null,
+        status: "done",
+        message: "Ready",
+      },
+    } as never);
+    try {
+      expect((await invoke(input, false)).status).toBe(401);
+      expect((await invoke({ ...input, fields: "invalid" })).status).toBe(400);
+      expect(
+        (await invoke({ ...input, applicationId: foreign.id })).status,
+      ).toBe(404);
+      expect(
+        (await invoke({ ...input, applicationId: crypto.randomUUID() })).status,
+      ).toBe(404);
+      expect(generateText).not.toHaveBeenCalled();
+      const result = await invoke({ ...input, applicationId: own.id });
+      expect(result.status).toBe(200);
+      expect(await result.json()).toMatchObject({ resumeId: ownResume.id });
+      const prompt = vi.mocked(generateText).mock.calls[0]?.[0].prompt;
+      expect(prompt).toContain("OWN AUTOFILL JOB");
+      expect(prompt).not.toContain("PRIVATE NOTE");
+      expect(prompt).not.toContain("FOREIGN JOB");
+      const file = await GET(
+        new NextRequest("http://localhost/api/resumes/foreign/pdf", {
+          headers: { cookie },
+        }),
+        { params: Promise.resolve({ id: foreignResume.id }) },
+      );
+      expect(file.status).toBe(404);
+    } finally {
+      await service.deleteResume(userId, ownResume.id);
+      await service.deleteResume(otherUserId, foreignResume.id);
+      await applications.deleteApplication(userId, own.id);
+      await applications.deleteApplication(otherUserId, foreign.id);
+      vi.mocked(generateText).mockClear();
+    }
+  });
+
+  test("drafting answers reads only the caller's application", async () => {
+    const { POST } =
+      await import("../../src/app/api/application-answers/generate/route");
+    const { ApplicationsService } =
+      await import("../../src/app/api/applications/service");
+    const applications = new ApplicationsService();
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        answers: [{ question: "Why us?", answer: "Rockets.", reason: "" }],
+      },
+    } as never);
+    const draft = (applicationId: string) =>
+      POST(
+        new NextRequest("http://localhost/api/application-answers/generate", {
+          method: "POST",
+          headers: { cookie, "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationId, questions: "Why us?" }),
+        }),
+      );
+
+    const own = await applications.createApplication(userId, {
+      company: "Answers Co",
+      position: "Engineer",
+      jobDescription: "Own job description",
+      status: "applied",
+    });
+    const foreign = await applications.createApplication(otherUserId, {
+      company: "Other Answers Co",
+      position: "Engineer",
+      jobDescription: "Foreign job description",
+      status: "applied",
+    });
+
+    try {
+      expect((await draft(foreign.id)).status).toBe(404);
+      expect(generateText).not.toHaveBeenCalled();
+
+      const response = await draft(own.id);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        answers: [{ question: "Why us?", answer: "Rockets.", reason: "" }],
+      });
+      const prompt = vi.mocked(generateText).mock.calls[0]?.[0].prompt;
+      expect(prompt).toContain("Own job description");
+      expect(prompt).not.toContain("Foreign job description");
+    } finally {
+      await applications.deleteApplication(userId, own.id);
+      await applications.deleteApplication(otherUserId, foreign.id);
+    }
   });
 
   test("retention removes old finished jobs and keeps active jobs and saved resumes", async () => {

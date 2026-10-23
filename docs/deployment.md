@@ -112,7 +112,7 @@ The worker runs one job at a time. Generation requests enqueue work and return H
 
 Preview remains a draft; Save and download PDF commits a tailored resume when the job completes, even if the browser closes. Completed jobs keep their PDFs in the database for download without another AI call or compilation. Saved library PDFs are written to object storage by the worker for Save and download PDF, by the app when a preview is saved, and by the app when a saved generated resume without a PDF is first opened.
 
-Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter and conversation-starter generation allow ten requests a minute per account and resume import five, counted in the app process's memory.
+Each account may have three jobs queued or running; a further request returns 429 until one finishes. Cover-letter, conversation-starter and answer drafting allow ten requests a minute per account and resume import five, counted in the app process's memory.
 
 Workers heartbeat claims every 30 seconds with five-minute leases. An interrupted job is retried once after its lease expires; an obsolete worker cannot overwrite the replacement. AI failures use model/draft fallbacks where available and otherwise produce a retryable job error. Content selection, PDF compilation, and fitting use a 180-second abort deadline in the worker, independently of Cloudflare's HTTP timeout; subsequent file storage and database completion are outside that deadline. Queued work survives restarts. Completed/failed job records and their PDFs expire after seven days, with hourly cleanup; saved library resumes remain.
 
@@ -123,3 +123,7 @@ Read `docker compose logs -f app worker latex-compiler ocr seaweedfs` for operat
 Run the [quality and integration checks](testing.md) before deploying. [CI checks](testing.md#ci) use synthetic credentials; verify your own configuration separately. Keep `docker-compose.dev.yml` out of the production stack; it publishes PostgreSQL, the compiler, the OCR service, and file storage for host development.
 
 Before using the public deployment, verify HTTPS sign-up/sign-in/reset links and dashboard redirects, profile/application CRUD, preview generation, leaving/reopening a running job, Save and download PDF, and saved-PDF downloads through the tunnel. Import a text-based PDF and a scanned PDF into a profile; the scan should populate fields and show the OCR warning. Both files should appear under Imported files on the profile and download unchanged. Confirm records and stored files survive container recreation and a backup restores into a separate test database. Live AI and email checks require your configured provider credentials.
+
+## Local autofill extension
+
+Deploy the autofill API with the app and rebuild/reload the unpacked extension from the same checkout (`pnpm run extension:build`). The extension uses the public app origin and the user's existing browser session; it needs no additional container, browser-hosting account or environment variables. Existing Groq/OpenRouter settings also govern its model requests. See the [extension setup](../README.md#local-autofill-extension) for browser installation, permissions and cookie-policy troubleshooting.

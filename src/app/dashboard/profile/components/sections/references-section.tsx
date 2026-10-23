@@ -1,10 +1,17 @@
 "use client";
 
 import { withAsyncHandler } from "@/lib/async-action";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCreateReference } from "@/app/dashboard/profile/mutations/use-create-reference";
 import { useUpdateReference } from "@/app/dashboard/profile/mutations/use-update-reference";
@@ -31,6 +38,15 @@ import {
   SectionEmpty,
   SectionHeader,
 } from "../section-parts";
+
+const relationshipLabels = {
+  manager: "Manager",
+  colleague: "Colleague",
+  client: "Client",
+  professor: "Professor",
+  mentor: "Mentor",
+  other: "Other",
+} satisfies Record<NonNullable<CreateReferenceRequest["relationship"]>, string>;
 
 interface ReferencesSectionProps {
   references: ReferenceJsonResponse[];
@@ -210,7 +226,9 @@ function ReferenceSummary({
       <EntryMeta>
         {reference.email && <span>{reference.email}</span>}
         {reference.phone && <span>{reference.phone}</span>}
-        {reference.relationship && <span>{reference.relationship}</span>}
+        {reference.relationship && (
+          <span>{relationshipLabels[reference.relationship]}</span>
+        )}
       </EntryMeta>
     </>
   );
@@ -242,8 +260,13 @@ function ReferenceForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = form;
+  const relationship = useWatch({
+    control: form.control,
+    name: "relationship",
+  });
 
   const onSubmit = (data: unknown) => {
     const validatedData = data as CreateReferenceRequest;
@@ -299,11 +322,29 @@ function ReferenceForm({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="relationship">Relationship</Label>
-        <Input
-          id="relationship"
-          {...register("relationship")}
-          placeholder="e.g. former manager"
-        />
+        <Select
+          // A Select item cannot have an empty value, so "none" stands for no
+          // relationship.
+          value={relationship ?? "none"}
+          onValueChange={(value) => {
+            const parsed = createReferenceSchema.shape.relationship.safeParse(
+              value === "none" ? null : value,
+            );
+            if (parsed.success) setValue("relationship", parsed.data);
+          }}
+        >
+          <SelectTrigger id="relationship">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Not specified</SelectItem>
+            {Object.entries(relationshipLabels).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <FormActions
         onCancel={onCancel}

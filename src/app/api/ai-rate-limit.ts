@@ -5,8 +5,10 @@ import { createRateLimiter } from "@/lib/rate-limit";
 // by every account, and imports may also run OCR. Each account gets a small
 // allowance so that no single one can spend the key or stall the others.
 const limiters = {
+  autofill: createRateLimiter({ limit: 30, windowMs: 60_000 }),
   coverLetter: createRateLimiter({ limit: 10, windowMs: 60_000 }),
   conversationStarter: createRateLimiter({ limit: 10, windowMs: 60_000 }),
+  applicationAnswers: createRateLimiter({ limit: 10, windowMs: 60_000 }),
   resumeImport: createRateLimiter({ limit: 5, windowMs: 60_000 }),
 };
 

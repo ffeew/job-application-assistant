@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { useApplicationAnswersStore } from "@/app/dashboard/application-answers/store/use-application-answers-store";
 import { useImportReviewStore } from "@/app/dashboard/profile/store/import-review-store";
 import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 
@@ -11,5 +12,6 @@ import { useDashboardStore } from "@/app/dashboard/store/use-dashboard-store";
 export function clearAccountState(queryClient: QueryClient): void {
   queryClient.clear();
   useImportReviewStore.getState().clear();
+  useApplicationAnswersStore.getState().reset();
   useDashboardStore.getState().setUser(null);
 }

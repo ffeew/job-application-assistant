@@ -24,6 +24,8 @@ const inheritedSettings = {
   OBJECT_STORAGE_ACCESS_KEY: "unrelated-storage-key",
   DISABLE_SIGNUP: "true",
   RESEND_API_KEY: "test-inherited-email-key",
+  OPENROUTER_API_KEY: "test-inherited-openrouter-key",
+  OPENROUTER_TIER_3_MODEL: "unrelated-model",
 };
 
 const invocationSchema = z.object({
